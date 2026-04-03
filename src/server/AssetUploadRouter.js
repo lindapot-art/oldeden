@@ -13,6 +13,7 @@
 
 import { Router } from 'express';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -49,6 +50,15 @@ function extensionFilter(allowedExtensions) {
  */
 export function createAssetUploadRouter({ uploadDir = 'uploads', maxFileSize = 150_000_000 } = {}) {
   const router = Router();
+
+  // Rate limit all asset routes: 100 requests per 15 minutes per IP
+  router.use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please try again later.' },
+  }));
 
   const modelsDir   = path.join(uploadDir, 'models');
   const texturesDir = path.join(uploadDir, 'textures');
