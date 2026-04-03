@@ -17,6 +17,7 @@ import rateLimit from 'express-rate-limit';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { GlbProcessor, SUPPORTED_EXTENSIONS as GLB_EXTENSIONS } from '../assets/GlbProcessor.js';
 
 /** Allowed file extensions for 3D model uploads */
 const MODEL_EXTENSIONS = new Set(['.glb', '.gltf', '.fbx', '.obj']);
@@ -102,17 +103,31 @@ export function createAssetUploadRouter({ uploadDir = 'uploads', maxFileSize = 1
    * Upload one or more 3D model files.
    * Field name: "models"
    */
-  router.post('/models', modelUpload.array('models', 10), (req, res) => {
+  const glbProcessor = new GlbProcessor();
+
+  router.post('/models', modelUpload.array('models', 10), async (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No model files provided. Use field name "models".' });
     }
 
-    const uploaded = req.files.map((f) => ({
-      originalName: f.originalname,
-      filename: f.filename,
-      size: f.size,
-      path: `/assets/models/${f.filename}`,
-    }));
+    const uploaded = [];
+    for (const f of req.files) {
+      const entry = {
+        originalName: f.originalname,
+        filename: f.filename,
+        size: f.size,
+        path: `/assets/models/${f.filename}`,
+      };
+
+      // Run glTF-Transform inspection on GLB/glTF files
+      const ext = path.extname(f.originalname).toLowerCase();
+      if (GLB_EXTENSIONS.has(ext)) {
+        const report = await glbProcessor.inspect(f.path);
+        entry.glbReport = report;
+      }
+
+      uploaded.push(entry);
+    }
 
     res.status(201).json({ uploaded });
   });
@@ -135,6 +150,28 @@ export function createAssetUploadRouter({ uploadDir = 'uploads', maxFileSize = 1
     }));
 
     res.status(201).json({ uploaded });
+  });
+
+  /**
+   * GET /api/assets/models/:filename/inspect
+   * Inspect a previously uploaded GLB/glTF model using glTF-Transform.
+   * Returns mesh stats, materials, textures, animations, and validation info.
+   */
+  router.get('/models/:filename/inspect', async (req, res) => {
+    const safeName = path.basename(req.params.filename);
+    const filePath = path.join(modelsDir, safeName);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found.' });
+    }
+
+    const ext = path.extname(safeName).toLowerCase();
+    if (!GLB_EXTENSIONS.has(ext)) {
+      return res.status(400).json({ error: 'Only GLB/glTF files can be inspected.' });
+    }
+
+    const report = await glbProcessor.inspect(filePath);
+    res.json({ filename: safeName, ...report });
   });
 
   /**
