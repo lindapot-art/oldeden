@@ -10,6 +10,9 @@ build/
 artifacts/
 cache/
 
+# Uploads
+uploads/
+
 # Hardhat
 typechain/
 typechain-types/
