@@ -32,9 +32,10 @@ const WORLD_EVENT_TYPES = [
   { type: 'pirate_invasion',     weight: 0.25, combatIntensity: 0.8,    durationMinutes: 45  },
   { type: 'trade_disruption',    weight: 0.20, economicImpact: -0.3,    durationMinutes: 120 },
   { type: 'alien_anomaly',       weight: 0.10, explorationBonus: 2.0,   durationMinutes: 60  },
-  { type: 'faction_war',         weight: 0.15, combatIntensity: 1.0,    durationMinutes: 360 },
-  { type: 'resource_boom',       weight: 0.10, economicImpact: 0.5,     durationMinutes: 90  },
-  { type: 'pandemic',            weight: 0.05, healthHazard: 0.6,       durationMinutes: 480 },
+  { type: 'faction_war',         weight: 0.10, combatIntensity: 1.0,    durationMinutes: 360 },
+  { type: 'resource_boom',       weight: 0.08, economicImpact: 0.5,     durationMinutes: 90  },
+  { type: 'pandemic',            weight: 0.04, healthHazard: 0.6,       durationMinutes: 480 },
+  { type: 'soul_fracture_event', weight: 0.08, shardHunt: true,         durationMinutes: 30  },
 ];
 
 export class AIDirector {
@@ -48,6 +49,7 @@ export class AIDirector {
 
     engine.events.on('player:action', (data) => this._recordPlayerAction(data));
     engine.events.on('player:death',  (data) => this._onPlayerDeath(data));
+    engine.events.on('soul:fractured', (data) => this._onSoulFractured(data));
 
     console.log('[AIDirector] Initialised.');
   }
@@ -144,6 +146,29 @@ export class AIDirector {
 
   _onPlayerDeath({ playerId }) {
     this._recordPlayerAction({ playerId, actionType: 'death' });
+  }
+
+  /**
+   * Handle a Soul Fracture event — create a server-wide shard hunt world event.
+   * @param {object} data  Event data from SoulFractureSystem
+   */
+  _onSoulFractured({ fractureId, characterName, shardCount }) {
+    const now = Date.now();
+    const event = {
+      id: `fracture_${fractureId}`,
+      type: 'soul_fracture_event',
+      startTime: now,
+      durationMs: 30 * 60_000, // 30 minutes
+      affectedSectors: this._randomSectors(),
+      shardHunt: true,
+      fractureId,
+      characterName,
+      shardCount,
+    };
+
+    this._activeEvents.push(event);
+    this._engine.events.emit('world:event_started', event);
+    console.log(`[AIDirector] Soul Fracture Event: "${characterName}" shattered into ${shardCount} shards.`);
   }
 
   _considerWorldEvent(now) {

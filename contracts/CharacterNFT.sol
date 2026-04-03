@@ -44,6 +44,11 @@ contract CharacterNFT is ERC721, ERC721URIStorage, Ownable {
         uint16  generation;     // 0 = genesis
         uint256 parentTokenId;  // 0 = no parent
         uint256 mintedAt;       // block.timestamp
+        bool    isFractured;    // true if Soul Fracture occurred
+        uint256 fracturedAt;    // timestamp of fracture (0 if not fractured)
+        uint16  shardCount;     // number of shards created on fracture
+        bool    isAscended;     // true if character ascended
+        uint256 ascendedAt;     // timestamp of ascension (0 if not ascended)
     }
 
     mapping(uint256 => CharacterData) private _characterData;
@@ -54,6 +59,17 @@ contract CharacterNFT is ERC721, ERC721URIStorage, Ownable {
         string  genomeHex,
         uint16  statusScore,
         uint16  generation
+    );
+
+    event CharacterFractured(
+        uint256 indexed tokenId,
+        uint256 fracturedAt,
+        uint16  shardCount
+    );
+
+    event CharacterAscended(
+        uint256 indexed tokenId,
+        uint256 ascendedAt
     );
 
     event MinterUpdated(address indexed oldMinter, address indexed newMinter);
@@ -109,11 +125,48 @@ contract CharacterNFT is ERC721, ERC721URIStorage, Ownable {
             statusScore:  statusScore,
             generation:   generation,
             parentTokenId: parentTokenId,
-            mintedAt:     block.timestamp
+            mintedAt:     block.timestamp,
+            isFractured:  false,
+            fracturedAt:  0,
+            shardCount:   0,
+            isAscended:   false,
+            ascendedAt:   0
         });
 
         emit CharacterMinted(to, tokenId, genomeHex, statusScore, generation);
         return tokenId;
+    }
+
+    // ── Soul Fracture ──────────────────────────────────────────────────────────
+
+    /**
+     * @notice Mark a character NFT as fractured (Soul Fracture).
+     *         The NFT is NOT burned — it becomes a rare "Fractured" collectible.
+     * @param tokenId      The token ID to fracture
+     * @param _shardCount  Number of Soul Shards generated
+     */
+    function fractureCharacter(uint256 tokenId, uint16 _shardCount) external onlyMinter {
+        require(_exists(tokenId), "CharacterNFT: fracture of nonexistent token");
+        CharacterData storage data = _characterData[tokenId];
+        require(!data.isFractured, "CharacterNFT: already fractured");
+        data.isFractured = true;
+        data.fracturedAt = block.timestamp;
+        data.shardCount  = _shardCount;
+        emit CharacterFractured(tokenId, block.timestamp, _shardCount);
+    }
+
+    /**
+     * @notice Mark a character NFT as ascended.
+     * @param tokenId  The token ID to ascend
+     */
+    function ascendCharacter(uint256 tokenId) external onlyMinter {
+        require(_exists(tokenId), "CharacterNFT: ascension of nonexistent token");
+        CharacterData storage data = _characterData[tokenId];
+        require(!data.isAscended, "CharacterNFT: already ascended");
+        require(!data.isFractured, "CharacterNFT: cannot ascend fractured character");
+        data.isAscended = true;
+        data.ascendedAt = block.timestamp;
+        emit CharacterAscended(tokenId, block.timestamp);
     }
 
     // ── Views ─────────────────────────────────────────────────────────────────

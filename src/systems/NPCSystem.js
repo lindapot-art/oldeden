@@ -77,6 +77,8 @@ export class NPCSystem {
       isPlayerAvatar: false,
       isDeceasedAvatar: false,
       causeOfDeath: null,
+      isFractured: false,
+      isAscended: false,
       spawnedAt: Date.now(),
     };
     this._npcs.set(npc.id, npc);
@@ -99,7 +101,7 @@ export class NPCSystem {
    */
   getLivingNPCPool() {
     return [...this._npcs.values()].filter(
-      (npc) => npc.isActive && !npc.isPlayerAvatar
+      (npc) => npc.isActive && !npc.isPlayerAvatar && !npc.isFractured && !npc.isAscended
     );
   }
 
@@ -141,18 +143,50 @@ export class NPCSystem {
   }
 
   /**
+   * Mark a character as fractured (Soul Fracture path).
+   * Fractured characters do NOT become autonomous NPCs — they are destroyed.
+   * @param {string} characterId
+   */
+  markFractured(characterId) {
+    const npc = this._npcs.get(characterId);
+    if (!npc) return;
+    npc.isFractured = true;
+    npc.isActive = false;
+    this._engine.events.emit('npc:fractured', { npcId: npc.id });
+    console.log(`[NPCSystem] Character ${characterId} marked as fractured.`);
+  }
+
+  /**
+   * Mark a character as ascended (Ascension path).
+   * Ascended characters become ghostly presences, not regular NPCs.
+   * @param {string} characterId
+   * @param {string} systemId  The star system the Ascended entity controls
+   */
+  markAscended(characterId, systemId) {
+    const npc = this._npcs.get(characterId);
+    if (!npc) return;
+    npc.isAscended = true;
+    npc.isActive = false;
+    npc.sectorId = systemId;
+    this._engine.events.emit('npc:ascended', { npcId: npc.id, systemId });
+    console.log(`[NPCSystem] Character ${characterId} ascended to system ${systemId}.`);
+  }
+
+  /**
    * Return population statistics for monitoring / analytics.
    * @returns {PopulationStats}
    */
   getPopulationStats() {
-    let living = 0, deceased = 0, playerAvatars = 0, deceasedAvatars = 0;
+    let living = 0, deceased = 0, playerAvatars = 0, deceasedAvatars = 0, fractured = 0, ascended = 0;
     for (const npc of this._npcs.values()) {
       if (npc.isActive) living++;
       else deceased++;
       if (npc.isPlayerAvatar) playerAvatars++;
       if (npc.isDeceasedAvatar) deceasedAvatars++;
+      if (npc.isFractured) fractured++;
+      if (npc.isAscended) ascended++;
     }
-    return { total: this._npcs.size, living, deceased, playerAvatars, deceasedAvatars };
+    return { total: this._npcs.size, living, deceased, playerAvatars, deceasedAvatars, fractured, ascended };
   }
 
   // ── Private ──────────────────────────────────────────────────────────────────
@@ -212,6 +246,8 @@ export class NPCSystem {
  * @property {boolean}   isPlayerAvatar
  * @property {boolean}   isDeceasedAvatar
  * @property {string|null} causeOfDeath
+ * @property {boolean}   isFractured
+ * @property {boolean}   isAscended
  * @property {number}    spawnedAt
  */
 
@@ -222,4 +258,6 @@ export class NPCSystem {
  * @property {number} deceased
  * @property {number} playerAvatars
  * @property {number} deceasedAvatars
+ * @property {number} fractured
+ * @property {number} ascended
  */

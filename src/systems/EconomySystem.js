@@ -40,6 +40,15 @@ const TIER_CONFIG = {
 const BASE_EC_PER_SM_SELL = 10_000;
 const BASE_EC_PER_SM_BUY  = 12_000;
 
+/**
+ * Premium shard-hunting items purchasable with SM.
+ */
+export const SHARD_ITEMS = Object.freeze({
+  SHARD_DETECTOR:     { id: 'shard_detector',     name: 'Shard Detector',     priceSm: 50,  durationHours: 24, description: 'Shows approximate shard locations on map for 24h' },
+  SHARD_MAGNET:       { id: 'shard_magnet',       name: 'Shard Magnet',       priceSm: 200, durationHours: 1,  description: 'Increases shard pickup radius 5× for 1h' },
+  FRACTURE_AMPLIFIER: { id: 'fracture_amplifier', name: 'Fracture Amplifier', priceSm: 100, durationHours: 0,  description: 'Your shards are 20% more powerful when you fracture' },
+});
+
 export class EconomySystem {
   async init(engine) {
     this._engine = engine;
@@ -49,6 +58,10 @@ export class EconomySystem {
     this._subscriptions = new Map();
     /** EC:SM exchange rate volatility factor (0.7–1.3) */
     this._exchangeRateFactor = 1.0;
+    /** @type {Map<string, ShardInventory>} playerId → shard inventory */
+    this._shardInventories = new Map();
+    /** @type {Map<string, ActiveItem[]>} playerId → active premium items */
+    this._activeItems = new Map();
     console.log('[EconomySystem] Initialised.');
   }
 
@@ -144,6 +157,80 @@ export class EconomySystem {
   getEcMultiplier(playerId) {
     const tier = this.getSubscription(playerId);
     return TIER_CONFIG[tier]?.ecMultiplier ?? 1.0;
+  }
+
+  // ── Shard Inventory ─────────────────────────────────────────────────────────
+
+  /**
+   * Get a player's shard inventory (tracking absorbed shards).
+   * @param {string} playerId
+   * @returns {ShardInventory}
+   */
+  getShardInventory(playerId) {
+    if (!this._shardInventories.has(playerId)) {
+      this._shardInventories.set(playerId, {
+        totalAbsorbed: 0,
+        skillShards: 0,
+        wealthShards: 0,
+        itemShards: 0,
+        mutationShards: 0,
+        memoryShards: 0,
+      });
+    }
+    return this._shardInventories.get(playerId);
+  }
+
+  /**
+   * Record an absorbed shard in a player's inventory.
+   * @param {string} playerId
+   * @param {string} shardType  One of: skill, wealth, item, mutation, memory
+   */
+  recordShardAbsorption(playerId, shardType) {
+    const inv = this.getShardInventory(playerId);
+    inv.totalAbsorbed++;
+    const key = `${shardType}Shards`;
+    if (key in inv) inv[key]++;
+  }
+
+  // ── Premium Shard Items ────────────────────────────────────────────────────
+
+  /**
+   * Purchase a premium shard-hunting item.
+   * @param {string} playerId
+   * @param {string} itemId  Key from SHARD_ITEMS
+   * @returns {{ success: boolean, reason?: string }}
+   */
+  purchaseShardItem(playerId, itemId) {
+    const item = Object.values(SHARD_ITEMS).find(i => i.id === itemId);
+    if (!item) return { success: false, reason: 'Unknown item.' };
+
+    const success = this.debit(playerId, CURRENCY.SM, item.priceSm);
+    if (!success) return { success: false, reason: 'Insufficient Stellar Marks.' };
+
+    if (item.durationHours > 0) {
+      if (!this._activeItems.has(playerId)) this._activeItems.set(playerId, []);
+      this._activeItems.get(playerId).push({
+        itemId: item.id,
+        activatedAt: Date.now(),
+        expiresAt: Date.now() + item.durationHours * 60 * 60 * 1000,
+      });
+    }
+
+    this._engine.events.emit('economy:shard_item_purchased', { playerId, itemId: item.id, priceSm: item.priceSm });
+    return { success: true };
+  }
+
+  /**
+   * Check if a player has an active premium item.
+   * @param {string} playerId
+   * @param {string} itemId
+   * @returns {boolean}
+   */
+  hasActiveItem(playerId, itemId) {
+    const items = this._activeItems.get(playerId);
+    if (!items) return false;
+    const now = Date.now();
+    return items.some(i => i.itemId === itemId && now < i.expiresAt);
   }
 
   // ── Exchange ──────────────────────────────────────────────────────────────────
