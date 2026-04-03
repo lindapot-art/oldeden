@@ -179,6 +179,179 @@
       height: 100%; width: 0%; background: #6ab0de;
       transition: width 0.3s ease;
     }
+
+    /* ─── Gunner Mode HUD ──────────────────────────────────────────── */
+    #gunner-hud {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 20; pointer-events: none;
+      display: none;
+    }
+    #gunner-hud.active { display: block; }
+    #gunner-hud > * { pointer-events: auto; }
+
+    /* Cockpit frame vignette */
+    #cockpit-frame {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        transparent 55%,
+        rgba(10,20,35,0.3) 70%,
+        rgba(5,10,20,0.7) 85%,
+        rgba(0,0,0,0.95) 100%);
+      border: 3px solid rgba(60,100,140,0.15);
+      box-shadow: inset 0 0 120px rgba(0,0,0,0.8);
+    }
+
+    /* Glass canopy tint overlay */
+    #canopy-tint {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        rgba(100,180,255,0.02) 0%,
+        rgba(80,150,220,0.04) 60%,
+        transparent 100%);
+    }
+
+    /* Canopy hex grid pattern */
+    #canopy-grid {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image:
+        linear-gradient(30deg, rgba(100,180,255,1) 1px, transparent 1px),
+        linear-gradient(150deg, rgba(100,180,255,1) 1px, transparent 1px),
+        linear-gradient(270deg, rgba(100,180,255,1) 1px, transparent 1px);
+      background-size: 60px 104px;
+    }
+
+    /* Crosshair */
+    #crosshair {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px; height: 80px;
+      pointer-events: none;
+    }
+    #crosshair .ch-ring {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50px; height: 50px;
+      border: 1px solid rgba(100,200,255,0.5);
+      border-radius: 50%;
+    }
+    #crosshair .ch-dot {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px; height: 4px;
+      background: rgba(100,220,255,0.9);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(100,200,255,0.6);
+    }
+    #crosshair .ch-line {
+      position: absolute;
+      background: rgba(100,200,255,0.4);
+    }
+    #crosshair .ch-line.top    { top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 12px; }
+    #crosshair .ch-line.bottom { bottom: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 12px; }
+    #crosshair .ch-line.left   { left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 1px; }
+    #crosshair .ch-line.right  { right: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 1px; }
+
+    /* Gunner mode indicator */
+    #gunner-mode-label {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,80,60,0.8);
+      text-shadow: 0 0 10px rgba(255,80,60,0.4);
+      pointer-events: none;
+    }
+
+    /* Weapon status panel (bottom center) */
+    #weapon-panel {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 20px; align-items: flex-end;
+      pointer-events: none;
+    }
+    .weapon-group {
+      text-align: center;
+    }
+    .weapon-name {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(100,200,255,0.6); margin-bottom: 4px;
+    }
+    .weapon-ammo {
+      font-size: 1.4rem; font-weight: 300;
+      color: rgba(100,220,255,0.9);
+      text-shadow: 0 0 15px rgba(100,200,255,0.4);
+    }
+    .weapon-bar {
+      width: 80px; height: 3px;
+      background: rgba(100,180,255,0.15);
+      border-radius: 2px; margin: 4px auto 0;
+      overflow: hidden;
+    }
+    .weapon-bar-fill {
+      height: 100%; border-radius: 2px;
+      background: rgba(100,200,255,0.7);
+      transition: width 0.2s ease;
+    }
+    .weapon-heat {
+      font-size: 0.55rem; color: rgba(255,180,60,0.6); margin-top: 2px;
+    }
+
+    /* Shield/hull status (bottom left in gunner) */
+    #gunner-shield-panel {
+      position: absolute; bottom: 30px; left: 30px;
+      pointer-events: none;
+    }
+    .gs-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .gs-label {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(100,200,255,0.5); width: 50px; text-align: right;
+    }
+    .gs-bar {
+      width: 120px; height: 6px;
+      background: rgba(100,180,255,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+    .gs-bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .gs-bar-fill.shield { background: rgba(100,200,255,0.7); }
+    .gs-bar-fill.hull   { background: rgba(80,220,120,0.7); }
+    .gs-val {
+      font-size: 0.65rem; color: rgba(200,220,240,0.7); width: 40px;
+    }
+
+    /* Target info (bottom right in gunner) */
+    #gunner-target-panel {
+      position: absolute; bottom: 30px; right: 30px;
+      text-align: right;
+      pointer-events: none;
+    }
+    .gt-label {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,100,60,0.5);
+    }
+    .gt-name {
+      font-size: 0.85rem; color: rgba(255,120,80,0.8); margin-top: 2px;
+    }
+    .gt-dist {
+      font-size: 0.65rem; color: rgba(200,200,220,0.5); margin-top: 2px;
+    }
+
+    /* Mode switch hint (top right) */
+    #mode-hint {
+      position: absolute; top: 18px; right: 20px;
+      font-size: 0.65rem; color: rgba(150,170,200,0.5);
+      pointer-events: none;
+    }
+    #mode-hint kbd {
+      padding: 1px 5px; border: 1px solid rgba(150,170,200,0.3);
+      border-radius: 3px; font-family: monospace;
+    }
   </style>
 </head>
 <body>
@@ -231,8 +404,69 @@
 
     <div id="controls-hint">
       Drag to orbit &bull; Scroll to zoom<br/>
-      Click star to explore &bull; Press <b>G</b> to generate new system
+      Click star to explore &bull; Press <b>G</b> to generate new system<br/>
+      Press <b>F</b> to toggle Gunner Mode
     </div>
+  </div>
+
+  <!-- Gunner Mode HUD overlay -->
+  <div id="gunner-hud">
+    <div id="cockpit-frame"></div>
+    <div id="canopy-tint"></div>
+    <div id="canopy-grid"></div>
+
+    <div id="crosshair">
+      <div class="ch-ring"></div>
+      <div class="ch-dot"></div>
+      <div class="ch-line top"></div>
+      <div class="ch-line bottom"></div>
+      <div class="ch-line left"></div>
+      <div class="ch-line right"></div>
+    </div>
+
+    <div id="gunner-mode-label">&#9678; GUNNER MODE &mdash; TURRET ACTIVE</div>
+
+    <div id="weapon-panel">
+      <div class="weapon-group">
+        <div class="weapon-name">Laser Cannon</div>
+        <div class="weapon-ammo" id="laser-ammo">&infin;</div>
+        <div class="weapon-bar"><div class="weapon-bar-fill" id="laser-bar" style="width:100%"></div></div>
+        <div class="weapon-heat" id="laser-heat">HEAT 0%</div>
+      </div>
+      <div class="weapon-group">
+        <div class="weapon-name">Missiles</div>
+        <div class="weapon-ammo" id="missile-ammo">24</div>
+        <div class="weapon-bar"><div class="weapon-bar-fill" id="missile-bar" style="width:100%"></div></div>
+        <div class="weapon-heat" id="missile-heat">READY</div>
+      </div>
+      <div class="weapon-group">
+        <div class="weapon-name">Ballistic</div>
+        <div class="weapon-ammo" id="ballistic-ammo">2400</div>
+        <div class="weapon-bar"><div class="weapon-bar-fill" id="ballistic-bar" style="width:100%"></div></div>
+        <div class="weapon-heat" id="ballistic-heat">HEAT 0%</div>
+      </div>
+    </div>
+
+    <div id="gunner-shield-panel">
+      <div class="gs-row">
+        <span class="gs-label">Shield</span>
+        <div class="gs-bar"><div class="gs-bar-fill shield" id="gs-shield-fill" style="width:85%"></div></div>
+        <span class="gs-val" id="gs-shield-val">85%</span>
+      </div>
+      <div class="gs-row">
+        <span class="gs-label">Hull</span>
+        <div class="gs-bar"><div class="gs-bar-fill hull" id="gs-hull-fill" style="width:100%"></div></div>
+        <span class="gs-val" id="gs-hull-val">100%</span>
+      </div>
+    </div>
+
+    <div id="gunner-target-panel">
+      <div class="gt-label">Target Lock</div>
+      <div class="gt-name" id="gt-name">No Target</div>
+      <div class="gt-dist" id="gt-dist">&mdash;</div>
+    </div>
+
+    <div id="mode-hint">Press <kbd>F</kbd> to exit &bull; <kbd>LMB</kbd> to fire</div>
   </div>
 
   <!-- Three.js + OrbitControls from CDN -->
@@ -424,6 +658,24 @@
     let activeEvents = [];
     let wallet = { ec: 12450, sm: 35, eden: 2.7 };
 
+    // ─── Gunner Mode State ────────────────────────────────────────────
+    let gunnerMode = false;
+    let gunnerYaw = 0, gunnerPitch = 0;
+    const GUNNER_SENSITIVITY = 0.002;
+    const GUNNER_MAX_YAW = 1.5;      // ~86°
+    const GUNNER_MAX_PITCH = 1.2;    // ~69°
+    const GUNNER_FOV = 75;
+    const NAV_FOV = 60;
+    let cockpitGroup = null;
+    let playerShipGroup = null;
+    let turretMountPoint = null;
+    let savedCameraState = null;
+
+    // Weapon simulation state
+    let laserHeat = 0;
+    let missileCount = 24;
+    let ballisticAmmo = 2400;
+
     function clearSystem() {
       if (starMesh) { scene.remove(starMesh); starMesh = null; }
       if (starLight) { scene.remove(starLight); starLight = null; }
@@ -493,6 +745,303 @@
       });
 
       updateSystemPanel(sys);
+    }
+
+    // ─── Placeholder Vector Ship ──────────────────────────────────────
+    function buildPlaceholderShip() {
+      const group = new THREE.Group();
+      group.name = 'placeholder-ship';
+
+      const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
+      const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.3, metalness: 0.6, emissive: 0x44aaff, emissiveIntensity: 0.3 });
+      const canopyMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35 });
+      const gunMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4, metalness: 0.7 });
+
+      // Main hull
+      group.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(3, 1, 10), hullMat), { name: 'hull' }));
+
+      // Nose cone
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(1.5, 4, 4), hullMat);
+      nose.rotation.x = Math.PI / 2;
+      nose.position.z = -7;
+      group.add(nose);
+
+      // Wings
+      const wingGeo = new THREE.BoxGeometry(8, 0.15, 4);
+      const wingL = new THREE.Mesh(wingGeo, hullMat);
+      wingL.position.set(-4.5, 0, 1); wingL.rotation.z = -0.08;
+      group.add(wingL);
+      const wingR = new THREE.Mesh(wingGeo, hullMat);
+      wingR.position.set(4.5, 0, 1); wingR.rotation.z = 0.08;
+      group.add(wingR);
+
+      // Wing tip fins
+      const finGeo = new THREE.BoxGeometry(0.15, 1.5, 2);
+      const finL = new THREE.Mesh(finGeo, accentMat);
+      finL.position.set(-8.4, 0.6, 1);
+      group.add(finL);
+      const finR = new THREE.Mesh(finGeo, accentMat);
+      finR.position.set(8.4, 0.6, 1);
+      group.add(finR);
+
+      // Tail fins
+      const tailGeo = new THREE.BoxGeometry(0.15, 2, 2.5);
+      const tailL = new THREE.Mesh(tailGeo, hullMat);
+      tailL.position.set(-1.2, 1.2, 4.5); tailL.rotation.z = 0.15;
+      group.add(tailL);
+      const tailR = new THREE.Mesh(tailGeo, hullMat);
+      tailR.position.set(1.2, 1.2, 4.5); tailR.rotation.z = -0.15;
+      group.add(tailR);
+
+      // Engines
+      const engGeo = new THREE.CylinderGeometry(0.5, 0.7, 2, 8);
+      const engL = new THREE.Mesh(engGeo, accentMat);
+      engL.rotation.x = Math.PI / 2; engL.position.set(-1, -0.2, 5.5);
+      group.add(engL);
+      const engR = new THREE.Mesh(engGeo, accentMat);
+      engR.rotation.x = Math.PI / 2; engR.position.set(1, -0.2, 5.5);
+      group.add(engR);
+
+      // Engine glow
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7 });
+      const glowGeo = new THREE.CircleGeometry(0.65, 16);
+      const glowL = new THREE.Mesh(glowGeo, glowMat);
+      glowL.position.set(-1, -0.2, 6.51);
+      group.add(glowL);
+      const glowR = new THREE.Mesh(glowGeo, glowMat);
+      glowR.position.set(1, -0.2, 6.51);
+      group.add(glowR);
+
+      // Cockpit canopy
+      const canopy = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), canopyMat);
+      canopy.position.set(0, 0.5, -3);
+      group.add(canopy);
+
+      // Gun turret base
+      const turretBase = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 0.4, 8), gunMat);
+      turretBase.position.set(0, 0.8, -1);
+      group.add(turretBase);
+
+      // Gun barrels
+      const barrelGeo = new THREE.CylinderGeometry(0.08, 0.08, 3, 6);
+      const barrelL = new THREE.Mesh(barrelGeo, gunMat);
+      barrelL.rotation.x = Math.PI / 2; barrelL.position.set(-0.25, 0.95, -2.5);
+      group.add(barrelL);
+      const barrelR = new THREE.Mesh(barrelGeo, gunMat);
+      barrelR.rotation.x = Math.PI / 2; barrelR.position.set(0.25, 0.95, -2.5);
+      group.add(barrelR);
+
+      // Turret mount point (for camera)
+      const turretMount = new THREE.Object3D();
+      turretMount.name = 'turret-mount';
+      turretMount.position.set(0, 1.2, -0.5);
+      group.add(turretMount);
+
+      return { group, turretMount };
+    }
+
+    // ─── Cockpit Interior (attached to camera in gunner mode) ─────────
+    function buildCockpitInterior() {
+      const cockpit = new THREE.Group();
+      cockpit.name = 'gunner-cockpit';
+
+      // Glass canopy dome
+      const canopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
+      const canopyGeo = new THREE.SphereGeometry(3.0, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.6);
+      const canopyMesh = new THREE.Mesh(canopyGeo, canopyMat);
+      canopyMesh.position.set(0, 0, -2.5);
+      canopyMesh.rotation.x = Math.PI;
+      cockpit.add(canopyMesh);
+
+      // Frame struts
+      const frameMat = new THREE.MeshBasicMaterial({ color: 0x334466, transparent: true, opacity: 0.5 });
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 3.5, 4), frameMat);
+        strut.position.set(Math.sin(angle) * 2.8, Math.cos(angle) * 2.0, -3.0);
+        strut.rotation.x = Math.PI * 0.3;
+        strut.rotation.z = angle;
+        cockpit.add(strut);
+      }
+
+      // Gun barrels (visible at bottom of FOV)
+      const gunMat = new THREE.MeshBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.8 });
+      const barrelGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.5, 6);
+      const barrelL = new THREE.Mesh(barrelGeo, gunMat);
+      barrelL.rotation.x = Math.PI / 2; barrelL.position.set(-0.18, -0.55, -2.0);
+      cockpit.add(barrelL);
+      const barrelR = new THREE.Mesh(barrelGeo, gunMat);
+      barrelR.rotation.x = Math.PI / 2; barrelR.position.set(0.18, -0.55, -2.0);
+      cockpit.add(barrelR);
+
+      // Muzzle rings
+      const muzzleMat = new THREE.MeshBasicMaterial({ color: 0x66aaff, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+      const muzzleGeo = new THREE.RingGeometry(0.03, 0.06, 8);
+      const muzzleL = new THREE.Mesh(muzzleGeo, muzzleMat);
+      muzzleL.position.set(-0.18, -0.55, -3.3);
+      cockpit.add(muzzleL);
+      const muzzleR = new THREE.Mesh(muzzleGeo, muzzleMat);
+      muzzleR.position.set(0.18, -0.55, -3.3);
+      cockpit.add(muzzleR);
+
+      // Gun mounting bracket
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.5), gunMat);
+      bracket.position.set(0, -0.6, -0.8);
+      cockpit.add(bracket);
+
+      // Vertical supports
+      const suppGeo = new THREE.BoxGeometry(0.06, 0.4, 0.06);
+      const suppL = new THREE.Mesh(suppGeo, gunMat);
+      suppL.position.set(-0.35, -0.4, -0.8);
+      cockpit.add(suppL);
+      const suppR = new THREE.Mesh(suppGeo, gunMat);
+      suppR.position.set(0.35, -0.4, -0.8);
+      cockpit.add(suppR);
+
+      // Side instrument panels
+      const panelMat = new THREE.MeshBasicMaterial({ color: 0x1a2a3a, transparent: true, opacity: 0.6 });
+      const panelGeo = new THREE.BoxGeometry(0.04, 0.8, 1.2);
+      const panelL = new THREE.Mesh(panelGeo, panelMat);
+      panelL.position.set(-1.3, -0.2, -1.0); panelL.rotation.y = 0.3;
+      cockpit.add(panelL);
+      const panelR = new THREE.Mesh(panelGeo, panelMat);
+      panelR.position.set(1.3, -0.2, -1.0); panelR.rotation.y = -0.3;
+      cockpit.add(panelR);
+
+      // Panel glow strips
+      const stripMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.4 });
+      const stripGeo = new THREE.BoxGeometry(0.01, 0.05, 0.8);
+      const stripL = new THREE.Mesh(stripGeo, stripMat);
+      stripL.position.set(-1.28, 0.0, -1.0); stripL.rotation.y = 0.3;
+      cockpit.add(stripL);
+      const stripR = new THREE.Mesh(stripGeo, stripMat);
+      stripR.position.set(1.28, 0.0, -1.0); stripR.rotation.y = -0.3;
+      cockpit.add(stripR);
+
+      // Bottom console
+      const consoleMat = new THREE.MeshBasicMaterial({ color: 0x0a1520, transparent: true, opacity: 0.7 });
+      const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.0), consoleMat);
+      consoleMesh.position.set(0, -0.75, -1.2); consoleMesh.rotation.x = -0.2;
+      cockpit.add(consoleMesh);
+
+      // Console indicator dots
+      const dotGeo = new THREE.CircleGeometry(0.015, 8);
+      const dotColors = [0x44ff88, 0xff4444, 0x44aaff, 0xffaa00];
+      for (let i = 0; i < 8; i++) {
+        const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: dotColors[i % 4] }));
+        dot.position.set(-0.5 + i * 0.14, -0.71, -1.0);
+        dot.rotation.x = -0.2;
+        cockpit.add(dot);
+      }
+
+      return cockpit;
+    }
+
+    // ─── Gunner Mode Toggle ──────────────────────────────────────────
+    function enterGunnerMode() {
+      if (gunnerMode) return;
+      gunnerMode = true;
+      gunnerYaw = 0;
+      gunnerPitch = 0;
+
+      // Save camera state
+      savedCameraState = {
+        fov: camera.fov,
+        position: camera.position.clone(),
+        rotation: camera.rotation.clone(),
+      };
+
+      // Set gunner FOV
+      camera.fov = GUNNER_FOV;
+      camera.updateProjectionMatrix();
+
+      // Build cockpit if needed
+      if (!cockpitGroup) {
+        cockpitGroup = buildCockpitInterior();
+      }
+      camera.add(cockpitGroup);
+
+      // Disable orbit controls
+      controls.enabled = false;
+      controls.autoRotate = false;
+
+      // Show gunner HUD, hide nav HUD
+      document.getElementById('gunner-hud').classList.add('active');
+      document.getElementById('hud').style.display = 'none';
+
+      // Request pointer lock
+      canvas.requestPointerLock();
+
+      console.log('[Gunner] Entered gunner mode.');
+    }
+
+    function exitGunnerMode() {
+      if (!gunnerMode) return;
+      gunnerMode = false;
+
+      // Remove cockpit from camera
+      if (cockpitGroup) {
+        camera.remove(cockpitGroup);
+      }
+
+      // Restore camera
+      if (savedCameraState) {
+        camera.fov = savedCameraState.fov;
+        camera.updateProjectionMatrix();
+        camera.position.copy(savedCameraState.position);
+        camera.rotation.copy(savedCameraState.rotation);
+      }
+      savedCameraState = null;
+
+      // Re-enable orbit controls
+      controls.enabled = true;
+      controls.autoRotate = true;
+
+      // Show nav HUD, hide gunner HUD
+      document.getElementById('gunner-hud').classList.remove('active');
+      document.getElementById('hud').style.display = '';
+
+      // Release pointer lock
+      document.exitPointerLock();
+
+      console.log('[Gunner] Exited gunner mode.');
+    }
+
+    function toggleGunnerMode() {
+      if (gunnerMode) exitGunnerMode();
+      else enterGunnerMode();
+    }
+
+    // Pointer lock mouse handler for gunner look
+    document.addEventListener('mousemove', (e) => {
+      if (!gunnerMode) return;
+      if (!document.pointerLockElement) return;
+
+      gunnerYaw   += e.movementX * GUNNER_SENSITIVITY;
+      gunnerPitch += e.movementY * GUNNER_SENSITIVITY;
+
+      gunnerYaw   = Math.max(-GUNNER_MAX_YAW,   Math.min(GUNNER_MAX_YAW,   gunnerYaw));
+      gunnerPitch = Math.max(-GUNNER_MAX_PITCH, Math.min(GUNNER_MAX_PITCH, gunnerPitch));
+    });
+
+    // Gunner fire simulation
+    canvas.addEventListener('mousedown', (e) => {
+      if (!gunnerMode) return;
+      if (e.button === 0) {
+        // Simulate laser fire — increase heat
+        laserHeat = Math.min(100, laserHeat + 15);
+        updateGunnerHUD();
+      }
+    });
+
+    // Update gunner weapon HUD
+    function updateGunnerHUD() {
+      document.getElementById('laser-heat').textContent = `HEAT ${Math.round(laserHeat)}%`;
+      document.getElementById('laser-bar').style.width = `${100 - laserHeat}%`;
+      document.getElementById('missile-ammo').textContent = missileCount;
+      document.getElementById('missile-bar').style.width = `${(missileCount / 24) * 100}%`;
+      document.getElementById('ballistic-ammo').textContent = ballisticAmmo;
+      document.getElementById('ballistic-bar').style.width = `${(ballisticAmmo / 2400) * 100}%`;
     }
 
     // ─── Soul Shard Particles ─────────────────────────────────────────
@@ -640,7 +1189,11 @@
 
     // ─── Key handler ──────────────────────────────────────────────────
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        toggleGunnerMode();
+      }
       if (e.key === 'g' || e.key === 'G') {
+        if (gunnerMode) return; // don't regenerate while in gunner
         const seed = 'system-' + Date.now();
         const sys = generateSystem(seed);
         buildSystem(sys);
@@ -668,6 +1221,14 @@
     const initSys = generateSystem('aethon-prime');
     buildSystem(initSys);
     loadFill.style.width = '80%';
+
+    // Build placeholder player ship and add to scene
+    const shipData = buildPlaceholderShip();
+    playerShipGroup = shipData.group;
+    turretMountPoint = shipData.turretMount;
+    playerShipGroup.position.set(15, 3, 20);
+    playerShipGroup.rotation.y = -0.5;
+    scene.add(playerShipGroup);
 
     currentGenome = generateGenome(mulberry32(hashSeed('player-genome')));
     updateGenomePanel(currentGenome);
@@ -708,6 +1269,36 @@
         starMesh.scale.set(s, s, s);
       }
 
+      // Gentle ship drift (placeholder ship bobs slowly)
+      if (playerShipGroup) {
+        playerShipGroup.position.y = 3 + Math.sin(elapsed * 0.5) * 0.3;
+        playerShipGroup.rotation.z = Math.sin(elapsed * 0.3) * 0.02;
+      }
+
+      // ── Gunner mode camera update ──────────────────────────────────
+      if (gunnerMode && turretMountPoint) {
+        // Position camera at turret mount world position
+        const worldPos = new THREE.Vector3();
+        turretMountPoint.getWorldPosition(worldPos);
+        camera.position.copy(worldPos);
+
+        // Get ship's world orientation
+        const shipQuat = new THREE.Quaternion();
+        playerShipGroup.getWorldQuaternion(shipQuat);
+
+        // Apply mouse look on top of ship orientation
+        const lookEuler = new THREE.Euler(-gunnerPitch, -gunnerYaw, 0, 'YXZ');
+        const lookQuat = new THREE.Quaternion().setFromEuler(lookEuler);
+
+        camera.quaternion.copy(shipQuat).multiply(lookQuat);
+
+        // Cool down laser heat over time
+        if (laserHeat > 0) {
+          laserHeat = Math.max(0, laserHeat - delta * 12);
+          updateGunnerHUD();
+        }
+      }
+
       // Soul shard particles
       if (shardParticles && shardLife > 0) {
         shardLife -= delta;
@@ -741,7 +1332,7 @@
         updateWallet();
       }
 
-      controls.update();
+      if (!gunnerMode) controls.update();
       renderer.render(scene, camera);
     }
 
