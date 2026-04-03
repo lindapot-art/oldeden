@@ -4,6 +4,10 @@
 
 **Old Eden** is an ambitious, blockchain-native, AI-driven massively multiplayer online space game that fuses EVE Online's deep economy and exploration, The Sims' life simulation, Counter-Strike's tactical combat, StarCraft's strategic depth, Civilization's long-arc progression, Spore's procedural evolution, and Second Life's open virtual world — all wrapped in a unique **Rebirth System** where death is not an ending but a transformation.
 
+### 🎮 [Play the Staging Demo](https://lindapot-art.github.io/oldeden/)
+
+> Interactive 3D prototype with procedural star systems, genome viewer, rebirth lottery, world events, and soul fracture effects.
+
 ---
 
 ## Table of Contents
@@ -281,6 +285,8 @@ oldeden/
 │   ├── rebirth-system.md
 │   ├── blockchain-integration.md
 │   └── roadmap.md
+├── public/                     # Staging demo (GitHub Pages)
+│   └── index.html              # Interactive 3D prototype
 ├── package.json
 └── .env.example
 ```

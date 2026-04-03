@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Old Eden — Staging Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #c8d6e5;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+    /* HUD overlay */
+    #hud {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10; pointer-events: none;
+    }
+    #hud > * { pointer-events: auto; }
+
+    /* Title bar */
+    #title-bar {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      text-align: center;
+    }
+    #title-bar h1 {
+      font-size: 2rem; font-weight: 300; letter-spacing: 0.3em;
+      color: #fff; text-shadow: 0 0 30px rgba(100,200,255,0.5);
+    }
+    #title-bar .subtitle {
+      font-size: 0.8rem; letter-spacing: 0.15em; color: #6ab0de;
+      margin-top: 4px;
+    }
+
+    /* Panels */
+    .panel {
+      background: rgba(5, 10, 25, 0.85);
+      border: 1px solid rgba(100, 180, 255, 0.15);
+      border-radius: 8px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(100,180,255,0.08);
+    }
+    .panel h2 {
+      font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #6ab0de; margin-bottom: 10px; font-weight: 600;
+    }
+
+    /* Left sidebar — star system info */
+    #system-panel {
+      position: absolute; top: 80px; left: 20px; width: 280px;
+    }
+    .star-info { margin-bottom: 8px; }
+    .star-name { font-size: 1.1rem; color: #fff; font-weight: 500; }
+    .star-class { font-size: 0.75rem; color: #88a; }
+    .planet-list { list-style: none; max-height: 180px; overflow-y: auto; }
+    .planet-list li {
+      padding: 6px 0; border-bottom: 1px solid rgba(100,180,255,0.08);
+      font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
+    }
+    .planet-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .planet-name { color: #e0e6ed; }
+    .planet-biome { color: #6a7; font-size: 0.7rem; }
+
+    /* Right sidebar — genome viewer */
+    #genome-panel {
+      position: absolute; top: 80px; right: 20px; width: 280px;
+    }
+    .genome-bars { display: flex; flex-direction: column; gap: 4px; }
+    .genome-row {
+      display: flex; align-items: center; gap: 8px; font-size: 0.75rem;
+    }
+    .genome-label { width: 70px; text-align: right; color: #88a; flex-shrink: 0; }
+    .genome-bar-bg {
+      flex: 1; height: 8px; background: rgba(100,180,255,0.1);
+      border-radius: 4px; overflow: hidden;
+    }
+    .genome-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .genome-val { width: 30px; font-size: 0.65rem; color: #6ab0de; }
+
+    /* Bottom bar — world events */
+    #events-bar {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; max-width: 90vw; overflow-x: auto;
+    }
+    .event-card {
+      background: rgba(5, 10, 25, 0.85);
+      border: 1px solid rgba(255, 180, 60, 0.2);
+      border-radius: 8px; padding: 10px 16px;
+      backdrop-filter: blur(8px); white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      min-width: 180px;
+    }
+    .event-card.active { border-color: rgba(255, 100, 60, 0.5); }
+    .event-name { font-size: 0.8rem; color: #ffb848; font-weight: 600; }
+    .event-timer { font-size: 0.65rem; color: #88a; margin-top: 2px; }
+    .event-desc { font-size: 0.7rem; color: #aab; margin-top: 4px; }
+
+    /* Bottom-left — economy stats */
+    #economy-panel {
+      position: absolute; bottom: 20px; left: 20px;
+    }
+    .currency-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 4px; font-size: 0.8rem;
+    }
+    .currency-icon { font-size: 1rem; }
+    .currency-name { color: #88a; width: 40px; }
+    .currency-val { color: #fff; font-weight: 500; }
+
+    /* Bottom-right — controls hint */
+    #controls-hint {
+      position: absolute; bottom: 20px; right: 20px;
+      font-size: 0.7rem; color: #556; text-align: right;
+    }
+
+    /* NPC panel */
+    #npc-panel {
+      position: absolute; top: 380px; left: 20px; width: 280px;
+    }
+    .npc-stat {
+      display: flex; justify-content: space-between;
+      font-size: 0.8rem; padding: 3px 0;
+    }
+    .npc-stat .label { color: #88a; }
+    .npc-stat .val { color: #fff; font-weight: 500; }
+
+    /* Rebirth button */
+    #rebirth-btn {
+      position: absolute; top: 380px; right: 20px; width: 280px;
+      cursor: pointer; text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    #rebirth-btn:hover {
+      border-color: rgba(200, 100, 255, 0.5);
+      box-shadow: 0 0 20px rgba(200, 100, 255, 0.15);
+    }
+    #rebirth-btn .big-text {
+      font-size: 1.1rem; color: #c88eff; font-weight: 600; margin: 8px 0;
+    }
+    #rebirth-btn .hint { font-size: 0.7rem; color: #88a; }
+    .rebirth-result {
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid rgba(200,100,255,0.2);
+      font-size: 0.75rem; color: #c8d6e5;
+    }
+    .rebirth-result .npc-name { color: #c88eff; font-weight: 600; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(100,180,255,0.2); border-radius: 2px; }
+
+    /* Loading screen */
+    #loading {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; z-index: 100;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 0.8s ease;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading h1 {
+      font-size: 2.5rem; font-weight: 200; letter-spacing: 0.4em;
+      color: #fff; margin-bottom: 20px;
+    }
+    .loading-bar {
+      width: 200px; height: 2px; background: rgba(100,180,255,0.2);
+      border-radius: 1px; overflow: hidden;
+    }
+    .loading-fill {
+      height: 100%; width: 0%; background: #6ab0de;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <!-- Loading screen -->
+  <div id="loading">
+    <h1>OLD EDEN</h1>
+    <div class="loading-bar"><div class="loading-fill" id="load-fill"></div></div>
+  </div>
+
+  <!-- HUD overlay -->
+  <div id="hud" style="display:none;">
+    <div id="title-bar">
+      <h1>OLD EDEN</h1>
+      <div class="subtitle">STAGING DEMO &mdash; PROTOTYPE BUILD</div>
+    </div>
+
+    <div id="system-panel" class="panel">
+      <h2>&#9733; Star System</h2>
+      <div id="star-info"></div>
+      <ul class="planet-list" id="planet-list"></ul>
+    </div>
+
+    <div id="genome-panel" class="panel">
+      <h2>&#9879; Genome Viewer</h2>
+      <div class="genome-bars" id="genome-bars"></div>
+    </div>
+
+    <div id="npc-panel" class="panel">
+      <h2>&#9823; Population</h2>
+      <div id="npc-stats"></div>
+    </div>
+
+    <div id="rebirth-btn" class="panel" onclick="doRebirth()">
+      <h2>&#8635; Rebirth Lottery</h2>
+      <div class="big-text">ENTER THE CYCLE</div>
+      <div class="hint">Click to roll the rebirth lottery</div>
+      <div id="rebirth-result"></div>
+    </div>
+
+    <div id="events-bar"></div>
+
+    <div id="economy-panel" class="panel">
+      <h2>&#9733; Wallet</h2>
+      <div class="currency-row"><span class="currency-icon">&#9672;</span><span class="currency-name">EC</span><span class="currency-val" id="ec-val">0</span></div>
+      <div class="currency-row"><span class="currency-icon">&#9670;</span><span class="currency-name">SM</span><span class="currency-val" id="sm-val">0</span></div>
+      <div class="currency-row"><span class="currency-icon">&#9651;</span><span class="currency-name">EDEN</span><span class="currency-val" id="eden-val">0</span></div>
+    </div>
+
+    <div id="controls-hint">
+      Drag to orbit &bull; Scroll to zoom<br/>
+      Click star to explore &bull; Press <b>G</b> to generate new system
+    </div>
+  </div>
+
+  <!-- Three.js + OrbitControls from CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ─── Seeded RNG (simplified seedrandom) ───────────────────────────
+    function mulberry32(seed) {
+      let t = seed | 0;
+      return function () {
+        t = (t + 0x6D2B79F5) | 0;
+        let x = Math.imul(t ^ (t >>> 15), 1 | t);
+        x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function hashSeed(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+      }
+      return h;
+    }
+
+    // ─── Procedural Star System Generator (port from backend) ─────────
+    const STAR_TYPES = [
+      { name: 'M-class Red Dwarf', color: 0xff4422, chance: 0.73, tempK: 3200 },
+      { name: 'K-class Orange',    color: 0xff8844, chance: 0.12, tempK: 4500 },
+      { name: 'G-class Yellow',    color: 0xffdd44, chance: 0.07, tempK: 5800 },
+      { name: 'F-class White',     color: 0xffffff, chance: 0.03, tempK: 6800 },
+      { name: 'A-class Blue-White',color: 0xaaccff, chance: 0.006, tempK: 8500 },
+      { name: 'Neutron Star',      color: 0x88ddff, chance: 0.002, tempK: 600000 },
+      { name: 'Black Hole',        color: 0x220033, chance: 0.001, tempK: 0 },
+      { name: 'Binary System',     color: 0xffcc88, chance: 0.02, tempK: 5000 },
+    ];
+
+    const BIOMES = ['Barren', 'Volcanic', 'Frozen', 'Oceanic', 'Desert', 'Jungle', 'Gaseous', 'Crystalline', 'Toxic Swamp', 'Fungal'];
+    const HAZARDS = ['Radiation Belt', 'Asteroid Field', 'Pirate Territory', 'Anomaly', 'Toxic Atmosphere', 'Ion Storm'];
+    const FIRST_NAMES = ['Aria','Kael','Zora','Thane','Nova','Drex','Lyra','Bask','Juno','Vex','Cael','Mira','Fenn','Io','Rex','Sol','Tyr','Yuki','Zed','Pax'];
+    const LAST_NAMES = ['Voidwalker','Starfire','Ashborn','Ironhelm','Nightshade','Dawnbreak','Frostbane','Sunforge','Deepwell','Stormrider'];
+    const SYSTEM_NAMES = ['Aethon','Byzantis','Cygnar','Drakon','Elysia','Forthen','Glacis','Helix','Ionis','Jothar','Kaldis','Lyrium','Morphea','Nexar','Orythia','Pyxis','Quilon','Rhexis','Solara','Typhon','Ulnar','Vortis','Wyrmis','Xenith','Yggdra','Zephon'];
+
+    function pickStar(rng) {
+      let r = rng(), cumul = 0;
+      for (const s of STAR_TYPES) {
+        cumul += s.chance;
+        if (r <= cumul) return s;
+      }
+      return STAR_TYPES[0];
+    }
+
+    function generateSystem(seed) {
+      const rng = mulberry32(hashSeed(seed));
+      const star = pickStar(rng);
+      const sysName = SYSTEM_NAMES[Math.floor(rng() * SYSTEM_NAMES.length)] + '-' + Math.floor(rng() * 999);
+      const planetCount = 1 + Math.floor(rng() * 8);
+      const planets = [];
+      for (let i = 0; i < planetCount; i++) {
+        const biome = BIOMES[Math.floor(rng() * BIOMES.length)];
+        const radius = 0.3 + rng() * 2.5;
+        const orbitRadius = 3 + i * (2 + rng() * 3);
+        const gravity = 0.1 + rng() * 3.0;
+        const hasLife = rng() < 0.15;
+        const hazards = [];
+        if (rng() < 0.3) hazards.push(HAZARDS[Math.floor(rng() * HAZARDS.length)]);
+        planets.push({ name: `${sysName}-${String.fromCharCode(98 + i)}`, biome, radius, orbitRadius, gravity, hasLife, hazards });
+      }
+      return { name: sysName, star, planets, seed };
+    }
+
+    // ─── Genome Generator (port from backend) ─────────────────────────
+    const TRAITS = [
+      { name: 'Height',   idx: 0,   color: '#6ab0de' },
+      { name: 'Build',    idx: 1,   color: '#6ab0de' },
+      { name: 'Lifespan', idx: 3,   color: '#58d68d' },
+      { name: 'Combat',   idx: 32,  color: '#e74c3c' },
+      { name: 'Piloting', idx: 33,  color: '#f39c12' },
+      { name: 'Engineer', idx: 34,  color: '#f39c12' },
+      { name: 'Trade',    idx: 35,  color: '#f1c40f' },
+      { name: 'Science',  idx: 36,  color: '#9b59b6' },
+      { name: 'Stealth',  idx: 38,  color: '#34495e' },
+      { name: 'Aggress.',idx: 64,  color: '#e74c3c' },
+      { name: 'Empathy',  idx: 65,  color: '#3498db' },
+      { name: 'Curiosity',idx: 66,  color: '#9b59b6' },
+      { name: 'Rad Res.', idx: 96,  color: '#2ecc71' },
+    ];
+
+    function generateGenome(rng) {
+      const g = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) g[i] = Math.floor(rng() * 256);
+      return g;
+    }
+
+    // ─── NPC Pool (simplified) ────────────────────────────────────────
+    function generateNPCs(count, rng) {
+      const npcs = [];
+      for (let i = 0; i < count; i++) {
+        const first = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
+        const last = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)];
+        const genome = generateGenome(rng);
+        const age = 18 + Math.floor(rng() * 70);
+        const credits = Math.floor(rng() * 100000);
+        const skills = { combat: rng(), piloting: rng(), trade: rng(), science: rng() };
+        const statusScore = 0.35 * (credits / 100000) + 0.35 * ((skills.combat + skills.piloting + skills.trade + skills.science) / 4) + 0.15 * (age / 90) + 0.15 * rng();
+        npcs.push({ id: `npc-${i}`, name: `${first} ${last}`, genome, age, credits, skills, statusScore, isActive: rng() > 0.05 });
+      }
+      return npcs;
+    }
+
+    // ─── World Events (port from AIDirector) ──────────────────────────
+    const EVENT_TYPES = [
+      { name: 'Solar Flare',       icon: '☀',  color: '#ff6633', desc: '3× radiation spike in affected sectors', durationSec: 120 },
+      { name: 'Pirate Invasion',   icon: '☠',  color: '#ff3333', desc: 'Enemy waves in trade routes',          durationSec: 180 },
+      { name: 'Trade Disruption',  icon: '📉', color: '#ffaa33', desc: '-30% exchange rates',                  durationSec: 300 },
+      { name: 'Alien Anomaly',     icon: '👁',  color: '#aa66ff', desc: '2× exploration rewards',               durationSec: 180 },
+      { name: 'Resource Boom',     icon: '💎', color: '#33ff99', desc: '+50% EC earnings',                     durationSec: 240 },
+      { name: 'Soul Fracture Event',icon: '💀', color: '#cc66ff', desc: 'Shard hunt — collect fragments!',      durationSec: 90  },
+    ];
+
+    // ─── Three.js Scene ───────────────────────────────────────────────
+    const canvas = document.getElementById('canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000008, 0.0004);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50000);
+    camera.position.set(0, 25, 45);
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 5;
+    controls.maxDistance = 200;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.3;
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x112244, 0.6));
+
+    // ─── Starfield Background ─────────────────────────────────────────
+    function createStarfield() {
+      const count = 8000;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+      const rng = mulberry32(42);
+      for (let i = 0; i < count; i++) {
+        const r = 200 + rng() * 800;
+        const theta = rng() * Math.PI * 2;
+        const phi = Math.acos(2 * rng() - 1);
+        positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+        const t = rng();
+        colors[i * 3]     = 0.7 + t * 0.3;
+        colors[i * 3 + 1] = 0.7 + (1 - t) * 0.3;
+        colors[i * 3 + 2] = 0.9 + rng() * 0.1;
+        sizes[i] = 0.3 + rng() * 1.2;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+      const mat = new THREE.PointsMaterial({ size: 0.8, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.8 });
+      return new THREE.Points(geo, mat);
+    }
+    scene.add(createStarfield());
+
+    // ─── Scene Objects ────────────────────────────────────────────────
+    let starMesh, planetMeshes = [], orbitLines = [], starLight;
+    let currentSystem = null;
+    let currentGenome = null;
+    let npcPool = [];
+    let activeEvents = [];
+    let wallet = { ec: 12450, sm: 35, eden: 2.7 };
+
+    function clearSystem() {
+      if (starMesh) { scene.remove(starMesh); starMesh = null; }
+      if (starLight) { scene.remove(starLight); starLight = null; }
+      planetMeshes.forEach(m => scene.remove(m));
+      planetMeshes = [];
+      orbitLines.forEach(l => scene.remove(l));
+      orbitLines = [];
+    }
+
+    function buildSystem(sys) {
+      clearSystem();
+      currentSystem = sys;
+
+      // Star
+      const starColor = new THREE.Color(sys.star.color);
+      const starGeo = new THREE.SphereGeometry(2, 48, 48);
+      const starMat = new THREE.MeshBasicMaterial({ color: starColor });
+      starMesh = new THREE.Mesh(starGeo, starMat);
+      scene.add(starMesh);
+
+      // Star glow
+      const glowGeo = new THREE.SphereGeometry(2.8, 32, 32);
+      const glowMat = new THREE.MeshBasicMaterial({ color: starColor, transparent: true, opacity: 0.15 });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      starMesh.add(glow);
+
+      // Point light from star
+      starLight = new THREE.PointLight(sys.star.color, 3, 100);
+      scene.add(starLight);
+
+      // Planets
+      const biomeColors = {
+        'Barren': 0x888888, 'Volcanic': 0xff4411, 'Frozen': 0xaaddff,
+        'Oceanic': 0x2266cc, 'Desert': 0xddaa55, 'Jungle': 0x227733,
+        'Gaseous': 0xdd8844, 'Crystalline': 0xcc66ff, 'Toxic Swamp': 0x66aa33,
+        'Fungal': 0xaa5588,
+      };
+
+      sys.planets.forEach((p, i) => {
+        const pGeo = new THREE.SphereGeometry(p.radius * 0.4, 32, 32);
+        const pMat = new THREE.MeshStandardMaterial({
+          color: biomeColors[p.biome] || 0x666666,
+          roughness: 0.7,
+          metalness: 0.1,
+        });
+        const pMesh = new THREE.Mesh(pGeo, pMat);
+        pMesh.userData = { planet: p, orbitRadius: p.orbitRadius, orbitSpeed: 0.2 / (i + 1), phase: Math.random() * Math.PI * 2 };
+        scene.add(pMesh);
+        planetMeshes.push(pMesh);
+
+        // Orbit ring
+        const orbitGeo = new THREE.RingGeometry(p.orbitRadius - 0.02, p.orbitRadius + 0.02, 128);
+        const orbitMat = new THREE.MeshBasicMaterial({ color: 0x223355, side: THREE.DoubleSide, transparent: true, opacity: 0.2 });
+        const orbitMesh = new THREE.Mesh(orbitGeo, orbitMat);
+        orbitMesh.rotation.x = -Math.PI / 2;
+        scene.add(orbitMesh);
+        orbitLines.push(orbitMesh);
+
+        // Ring for gas giants
+        if (p.biome === 'Gaseous' && p.radius > 1.5) {
+          const ringGeo = new THREE.RingGeometry(p.radius * 0.5, p.radius * 0.8, 64);
+          const ringMat = new THREE.MeshBasicMaterial({ color: biomeColors[p.biome], side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = Math.PI / 2.5;
+          pMesh.add(ring);
+        }
+      });
+
+      updateSystemPanel(sys);
+    }
+
+    // ─── Soul Shard Particles ─────────────────────────────────────────
+    let shardParticles = null;
+    let shardLife = 0;
+
+    function spawnShards(position) {
+      if (shardParticles) scene.remove(shardParticles);
+      const count = 200;
+      const positions = new Float32Array(count * 3);
+      const velocities = [];
+      for (let i = 0; i < count; i++) {
+        positions[i * 3]     = position.x;
+        positions[i * 3 + 1] = position.y;
+        positions[i * 3 + 2] = position.z;
+        velocities.push(new THREE.Vector3((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2));
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ color: 0xcc66ff, size: 0.3, transparent: true, opacity: 1.0 });
+      shardParticles = new THREE.Points(geo, mat);
+      shardParticles.userData.velocities = velocities;
+      scene.add(shardParticles);
+      shardLife = 3.0;
+    }
+
+    // ─── HUD Updates ──────────────────────────────────────────────────
+    function updateSystemPanel(sys) {
+      document.getElementById('star-info').innerHTML =
+        `<div class="star-name">${sys.name}</div>` +
+        `<div class="star-class">${sys.star.name} — ${sys.star.tempK > 0 ? sys.star.tempK + 'K' : 'Singularity'}</div>`;
+      const list = document.getElementById('planet-list');
+      list.innerHTML = sys.planets.map(p => {
+        const biomeColors = {
+          'Barren': '#888', 'Volcanic': '#f41', 'Frozen': '#adf',
+          'Oceanic': '#26c', 'Desert': '#da5', 'Jungle': '#273',
+          'Gaseous': '#d84', 'Crystalline': '#c6f', 'Toxic Swamp': '#6a3', 'Fungal': '#a58',
+        };
+        return `<li>
+          <span class="planet-dot" style="background:${biomeColors[p.biome] || '#666'}"></span>
+          <span>
+            <span class="planet-name">${p.name}</span><br/>
+            <span class="planet-biome">${p.biome}${p.hasLife ? ' 🌱' : ''} — ${p.gravity.toFixed(1)}g</span>
+          </span>
+        </li>`;
+      }).join('');
+    }
+
+    function updateGenomePanel(genome) {
+      const bars = document.getElementById('genome-bars');
+      bars.innerHTML = TRAITS.map(t => {
+        const val = genome[t.idx];
+        const pct = (val / 255 * 100).toFixed(0);
+        return `<div class="genome-row">
+          <span class="genome-label">${t.name}</span>
+          <div class="genome-bar-bg"><div class="genome-bar-fill" style="width:${pct}%;background:${t.color}"></div></div>
+          <span class="genome-val">${val}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function updateNPCPanel() {
+      const living = npcPool.filter(n => n.isActive).length;
+      const deceased = npcPool.length - living;
+      const stats = document.getElementById('npc-stats');
+      stats.innerHTML = `
+        <div class="npc-stat"><span class="label">Total NPCs</span><span class="val">${npcPool.length.toLocaleString()}</span></div>
+        <div class="npc-stat"><span class="label">Living</span><span class="val" style="color:#58d68d">${living.toLocaleString()}</span></div>
+        <div class="npc-stat"><span class="label">Deceased</span><span class="val" style="color:#e74c3c">${deceased.toLocaleString()}</span></div>
+        <div class="npc-stat"><span class="label">Avg. Age</span><span class="val">${(npcPool.reduce((s, n) => s + n.age, 0) / npcPool.length).toFixed(0)} yrs</span></div>
+      `;
+    }
+
+    function updateWallet() {
+      document.getElementById('ec-val').textContent = wallet.ec.toLocaleString();
+      document.getElementById('sm-val').textContent = wallet.sm.toLocaleString();
+      document.getElementById('eden-val').textContent = wallet.eden.toFixed(2);
+    }
+
+    function updateEvents() {
+      const bar = document.getElementById('events-bar');
+      bar.innerHTML = activeEvents.map(e => {
+        const remaining = Math.max(0, e.endsAt - Date.now());
+        const sec = Math.floor(remaining / 1000);
+        const min = Math.floor(sec / 60);
+        const timer = min > 0 ? `${min}m ${sec % 60}s` : `${sec}s`;
+        return `<div class="event-card active">
+          <div class="event-name">${e.icon} ${e.name}</div>
+          <div class="event-timer">${timer} remaining</div>
+          <div class="event-desc">${e.desc}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ─── Rebirth Lottery ──────────────────────────────────────────────
+    window.doRebirth = function () {
+      const livingPool = npcPool.filter(n => n.isActive);
+      if (livingPool.length === 0) return;
+
+      // Inverse weighting: e^(-6 * statusScore)
+      const weighted = livingPool.map(n => ({ npc: n, weight: Math.exp(-6 * n.statusScore) }));
+      const totalWeight = weighted.reduce((s, w) => s + w.weight, 0);
+      let r = Math.random() * totalWeight;
+      let chosen = weighted[0].npc;
+      for (const w of weighted) {
+        r -= w.weight;
+        if (r <= 0) { chosen = w.npc; break; }
+      }
+
+      // Show result
+      const result = document.getElementById('rebirth-result');
+      result.innerHTML = `<div class="rebirth-result">
+        <div>You are reborn as:</div>
+        <div class="npc-name">${chosen.name}</div>
+        <div>Age ${chosen.age} · ${chosen.credits.toLocaleString()} EC · Status: ${(chosen.statusScore * 100).toFixed(0)}%</div>
+      </div>`;
+
+      // Spawn soul shard effect at a random planet
+      if (planetMeshes.length > 0) {
+        const pm = planetMeshes[Math.floor(Math.random() * planetMeshes.length)];
+        spawnShards(pm.position.clone());
+      }
+
+      // Update genome to chosen NPC
+      currentGenome = chosen.genome;
+      updateGenomePanel(currentGenome);
+
+      // Award wallet
+      wallet.ec += Math.floor(Math.random() * 500);
+      updateWallet();
+    };
+
+    // ─── Event Spawning ───────────────────────────────────────────────
+    function maybeSpawnEvent() {
+      if (activeEvents.length >= 3) return;
+      if (Math.random() > 0.15) return;
+      const type = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
+      if (activeEvents.find(e => e.name === type.name)) return;
+      activeEvents.push({ ...type, endsAt: Date.now() + type.durationSec * 1000 });
+    }
+
+    function tickEvents() {
+      activeEvents = activeEvents.filter(e => e.endsAt > Date.now());
+    }
+
+    // ─── Key handler ──────────────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'g' || e.key === 'G') {
+        const seed = 'system-' + Date.now();
+        const sys = generateSystem(seed);
+        buildSystem(sys);
+        const rng2 = mulberry32(hashSeed(seed + '-genome'));
+        currentGenome = generateGenome(rng2);
+        updateGenomePanel(currentGenome);
+      }
+    });
+
+    // ─── Resize ───────────────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ─── Initialise ───────────────────────────────────────────────────
+    const loadFill = document.getElementById('load-fill');
+    loadFill.style.width = '30%';
+
+    const initRng = mulberry32(hashSeed('old-eden-demo'));
+    npcPool = generateNPCs(500, initRng);
+    loadFill.style.width = '60%';
+
+    const initSys = generateSystem('aethon-prime');
+    buildSystem(initSys);
+    loadFill.style.width = '80%';
+
+    currentGenome = generateGenome(mulberry32(hashSeed('player-genome')));
+    updateGenomePanel(currentGenome);
+    updateNPCPanel();
+    updateWallet();
+
+    // Spawn initial event
+    activeEvents.push({ ...EVENT_TYPES[4], endsAt: Date.now() + 240000 });
+    updateEvents();
+
+    loadFill.style.width = '100%';
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('hud').style.display = '';
+    }, 600);
+
+    // ─── Animation Loop ───────────────────────────────────────────────
+    const clock = new THREE.Clock();
+    let eventTimer = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      // Orbit planets
+      planetMeshes.forEach(pm => {
+        const d = pm.userData;
+        const angle = d.phase + elapsed * d.orbitSpeed;
+        pm.position.x = Math.cos(angle) * d.orbitRadius;
+        pm.position.z = Math.sin(angle) * d.orbitRadius;
+        pm.rotation.y += delta * 0.5;
+      });
+
+      // Star pulsing
+      if (starMesh) {
+        const s = 1 + Math.sin(elapsed * 2) * 0.02;
+        starMesh.scale.set(s, s, s);
+      }
+
+      // Soul shard particles
+      if (shardParticles && shardLife > 0) {
+        shardLife -= delta;
+        const pos = shardParticles.geometry.attributes.position;
+        const vels = shardParticles.userData.velocities;
+        for (let i = 0; i < vels.length; i++) {
+          pos.array[i * 3]     += vels[i].x * delta;
+          pos.array[i * 3 + 1] += vels[i].y * delta;
+          pos.array[i * 3 + 2] += vels[i].z * delta;
+          vels[i].multiplyScalar(0.98);
+        }
+        pos.needsUpdate = true;
+        shardParticles.material.opacity = Math.max(0, shardLife / 3.0);
+        if (shardLife <= 0) {
+          scene.remove(shardParticles);
+          shardParticles = null;
+        }
+      }
+
+      // Periodically spawn events
+      eventTimer += delta;
+      if (eventTimer > 15) {
+        eventTimer = 0;
+        maybeSpawnEvent();
+        tickEvents();
+        updateEvents();
+
+        // Passive wallet growth
+        wallet.ec += Math.floor(Math.random() * 100 + 20);
+        if (Math.random() < 0.1) wallet.sm += 1;
+        updateWallet();
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
