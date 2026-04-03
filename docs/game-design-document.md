@@ -89,10 +89,11 @@ See [rebirth-system.md](rebirth-system.md) for the full specification.
 
 **Short version:**
 1. Your avatar dies (combat, age, disease, accident)
-2. You enter the Rebirth Lottery — a weighted random draw from the NPC pool
-3. You receive a random new character: could be a beggar or a millionaire
-4. Your old avatar becomes a permanent NPC, living on with AI-driven behaviour
-5. NFT-locked items and meta-reputation carry over; in-game possessions do not
+2. You choose one of three paths:
+   - **Standard Rebirth**: Enter the Rebirth Lottery — weighted random draw from NPC pool. Your old avatar becomes a permanent NPC.
+   - **Soul Fracture**: Your character shatters into Soul Shards that scatter across the galaxy. A server-wide Fracture Event announces the shard hunt. Any player can absorb shards for permanent bonuses. Your NFT is marked "Fractured" (rare collectible).
+   - **Ascension** (requires 3+ rebirths): Attempt a solo procedural gauntlet. Success = become an Ascended entity with passive powers over a star system. Fail = standard rebirth.
+3. NFT-locked items and meta-reputation carry over; in-game possessions do not
 
 ---
 
@@ -168,10 +169,10 @@ See [rebirth-system.md](rebirth-system.md) for the full specification.
 ### 8.2 Subscription Tiers
 | Tier | Price | Perks |
 |---|---|---|
-| Free | $0 | Full gameplay, limited storage |
-| Explorer | $9.99/mo | 2× EC, expanded inventory, priority queues |
-| Commander | $19.99/mo | 3× EC, exclusive cosmetics, VIP zones |
-| Admiral | $49.99/mo | 5× EC, monthly NFT drop, developer access |
+| Free | $0 | Full gameplay, standard rebirth |
+| Pioneer | $7.99/mo | 2× EC, Priority Fracture Alerts, 1 free re-roll/death, 500 SM/mo |
+| Vanguard | $14.99/mo | 3× EC, all Pioneer perks, Cycle Pass included, 2 free re-rolls/death |
+| Overlord | $29.99/mo | 5× EC, all Vanguard perks, 1 Ascension Trial/mo, monthly NFT drop, 1500 SM/mo |
 
 ### 8.3 NFT Marketplace
 - Characters, ships, stations, land parcels, and rare equipment are NFTs
@@ -179,8 +180,26 @@ See [rebirth-system.md](rebirth-system.md) for the full specification.
 - 2.5% platform fee on secondary sales, split: 1% burn, 1.5% treasury
 
 ### 8.4 Rebirth Re-Rolls
-- Players can spend Stellar Marks for up to 3 re-rolls per death
+- Players can spend Stellar Marks for up to 5 re-rolls per death
+- Escalating SM cost per re-roll: 30 / 60 / 120 / 250 / 500
 - Encourages spending without being mandatory
+
+### 8.5 Cycle Pass (Season/Battle Pass)
+- Free Track: Basic cosmetics, EC rewards, 1 free Shard Detector per season
+- Premium Track (1500 SM or $14.99): Exclusive ship skins, character cosmetics, portrait frames, SM bonuses, guaranteed rare shard at end of season
+- Seasons last 8 weeks, themed around major universe events
+
+### 8.6 Cosmetics Store
+- Ship paint jobs, engine trails, weapon effects
+- Character outfits, emotes, voice packs
+- Housing furniture and decorations
+- All purely visual — zero gameplay advantage
+- Priced 50–500 SM ($0.50–$5.00 equivalent)
+
+### 8.7 Soul Fracture Premium Items
+- Shard Detector (50 SM): Shows approximate shard locations for 24h
+- Shard Magnet (200 SM): 5× pickup radius for 1h
+- Fracture Amplifier (100 SM): Your shards are 20% more powerful when you fracture
 
 ---
 
