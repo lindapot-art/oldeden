@@ -1,6 +1,15 @@
 import { randomUUID } from 'crypto';
 import { APTITUDE_GENES, PHYSICAL_GENES } from './GeneticSystem.js';
 
+export const DEATH_PATH = Object.freeze({
+  STANDARD_REBIRTH: 'standard_rebirth',
+  SOUL_FRACTURE: 'soul_fracture',
+  ASCENSION: 'ascension',
+});
+
+export const REROLL_COSTS = Object.freeze([30, 60, 120, 250, 500]);
+export const MAX_REROLLS = 5;
+
 /**
  * RebirthSystem — the signature mechanic of Old Eden.
  *
@@ -41,6 +50,88 @@ export class RebirthSystem {
   async destroy() {}
 
   // ── Public API ──────────────────────────────────────────────────────────────
+
+  /**
+   * Handle a player's death path choice.
+   *
+   * @param {string} playerId
+   * @param {string} path        DEATH_PATH enum value
+   * @param {object} character   The dying character object
+   * @param {object} [options]
+   * @param {boolean} [options.amplified=false]  For Soul Fracture: amplifier active?
+   * @param {string}  [options.targetSystemId]   For Ascension: target star system
+   * @returns {object}  Path-specific result
+   */
+  chooseDeathPath(playerId, path, character, options = {}) {
+    switch (path) {
+      case DEATH_PATH.STANDARD_REBIRTH: {
+        // Standard: promote to NPC + enter lottery
+        const npcSystem = this._engine.getSystem('npc');
+        npcSystem.promoteToNPC(character.id, {
+          causeOfDeath: options.causeOfDeath ?? 'death',
+          sectorId: character.sectorId,
+        });
+        this._engine.events.emit('player:rebirth_ready', { playerId, characterId: character.id });
+        return { path, playerId };
+      }
+      case DEATH_PATH.SOUL_FRACTURE: {
+        // Fracture: shatter into shards (fractured chars do NOT become NPCs)
+        const fracture = this._engine.getSystem('fracture');
+        if (!fracture) throw new Error('[RebirthSystem] SoulFractureSystem not registered.');
+        const result = fracture.executeFracture(playerId, character, {
+          amplified: options.amplified ?? false,
+        });
+        // Player still rebirths after fracture
+        this._engine.events.emit('player:rebirth_ready', { playerId, characterId: character.id });
+        return { path, playerId, fractureResult: result };
+      }
+      case DEATH_PATH.ASCENSION: {
+        const ascension = this._engine.getSystem('ascension');
+        if (!ascension) throw new Error('[RebirthSystem] AscensionSystem not registered.');
+        const result = ascension.attemptTrial(playerId, character, {
+          targetSystemId: options.targetSystemId,
+        });
+        if (!result.success) {
+          // Failed ascension: standard rebirth, attempt becomes NPC story
+          const npcSystem = this._engine.getSystem('npc');
+          npcSystem.promoteToNPC(character.id, {
+            causeOfDeath: 'failed_ascension',
+            sectorId: character.sectorId,
+          });
+          this._engine.events.emit('player:rebirth_ready', { playerId, characterId: character.id });
+        }
+        return { path, playerId, ascensionResult: result };
+      }
+      default:
+        throw new Error(`[RebirthSystem] Unknown death path: ${path}`);
+    }
+  }
+
+  /**
+   * Get the SM cost for a specific re-roll number (1-indexed).
+   * @param {number} rerollNumber  Which re-roll (1 = first, 2 = second, etc.)
+   * @param {string} [playerId]    Optional: to check subscription for free re-rolls
+   * @returns {{ cost: number, isFree: boolean }}
+   */
+  computeRerollCost(rerollNumber, playerId) {
+    if (rerollNumber < 1 || rerollNumber > MAX_REROLLS) {
+      throw new RangeError(`Re-roll number must be 1–${MAX_REROLLS}.`);
+    }
+
+    // Check subscription tier for free re-rolls
+    if (playerId) {
+      const economy = this._engine.getSystem('economy');
+      if (economy) {
+        const tier = economy.getSubscription(playerId);
+        const freeRolls = this._freeRerollsForTier(tier);
+        if (rerollNumber <= freeRolls) {
+          return { cost: 0, isFree: true };
+        }
+      }
+    }
+
+    return { cost: REROLL_COSTS[rerollNumber - 1], isFree: false };
+  }
 
   /**
    * Perform a rebirth lottery draw for a deceased player.
@@ -91,6 +182,15 @@ export class RebirthSystem {
   }
 
   // ── Private ──────────────────────────────────────────────────────────────────
+
+  _freeRerollsForTier(tier) {
+    switch (tier) {
+      case 'pioneer':  return 1;
+      case 'vanguard': return 2;
+      case 'overlord': return 2;
+      default:         return 0;
+    }
+  }
 
   _onPlayerDeath({ playerId, characterId, causeOfDeath, sectorId }) {
     console.log(`[RebirthSystem] Player ${playerId} died (char: ${characterId}, cause: ${causeOfDeath}).`);
@@ -152,4 +252,14 @@ export class RebirthSystem {
  * @property {object}   chosenNpc
  * @property {number}   rerollsRemaining
  * @property {number}   timestamp
+ */
+
+/**
+ * @typedef {typeof DEATH_PATH} DeathPath
+ * Enum of supported death paths: STANDARD_REBIRTH, SOUL_FRACTURE, ASCENSION.
+ */
+
+/**
+ * @typedef {typeof REROLL_COSTS} RerollCosts
+ * Escalating SM costs for re-rolls: [30, 60, 120, 250, 500].
  */
