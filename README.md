@@ -1,6 +1,6 @@
 # Old Eden 🌌
 
-> *"From dust you came. To dust you shall return. And from the dust — someone else entirely."*
+> *"From dust you came. To dust you shall return. And from the dust shall you rise again — someone else entirely. And then the cycle will repeat. Forever and ever. But some souls burn so bright that death cannot contain them. When they shatter, the universe itself trembles, and the fragments of their power scatter across the stars like seeds of a new beginning."*
 
 **Old Eden** is an ambitious, blockchain-native, AI-driven massively multiplayer online space game that fuses EVE Online's deep economy and exploration, The Sims' life simulation, Counter-Strike's tactical combat, StarCraft's strategic depth, Civilization's long-arc progression, Spore's procedural evolution, and Second Life's open virtual world — all wrapped in a unique **Rebirth System** where death is not an ending but a transformation.
 
@@ -47,19 +47,45 @@ Players do not merely *play* a character — they *are* one, living a full simul
 
 ## Rebirth System
 
-The signature mechanic of Old Eden is the **Rebirth System**:
+The signature mechanic of Old Eden is the **Rebirth System**. When your avatar dies (in combat, from old age, disease, or accident), you do not simply respawn. Instead, you choose one of **three death paths**:
 
-1. **Death** — When your avatar dies (in combat, from old age, disease, or accident), you do not simply respawn.
-2. **NPC Pool** — Throughout the game world, thousands of NPCs lead autonomous lives, building skills, accumulating wealth, forming relationships, and developing personalities. Every NPC is fully tracked.
-3. **Rebirth Lottery** — On death, you are presented with a weighted random draw from the NPC pool. Higher-status NPCs are rarer draws. You may receive a destitute scavenger or a wealthy trader captain — it is chance.
-4. **Continuity** — Your new character retains none of your old character's possessions, but your *meta-progression* (player reputation, faction standing bonuses, and NFT-locked items) carries over.
-5. **Old Self as NPC** — Your deceased avatar becomes a trackable NPC, continuing to "live" in the world with AI-driven behaviour based on their established personality and skills.
+### Path 1: Standard Rebirth
 
-This creates:
+The classic weighted NPC lottery:
+
+1. **NPC Pool** — Throughout the game world, thousands of NPCs lead autonomous lives, building skills, accumulating wealth, forming relationships, and developing personalities. Every NPC is fully tracked.
+2. **Rebirth Lottery** — On death, you are presented with a weighted random draw from the NPC pool. Higher-status NPCs are rarer draws. You may receive a destitute scavenger or a wealthy trader captain — it is chance.
+3. **Continuity** — Your new character retains none of your old character's possessions, but your *meta-progression* (player reputation, faction standing bonuses, and NFT-locked items) carries over.
+4. **Old Self as NPC** — Your deceased avatar becomes a trackable NPC, continuing to "live" in the world with AI-driven behaviour based on their established personality and skills.
+
+### Path 2: Soul Fracture
+
+For characters who burn too bright to simply be reborn:
+
+1. **Shatter** — Your character shatters into **Soul Shards** that scatter across the galaxy, each containing a fragment of your character's power and legacy.
+2. **Fracture Event** — A server-wide **Fracture Event** is triggered, alerting all players that a soul has shattered. The sky cracks, anomalies ripple across star systems, and the hunt begins.
+3. **Shard Hunting** — Any player can hunt and collect the scattered Soul Shards. Each shard grants **permanent bonuses** — stat boosts, unique abilities, or rare crafting materials — to the player who claims it.
+4. **Fractured NFT** — Your character NFT is marked as **"Fractured"** rather than burned. Fractured NFTs remain on-chain as collectible relics of the character's legacy, retaining historical value.
+5. **Standard Rebirth follows** — After the fracture, the player enters the standard rebirth lottery to receive a new character.
+
+### Path 3: Ascension
+
+For veteran souls who have endured the cycle and seek transcendence:
+
+1. **Eligibility** — Only characters with **3 or more previous rebirths** may attempt Ascension.
+2. **Ascension Trial** — A gruelling solo gauntlet that tests mastery of combat, exploration, economy, and survival. There are no second chances — you complete it or you don't.
+3. **Success: Become Ascended** — Ascended players shed their mortal form and become a **ghostly presence bound to a star system**. They earn passive income from all activity in their system, can set bounties on other players, and influence events from beyond the veil.
+4. **Failure: Standard Rebirth** — Failing the Ascension Trial sends you into the standard rebirth lottery. Your attempt is spent.
+5. **Limited Slots** — Only **100 Ascended may exist per server** at any time. When a slot opens (via an Ascended voluntarily departing or server rebalancing), a new Ascension Trial becomes available.
+
+### What This Creates
+
 - A living, persistent world that deepens over time
 - Economic scarcity that mirrors real life
 - True stakes in every engagement
 - A market for high-status NPC "slots"
+- Server-wide community events through Soul Fracture
+- An aspirational endgame through Ascension
 
 See [docs/rebirth-system.md](docs/rebirth-system.md) for full specification.
 
@@ -97,9 +123,46 @@ Old Eden features a three-layer economy:
 | Tier | Price | Benefits |
 |---|---|---|
 | Free | $0 | Core gameplay, limited storage |
-| Explorer | $9.99/mo | Expanded storage, 2× EC earning, priority queue |
-| Commander | $19.99/mo | All Explorer perks + exclusive cosmetics, 3× EC, VIP zones |
-| Admiral | $49.99/mo | All Commander perks + monthly NFT drop, developer access channel |
+| Pioneer | $7.99/mo | Expanded storage, 2× EC earning, priority queue |
+| Vanguard | $14.99/mo | All Pioneer perks + exclusive cosmetics, 3× EC, VIP zones |
+| Overlord | $29.99/mo | All Vanguard perks + monthly NFT drop, developer access channel |
+
+### Re-rolls on Death
+
+Players may spend Stellar Marks to re-roll their rebirth lottery result, up to **5 re-rolls per death** with escalating cost:
+
+| Re-roll | Cost |
+|---|---|
+| 1st | 30 SM |
+| 2nd | 60 SM |
+| 3rd | 120 SM |
+| 4th | 250 SM |
+| 5th | 500 SM |
+
+### Cycle Pass
+
+An **8-week season pass** with **free and premium tracks**:
+
+- **Free Track** — Earn EC, basic cosmetics, and crafting materials through gameplay milestones
+- **Premium Track** — Unlocks exclusive ship skins, character outfits, emotes, Soul Fracture–themed rewards, and bonus SM at key tiers
+
+### Cosmetics Store
+
+A **purely visual** storefront offering:
+
+- **Ship Skins** — Custom paint jobs, engine trails, and hull effects
+- **Character Outfits** — Armour sets, clothing, and accessories with no stat impact
+- **Emotes** — Animations, holograms, and social expressions
+
+All cosmetics are non-functional and provide **zero gameplay advantage**.
+
+### Shard-Hunting Premium Items
+
+Specialised items for players who want an edge in Soul Fracture events:
+
+- **Shard Detector** — Reveals the approximate region of scattered Soul Shards on the galaxy map
+- **Shard Magnet** — Increases pickup radius when near a Soul Shard
+- **Fracture Amplifier** — Boosts the permanent bonuses received from collected Soul Shards
 
 See [docs/blockchain-integration.md](docs/blockchain-integration.md) for smart contract details.
 
