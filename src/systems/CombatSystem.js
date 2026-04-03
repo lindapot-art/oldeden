@@ -32,6 +32,7 @@ export const WEAPON_TYPE = Object.freeze({
   MISSILE:   'missile',
   PLASMA:    'plasma',
   MELEE:     'melee',
+  RAILGUN:   'railgun',
 });
 
 export const ARMOR_TYPE = Object.freeze({
@@ -92,6 +93,13 @@ export const TYPE_EFFECTIVENESS = Object.freeze({
     [ARMOR_TYPE.HEAVY]:  0.5,
     [ARMOR_TYPE.SHIELD]: 1.0,   // melee bypasses shields (handled in resolve)
   },
+  [WEAPON_TYPE.RAILGUN]: {
+    [ARMOR_TYPE.NONE]:   1.0,
+    [ARMOR_TYPE.LIGHT]:  1.4,   // penetrates light armor
+    [ARMOR_TYPE.MEDIUM]: 1.3,   // strong vs medium
+    [ARMOR_TYPE.HEAVY]:  1.6,   // devastating vs heavy armor
+    [ARMOR_TYPE.SHIELD]: 1.2,   // pierces shields
+  },
 });
 
 /** Base critical-hit chance per weapon type. */
@@ -101,6 +109,7 @@ const WEAPON_CRIT_CHANCE = {
   [WEAPON_TYPE.MISSILE]:   0.03,
   [WEAPON_TYPE.PLASMA]:    0.06,
   [WEAPON_TYPE.MELEE]:     0.10,
+  [WEAPON_TYPE.RAILGUN]:   0.12,  // high crit chance
 };
 
 /** Base critical-hit damage multiplier. */
