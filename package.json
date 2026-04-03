@@ -1,0 +1,50 @@
+{
+  "name": "old-eden",
+  "version": "0.1.0",
+  "description": "Old Eden — a blockchain-native AI-driven space MMO with evolutionary mechanics and a rebirth system",
+  "main": "src/core/GameEngine.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/core/index.js",
+    "start": "node src/core/index.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.json",
+    "lint": "eslint src/ --ext .js",
+    "build:contracts": "hardhat compile",
+    "deploy:contracts": "hardhat run scripts/deploy.js --network polygon"
+  },
+  "keywords": [
+    "space-game",
+    "mmo",
+    "blockchain",
+    "nft",
+    "polygon",
+    "procedural-generation",
+    "ai",
+    "game"
+  ],
+  "author": "Old Eden Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cannon-es": "^0.20.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.11.1",
+    "express": "^4.18.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.2.2",
+    "redis": "^4.6.13",
+    "seedrandom": "^3.0.5",
+    "socket.io": "^4.7.4",
+    "three": "^0.163.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "eslint": "^8.57.0",
+    "hardhat": "^2.22.1",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
