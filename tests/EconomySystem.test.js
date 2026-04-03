@@ -86,8 +86,8 @@ describe('EconomySystem', () => {
     });
 
     it('updates tier correctly', () => {
-      economy.setSubscription('p', SUBSCRIPTION_TIER.COMMANDER);
-      expect(economy.getSubscription('p')).toBe(SUBSCRIPTION_TIER.COMMANDER);
+      economy.setSubscription('p', SUBSCRIPTION_TIER.VANGUARD);
+      expect(economy.getSubscription('p')).toBe(SUBSCRIPTION_TIER.VANGUARD);
     });
 
     it('throws for invalid tier', () => {
@@ -101,7 +101,7 @@ describe('EconomySystem', () => {
     });
 
     it('returns higher multiplier for premium tiers', () => {
-      economy.setSubscription('p', SUBSCRIPTION_TIER.ADMIRAL);
+      economy.setSubscription('p', SUBSCRIPTION_TIER.OVERLORD);
       expect(economy.getEcMultiplier('p')).toBeGreaterThan(1.0);
     });
   });

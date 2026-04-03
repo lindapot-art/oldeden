@@ -122,10 +122,10 @@ Old Eden features a three-layer economy:
 ### Subscription Tiers
 | Tier | Price | Benefits |
 |---|---|---|
-| Free | $0 | Core gameplay, limited storage |
-| Pioneer | $7.99/mo | Expanded storage, 2× EC earning, priority queue |
-| Vanguard | $14.99/mo | All Pioneer perks + exclusive cosmetics, 3× EC, VIP zones |
-| Overlord | $29.99/mo | All Vanguard perks + monthly NFT drop, developer access channel |
+| Free | $0 | Full gameplay, standard rebirth |
+| Pioneer | $7.99/mo | 2× EC, Priority Fracture Alerts, 1 free re-roll/death, 500 SM/mo |
+| Vanguard | $14.99/mo | 3× EC, all Pioneer perks, Cycle Pass included, 2 free re-rolls/death |
+| Overlord | $29.99/mo | 5× EC, all Vanguard perks, 1 Ascension Trial/mo, monthly NFT drop, 1500 SM/mo |
 
 ### Re-rolls on Death
 
