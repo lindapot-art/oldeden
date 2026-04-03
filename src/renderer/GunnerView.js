@@ -6,13 +6,16 @@
  *   - Mouse look (yaw + pitch) within clamped angles
  *   - Visible cockpit frame: glass canopy shield, gun barrels, instrument panels
  *   - HUD crosshair, weapon status, and shield readouts
+ *   - Railgun weapon with giant nail ammo and recoil
+ *   - Swivel chair cabin interior
+ *   - Holographic targeting displays
  *
  * The cockpit interior geometry is added to the camera so it moves with the
  * player's head. Exterior space (stars, planets, enemies) is visible through
  * the transparent canopy.
  *
  * Usage:
- *   const gunner = new GunnerView(THREE, camera, canvas);
+ *   const gunner = new GunnerView(THREE, camera, canvas, railgunWeapon);
  *   gunner.attachToShip(shipGroup, turretMount);
  *   gunner.enter();          // switch into gunner mode
  *   gunner.update(deltaMs);  // call in animation loop
@@ -24,16 +27,18 @@ export class GunnerView {
    * @param {object} THREE       Three.js namespace.
    * @param {object} camera      The PerspectiveCamera to take over.
    * @param {HTMLCanvasElement} canvas  For pointer-lock events.
+   * @param {object} railgunWeapon  RailgunWeapon instance.
    * @param {object} [options]
    * @param {number} [options.sensitivity=0.002]    Mouse look sensitivity.
    * @param {number} [options.maxPitch=1.2]         Max pitch (radians, ~69°).
    * @param {number} [options.maxYaw=1.5]           Max yaw (radians, ~86°).
    * @param {number} [options.fov=75]               FOV when in gunner mode.
    */
-  constructor(THREE, camera, canvas, options = {}) {
+  constructor(THREE, camera, canvas, railgunWeapon, options = {}) {
     this._THREE  = THREE;
     this._camera = camera;
     this._canvas = canvas;
+    this._railgun = railgunWeapon;
 
     this._sensitivity = options.sensitivity ?? 0.002;
     this._maxPitch    = options.maxPitch    ?? 1.2;
@@ -56,6 +61,7 @@ export class GunnerView {
     // Bound event handlers
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onPointerLockChange = this._handlePointerLockChange.bind(this);
+    this._onMouseDown = this._handleMouseDown.bind(this);
   }
 
   // ── Public API ──────────────────────────────────────────────────────────────
@@ -112,6 +118,7 @@ export class GunnerView {
 
     // Request pointer lock
     this._canvas.addEventListener('mousemove', this._onMouseMove);
+    this._canvas.addEventListener('mousedown', this._onMouseDown);
     document.addEventListener('pointerlockchange', this._onPointerLockChange);
     this._canvas.requestPointerLock?.();
 
@@ -138,6 +145,7 @@ export class GunnerView {
 
     // Release pointer lock
     this._canvas.removeEventListener('mousemove', this._onMouseMove);
+    this._canvas.removeEventListener('mousedown', this._onMouseDown);
     document.removeEventListener('pointerlockchange', this._onPointerLockChange);
     document.exitPointerLock?.();
 
@@ -147,10 +155,15 @@ export class GunnerView {
 
   /**
    * Per-frame update. Call inside the animation loop.
-   * @param {number} _deltaMs  Milliseconds since last frame (reserved for future anim).
+   * @param {number} deltaMs  Milliseconds since last frame.
    */
-  update(_deltaMs) {
+  update(deltaMs) {
     if (!this._active || !this._turretMount) return;
+
+    // Update railgun
+    if (this._railgun) {
+      this._railgun.update(deltaMs);
+    }
 
     // Position camera at turret mount world position
     const worldPos = new this._THREE.Vector3();
@@ -200,9 +213,11 @@ export class GunnerView {
    *
    * Contains:
    *   - Glass canopy shield (transparent sphere segment in front)
-   *   - Gun barrel tips visible at bottom of FOV
+   *   - Swivel chair/seat structure
+   *   - Railgun weapon mount
    *   - Instrument frame / mounting bracket
-   *   - Side panel outlines
+   *   - Side panel outlines with holographic readouts
+   *   - Bottom console with digital displays
    *
    * @returns {THREE.Group}
    */
@@ -246,51 +261,44 @@ export class GunnerView {
       cockpit.add(strut);
     }
 
-    // ── Gun barrels (visible at bottom of FOV) ────────────────────────
-    const gunMat = new THREE.MeshBasicMaterial({
-      color: 0x445566, transparent: true, opacity: 0.8,
+    // ── Swivel Chair / Seat ────────────────────────────────────────────
+    const seatMat = new THREE.MeshBasicMaterial({
+      color: 0x2a3540, transparent: true, opacity: 0.7,
     });
+    
+    // Seat back (visible at edges when looking around)
+    const seatBackGeo = new THREE.BoxGeometry(0.8, 0.6, 0.08);
+    const seatBack = new THREE.Mesh(seatBackGeo, seatMat);
+    seatBack.position.set(0, -0.1, 0.4);
+    seatBack.name = 'seat-back';
+    cockpit.add(seatBack);
 
-    // Left barrel
-    const barrelGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.5, 6);
-    const barrelL = new THREE.Mesh(barrelGeo, gunMat);
-    barrelL.rotation.x = Math.PI / 2;
-    barrelL.position.set(-0.18, -0.55, -2.0);
-    barrelL.name = 'cockpit-gun-left';
-    cockpit.add(barrelL);
+    // Seat base
+    const seatBaseGeo = new THREE.BoxGeometry(0.6, 0.08, 0.5);
+    const seatBase = new THREE.Mesh(seatBaseGeo, seatMat);
+    seatBase.position.set(0, -0.5, 0.1);
+    cockpit.add(seatBase);
 
-    const barrelR = new THREE.Mesh(barrelGeo, gunMat);
-    barrelR.rotation.x = Math.PI / 2;
-    barrelR.position.set(0.18, -0.55, -2.0);
-    barrelR.name = 'cockpit-gun-right';
-    cockpit.add(barrelR);
+    // Armrests (visible at sides)
+    const armrestGeo = new THREE.BoxGeometry(0.1, 0.08, 0.4);
+    const armrestL = new THREE.Mesh(armrestGeo, seatMat);
+    armrestL.position.set(-0.35, -0.35, 0.0);
+    cockpit.add(armrestL);
+    
+    const armrestR = new THREE.Mesh(armrestGeo, seatMat);
+    armrestR.position.set(0.35, -0.35, 0.0);
+    cockpit.add(armrestR);
 
-    // Gun barrel tips (muzzle flash points)
-    const muzzleGeo = new THREE.RingGeometry(0.03, 0.06, 8);
-    const muzzleMat = new THREE.MeshBasicMaterial({
-      color: 0x66aaff, transparent: true, opacity: 0.6, side: THREE.DoubleSide,
-    });
-    const muzzleL = new THREE.Mesh(muzzleGeo, muzzleMat);
-    muzzleL.position.set(-0.18, -0.55, -3.3);
-    cockpit.add(muzzleL);
-    const muzzleR = new THREE.Mesh(muzzleGeo, muzzleMat);
-    muzzleR.position.set(0.18, -0.55, -3.3);
-    cockpit.add(muzzleR);
+    // Chair pivot cylinder (connects seat to floor)
+    const pivotGeo = new THREE.CylinderGeometry(0.08, 0.12, 0.3, 8);
+    const pivot = new THREE.Mesh(pivotGeo, frameMat);
+    pivot.position.set(0, -0.75, 0.1);
+    cockpit.add(pivot);
 
-    // ── Gun mounting bracket ──────────────────────────────────────────
-    const bracketGeo = new THREE.BoxGeometry(0.8, 0.08, 0.5);
-    const bracket = new THREE.Mesh(bracketGeo, gunMat);
-    bracket.position.set(0, -0.6, -0.8);
-    cockpit.add(bracket);
-
-    // Vertical support
-    const supportGeo = new THREE.BoxGeometry(0.06, 0.4, 0.06);
-    const supportL = new THREE.Mesh(supportGeo, gunMat);
-    supportL.position.set(-0.35, -0.4, -0.8);
-    cockpit.add(supportL);
-    const supportR = new THREE.Mesh(supportGeo, gunMat);
-    supportR.position.set(0.35, -0.4, -0.8);
-    cockpit.add(supportR);
+    // ── Railgun weapon (if provided) ───────────────────────────────────
+    if (this._railgun) {
+      cockpit.add(this._railgun.group);
+    }
 
     // ── Side instrument panels (visible at edges of FOV) ──────────────
     const panelMat = new THREE.MeshBasicMaterial({
@@ -324,6 +332,21 @@ export class GunnerView {
     stripR.rotation.y = -0.3;
     cockpit.add(stripR);
 
+    // Holographic readout screens (side panels)
+    const holoMat = new THREE.MeshBasicMaterial({
+      color: 0x44aaff, transparent: true, opacity: 0.3, side: THREE.DoubleSide,
+    });
+    const holoGeo = new THREE.PlaneGeometry(0.3, 0.4);
+    const holoL = new THREE.Mesh(holoGeo, holoMat);
+    holoL.position.set(-1.25, 0.2, -0.8);
+    holoL.rotation.y = 0.3;
+    cockpit.add(holoL);
+    
+    const holoR = new THREE.Mesh(holoGeo, holoMat);
+    holoR.position.set(1.25, 0.2, -0.8);
+    holoR.rotation.y = -0.3;
+    cockpit.add(holoR);
+
     // ── Bottom console (below gun barrels) ────────────────────────────
     const consoleMat = new THREE.MeshBasicMaterial({
       color: 0x0a1520, transparent: true, opacity: 0.7,
@@ -334,7 +357,7 @@ export class GunnerView {
     consoleMesh.rotation.x = -0.2;
     cockpit.add(consoleMesh);
 
-    // Console indicator dots
+    // Console indicator dots (status lights)
     const dotMat = new THREE.MeshBasicMaterial({ color: 0x44ff88 });
     const dotGeo = new THREE.CircleGeometry(0.015, 8);
     for (let i = 0; i < 8; i++) {
@@ -343,6 +366,41 @@ export class GunnerView {
       dot.position.set(-0.5 + i * 0.14, -0.71, -1.0);
       dot.rotation.x = -0.2;
       cockpit.add(dot);
+    }
+
+    // Digital text displays (holographic numbers)
+    const textMat = new THREE.MeshBasicMaterial({
+      color: 0x00ff00, transparent: true, opacity: 0.8,
+    });
+    const textGeo = new THREE.PlaneGeometry(0.2, 0.08);
+    for (let i = 0; i < 3; i++) {
+      const display = new THREE.Mesh(textGeo, textMat.clone());
+      display.position.set(-0.4 + i * 0.4, -0.68, -0.95);
+      display.rotation.x = -0.2;
+      cockpit.add(display);
+    }
+
+    // ── Upper ceiling detail ───────────────────────────────────────────
+    const ceilingMat = new THREE.MeshBasicMaterial({
+      color: 0x1a2530, transparent: true, opacity: 0.5,
+    });
+    const ceilingGeo = new THREE.BoxGeometry(1.8, 0.04, 1.5);
+    const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+    ceiling.position.set(0, 0.9, -0.5);
+    cockpit.add(ceiling);
+
+    // Overhead status lights
+    for (let i = 0; i < 4; i++) {
+      const lightGeo = new THREE.CircleGeometry(0.02, 8);
+      const lightMat = new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? 0xff4444 : 0x44ff44,
+        transparent: true,
+        opacity: 0.7,
+      });
+      const light = new THREE.Mesh(lightGeo, lightMat);
+      light.position.set(-0.6 + i * 0.4, 0.88, -0.4);
+      light.rotation.x = -Math.PI / 2;
+      cockpit.add(light);
     }
 
     return cockpit;
@@ -361,6 +419,31 @@ export class GunnerView {
     // Clamp
     this._yaw   = Math.max(-this._maxYaw, Math.min(this._maxYaw, this._yaw));
     this._pitch  = Math.max(-this._maxPitch, Math.min(this._maxPitch, this._pitch));
+  }
+
+  /** @param {MouseEvent} e */
+  _handleMouseDown(e) {
+    if (!this._active) return;
+    if (e.button !== 0) return;  // Left mouse button only
+
+    // Fire railgun
+    if (this._railgun && this._railgun.isReady) {
+      this._railgun.fire();
+      
+      // Emit event with firing direction (camera forward)
+      const direction = new this._THREE.Vector3(0, 0, -1);
+      direction.applyQuaternion(this._camera.quaternion);
+      
+      // Custom event for projectile spawning
+      const event = new CustomEvent('gunner:fire', {
+        detail: {
+          origin: this._camera.position.clone(),
+          direction: direction,
+          weaponType: 'railgun',
+        },
+      });
+      this._canvas.dispatchEvent(event);
+    }
   }
 
   _handlePointerLockChange() {
