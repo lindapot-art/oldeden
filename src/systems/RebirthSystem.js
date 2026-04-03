@@ -13,7 +13,7 @@ import { APTITUDE_GENES, PHYSICAL_GENES } from './GeneticSystem.js';
  *   - The lottery is inversely weighted — lower-status NPCs appear far more
  *     often so that high-status NPCs remain rare and valuable prizes
  *   - Players may spend "Stellar Marks" (premium currency) to re-roll up to
- *     3 times per death, but never to cherry-pick a specific NPC
+ *     5 times per death (escalating cost), but never to cherry-pick a specific NPC
  *
  * What carries over after rebirth:
  *   - Player meta-reputation (faction standing modifiers)
