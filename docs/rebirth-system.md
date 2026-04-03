@@ -261,7 +261,7 @@ Ascension is the aspirational endgame for players who have lived and died multip
 
 - Player must have completed at least **3 full rebirths** (3 characters lived and died)
 - Player must be alive (Ascension is chosen voluntarily, not at death)
-- Maximum **100 Ascended entities per server** (hard cap)
+- Maximum **100 Ascended entities per server** (hard cap — if all slots are full, a player must challenge an existing Ascended to claim a slot)
 - Ascension Trial costs 500 SM (free once per month for Overlord subscribers)
 
 ### The Ascension Trial
