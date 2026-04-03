@@ -72,6 +72,12 @@ const NEED_DECAY_RATES = Object.freeze({
 /** Default memory entry lifetime in milliseconds (5 minutes). */
 const DEFAULT_MEMORY_DURATION_MS = 300_000;
 
+/** Safety cap on iterations for the 'until_fail' decorator. */
+const MAX_UNTIL_FAIL_ITERATIONS = 100;
+
+/** Chance (0–1) that an investigate action discovers a new resource. */
+const RESOURCE_DISCOVERY_CHANCE = 0.3;
+
 /** Action type constants for NPC behaviors. */
 export const NPC_ACTIONS = Object.freeze({
   // Combat / piracy
@@ -227,7 +233,7 @@ export class DecoratorNode extends BehaviorNode {
         }
         return NODE_STATUS.SUCCESS;
       case 'until_fail':
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < MAX_UNTIL_FAIL_ITERATIONS; i++) {
           const status = this.child.evaluate(context);
           if (status === NODE_STATUS.FAILURE) return NODE_STATUS.SUCCESS;
           if (status === NODE_STATUS.RUNNING) return NODE_STATUS.RUNNING;
@@ -1225,7 +1231,7 @@ export class BehaviorTreeSystem {
           ctx.chosenUtility = curiosity * 0.45;
           ctx.system.satisfyNeed(ctx.npcId, 'exploration', 0.2);
           // Investigating may reveal resources
-          if (Math.random() < 0.3) {
+          if (Math.random() < RESOURCE_DISCOVERY_CHANCE) {
             ctx.system.recordMemory(ctx.npcId, {
               type: 'resource',
               sourceId: `resource_${randomUUID()}`,
