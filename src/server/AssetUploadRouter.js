@@ -17,24 +17,8 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** Allowed MIME types for 3D model uploads */
-const MODEL_MIMETYPES = new Set([
-  'model/gltf-binary',       // .glb
-  'model/gltf+json',         // .gltf
-  'application/octet-stream', // .glb / .fbx (often detected as generic binary)
-]);
-
 /** Allowed file extensions for 3D model uploads */
 const MODEL_EXTENSIONS = new Set(['.glb', '.gltf', '.fbx', '.obj']);
-
-/** Allowed MIME types for texture uploads */
-const TEXTURE_MIMETYPES = new Set([
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'image/vnd.radiance', // .hdr
-  'application/octet-stream',
-]);
 
 /** Allowed file extensions for texture uploads */
 const TEXTURE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.hdr']);
