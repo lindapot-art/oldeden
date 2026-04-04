@@ -636,7 +636,9 @@ export class GunnerHUD {
     for (const item of loot.slice(0, 3)) { // Show first 3 items
       const itemText = item.type === 'credits' 
         ? `${item.amount} Credits`
-        : `${item.itemId} x${item.quantity || 1}`;
+        : item.itemId 
+          ? `${item.itemId} x${item.quantity || 1}`
+          : `Unknown Item x${item.quantity || 1}`;
       ctx.fillText(itemText, w / 2, yOffset);
       yOffset += 25;
     }
