@@ -132,6 +132,14 @@ export class GunnerView {
   }
 
   /**
+   * Whether gyroscope is currently calibrating.
+   * @returns {boolean}
+   */
+  get isGyroCalibrating() {
+    return this._gyroCalibrating;
+  }
+
+  /**
    * Enter gunner (first-person) mode.
    */
   enter() {

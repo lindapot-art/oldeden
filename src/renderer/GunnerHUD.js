@@ -63,6 +63,13 @@ export class GunnerHUD {
     this._pulsePhase = 0;
     this._scanlineOffset = 0;
 
+    /** Gyro control state */
+    this._gyroStatus = {
+      enabled: false,
+      supported: false,
+      calibrating: false,
+    };
+
     this._resize();
   }
 
@@ -107,6 +114,17 @@ export class GunnerHUD {
   }
 
   /**
+   * Update gyroscope control status (mobile).
+   * @param {object} status
+   * @param {boolean} status.enabled      Whether gyro is enabled.
+   * @param {boolean} [status.supported]  Whether gyro is supported.
+   * @param {boolean} [status.calibrating] Whether gyro is calibrating.
+   */
+  updateGyroStatus(status) {
+    Object.assign(this._gyroStatus, status);
+  }
+
+  /**
    * Render the HUD. Call every frame.
    * @param {number} [deltaMs=16] Milliseconds since last frame (for animations).
    */
@@ -127,6 +145,7 @@ export class GunnerHUD {
     this._drawWeaponStatus(ctx, w, h);
     this._drawTargetLock(ctx, w, h);
     this._drawShieldHull(ctx, w, h);
+    this._drawGyroIndicator(ctx, w, h);
     this._drawScanlines(ctx, w, h);
     this._drawVignette(ctx, w, h);
   }
@@ -462,6 +481,85 @@ export class GunnerHUD {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
     
+    ctx.restore();
+  }
+
+  /**
+   * Draw gyroscope control indicator (mobile only).
+   */
+  _drawGyroIndicator(ctx, w, h) {
+    if (!this._gyroStatus.enabled && !this._gyroStatus.supported) return;
+
+    ctx.save();
+
+    const x = w - 100;
+    const y = h - 80;
+
+    // Background panel
+    ctx.fillStyle = 'rgba(5, 10, 25, 0.7)';
+    ctx.fillRect(x - 50, y - 30, 90, 60);
+    
+    ctx.strokeStyle = this._primaryColor;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - 50, y - 30, 90, 60);
+
+    // Gyro icon (device with rotation arrows)
+    const iconSize = 20;
+    const iconX = x - 25;
+    const iconY = y;
+
+    // Device outline (phone/tablet)
+    ctx.strokeStyle = this._gyroStatus.enabled ? this._accentColor : this._primaryColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize * 1.5);
+
+    // Rotation arrows
+    if (this._gyroStatus.enabled) {
+      ctx.strokeStyle = this._accentColor;
+      ctx.lineWidth = 1.5;
+      
+      // Left arrow (counter-clockwise)
+      ctx.beginPath();
+      ctx.arc(iconX - iconSize / 2 - 8, iconY, 6, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.stroke();
+      
+      // Right arrow (clockwise)
+      ctx.beginPath();
+      ctx.arc(iconX + iconSize / 2 + 8, iconY, 6, Math.PI * 1.5, Math.PI * 0.5);
+      ctx.stroke();
+    }
+
+    // Status text
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'left';
+    
+    if (this._gyroStatus.calibrating) {
+      ctx.fillStyle = this._warningColor;
+      ctx.fillText('CALIBRATING', x + 5, y - 5);
+      
+      // Pulse effect for calibrating
+      const pulse = Math.sin(this._pulsePhase * 4) * 0.3 + 0.7;
+      ctx.globalAlpha = pulse;
+      ctx.fillText('...', x + 5, y + 8);
+      ctx.globalAlpha = 1.0;
+    } else if (this._gyroStatus.enabled) {
+      ctx.fillStyle = this._accentColor;
+      ctx.fillText('GYRO', x + 5, y - 5);
+      ctx.fillText('ACTIVE', x + 5, y + 8);
+    } else if (this._gyroStatus.supported) {
+      ctx.fillStyle = this._primaryColor;
+      ctx.fillText('GYRO', x + 5, y - 5);
+      ctx.fillText('OFF', x + 5, y + 8);
+    }
+
+    // Calibration hint (when enabled)
+    if (this._gyroStatus.enabled && !this._gyroStatus.calibrating) {
+      ctx.font = '9px monospace';
+      ctx.fillStyle = 'rgba(100, 180, 255, 0.5)';
+      ctx.textAlign = 'center';
+      ctx.fillText('TAP TO RECENTER', w - 55, h - 15);
+    }
+
     ctx.restore();
   }
 }

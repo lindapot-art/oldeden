@@ -402,6 +402,13 @@ export class GunnerModeIntegration {
       hull: 100,
       maxHull: 100,
     });
+
+    // Gyro status (mobile controls)
+    this._hud.updateGyroStatus({
+      enabled: this._gunnerView.isGyroEnabled,
+      supported: this._gunnerView.isGyroSupported,
+      calibrating: this._gunnerView.isGyroCalibrating,
+    });
   }
 
   /**
