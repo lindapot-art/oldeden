@@ -112,6 +112,17 @@ export class GunnerHUD {
   }
 
   /**
+   * Update gyroscope control status (mobile).
+   * @param {object} status
+   * @param {boolean} status.enabled      Whether gyro is enabled.
+   * @param {boolean} [status.supported]  Whether gyro is supported.
+   * @param {boolean} [status.calibrating] Whether gyro is calibrating.
+   */
+  updateGyroStatus(status) {
+    Object.assign(this._gyroStatus, status);
+  }
+
+  /**
    * Render the HUD. Call every frame.
    * @param {number} [deltaMs=16] Milliseconds since last frame (for animations).
    */
@@ -132,6 +143,7 @@ export class GunnerHUD {
     this._drawWeaponStatus(ctx, w, h);
     this._drawTargetLock(ctx, w, h);
     this._drawShieldHull(ctx, w, h);
+    this._drawGyroIndicator(ctx, w, h);
     this._drawScanlines(ctx, w, h);
     this._drawVignette(ctx, w, h);
 

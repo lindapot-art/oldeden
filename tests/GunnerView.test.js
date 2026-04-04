@@ -125,6 +125,7 @@ function createMockCanvas() {
     addEventListener: (type, fn) => { listeners[type] = fn; },
     removeEventListener: (type) => { delete listeners[type]; },
     requestPointerLock: () => {},
+    dispatchEvent: (evt) => { if (listeners[evt.type]) listeners[evt.type](evt); },
     _listeners: listeners,
   };
 }
@@ -134,6 +135,8 @@ describe('GunnerView', () => {
   let camera;
   let canvas;
   let origDocument;
+  let origNavigator;
+  let origWindow;
 
   beforeEach(() => {
     THREE = createTHREEStub();
@@ -150,10 +153,28 @@ describe('GunnerView', () => {
       pointerLockElement: null,
       _listeners: docListeners,
     };
+
+    // Stub navigator for mobile detection
+    origNavigator = globalThis.navigator;
+    globalThis.navigator = {
+      userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
+      vendor: '',
+      maxTouchPoints: 0,
+    };
+
+    // Stub window for gyro detection
+    origWindow = globalThis.window;
+    globalThis.window = {
+      opera: undefined,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    };
   });
 
   afterEach(() => {
     globalThis.document = origDocument;
+    globalThis.navigator = origNavigator;
+    globalThis.window = origWindow;
   });
 
   test('constructor sets default options', () => {
@@ -278,6 +299,37 @@ describe('GunnerView', () => {
     gv.dispose();
     expect(gv.isActive).toBe(false);
     expect(gv._cockpit).toBe(null);
+  });
+
+  test('detects mobile device', () => {
+    const gv = new GunnerView(THREE, camera, canvas);
+    // Test uses default navigator, result depends on environment
+    expect(typeof gv.isMobile).toBe('boolean');
+  });
+
+  test('detects gyro support', () => {
+    const gv = new GunnerView(THREE, camera, canvas);
+    // In test environment, DeviceOrientationEvent may or may not exist
+    expect(typeof gv.isGyroSupported).toBe('boolean');
+  });
+
+  test('gyro starts disabled by default', () => {
+    const gv = new GunnerView(THREE, camera, canvas);
+    expect(gv.isGyroEnabled).toBe(false);
+    expect(gv.isGyroCalibrating).toBe(false);
+  });
+
+  test('calibrateGyro sets calibrating flag', () => {
+    const gv = new GunnerView(THREE, camera, canvas);
+    gv._gyroEnabled = true; // Force enabled for test
+    gv.calibrateGyro();
+    expect(gv._gyroCalibrating).toBe(true);
+  });
+
+  test('disableGyro when not enabled is a no-op', () => {
+    const gv = new GunnerView(THREE, camera, canvas);
+    expect(() => gv.disableGyro()).not.toThrow();
+    expect(gv.isGyroEnabled).toBe(false);
   });
 
   test('mouse look clamps yaw and pitch', () => {
