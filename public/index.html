@@ -491,6 +491,7 @@ const state = {
     weaponReady: true, charging: false, chargeStart: 0, chargeLevel: 0,
     cooling: false, coolEnd: 0, recoilOffset: 0, recoilVel: 0,
     yaw: 0, pitch: 0, locked: false, damageFlash: 0, dead: false, bossActive: false,
+    enemyBolts: [],
   },
   starSystems: [],
   selectedSystem: null,
@@ -849,6 +850,15 @@ function addComms(sender, msg) {
   if (state.commsLog.length > 20) state.commsLog.pop();
 }
 
+function formatTimeAgo(ts) {
+  const sec = Math.floor((Date.now() - ts) / 1000);
+  if (sec < 5) return 'just now';
+  if (sec < 60) return sec + 's ago';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min + 'm ago';
+  return Math.floor(min / 60) + 'h ago';
+}
+
 function generateQuests() {
   const objectives = ['Retrieve','Protect','Eliminate','Escort','Investigate','Sabotage','Explore','Deliver'];
   const resources = ['Titanite Ore','Dark Matter Crystals','Hydrogen Fuel','Rare Earth Compounds','Bio-organic Materials','Ancient Artefacts','Quantum Processors'];
@@ -898,7 +908,8 @@ function updateBridgeUI() {
   const feed = document.getElementById('comms-feed');
   feed.innerHTML = '';
   state.commsLog.slice(0, 8).forEach(m => {
-    feed.innerHTML += `<div class="comms-msg"><div class="sender">${m.sender}</div>${m.msg}</div>`;
+    const ago = formatTimeAgo(m.time);
+    feed.innerHTML += `<div class="comms-msg"><div class="sender">${m.sender} <span style="color:#334;font-weight:normal;font-size:0.65rem">${ago}</span></div>${m.msg}</div>`;
   });
 
   // Quest tracker with progress
@@ -1102,6 +1113,47 @@ function renderSystemDetail(idx) {
 
 function jumpToSystem(idx) {
   AudioSFX.play('jump');
+  // Warp flash animation
+  const warpOverlay = document.createElement('div');
+  warpOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;background:radial-gradient(ellipse at center,rgba(68,170,255,0.8) 0%,rgba(0,0,0,0) 70%);animation:warpFlash 1.2s ease-out forwards;';
+  const style = document.createElement('style');
+  style.textContent = '@keyframes warpFlash{0%{opacity:0;transform:scale(0.3)}15%{opacity:1;transform:scale(1)}40%{opacity:1}100%{opacity:0;transform:scale(2)}}';
+  document.head.appendChild(style);
+  document.body.appendChild(warpOverlay);
+  // Star streaks
+  const streakCanvas = document.createElement('canvas');
+  streakCanvas.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;';
+  streakCanvas.width = window.innerWidth; streakCanvas.height = window.innerHeight;
+  document.body.appendChild(streakCanvas);
+  const sctx = streakCanvas.getContext('2d');
+  const streaks = Array.from({length: 60}, () => ({
+    x: Math.random() * streakCanvas.width,
+    y: Math.random() * streakCanvas.height,
+    len: 30 + Math.random() * 80,
+    speed: 800 + Math.random() * 1200,
+    alpha: 0.3 + Math.random() * 0.7,
+  }));
+  let warpStart = performance.now();
+  function drawStreaks() {
+    const elapsed = performance.now() - warpStart;
+    if (elapsed > 1200) { warpOverlay.remove(); streakCanvas.remove(); style.remove(); return; }
+    sctx.clearRect(0, 0, streakCanvas.width, streakCanvas.height);
+    const progress = elapsed / 1200;
+    const cx = streakCanvas.width / 2, cy = streakCanvas.height / 2;
+    streaks.forEach(s => {
+      const dx = s.x - cx, dy = s.y - cy;
+      const angle = Math.atan2(dy, dx);
+      const curLen = s.len * (0.5 + progress * 2);
+      const ex = s.x + Math.cos(angle) * curLen * progress;
+      const ey = s.y + Math.sin(angle) * curLen * progress;
+      sctx.strokeStyle = `rgba(180,210,255,${s.alpha * (1 - progress)})`;
+      sctx.lineWidth = 1;
+      sctx.beginPath(); sctx.moveTo(s.x, s.y); sctx.lineTo(ex, ey); sctx.stroke();
+    });
+    requestAnimationFrame(drawStreaks);
+  }
+  drawStreaks();
+
   state.location.systemIndex = idx;
   state.location.docked = false;
   state.ship.fuel = Math.max(0, state.ship.fuel - 5);
@@ -1602,6 +1654,11 @@ function enterGunnerMode() {
 function exitGunnerMode() {
   c.active = false;
   if (document.pointerLockElement) document.exitPointerLock();
+  // Clean up all 3D objects
+  c.enemyBolts.forEach(b => scene.remove(b.group)); c.enemyBolts = [];
+  c.enemies.forEach(e => scene.remove(e.group)); c.enemies = [];
+  c.projectiles.forEach(p => scene.remove(p.group)); c.projectiles = [];
+  c.explosions.forEach(ex => scene.remove(ex.group)); c.explosions = [];
   showScreen('bridge');
 }
 
@@ -1782,6 +1839,18 @@ function renderHUD() {
       hudCtx.beginPath(); hudCtx.arc(mx, my, e.isBoss ? 4 : 2, 0, Math.PI*2); hudCtx.fill();
     }
   });
+  // Incoming bolt dots (orange)
+  c.enemyBolts.forEach(b => {
+    const dx = b.group.position.x - ship.position.x;
+    const dz = b.group.position.z - ship.position.z;
+    const mapScale = mapR / (SPAWN_RADIUS + 200);
+    const mx = mapCx + dx * mapScale;
+    const my = mapCy + dz * mapScale;
+    if (Math.abs(mx-mapCx) < mapR && Math.abs(my-mapCy) < mapR) {
+      hudCtx.fillStyle = '#ff8800';
+      hudCtx.beginPath(); hudCtx.arc(mx, my, 1.5, 0, Math.PI*2); hudCtx.fill();
+    }
+  });
   hudCtx.globalAlpha = 1;
   hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
 
@@ -1802,6 +1871,12 @@ function renderHUD() {
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(bx, by, bw, bh);
     hudCtx.fillStyle = '#ff2200'; hudCtx.fillRect(bx, by, bw*(boss.hp/boss.maxHp), bh);
     hudCtx.strokeStyle = '#ff4422'; hudCtx.lineWidth = 1; hudCtx.strokeRect(bx, by, bw, bh);
+  }
+
+  // Enemy bolt count on HUD
+  if (c.enemyBolts.length > 0) {
+    hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ff4444';
+    hudCtx.fillText('\u26a0 INCOMING: ' + c.enemyBolts.length, 24, H-20);
   }
 
   // Scanlines
@@ -2028,6 +2103,26 @@ function gameLoop() {
       e.group.position.addScaledVector(dir, e.speed * dt);
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
+      // Enemy firing — shoot red bolt at player every 3-6 seconds
+      if (!e.lastShot) e.lastShot = state.gameTime;
+      const fireInterval = e.isBoss ? 1500 : (3000 + Math.random() * 3000);
+      if (state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
+        e.lastShot = state.gameTime;
+        const boltDir = ship.position.clone().sub(e.group.position).normalize();
+        // Add slight inaccuracy
+        boltDir.x += (Math.random() - 0.5) * 0.15;
+        boltDir.y += (Math.random() - 0.5) * 0.15;
+        boltDir.normalize();
+        const boltMat = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.9 });
+        const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4), boltMat);
+        bolt.position.copy(e.group.position);
+        bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), boltDir);
+        const boltTrailMat = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.5 });
+        const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4), boltTrailMat);
+        trail.position.copy(bolt.position); trail.quaternion.copy(bolt.quaternion);
+        const boltGroup = new THREE.Group(); boltGroup.add(bolt); boltGroup.add(trail); scene.add(boltGroup);
+        c.enemyBolts.push({ group: boltGroup, dir: boltDir, speed: 120, age: 0, life: 4000, mat: boltMat, trailMat: boltTrailMat });
+      }
       if (e.group.position.distanceTo(ship.position) < 5) {
         if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); }
         else state.ship.hull = Math.max(0, state.ship.hull - 0.3);
@@ -2041,6 +2136,30 @@ function gameLoop() {
         }
       }
     });
+
+    // Update enemy bolts
+    for (let i = c.enemyBolts.length - 1; i >= 0; i--) {
+      const b = c.enemyBolts[i];
+      b.age += dtMs;
+      b.group.position.addScaledVector(b.dir, b.speed * dt);
+      b.trailMat.opacity = Math.max(0, 0.5 - b.age / b.life);
+      // Hit player ship?
+      if (b.group.position.distanceTo(ship.position) < 6) {
+        const dmg = 3 + Math.random() * 4;
+        if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); }
+        else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+        c.damageFlash = 300;
+        scene.remove(b.group); c.enemyBolts.splice(i, 1);
+        if (state.ship.hull <= 0 && !c.dead) {
+          c.dead = true;
+          addComms('AI Director', 'Your ship has been destroyed. Embrace rebirth...');
+          AudioSFX.play('explode'); spawnExplosion(ship.position.clone(), 3);
+          setTimeout(() => { c.dead = false; showScreen('rebirth'); exitGunnerMode(); }, 2500);
+        }
+        continue;
+      }
+      if (b.age > b.life) { scene.remove(b.group); c.enemyBolts.splice(i, 1); }
+    }
 
     // Update explosions
     for (let i = c.explosions.length - 1; i >= 0; i--) {
