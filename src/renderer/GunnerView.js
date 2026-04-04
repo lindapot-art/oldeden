@@ -33,6 +33,9 @@ export class GunnerView {
    * @param {number} [options.maxPitch=1.2]         Max pitch (radians, ~69°).
    * @param {number} [options.maxYaw=1.5]           Max yaw (radians, ~86°).
    * @param {number} [options.fov=75]               FOV when in gunner mode.
+   * @param {number} [options.gyroSensitivity=0.015] Gyroscope sensitivity.
+   * @param {number} [options.gyroDeadZone=0.02]    Gyro dead zone (radians).
+   * @param {boolean} [options.autoEnableGyro=true] Auto-enable gyro on mobile.
    */
   constructor(THREE, camera, canvas, railgunWeapon, options = {}) {
     this._THREE  = THREE;
@@ -58,10 +61,30 @@ export class GunnerView {
     /** Saved camera state to restore on exit */
     this._savedState = null;
 
+    // ── Gyroscope controls (mobile) ─────────────────────────────────────
+    this._gyroSensitivity = options.gyroSensitivity ?? 0.015;
+    this._gyroDeadZone = options.gyroDeadZone ?? 0.02;
+    this._autoEnableGyro = options.autoEnableGyro ?? true;
+    
+    this._gyroEnabled = false;
+    this._gyroPermissionGranted = false;
+    this._gyroSupported = this._detectGyroSupport();
+    this._isMobile = this._detectMobile();
+    this._gyroCalibrating = false;
+    
+    // Gyro calibration baseline (set when calibrating)
+    this._gyroBaseline = {
+      alpha: 0,  // yaw (compass direction)
+      beta: 0,   // pitch (front-back tilt)
+      gamma: 0,  // roll (left-right tilt)
+    };
+
     // Bound event handlers
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onPointerLockChange = this._handlePointerLockChange.bind(this);
     this._onMouseDown = this._handleMouseDown.bind(this);
+    this._onDeviceOrientation = this._handleDeviceOrientation.bind(this);
+    this._onTouchStart = this._handleTouchStart.bind(this);
   }
 
   // ── Public API ──────────────────────────────────────────────────────────────
@@ -82,6 +105,30 @@ export class GunnerView {
    */
   get isActive() {
     return this._active;
+  }
+
+  /**
+   * Whether gyroscope controls are currently enabled.
+   * @returns {boolean}
+   */
+  get isGyroEnabled() {
+    return this._gyroEnabled;
+  }
+
+  /**
+   * Whether gyroscope is supported on this device.
+   * @returns {boolean}
+   */
+  get isGyroSupported() {
+    return this._gyroSupported;
+  }
+
+  /**
+   * Whether device is detected as mobile.
+   * @returns {boolean}
+   */
+  get isMobile() {
+    return this._isMobile;
   }
 
   /**
@@ -116,11 +163,23 @@ export class GunnerView {
     }
     this._camera.add(this._cockpit);
 
-    // Request pointer lock
-    this._canvas.addEventListener('mousemove', this._onMouseMove);
+    // Setup input controls based on device type
+    if (this._isMobile && this._autoEnableGyro && this._gyroSupported) {
+      // Try to enable gyro on mobile
+      this.requestGyroPermission().catch(err => {
+        console.warn('[GunnerView] Gyro permission denied, falling back to touch:', err);
+      });
+      // Add touch support for calibration and firing
+      this._canvas.addEventListener('touchstart', this._onTouchStart);
+    } else {
+      // Desktop: use pointer lock
+      this._canvas.addEventListener('mousemove', this._onMouseMove);
+      document.addEventListener('pointerlockchange', this._onPointerLockChange);
+      this._canvas.requestPointerLock?.();
+    }
+    
+    // Mouse down for firing (both mobile and desktop)
     this._canvas.addEventListener('mousedown', this._onMouseDown);
-    document.addEventListener('pointerlockchange', this._onPointerLockChange);
-    this._canvas.requestPointerLock?.();
 
     console.log('[GunnerView] Entered gunner mode.');
   }
@@ -143,9 +202,15 @@ export class GunnerView {
       this._camera.updateProjectionMatrix();
     }
 
-    // Release pointer lock
+    // Disable gyro if enabled
+    if (this._gyroEnabled) {
+      this.disableGyro();
+    }
+
+    // Release pointer lock and remove event listeners
     this._canvas.removeEventListener('mousemove', this._onMouseMove);
     this._canvas.removeEventListener('mousedown', this._onMouseDown);
+    this._canvas.removeEventListener('touchstart', this._onTouchStart);
     document.removeEventListener('pointerlockchange', this._onPointerLockChange);
     document.exitPointerLock?.();
 
@@ -203,6 +268,94 @@ export class GunnerView {
       });
       this._cockpit = null;
     }
+  }
+
+  // ── Gyroscope Controls API ──────────────────────────────────────────────────
+
+  /**
+   * Request permission to use device orientation (required on iOS and modern Android).
+   * Must be called from a user interaction (e.g., button click).
+   * @returns {Promise<boolean>} True if permission granted.
+   */
+  async requestGyroPermission() {
+    if (!this._gyroSupported) {
+      console.warn('[GunnerView] Gyroscope not supported on this device.');
+      return false;
+    }
+
+    // Check if permission API exists (iOS 13+, modern Android)
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const permission = await DeviceOrientationEvent.requestPermission();
+        this._gyroPermissionGranted = (permission === 'granted');
+        
+        if (this._gyroPermissionGranted) {
+          this.enableGyro();
+          console.log('[GunnerView] Gyroscope permission granted.');
+        } else {
+          console.warn('[GunnerView] Gyroscope permission denied.');
+        }
+        
+        return this._gyroPermissionGranted;
+      } catch (error) {
+        console.error('[GunnerView] Error requesting gyroscope permission:', error);
+        return false;
+      }
+    } else {
+      // Older browsers or Android without permission API - assume granted
+      this._gyroPermissionGranted = true;
+      this.enableGyro();
+      console.log('[GunnerView] Gyroscope enabled (no permission required).');
+      return true;
+    }
+  }
+
+  /**
+   * Enable gyroscope controls.
+   */
+  enableGyro() {
+    if (!this._gyroSupported) {
+      console.warn('[GunnerView] Cannot enable gyro: not supported.');
+      return;
+    }
+    
+    if (!this._gyroPermissionGranted) {
+      console.warn('[GunnerView] Cannot enable gyro: permission not granted.');
+      return;
+    }
+
+    if (this._gyroEnabled) return;
+
+    this._gyroEnabled = true;
+    window.addEventListener('deviceorientation', this._onDeviceOrientation);
+    
+    // Calibrate immediately
+    this.calibrateGyro();
+    
+    console.log('[GunnerView] Gyroscope controls enabled.');
+  }
+
+  /**
+   * Disable gyroscope controls.
+   */
+  disableGyro() {
+    if (!this._gyroEnabled) return;
+
+    this._gyroEnabled = false;
+    window.removeEventListener('deviceorientation', this._onDeviceOrientation);
+    
+    console.log('[GunnerView] Gyroscope controls disabled.');
+  }
+
+  /**
+   * Calibrate gyroscope to current device orientation.
+   * This sets the current orientation as the "center" position.
+   */
+  calibrateGyro() {
+    // The next deviceorientation event will set the baseline
+    this._gyroCalibrating = true;
+    console.log('[GunnerView] Calibrating gyroscope...');
   }
 
   // ── Private — Cockpit Geometry ──────────────────────────────────────────────
@@ -451,5 +604,102 @@ export class GunnerView {
       // Pointer lock was released externally — remain in gunner mode
       // but stop tracking mouse until re-locked.
     }
+  }
+
+  /** @param {DeviceOrientationEvent} e */
+  _handleDeviceOrientation(e) {
+    if (!this._active || !this._gyroEnabled) return;
+
+    // Extract orientation values (in degrees)
+    const alpha = e.alpha ?? 0;  // Z-axis rotation (compass, 0-360)
+    const beta = e.beta ?? 0;    // X-axis rotation (pitch, -180 to 180)
+    const gamma = e.gamma ?? 0;  // Y-axis rotation (roll, -90 to 90)
+
+    // Handle calibration
+    if (this._gyroCalibrating) {
+      this._gyroBaseline = { alpha, beta, gamma };
+      this._gyroCalibrating = false;
+      console.log('[GunnerView] Gyro calibrated:', this._gyroBaseline);
+      return;
+    }
+
+    // Convert to radians and apply baseline offset
+    const alphaRad = ((alpha - this._gyroBaseline.alpha) * Math.PI) / 180;
+    const betaRad = ((beta - this._gyroBaseline.beta) * Math.PI) / 180;
+    const gammaRad = ((gamma - this._gyroBaseline.gamma) * Math.PI) / 180;
+
+    // Map device orientation to yaw/pitch
+    // Portrait mode: use gamma for yaw, beta for pitch
+    // Landscape mode: use different mapping (could be enhanced later)
+    
+    // For portrait mode (most common):
+    let yaw = -gammaRad * this._gyroSensitivity;
+    let pitch = betaRad * this._gyroSensitivity;
+
+    // Apply dead zone to reduce jitter
+    if (Math.abs(yaw) < this._gyroDeadZone) yaw = 0;
+    if (Math.abs(pitch) < this._gyroDeadZone) pitch = 0;
+
+    // Update yaw and pitch (replace current values, not accumulate)
+    this._yaw = yaw;
+    this._pitch = pitch;
+
+    // Clamp to limits
+    this._yaw = Math.max(-this._maxYaw, Math.min(this._maxYaw, this._yaw));
+    this._pitch = Math.max(-this._maxPitch, Math.min(this._maxPitch, this._pitch));
+  }
+
+  /** @param {TouchEvent} e */
+  _handleTouchStart(e) {
+    if (!this._active) return;
+
+    // Single tap to calibrate gyro
+    if (e.touches.length === 1 && this._gyroEnabled) {
+      this.calibrateGyro();
+    }
+
+    // Double tap or two-finger tap to fire
+    if (e.touches.length === 2 || e.detail === 2) {
+      // Fire railgun
+      if (this._railgun && this._railgun.isReady) {
+        this._railgun.fire();
+        
+        // Emit event with firing direction
+        const direction = new this._THREE.Vector3(0, 0, -1);
+        direction.applyQuaternion(this._camera.quaternion);
+        
+        const event = new CustomEvent('gunner:fire', {
+          detail: {
+            origin: this._camera.position.clone(),
+            direction: direction,
+            weaponType: 'railgun',
+          },
+        });
+        this._canvas.dispatchEvent(event);
+      }
+    }
+  }
+
+  // ── Private — Detection Helpers ─────────────────────────────────────────────
+
+  /**
+   * Detect if device supports gyroscope.
+   * @returns {boolean}
+   */
+  _detectGyroSupport() {
+    return typeof DeviceOrientationEvent !== 'undefined';
+  }
+
+  /**
+   * Detect if device is mobile.
+   * @returns {boolean}
+   */
+  _detectMobile() {
+    // Check user agent and touch support
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    const hasTouchScreen = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    
+    return isMobileUA || hasTouchScreen;
   }
 }
