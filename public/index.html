@@ -317,6 +317,7 @@ canvas{display:block;}
   </div>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Your current character's rebirth weight determines the quality of NPC you inherit.</p>
   <div class="btn-row">
+    <button class="btn" id="btn-embrace-rebirth" style="border-color:var(--danger);color:var(--danger);">&#9760; Embrace Rebirth</button>
     <button class="btn" id="btn-rebirth-back">&larr; Return to Bridge</button>
   </div>
 </div>
@@ -411,6 +412,7 @@ const state = {
   selectedSystem: null,
   quests: [],
   inventory: [],
+  stationPrices: null,
   factionRep: {},
   commsLog: [],
   gameTime: 0,
@@ -439,26 +441,94 @@ async function connectSocket() {
           updateServerStatus(false);
         });
         s.on('game:init', (data) => {
-          addComms('AI Director', `Systems online: ${data.systems.join(', ')}`);
-        });
-        s.on('starmap:data', (data) => {
-          if (data.systems) state.starSystems = data.systems;
-        });
-        s.on('quests:data', (data) => {
-          if (data.quests) state.quests = data.quests;
+          addComms('AI Director', `${data.systems.length} systems online. Tick rate: ${data.tickRate}ms`);
         });
         s.on('character:created', (data) => {
+          state.player.serverId = data.id;
           if (data.wallet) {
             state.player.credits = data.wallet.ec;
             state.player.stellarMarks = data.wallet.sm;
           }
-          addComms('System', `Character ${data.name} created on server (ID: ${data.id.slice(0,8)}...)`);
+          addComms('System', `Pilot ${data.name} registered (${data.id.slice(0,8)})`);
         });
-        s.on('combat:result', (data) => {
-          if (data.hit) addComms('Combat', `Hit confirmed! ${data.damage} damage dealt.`);
+        // Combat reward from server
+        s.on('combat:rewarded', (data) => {
+          if (data.wallet) {
+            state.player.credits = data.wallet.ec;
+            state.player.stellarMarks = data.wallet.sm;
+          }
+          showToast(`+${data.reward} EC bounty (${data.enemyType})`);
+          // Update quest progress on client
+          if (data.questUpdates) {
+            data.questUpdates.forEach(qu => {
+              const q = state.quests.find(q => q.id === qu.questId);
+              if (q) q.objectives = qu.objectives;
+            });
+          }
+          if (state.screen === 'bridge') updateBridgeUI();
         });
-        s.on('economy:exchanged', (data) => {
-          if (data.success) addComms('Economy', 'Currency exchange completed.');
+        // Quest events
+        s.on('quest:accepted', (data) => {
+          addComms('Mission Board', `Accepted: ${data.quest.name}`);
+          const existing = state.quests.find(q => q.id === data.questId);
+          if (existing) { existing.active = true; existing.objectives = data.quest.objectives; }
+          else state.quests.push({ id: data.questId, title: data.quest.name, active: true, objectives: data.quest.objectives, reward: data.quest.rewards?.credits || 0 });
+          if (state.screen === 'bridge') updateBridgeUI();
+        });
+        s.on('quest:complete', (data) => {
+          if (data.wallet) { state.player.credits = data.wallet.ec; state.player.stellarMarks = data.wallet.sm; }
+          const q = state.quests.find(q => q.id === data.questId);
+          if (q) { q.active = false; q.completed = true; }
+          showToast(`Quest complete! +${data.rewards?.credits || 0} EC`);
+          addComms('Mission Board', `Mission complete! Reward: ${data.rewards?.credits || 0} EC`);
+          if (state.screen === 'bridge') updateBridgeUI();
+        });
+        s.on('quest:error', (data) => { addComms('System', data.error); });
+        // Station events
+        s.on('station:prices', (data) => {
+          state.stationPrices = data.prices;
+          if (state.screen === 'station') renderStation();
+        });
+        s.on('station:bought', (data) => {
+          if (data.wallet) { state.player.credits = data.wallet.ec; state.player.stellarMarks = data.wallet.sm; }
+          state.inventory.push({ name: data.name, quantity: 1 });
+          addComms('Station', `Purchased ${data.name} for ${data.price} EC`);
+          if (state.screen === 'station') renderStation();
+        });
+        s.on('station:sold', (data) => {
+          if (data.wallet) { state.player.credits = data.wallet.ec; state.player.stellarMarks = data.wallet.sm; }
+          addComms('Station', `Sold ${data.name} for ${data.price} EC`);
+          if (state.screen === 'station') renderStation();
+        });
+        s.on('station:error', (data) => { addComms('Station', data.error); });
+        // Save/Load
+        s.on('game:saved', (data) => {
+          if (data.ok) { state.player.serverId = data.playerId; addComms('System', 'Game saved to server.'); }
+        });
+        s.on('game:loaded', (data) => {
+          if (data.ok && data.data) {
+            loadFromServerData(data.data);
+            addComms('System', 'Game loaded from server.');
+            showScreen('bridge');
+          }
+        });
+        // Player state sync
+        s.on('player:state', (data) => {
+          if (data.wallet) { state.player.credits = data.wallet.ec; state.player.stellarMarks = data.wallet.sm; }
+        });
+        // Rebirth result
+        s.on('rebirth:result', (data) => {
+          state.player.genome = data.genome;
+          state.player.rebirths++;
+          state.player.credits = data.wallet.ec;
+          state.player.stellarMarks = data.wallet.sm;
+          state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1;
+          state.ship = { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 };
+          state.inventory = [];
+          state.quests = state.quests.filter(q => !q.active);
+          addComms('AI Director', 'You have been reborn. A new life awaits.');
+          saveGame();
+          showScreen('bridge');
         });
         resolve(s);
       } catch(e) { resolve(null); }
@@ -466,6 +536,25 @@ async function connectSocket() {
     script.onerror = () => resolve(null);
     document.head.appendChild(script);
   });
+}
+
+// Toast notification
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(212,168,86,0.9);color:#000;padding:8px 20px;border-radius:4px;font-size:0.85rem;z-index:9999;pointer-events:none;animation:fadeIn 0.3s ease;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }, 2000);
+}
+
+function loadFromServerData(data) {
+  if (data.player) Object.assign(state.player, data.player);
+  if (data.ship) Object.assign(state.ship, data.ship);
+  if (data.location) Object.assign(state.location, data.location);
+  if (data.factionRep) Object.assign(state.factionRep, data.factionRep);
+  if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; }
+  if (data.inventory) state.inventory = data.inventory;
+  if (data.quests) state.quests = data.quests;
 }
 
 function updateServerStatus(online) {
@@ -700,11 +789,19 @@ function updateBridgeUI() {
     feed.innerHTML += `<div class="comms-msg"><div class="sender">${m.sender}</div>${m.msg}</div>`;
   });
 
-  // Quest tracker
+  // Quest tracker with progress
   const qt = document.getElementById('quest-tracker');
   qt.innerHTML = '';
-  state.quests.filter(q => q.active).forEach(q => {
-    qt.innerHTML += `<div class="quest-item"><div class="qt">${q.title}</div>${q.summary}<br/><span style="color:var(--gold)">${q.reward} EC</span></div>`;
+  state.quests.filter(q => q.active && !q.completed).forEach(q => {
+    let progressHtml = '';
+    if (q.objectives) {
+      progressHtml = q.objectives.map(o => {
+        const pct = Math.min(100, (o.current || 0) / o.required * 100);
+        return `<div style="margin-top:4px;font-size:0.7rem;color:var(--muted)">${o.type}: ${o.target === '*' ? 'any' : o.target} <span style="color:${pct >= 100 ? 'var(--green)' : 'var(--warn)'};">${o.current || 0}/${o.required}</span>
+          <div style="height:3px;background:#111;border-radius:2px;margin-top:2px;"><div style="height:100%;width:${pct}%;background:${pct >= 100 ? 'var(--green)' : 'var(--blue)'};border-radius:2px;"></div></div></div>`;
+      }).join('');
+    }
+    qt.innerHTML += `<div class="quest-item"><div class="qt">${q.title || q.name || 'Mission'}</div>${q.summary || ''}${progressHtml}<br/><span style="color:var(--gold)">${q.reward || 0} EC</span></div>`;
   });
 }
 
@@ -897,6 +994,8 @@ function jumpToSystem(idx) {
   state.ship.fuel = Math.max(0, state.ship.fuel - 5);
   state.selectedSystem = null;
   const sys = state.starSystems[idx];
+  // Report visit to server for quest progress
+  if (state.socket) state.socket.emit('system:visit', { systemId: sys.id });
   addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
@@ -918,12 +1017,26 @@ const COMMODITIES = [
   { name: 'Anti-matter Reserves', buy: 2000, sell: 1600 },
 ];
 
+// Mirror of server starter quests (for UI)
+const STARTER_QUESTS_CLIENT = [
+  { id: 'q-kill-scouts',  name: 'Thin the Ranks',   objectives: [{ type: 'kill', target: 'scout', required: 5 }],  rewards: { credits: 250 } },
+  { id: 'q-kill-fighters', name: 'Dogfight Ace',     objectives: [{ type: 'kill', target: 'fighter', required: 3 }], rewards: { credits: 400 } },
+  { id: 'q-kill-bombers', name: 'Bomber Buster',     objectives: [{ type: 'kill', target: 'bomber', required: 2 }],  rewards: { credits: 500 } },
+  { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 600 } },
+  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 300 } },
+  { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 350 } },
+];
+
 function renderStation() {
   const sys = state.starSystems[state.location.systemIndex];
   document.getElementById('station-name').innerHTML = `&#9968; ${sys ? sys.name : 'Unknown'} Station`;
 
+  // Request dynamic prices from server
+  if (state.socket) state.socket.emit('station:enter', { systemIndex: state.location.systemIndex });
+
+  const prices = state.stationPrices || COMMODITIES;
   const market = document.getElementById('trade-market');
-  market.innerHTML = COMMODITIES.map(c => `
+  market.innerHTML = prices.map(c => `
     <div class="trade-row">
       <span>${c.name}</span>
       <span>
@@ -932,19 +1045,53 @@ function renderStation() {
       </span>
     </div>`).join('');
 
+  // Inventory display
+  const invHtml = state.inventory.length
+    ? state.inventory.map(item => `<div class="trade-row"><span>${item.name}</span><span style="color:var(--muted)">x${item.quantity || 1}</span></div>`).join('')
+    : '<p style="color:var(--muted);font-size:0.8rem">Empty cargo hold.</p>';
+
+  // Available server quests
+  const availableQuests = STARTER_QUESTS_CLIENT.filter(q => !state.quests.find(sq => sq.id === q.id && (sq.active || sq.completed)));
+
   const missions = document.getElementById('mission-board');
-  missions.innerHTML = state.quests.filter(q => !q.active).slice(0, 4).map(q => `
+  missions.innerHTML = availableQuests.slice(0, 4).map(q => `
     <div class="quest-item">
-      <div class="qt">${q.title}</div>${q.summary}<br/>
-      <span style="color:var(--gold)">${q.reward} EC</span>
+      <div class="qt">${q.name}</div>
+      ${q.objectives.map(o => `<span style="color:var(--muted);font-size:0.7rem">${o.type}: ${o.target === '*' ? 'any' : o.target} (${o.required})</span>`).join('<br/>')}
+      <br/><span style="color:var(--gold)">${q.rewards?.credits || 0} EC</span>
       <button class="btn btn-sm" style="margin-left:8px;padding:3px 10px;font-size:0.7rem" onclick="window._acceptQuest('${q.id}')">Accept</button>
     </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No missions available.</p>';
+
+  // Add inventory section after mission board
+  const stationGrid = document.querySelector('.station-grid');
+  let invPanel = document.getElementById('inv-panel');
+  if (!invPanel) {
+    invPanel = document.createElement('div');
+    invPanel.id = 'inv-panel';
+    invPanel.className = 'station-panel';
+    stationGrid.appendChild(invPanel);
+  }
+  invPanel.innerHTML = `<div class="panel-title">Cargo Hold</div>${invHtml}`;
+
+  // Wallet display
+  let walletPanel = document.getElementById('wallet-panel');
+  if (!walletPanel) {
+    walletPanel = document.createElement('div');
+    walletPanel.id = 'wallet-panel';
+    walletPanel.className = 'station-panel';
+    stationGrid.appendChild(walletPanel);
+  }
+  walletPanel.innerHTML = `<div class="panel-title">Wallet</div>
+    <div style="font-size:1.1rem;color:var(--gold);font-weight:600">${state.player.credits.toLocaleString()} EC</div>
+    <div style="font-size:0.8rem;color:var(--muted)">${state.player.stellarMarks} SM</div>`;
 
   state.location.docked = true;
 }
 
 window._buy = (name, price) => {
-  if (state.player.credits >= price) {
+  if (state.socket) {
+    state.socket.emit('station:buy', { name, price });
+  } else if (state.player.credits >= price) {
     state.player.credits -= price;
     state.inventory.push({ name, quantity: 1 });
     addComms('Station', `Purchased ${name} for ${price} EC.`);
@@ -953,7 +1100,11 @@ window._buy = (name, price) => {
 };
 window._sell = (name, price) => {
   const idx = state.inventory.findIndex(i => i.name === name);
-  if (idx >= 0) {
+  if (idx < 0) return;
+  if (state.socket) {
+    state.inventory.splice(idx, 1);
+    state.socket.emit('station:sell', { name, price });
+  } else {
     state.inventory.splice(idx, 1);
     state.player.credits += price;
     addComms('Station', `Sold ${name} for ${price} EC.`);
@@ -961,8 +1112,12 @@ window._sell = (name, price) => {
   }
 };
 window._acceptQuest = (id) => {
-  const q = state.quests.find(q => q.id === id);
-  if (q) { q.active = true; addComms('Mission Board', `Accepted: ${q.title}`); renderStation(); }
+  if (state.socket) {
+    state.socket.emit('quest:accept', { questId: id });
+  } else {
+    const q = state.quests.find(q => q.id === id);
+    if (q) { q.active = true; addComms('Mission Board', `Accepted: ${q.title || q.name}`); renderStation(); }
+  }
 };
 
 // ================================================================
@@ -1055,6 +1210,8 @@ function saveGame() {
     quests: state.quests,
   };
   localStorage.setItem('oe-save', JSON.stringify(data));
+  // Also save to server
+  if (state.socket) state.socket.emit('game:save', data);
 }
 
 function loadGame() {
@@ -1062,15 +1219,7 @@ function loadGame() {
     const raw = localStorage.getItem('oe-save');
     if (!raw) return false;
     const data = JSON.parse(raw);
-    Object.assign(state.player, data.player);
-    Object.assign(state.ship, data.ship);
-    Object.assign(state.location, data.location);
-    Object.assign(state.factionRep, data.factionRep || {});
-    state.combat.score = data.combat?.score || 0;
-    state.combat.kills = data.combat?.kills || 0;
-    state.combat.cycle = data.combat?.cycle || 1;
-    state.inventory = data.inventory || [];
-    state.quests = data.quests || [];
+    loadFromServerData(data);
     return true;
   } catch(e) { return false; }
 }
@@ -1451,6 +1600,24 @@ document.getElementById('btn-back-title').addEventListener('click', () => showSc
 document.getElementById('btn-undock').addEventListener('click', () => { state.location.docked = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
 document.getElementById('btn-char-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-rebirth-back').addEventListener('click', () => showScreen('bridge'));
+document.getElementById('btn-embrace-rebirth').addEventListener('click', () => {
+  if (!confirm('Embrace rebirth? Your current character will be reborn into a new body. All credits, inventory, and active quests will be lost.')) return;
+  if (state.socket) {
+    state.socket.emit('rebirth:perform', { genome: state.player.genome });
+  } else {
+    // Offline rebirth
+    state.player.rebirths++;
+    state.player.credits = 500;
+    state.player.stellarMarks = 0;
+    state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1;
+    state.inventory = [];
+    state.quests = state.quests.filter(q => !q.active);
+    crypto.getRandomValues(new Uint8Array(256)).forEach((v, i) => { if (state.player.genome) state.player.genome[i] = v; });
+    addComms('AI Director', 'You have been reborn. A new life awaits.');
+    saveGame();
+    showScreen('bridge');
+  }
+});
 document.getElementById('btn-jump').addEventListener('click', () => {
   if (state.selectedSystem !== null) jumpToSystem(state.selectedSystem);
 });
@@ -1527,6 +1694,8 @@ function gameLoop() {
           if (e.hp <= 0) {
             c.score += e.points; c.kills++;
             state.player.credits += e.points;
+            // Report kill to server for economy credit + quest progress
+            if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
             spawnExplosion(e.group.position.clone(), e.cfg.scale);
             scene.remove(e.group); c.enemies.splice(j, 1);
           }
