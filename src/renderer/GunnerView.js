@@ -637,10 +637,13 @@ export class GunnerView {
     const gammaRad = ((gamma - this._gyroBaseline.gamma) * Math.PI) / 180;
 
     // Map device orientation to yaw/pitch
-    // Portrait mode: use gamma for yaw, beta for pitch
-    // Landscape mode: use different mapping (could be enhanced later)
+    // Portrait mode (most common):
+    // - gamma (-90 to 90) controls yaw (left-right aim): negated to match natural expectation
+    // - beta (-180 to 180) controls pitch (up-down aim): positive beta = tilt forward = look down
+    // Device coordinate system: gamma increases tilting right, beta increases tilting forward
+    // Camera coordinate system: yaw increases rotating left, pitch increases looking up
+    // Therefore: yaw = -gamma, pitch = beta
     
-    // For portrait mode (most common):
     let yaw = -gammaRad * this._gyroSensitivity;
     let pitch = betaRad * this._gyroSensitivity;
 
@@ -703,9 +706,12 @@ export class GunnerView {
    * @returns {boolean}
    */
   _detectMobile() {
-    // Check user agent and touch support
-    const userAgent = (typeof navigator !== 'undefined' ? navigator.userAgent : '') || 
-                      (typeof navigator !== 'undefined' ? navigator.vendor : '') || 
+    // Check user agent and touch support (with SSR-safe checks)
+    if (typeof navigator === 'undefined' && typeof window === 'undefined') {
+      return false; // Server-side or test environment
+    }
+    
+    const userAgent = (typeof navigator !== 'undefined' ? (navigator.userAgent || navigator.vendor) : '') || 
                       (typeof window !== 'undefined' ? window.opera : '') || '';
     const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
     const hasTouchScreen = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || 
