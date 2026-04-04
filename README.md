@@ -212,6 +212,17 @@ An adaptive AI Director (inspired by Left 4 Dead and modern WoW) monitors player
 
 ## Getting Started
 
+### 🚀 Quick Start (Recommended)
+
+**Windows:** Double-click `start.bat`  
+**Linux/Mac:** Run `./start.sh`
+
+The launcher automatically handles everything - Node.js check, dependencies, configuration, and startup!
+
+👉 See [QUICKSTART.md](QUICKSTART.md) for details
+
+### 📋 Manual Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/lindapot-art/oldeden.git
@@ -226,6 +237,16 @@ cp .env.example .env
 # Start development server
 npm run dev
 ```
+
+### 🌐 Staging Deployment
+
+For online testing of your private repository:
+
+1. Enable GitHub Pages: `Settings` → `Pages` → Source: `GitHub Actions`
+2. Push to `staging` or `develop` branch
+3. Access at: `https://[your-username].github.io/oldeden/`
+
+👉 See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment guide
 
 ### Environment Variables
 
