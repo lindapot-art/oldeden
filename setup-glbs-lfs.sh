@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Automated Git LFS setup script for glbs repository
-# This solves the 25MB file size limit issue
+# This solves the 25MB GitHub WEB UI file size limit issue
+# Note: GitHub's web interface has a hard 25MB limit - files larger than
+# 25MB MUST be uploaded via Git CLI, even with LFS configured
 
 set -e
 
@@ -9,6 +11,7 @@ GLBS_REPO_URL="https://github.com/lindapot-art/glbs.git"
 GLBS_DIR="$HOME/glbs-repo"
 
 echo "🚀 Setting up Git LFS for your glbs repository..."
+echo "⚠️  Note: GitHub web UI has a 25MB limit - this script enables CLI uploads for larger files"
 echo ""
 
 # Check if git-lfs is installed
@@ -94,13 +97,19 @@ echo ""
 echo "🎉 Setup complete!"
 echo ""
 echo "📋 Next steps:"
-echo "   1. Copy your .glb files to: $GLBS_DIR"
-echo "   2. Run these commands:"
+echo "   Use the upload-glbs.sh script to upload files:"
+echo ""
+echo "      ./upload-glbs.sh /path/to/your/models/*.glb"
+echo ""
+echo "   OR manually:"
 echo ""
 echo "      cd $GLBS_DIR"
+echo "      cp /path/to/your/*.glb ."
 echo "      git add *.glb"
 echo "      git commit -m \"Add GLB assets\""
-echo "      git push"
+echo "      git push origin main"
 echo ""
 echo "💡 Git LFS will now handle files over 25MB automatically!"
+echo "⚠️  Remember: GitHub web UI at github.com/lindapot-art/glbs/upload has a 25MB limit"
+echo "    Files > 25MB MUST be uploaded via Git CLI (as shown above)"
 echo ""

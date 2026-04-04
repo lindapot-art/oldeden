@@ -2,43 +2,59 @@
 
 ## The Problem
 
-GitHub has a 25MB file size limit for files uploaded through the web interface. Large 3D models (GLB, GLTF, FBX) often exceed this limit.
+GitHub has a **hard 25MB file size limit** for files uploaded through the web interface (https://github.com/lindapot-art/glbs/upload). This limit **cannot be bypassed**, even with Git LFS configured. Large 3D models (GLB, GLTF, FBX) often exceed this limit.
 
-## The Solution: Git LFS
+## The Solution: Git CLI with Git LFS
 
-This repository is configured to use **Git Large File Storage (LFS)** to handle large files automatically.
+To upload files larger than 25MB, you **must use the Git command-line interface (CLI)**. The GitHub web UI cannot handle large files, even with Git LFS enabled.
 
 ## Quick Start
 
-### Option 1: Upload via GitHub Web UI (Easiest)
+### ⚠️ GitHub Web UI (Only for files < 25MB)
 
-1. Go to https://github.com/lindapot-art/oldeden/tree/main/public/3d/glb
+**WARNING:** This method only works for files smaller than 25MB. For larger files, use Option 2 below.
+
+1. Go to https://github.com/lindapot-art/glbs/upload
 2. Click "Add file" → "Upload files"
-3. Drag and drop your `.glb` files
+3. Drag and drop your `.glb` files (must be < 25MB)
 4. Commit the changes
 
-**Git LFS handles the upload automatically** - no 25MB errors!
+**If you get a "file too large" error, you must use the Git CLI method below.**
 
-### Option 2: Upload via Git CLI
+### ✅ Git CLI Method (Required for files > 25MB)
+
+This is the **only way** to upload files larger than 25MB to GitHub.
+
+#### First-Time Setup
 
 ```bash
 # 1. Make sure Git LFS is installed
 git lfs install
 
-# 2. Clone the repository (if you haven't already)
-git clone https://github.com/lindapot-art/oldeden.git
-cd oldeden
+# 2. Clone the glbs repository
+git clone https://github.com/lindapot-art/glbs.git
+cd glbs
 
-# 3. Copy your GLB files to the appropriate directory
-cp /path/to/your/models/*.glb public/3d/glb/
+# 3. Verify Git LFS is tracking large files
+cat .gitattributes
+# Should show: *.glb filter=lfs diff=lfs merge=lfs -text
+```
 
-# 4. Add and commit the files
-git add public/3d/glb/*.glb
+#### Upload Files
+
+```bash
+# 1. Copy your GLB files to the repository
+cp /path/to/your/models/*.glb .
+
+# 2. Add and commit the files
+git add *.glb
 git commit -m "Add 3D model files"
 
-# 5. Push to GitHub
+# 3. Push to GitHub (Git LFS handles the upload automatically)
 git push origin main
 ```
+
+**Git LFS will upload large files to GitHub's LFS storage, bypassing the 25MB web UI limit.**
 
 ## Installing Git LFS
 
@@ -127,27 +143,42 @@ const lods = await processor.generateLODs('/path/to/model.glb', {
 
 ### "This exceeds GitHub's file size limit of 25.00 MB"
 
-This error means Git LFS is not tracking your file. Make sure:
-
-1. Git LFS is installed: `git lfs install`
-2. The file extension is tracked in `.gitattributes`:
-   ```
-   *.glb filter=lfs diff=lfs merge=lfs -text
-   *.gltf filter=lfs diff=lfs merge=lfs -text
-   *.fbx filter=lfs diff=lfs merge=lfs -text
-   ```
-3. Add the file again: `git add yourfile.glb`
-
-### "Or No file chosenYowza, that's a big file..."
-
-This concatenated error message indicates a UI issue with the file upload form. It should show:
-- "No file chosen" (when no file is selected)
-- "Yowza, that's a big file. Try again with a file smaller than 25MB." (when file is too large)
+This error appears when trying to upload large files via the **GitHub web UI** at https://github.com/lindapot-art/glbs/upload.
 
 **Solutions:**
-1. Use Git LFS (see above) - this bypasses the 25MB GitHub web UI limit
-2. Use the Git CLI instead of the web interface
-3. Optimize the model using the ML service before uploading
+
+1. **Use the Git CLI method above** (the only way to upload files > 25MB)
+2. If using Git CLI and still seeing this error:
+   - Make sure Git LFS is installed: `git lfs install`
+   - Verify the file extension is tracked in `.gitattributes`:
+     ```bash
+     cat .gitattributes
+     # Should show:
+     # *.glb filter=lfs diff=lfs merge=lfs -text
+     # *.gltf filter=lfs diff=lfs merge=lfs -text
+     # *.fbx filter=lfs diff=lfs merge=lfs -text
+     ```
+   - If not tracked, add tracking: `git lfs track "*.glb"`
+   - Commit .gitattributes: `git add .gitattributes && git commit -m "Track GLB with LFS"`
+   - Add the file again: `git add yourfile.glb`
+
+### "Yowza, that's a big file. Try again with a file smaller than 25MB."
+
+This error appears on the GitHub web UI at https://github.com/lindapot-art/glbs/upload when you try to upload a file larger than 25MB.
+
+**This is a hard GitHub limit that cannot be bypassed via the web interface.**
+
+**Solutions:**
+1. **Use the Git CLI method** (see above) - this is the only way to upload files > 25MB
+2. **OR** Optimize the model using the ML service to reduce file size below 25MB:
+   ```javascript
+   import { GlbMLProcessor } from './src/ai/GlbMLProcessor.js';
+   const processor = new GlbMLProcessor();
+   const result = await processor.optimizeModel('/path/to/large-model.glb', {
+     targetPolyCount: 50000,
+     qualityThreshold: 0.95
+   });
+   ```
 
 ### "Error: File too large. Maximum size is 157286400 bytes."
 
@@ -194,20 +225,46 @@ When uploading GLB files, use descriptive names:
 - ❌ Bad: `model.glb`
 - ❌ Bad: `untitled-1.glb`
 
-## Automated Workflow
+## Automated Upload Scripts
 
-For bulk uploads, you can use the provided scripts:
+For easier uploads, we provide helper scripts:
+
+### First-Time Setup Script
+
+```bash
+./setup-glbs-lfs.sh
+```
+
+This will:
+- Install Git LFS if needed
+- Clone the `lindapot-art/glbs` repository to `~/glbs-repo`
+- Configure Git LFS to track large files automatically
+
+### Quick Upload Script
+
+After setup, upload files anytime:
 
 ```bash
 # Upload all GLB files from a directory
 ./upload-glbs.sh /path/to/your/models/*.glb
 
-# Or manually
+# Upload specific files
+./upload-glbs.sh model1.glb model2.glb model3.glb
+```
+
+This script will:
+1. Copy files to the glbs repository
+2. Add and commit them
+3. Push to GitHub (Git LFS handles large files automatically)
+
+### Manual Upload (Without Scripts)
+
+```bash
 cd ~/glbs-repo
 cp /path/to/your/*.glb .
 git add *.glb
 git commit -m "Add 3D assets"
-git push
+git push origin main
 ```
 
 ## API Upload Example
@@ -229,10 +286,21 @@ console.log('Uploaded:', result.uploaded);
 
 ## Summary
 
-- **Use Git LFS** for files over 25MB (already configured in this repo)
-- **Server limit**: 150 MB default, configurable up to 500 MB+
+**Key Points:**
+- **GitHub web UI** (https://github.com/lindapot-art/glbs/upload) has a **hard 25MB limit**
+- Files > 25MB **must be uploaded via Git CLI** with Git LFS
+- Use the provided scripts (`setup-glbs-lfs.sh` and `upload-glbs.sh`) for easier uploads
+- **Server limit** for Old Eden app: 150 MB default, configurable up to 500 MB+
 - **Optimize large files** using the ML service before uploading
 - **Generate LODs** for better game performance
-- **Check `.gitattributes`** to verify LFS tracking
 
-For questions, see the [main README](../README.md) or open an issue.
+**Quick Reference:**
+```bash
+# One-time setup
+./setup-glbs-lfs.sh
+
+# Upload files
+./upload-glbs.sh /path/to/*.glb
+```
+
+For questions, see the [GLB Upload README](../GLB_UPLOAD_README.md) or open an issue.
