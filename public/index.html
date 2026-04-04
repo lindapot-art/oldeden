@@ -164,7 +164,7 @@ canvas{display:block;}
   <p class="sub">A world that remembers</p>
   <button class="menu-btn" id="btn-new">&#9733; New Game</button>
   <button class="menu-btn" id="btn-continue" disabled>&#9654; Continue</button>
-  <button class="menu-btn" id="btn-settings" disabled>&#9881; Settings</button>
+  <button class="menu-btn" id="btn-settings">&#9881; Settings</button>
   <div id="server-status">Connecting&#8230;</div>
 </div>
 
@@ -303,6 +303,41 @@ canvas{display:block;}
 <!-- ════════════════════════════════════════════ -->
 <!--  REBIRTH SCREEN                              -->
 <!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-settings" style="z-index:90;background:var(--bg);flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
+  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;">Settings</h2>
+  <div style="width:100%;max-width:500px;">
+    <div style="margin-bottom:20px;">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Master Volume</label>
+      <input type="range" id="vol-master" min="0" max="100" value="70" style="width:100%;accent-color:var(--gold);">
+      <span id="vol-master-val" style="color:var(--gold);font-size:0.8rem;">70%</span>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">SFX Volume</label>
+      <input type="range" id="vol-sfx" min="0" max="100" value="80" style="width:100%;accent-color:var(--blue);">
+      <span id="vol-sfx-val" style="color:var(--blue);font-size:0.8rem;">80%</span>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Mouse Sensitivity</label>
+      <input type="range" id="setting-sens" min="1" max="10" value="5" style="width:100%;accent-color:var(--green);">
+      <span id="setting-sens-val" style="color:var(--green);font-size:0.8rem;">5</span>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="setting-scanlines" checked> Show HUD scan lines
+      </label>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="setting-screenshake" checked> Screen shake on damage
+      </label>
+    </div>
+  </div>
+  <div class="btn-row"><button class="btn" id="btn-settings-back">&larr; Back</button></div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  REBIRTH SCREEN                              -->
+<!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-rebirth">
   <h2>&#10040; Rebirth</h2>
   <div class="rebirth-info">
@@ -341,6 +376,7 @@ canvas{display:block;}
   <button class="nav-btn" data-screen="station"><span class="nav-icon">&#9968;</span>Station</button>
   <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
   <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
+  <button class="nav-btn" data-screen="settings"><span class="nav-icon">&#9881;</span>Settings</button>
 </div>
 
 <div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
@@ -384,6 +420,8 @@ const AudioSFX = {
     if (!this.ctx) return;
     this.ensure();
     const ctx = this.ctx;
+    const vol = state.settings.masterVol * state.settings.sfxVol;
+    if (vol <= 0) return;
     const now = ctx.currentTime;
     const gain = ctx.createGain();
     gain.connect(ctx.destination);
@@ -458,6 +496,21 @@ const state = {
   selectedSystem: null,
   quests: [],
   inventory: [],
+  upgrades: {
+    railgunDmg: 1,     // multiplier
+    shieldRegen: 3,    // per sec
+    maxAmmo: 24,
+    maxHull: 100,
+    maxShield: 100,
+    engineSpeed: 1,
+  },
+  settings: {
+    masterVol: 0.7,
+    sfxVol: 0.8,
+    sensitivity: 5,
+    scanlines: true,
+    screenShake: true,
+  },
   stationPrices: null,
   factionRep: {},
   commsLog: [],
@@ -602,6 +655,9 @@ function loadFromServerData(data) {
   if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; }
   if (data.inventory) state.inventory = data.inventory;
   if (data.quests) state.quests = data.quests;
+  if (data.upgrades) Object.assign(state.upgrades, data.upgrades);
+  if (data.settings) Object.assign(state.settings, data.settings);
+  applyUpgrades();
 }
 
 function updateServerStatus(online) {
@@ -625,7 +681,7 @@ function showScreen(name) {
 
   state.screen = name;
   const navBar = document.getElementById('nav-bar');
-  const showNav = ['bridge','starmap','station','character','rebirth'].includes(name);
+  const showNav = ['bridge','starmap','station','character','rebirth','settings'].includes(name);
   navBar.classList.toggle('visible', showNav);
 
   // Update nav active state
@@ -644,6 +700,7 @@ function showScreen(name) {
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
   if (name === 'rebirth') updateRebirthScreen();
+  if (name === 'settings') initSettingsScreen();
   if (name === 'gunner') { if (threeReady) enterGunnerMode(); else addComms('System', '3D engine not available.'); }
 }
 
@@ -1119,6 +1176,16 @@ function renderStation() {
     </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No missions available.</p>';
 
   // Add inventory section after mission board
+  // Available upgrades at station
+  const upgradesHtml = SHIP_UPGRADES.filter(u => {
+    // Only show if not already purchased (check if stat already at upgrade value)
+    return state.upgrades[u.stat] < u.value;
+  }).map(u => `
+    <div class="trade-row">
+      <span>${u.name} <span style="color:var(--muted);font-size:0.7rem">${u.desc}</span></span>
+      <button class="trade-buy" onclick="window._buyUpgrade('${u.id}')">${u.cost} EC</button>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">All upgrades purchased!</p>';
+
   const stationGrid = document.querySelector('.station-grid');
   let invPanel = document.getElementById('inv-panel');
   if (!invPanel) {
@@ -1140,6 +1207,16 @@ function renderStation() {
   walletPanel.innerHTML = `<div class="panel-title">Wallet</div>
     <div style="font-size:1.1rem;color:var(--gold);font-weight:600">${state.player.credits.toLocaleString()} EC</div>
     <div style="font-size:0.8rem;color:var(--muted)">${state.player.stellarMarks} SM</div>`;
+
+  // Ship upgrades panel
+  let upgradePanel = document.getElementById('upgrade-panel');
+  if (!upgradePanel) {
+    upgradePanel = document.createElement('div');
+    upgradePanel.id = 'upgrade-panel';
+    upgradePanel.className = 'station-panel';
+    stationGrid.appendChild(upgradePanel);
+  }
+  upgradePanel.innerHTML = `<div class="panel-title">Ship Upgrades</div>${upgradesHtml}`;
 
   state.location.docked = true;
 }
@@ -1174,6 +1251,19 @@ window._acceptQuest = (id) => {
     const q = state.quests.find(q => q.id === id);
     if (q) { q.active = true; addComms('Mission Board', `Accepted: ${q.title || q.name}`); renderStation(); }
   }
+};
+
+window._buyUpgrade = (id) => {
+  const u = SHIP_UPGRADES.find(u => u.id === id);
+  if (!u) return;
+  if (state.player.credits < u.cost) { addComms('Station', 'Insufficient credits.'); return; }
+  if (state.upgrades[u.stat] >= u.value) { addComms('Station', 'Already purchased.'); return; }
+  state.player.credits -= u.cost;
+  state.upgrades[u.stat] = u.value;
+  applyUpgrades();
+  addComms('Station', `Installed ${u.name}!`);
+  AudioSFX.play('quest_complete');
+  renderStation();
 };
 
 // ================================================================
@@ -1253,6 +1343,48 @@ function updateRebirthScreen() {
 }
 
 // ================================================================
+//  SETTINGS SCREEN
+// ================================================================
+function initSettingsScreen() {
+  const volM = document.getElementById('vol-master');
+  const volS = document.getElementById('vol-sfx');
+  const sens = document.getElementById('setting-sens');
+  const scan = document.getElementById('setting-scanlines');
+  const shake = document.getElementById('setting-screenshake');
+  volM.value = state.settings.masterVol * 100;
+  volS.value = state.settings.sfxVol * 100;
+  sens.value = state.settings.sensitivity;
+  scan.checked = state.settings.scanlines;
+  shake.checked = state.settings.screenShake;
+  document.getElementById('vol-master-val').textContent = Math.round(state.settings.masterVol * 100) + '%';
+  document.getElementById('vol-sfx-val').textContent = Math.round(state.settings.sfxVol * 100) + '%';
+  document.getElementById('setting-sens-val').textContent = state.settings.sensitivity;
+  volM.oninput = () => { state.settings.masterVol = volM.value / 100; document.getElementById('vol-master-val').textContent = volM.value + '%'; };
+  volS.oninput = () => { state.settings.sfxVol = volS.value / 100; document.getElementById('vol-sfx-val').textContent = volS.value + '%'; };
+  sens.oninput = () => { state.settings.sensitivity = parseInt(sens.value); document.getElementById('setting-sens-val').textContent = sens.value; };
+  scan.onchange = () => { state.settings.scanlines = scan.checked; };
+  shake.onchange = () => { state.settings.screenShake = shake.checked; };
+}
+
+// ================================================================
+//  SHIP UPGRADES
+// ================================================================
+const SHIP_UPGRADES = [
+  { id: 'railgun_mk3',  name: 'Railgun Mk-III',      cost: 800,  stat: 'railgunDmg',  value: 1.5, desc: '+50% railgun damage' },
+  { id: 'shield_boost',  name: 'Shield Capacitor',    cost: 600,  stat: 'maxShield',   value: 150, desc: '+50 max shield' },
+  { id: 'hull_plating',  name: 'Reinforced Hull',     cost: 500,  stat: 'maxHull',     value: 150, desc: '+50 max hull' },
+  { id: 'ammo_expand',   name: 'Expanded Magazine',   cost: 400,  stat: 'maxAmmo',     value: 36,  desc: '+12 max ammo' },
+  { id: 'shield_gen',    name: 'Shield Generator II',  cost: 1000, stat: 'shieldRegen', value: 5,   desc: '+2/sec shield regen' },
+  { id: 'engine_boost',  name: 'Engine Overcharge',   cost: 700,  stat: 'engineSpeed', value: 1.3, desc: '+30% engine speed' },
+];
+
+function applyUpgrades() {
+  state.ship.maxHull = state.upgrades.maxHull;
+  state.ship.maxShield = state.upgrades.maxShield;
+  state.combat.maxAmmo = state.upgrades.maxAmmo;
+}
+
+// ================================================================
 //  SAVE / LOAD
 // ================================================================
 function saveGame() {
@@ -1264,6 +1396,8 @@ function saveGame() {
     combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle },
     inventory: state.inventory,
     quests: state.quests,
+    upgrades: state.upgrades,
+    settings: state.settings,
   };
   localStorage.setItem('oe-save', JSON.stringify(data));
   // Also save to server
@@ -1432,6 +1566,25 @@ screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; c
 
 camera.add(cockpit);
 scene.add(camera);
+
+// ── Engine exhaust particles ────
+const exhaustParticles = [];
+const exhaustMat = new THREE.PointsMaterial({ color: 0x44aaff, size: 0.3, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+function spawnExhaust() {
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(30);
+  for (let i = 0; i < 30; i += 3) {
+    positions[i] = (Math.random() - 0.5) * 1.5;
+    positions[i+1] = (Math.random() - 0.5) * 0.5;
+    positions[i+2] = 6 + Math.random() * 2;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const points = new THREE.Points(geo, exhaustMat.clone());
+  points.position.copy(ship.position);
+  points.quaternion.copy(ship.quaternion);
+  scene.add(points);
+  exhaustParticles.push({ mesh: points, age: 0, maxAge: 800 });
+}
 
 // ================================================================
 //  GUNNER MODE — COMBAT
@@ -1652,9 +1805,11 @@ function renderHUD() {
   }
 
   // Scanlines
-  hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
-  for (let sy = 0; sy < H; sy += 4) hudCtx.fillRect(0, sy, W, 1);
-  hudCtx.globalAlpha = 1;
+  if (state.settings.scanlines) {
+    hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
+    for (let sy = 0; sy < H; sy += 4) hudCtx.fillRect(0, sy, W, 1);
+    hudCtx.globalAlpha = 1;
+  }
 
   // Corner brackets
   hudCtx.strokeStyle = '#334455'; hudCtx.lineWidth = 1; hudCtx.globalAlpha = 0.4;
@@ -1683,8 +1838,8 @@ document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.
 
 document.addEventListener('mousemove', (e) => {
   if (!c.locked || !c.active) return;
-  c.yaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, c.yaw - e.movementX * MOUSE_SENS));
-  c.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, c.pitch + e.movementY * MOUSE_SENS));
+  c.yaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, c.yaw - e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5)));
+  c.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, c.pitch + e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5)));
 });
 
 document.addEventListener('keydown', (e) => {
@@ -1711,6 +1866,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
       if (sys && sys.hasStation) showScreen('station');
       else addComms('Navigation', 'No station available in this system.');
     }
+    else if (target === 'settings') showScreen('settings');
     else showScreen(target);
   });
 });
@@ -1723,6 +1879,10 @@ document.getElementById('btn-continue').addEventListener('click', () => {
     showScreen('bridge');
   }
 });
+
+// Settings button (title screen)
+document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
+document.getElementById('btn-settings-back').addEventListener('click', () => showScreen('title'));
 
 // Create screen
 document.getElementById('btn-reroll').addEventListener('click', randomizeGenome);
@@ -1805,9 +1965,9 @@ function gameLoop() {
     railR.position.z = -2.0 + c.recoilOffset;
     c.heat = Math.max(0, c.heat - dt * 0.15);
 
-    // Shield regen (3/sec out of combat)
+    // Shield regen (uses upgrade value)
     if (state.ship.shield < state.ship.maxShield) {
-      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * 3);
+      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen);
     }
     // Damage flash
     if (c.damageFlash > 0) c.damageFlash = Math.max(0, c.damageFlash - dtMs);
@@ -1845,6 +2005,11 @@ function gameLoop() {
             c.score += e.points; c.kills++;
             state.player.credits += e.points;
             if (e.isBoss) { c.bossActive = false; addComms('AI Director', 'Boss destroyed! +500 points'); }
+            // Faction rep: killing enemy gains rep with controlling faction, loses with hostile faction
+            const sys = state.starSystems[state.location.systemIndex];
+            if (sys && sys.controllingFaction) {
+              state.factionRep[sys.controllingFaction] = Math.min(1000, (state.factionRep[sys.controllingFaction] || 0) + 5);
+            }
             // Report kill to server for economy credit + quest progress
             if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
             AudioSFX.play('explode');
@@ -1886,6 +2051,15 @@ function gameLoop() {
         if (ch.material) ch.material.opacity = Math.max(0, 1 - ex.age / ex.maxAge);
       });
       if (ex.age > ex.maxAge) { scene.remove(ex.group); c.explosions.splice(i, 1); }
+    }
+
+    // Engine exhaust
+    if (state.gameTime % 200 < dtMs) spawnExhaust();
+    for (let i = exhaustParticles.length - 1; i >= 0; i--) {
+      const ep = exhaustParticles[i];
+      ep.age += dtMs;
+      ep.mesh.material.opacity = Math.max(0, 0.6 * (1 - ep.age / ep.maxAge));
+      if (ep.age > ep.maxAge) { scene.remove(ep.mesh); ep.mesh.geometry.dispose(); ep.mesh.material.dispose(); exhaustParticles.splice(i, 1); }
     }
 
     renderHUD();
