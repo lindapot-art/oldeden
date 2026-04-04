@@ -35,11 +35,13 @@
 
 import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { EnemySpawnSystem } from '../systems/EnemySpawnSystem.js';
+import { BossSystem } from '../systems/BossSystem.js';
 import { RailgunWeapon } from './RailgunWeapon.js';
 import { GunnerView } from './GunnerView.js';
 import { GunnerHUD } from './GunnerHUD.js';
 import { ProjectileRenderer } from './ProjectileRenderer.js';
 import { EnemyRenderer } from './EnemyRenderer.js';
+import { BossRenderer } from './BossRenderer.js';
 import { WEAPON_TYPE } from '../systems/CombatSystem.js';
 
 export class GunnerModeIntegration {
@@ -70,6 +72,18 @@ export class GunnerModeIntegration {
 
     // ── Initialize systems ──────────────────────────────────────────────
     
+    /** Boss management */
+    this._bossSystem = new BossSystem(
+      this._npcSystem,
+      this._combatSystem,
+      null // enemySpawnSystem set after creation
+    );
+    this._bossRenderer = new BossRenderer(
+      this._THREE,
+      this._scene,
+      this._bossSystem
+    );
+
     /** Projectile management */
     this._projectileSystem = new ProjectileSystem(this._combatSystem);
     this._projectileRenderer = new ProjectileRenderer(
@@ -78,11 +92,16 @@ export class GunnerModeIntegration {
       this._projectileSystem
     );
 
-    /** Enemy spawning */
+    /** Enemy spawning (with boss system integration) */
     this._enemySpawnSystem = new EnemySpawnSystem(
       this._npcSystem,
       this._combatSystem,
-      { spawnRadius: 150, maxActiveEnemies: 15 }
+      { 
+        spawnRadius: 150, 
+        maxActiveEnemies: 15,
+        bossSystem: this._bossSystem,
+        bossWaveInterval: 5, // Boss every 5 waves
+      }
     );
     this._enemyRenderer = new EnemyRenderer(
       this._THREE,
@@ -128,6 +147,11 @@ export class GunnerModeIntegration {
     if (this._gameEngine) {
       this._gameEngine.registerSystem('projectiles', this._projectileSystem);
       this._gameEngine.registerSystem('enemies', this._enemySpawnSystem);
+      this._gameEngine.registerSystem('bosses', this._bossSystem);
+      
+      // Share event emitter with boss system
+      this._bossSystem.events = this._gameEngine.events;
+      this._enemySpawnSystem.events = this._gameEngine.events;
     }
 
     // ── Setup event handlers for combat ─────────────────────────────────
@@ -146,6 +170,27 @@ export class GunnerModeIntegration {
       // When enemy fires at player
       this._gameEngine.events.on('enemy:fired', (data) => {
         this._handleEnemyFire(data);
+      });
+
+      // Boss events
+      this._gameEngine.events.on('boss:warning', (data) => {
+        this._handleBossWarning(data);
+      });
+
+      this._gameEngine.events.on('boss:spawned', (data) => {
+        this._handleBossSpawned(data);
+      });
+
+      this._gameEngine.events.on('boss:phase_change', (data) => {
+        this._handleBossPhaseChange(data);
+      });
+
+      this._gameEngine.events.on('boss:killed', (data) => {
+        this._handleBossKilled(data);
+      });
+
+      this._gameEngine.events.on('boss:attack', (data) => {
+        this._handleBossAttack(data);
       });
     }
 
@@ -323,9 +368,160 @@ export class GunnerModeIntegration {
   }
 
   /**
-   * Update auto-targeting (select nearest enemy in view).
+   * Handle boss warning event.
+   * @param {object} data
+   */
+  _handleBossWarning(data) {
+    console.log(`[GunnerModeIntegration] ⚠️  BOSS WARNING: ${data.bossType} incoming in ${data.warningTimeMs / 1000}s!`);
+    
+    // Update HUD with warning
+    if (this._hud) {
+      this._hud.showBossWarning(data.bossType, data.warningTimeMs);
+    }
+  }
+
+  /**
+   * Handle boss spawned event.
+   * @param {object} data
+   */
+  _handleBossSpawned(data) {
+    console.log(`[GunnerModeIntegration] Boss spawned: ${data.name} (${data.type})`);
+  }
+
+  /**
+   * Handle boss phase change event.
+   * @param {object} data
+   */
+  _handleBossPhaseChange(data) {
+    console.log(`[GunnerModeIntegration] Boss entered Phase ${data.phase}/${data.maxPhases}!`);
+    
+    // Update HUD with phase change notification
+    if (this._hud) {
+      this._hud.showPhaseChange(data.phase, data.maxPhases);
+    }
+  }
+
+  /**
+   * Handle boss killed event.
+   * @param {object} data
+   */
+  _handleBossKilled(data) {
+    console.log(`[GunnerModeIntegration] Boss defeated: ${data.name}! Loot: ${JSON.stringify(data.loot)}`);
+    
+    // Show victory message
+    if (this._hud) {
+      this._hud.showBossVictory(data.name, data.loot);
+    }
+  }
+
+  /**
+   * Handle boss attack event.
+   * @param {object} data
+   */
+  _handleBossAttack(data) {
+    // Boss fires at player
+    const direction = new this._THREE.Vector3(
+      this._playerPosition.x - data.position.x,
+      this._playerPosition.y - data.position.y,
+      this._playerPosition.z - data.position.z
+    ).normalize();
+
+    // Determine projectile type based on attack pattern
+    let projectileType = 'LASER';
+    let projectileCount = 1;
+
+    switch (data.pattern) {
+      case 'RAILGUN_BURST':
+        projectileType = 'RAILGUN';
+        projectileCount = 3;
+        break;
+      case 'MISSILE_VOLLEY':
+      case 'MISSILE_BARRAGE':
+        projectileType = 'MISSILE';
+        projectileCount = data.pattern === 'MISSILE_BARRAGE' ? 8 : 4;
+        break;
+      case 'LASER_SWEEP':
+      case 'LASER_GRID':
+        projectileType = 'LASER';
+        projectileCount = 5;
+        break;
+      case 'ALL_WEAPONS':
+      case 'BERSERKER_MODE':
+      case 'DESPERATION_MODE':
+        projectileType = 'BALLISTIC';
+        projectileCount = 6;
+        break;
+    }
+
+    // Fire multiple projectiles
+    for (let i = 0; i < projectileCount; i++) {
+      const spread = (i - projectileCount / 2) * 0.1;
+      const spreadDir = direction.clone();
+      spreadDir.x += spread;
+      spreadDir.normalize();
+
+      this._projectileSystem.fireProjectile({
+        type: projectileType,
+        origin: new this._THREE.Vector3(data.position.x, data.position.y, data.position.z),
+        direction: spreadDir,
+        damage: data.damage,
+        shooterId: data.bossId,
+        weaponType: WEAPON_TYPE.PLASMA,
+        targetId: 'player',
+      });
+    }
+
+    console.log(`[GunnerModeIntegration] Boss ${data.bossId} executed ${data.pattern}!`);
+  }
+
+  /**
+   * Update auto-targeting (select nearest enemy or boss in view).
+   * Prioritizes bosses over regular enemies.
    */
   _updateAutoTarget() {
+    // First check for bosses (priority targets)
+    const bosses = this._bossSystem.getActiveBosses();
+    if (bosses.length > 0) {
+      // Target nearest boss
+      const cameraDir = new this._THREE.Vector3(0, 0, -1);
+      cameraDir.applyQuaternion(this._camera.quaternion);
+
+      let nearest = null;
+      let nearestDist = Infinity;
+
+      for (const boss of bosses) {
+        const bossPos = new this._THREE.Vector3(
+          boss.position.x,
+          boss.position.y,
+          boss.position.z
+        );
+        
+        const toBoss = bossPos.clone().sub(this._camera.position);
+        const dist = toBoss.length();
+        const angle = cameraDir.angleTo(toBoss.normalize());
+
+        // Bosses have wider targeting cone (60 degrees)
+        if (angle < Math.PI / 3 && dist < nearestDist && dist < 500) {
+          nearest = boss;
+          nearestDist = dist;
+        }
+      }
+
+      if (nearest) {
+        this._targetLock = {
+          id: nearest.id,
+          name: nearest.name,
+          distance: nearestDist,
+          health: (nearest.health / nearest.maxHealth) * 100,
+          isBoss: true,
+          phase: nearest.currentPhase + 1,
+          maxPhases: nearest.maxPhases,
+        };
+        return;
+      }
+    }
+
+    // Fall back to regular enemies
     const enemies = this._enemySpawnSystem.getActiveEnemies();
     if (enemies.length === 0) {
       this._targetLock = null;
@@ -363,6 +559,7 @@ export class GunnerModeIntegration {
         name: nearest.name,
         distance: nearestDist,
         health: (nearest.health / nearest.maxHealth) * 100,
+        isBoss: false,
       };
     } else {
       this._targetLock = null;
