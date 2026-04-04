@@ -30,9 +30,9 @@ export const SUBSCRIPTION_TIER = Object.freeze({
 });
 
 const TIER_CONFIG = {
-  [SUBSCRIPTION_TIER.FREE]:      { ecMultiplier: 1.0,  monthlySmAllowance: 0,   priceUsd: 0     },
+  [SUBSCRIPTION_TIER.FREE]:      { ecMultiplier: 1.0,  monthlySmAllowance: 0,    priceUsd: 0     },
   [SUBSCRIPTION_TIER.PIONEER]:   { ecMultiplier: 2.0,  monthlySmAllowance: 500,  priceUsd: 7.99  },
-  [SUBSCRIPTION_TIER.VANGUARD]:  { ecMultiplier: 3.0,  monthlySmAllowance: 0,   priceUsd: 14.99 },
+  [SUBSCRIPTION_TIER.VANGUARD]:  { ecMultiplier: 3.0,  monthlySmAllowance: 750,  priceUsd: 14.99 },
   [SUBSCRIPTION_TIER.OVERLORD]:  { ecMultiplier: 5.0,  monthlySmAllowance: 1500, priceUsd: 29.99 },
 };
 
@@ -41,12 +41,20 @@ const BASE_EC_PER_SM_SELL = 10_000;
 const BASE_EC_PER_SM_BUY  = 12_000;
 
 /**
+ * Ukraine donation split — IMMUTABLE.
+ * 10% of all real-money revenue is donated to Ukraine humanitarian aid.
+ * This constant MUST NEVER be reduced or removed.
+ */
+export const UKRAINE_DONATION_SPLIT = 0.10;
+export const UKRAINE_DONATION_WALLET = process.env.UKRAINE_DONATION_WALLET ?? '0x0000000000000000000000000000000000000000';
+
+/**
  * Premium shard-hunting items purchasable with SM.
  */
 export const SHARD_ITEMS = Object.freeze({
   SHARD_DETECTOR:     { id: 'shard_detector',     name: 'Shard Detector',     priceSm: 50,  durationHours: 24, description: 'Shows approximate shard locations on map for 24h' },
   SHARD_MAGNET:       { id: 'shard_magnet',       name: 'Shard Magnet',       priceSm: 200, durationHours: 1,  description: 'Increases shard pickup radius 5× for 1h' },
-  FRACTURE_AMPLIFIER: { id: 'fracture_amplifier', name: 'Fracture Amplifier', priceSm: 100, durationHours: 0,  description: 'Your shards are 20% more powerful when you fracture' },
+  FRACTURE_AMPLIFIER: { id: 'fracture_amplifier', name: 'Fracture Amplifier', priceSm: 100, durationHours: 0,  description: 'Your shards glow with a unique cosmic aura when you fracture (cosmetic)' },
 });
 
 export class EconomySystem {
@@ -206,6 +214,10 @@ export class EconomySystem {
 
     const success = this.debit(playerId, CURRENCY.SM, item.priceSm);
     if (!success) return { success: false, reason: 'Insufficient Stellar Marks.' };
+
+    // Ukraine 10% donation split on every SM purchase — IMMUTABLE
+    const donationAmount = item.priceSm * UKRAINE_DONATION_SPLIT;
+    this._engine.events.emit('economy:ukraine_donation', { playerId, itemId: item.id, donationSm: donationAmount });
 
     if (item.durationHours > 0) {
       if (!this._activeItems.has(playerId)) this._activeItems.set(playerId, []);

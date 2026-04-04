@@ -10,25 +10,63 @@ import { AscensionSystem } from '../systems/AscensionSystem.js';
 import { CyclePass } from '../systems/CyclePass.js';
 import { CosmeticsStore } from '../systems/CosmeticsStore.js';
 import { AIDirector } from '../ai/AIDirector.js';
+import { CombatSystem } from '../systems/CombatSystem.js';
+import { FactionSystem, FACTIONS } from '../systems/FactionSystem.js';
+import { InventorySystem } from '../systems/InventorySystem.js';
+import { SkillSystem } from '../systems/SkillSystem.js';
+import { QuestSystem } from '../systems/QuestSystem.js';
+import { EnemySpawnSystem } from '../systems/EnemySpawnSystem.js';
+import { ProjectileSystem } from '../systems/ProjectileSystem.js';
+import { BossSystem } from '../systems/BossSystem.js';
 import { createHttpServer } from '../server/HttpServer.js';
-import { FACTIONS } from '../systems/FactionSystem.js';
 import { Server as SocketServer } from 'socket.io';
 import { randomUUID } from 'crypto';
 
 const engine = new GameEngine({ tickRateMs: parseInt(process.env.GAME_TICK_MS ?? '100', 10) });
 
+// ── Standalone systems (no cross-dependencies) ──────────────────────────────
+const genetics = new GeneticSystem();
+const mutation = new MutationSystem();
+const npc = new NPCSystem();
+const economy = new EconomySystem();
+const rebirth = new RebirthSystem();
+const procedural = new ProceduralGenerator();
+const fracture = new SoulFractureSystem();
+const ascension = new AscensionSystem();
+const cyclepass = new CyclePass();
+const cosmetics = new CosmeticsStore();
+const director = new AIDirector();
+const combat = new CombatSystem();
+const factions = new FactionSystem();
+const inventory = new InventorySystem();
+const skills = new SkillSystem();
+const quests = new QuestSystem();
+
+// ── Systems with cross-dependencies ─────────────────────────────────────────
+const enemies = new EnemySpawnSystem(npc, combat);
+const projectiles = new ProjectileSystem(combat);
+const bosses = new BossSystem(npc, combat, enemies);
+
 engine
-  .registerSystem('genetics', new GeneticSystem())
-  .registerSystem('mutation', new MutationSystem())
-  .registerSystem('npc', new NPCSystem())
-  .registerSystem('economy', new EconomySystem())
-  .registerSystem('rebirth', new RebirthSystem())
-  .registerSystem('procedural', new ProceduralGenerator())
-  .registerSystem('fracture', new SoulFractureSystem())
-  .registerSystem('ascension', new AscensionSystem())
-  .registerSystem('cyclepass', new CyclePass())
-  .registerSystem('cosmetics', new CosmeticsStore())
-  .registerSystem('director', new AIDirector());
+  .registerSystem('genetics', genetics)
+  .registerSystem('mutation', mutation)
+  .registerSystem('npc', npc)
+  .registerSystem('economy', economy)
+  .registerSystem('combat', combat)
+  .registerSystem('factions', factions)
+  .registerSystem('inventory', inventory)
+  .registerSystem('skills', skills)
+  .registerSystem('quests', quests)
+  .registerSystem('rebirth', rebirth)
+  .registerSystem('procedural', procedural)
+  .registerSystem('fracture', fracture)
+  .registerSystem('ascension', ascension)
+  .registerSystem('cyclepass', cyclepass)
+  .registerSystem('cosmetics', cosmetics)
+  .registerSystem('enemies', enemies)
+  .registerSystem('projectiles', projectiles)
+  .registerSystem('bosses', bosses)
+  .registerSystem('director', director);
 
 // ── HTTP Server ──────────────────────────────────────────────────────────────
 const httpPort = parseInt(process.env.PORT ?? '3000', 10);
@@ -43,8 +81,8 @@ app.get('/api/game/factions', (_req, res) => {
 });
 
 app.get('/api/game/genome', (_req, res) => {
-  const genetics = engine.getSystem('genetics');
-  res.json({ genome: Array.from(genetics.generateRandom()) });
+  const gen = engine.getSystem('genetics');
+  res.json({ genome: Array.from(gen.generateRandom()) });
 });
 
 app.get('/api/game/starmap', (_req, res) => {
@@ -58,11 +96,20 @@ app.get('/api/game/starmap', (_req, res) => {
 
 app.get('/api/game/quests', (_req, res) => {
   const proc = engine.getSystem('procedural');
-  const quests = [];
+  const questHooks = [];
   for (let i = 0; i < 5; i++) {
-    quests.push(proc.generateQuestHook());
+    questHooks.push(proc.generateQuestHook());
   }
-  res.json({ quests });
+  res.json({ quests: questHooks });
+});
+
+app.get('/api/game/economy/rates', (_req, res) => {
+  const econ = engine.getSystem('economy');
+  res.json(econ.getExchangeRates());
+});
+
+app.get('/api/game/systems', (_req, res) => {
+  res.json({ systems: [...engine._systems.keys()], count: engine._systems.size });
 });
 
 // SPA fallback — MUST be last route
@@ -83,7 +130,13 @@ await engine.start();
 httpServer = await startHttp(httpPort);
 
 // ── Socket.IO ────────────────────────────────────────────────────────────────
-const io = new SocketServer(httpServer, { cors: { origin: '*' } });
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
+  : [`http://localhost:${httpPort}`];
+
+const io = new SocketServer(httpServer, {
+  cors: { origin: allowedOrigins },
+});
 
 io.on('connection', (socket) => {
   console.log(`[Socket.IO] Client connected: ${socket.id}`);
@@ -95,13 +148,23 @@ io.on('connection', (socket) => {
   });
 
   socket.on('player:create', (data) => {
-    const genetics = engine.getSystem('genetics');
-    const genome = Array.from(genetics.generateRandom());
+    // Input validation
+    const name = typeof data?.name === 'string' ? data.name.slice(0, 32).replace(/[<>"'&]/g, '') : 'Unknown Pilot';
+    const faction = typeof data?.faction === 'string' && FACTIONS.some(f => f.id === data.faction)
+      ? data.faction : 'free_colonies';
+
+    const gen = engine.getSystem('genetics');
+    const genome = Array.from(gen.generateRandom());
+    const econ = engine.getSystem('economy');
+    const playerId = randomUUID();
+    const wallet = econ.getWallet(playerId);
+
     socket.emit('character:created', {
-      id: randomUUID(),
-      name: data?.name || 'Unknown Pilot',
-      faction: data?.faction || 'free_colonies',
+      id: playerId,
+      name,
+      faction,
       genome,
+      wallet: { ec: wallet.ec, sm: wallet.sm },
     });
   });
 
@@ -116,11 +179,29 @@ io.on('connection', (socket) => {
 
   socket.on('quests:request', () => {
     const proc = engine.getSystem('procedural');
-    const quests = [];
+    const questHooks = [];
     for (let i = 0; i < 5; i++) {
-      quests.push(proc.generateQuestHook());
+      questHooks.push(proc.generateQuestHook());
     }
-    socket.emit('quests:data', { quests });
+    socket.emit('quests:data', { quests: questHooks });
+  });
+
+  socket.on('combat:fire', (data) => {
+    // Validate projectile fire request
+    if (!data || typeof data.type !== 'string') return;
+    socket.emit('combat:result', { hit: Math.random() > 0.3, damage: Math.floor(Math.random() * 50 + 10) });
+  });
+
+  socket.on('economy:exchange', (data) => {
+    const econ = engine.getSystem('economy');
+    if (!data || !data.playerId) return;
+    if (data.direction === 'ec_to_sm' && typeof data.amount === 'number' && data.amount > 0) {
+      const result = econ.sellEcForSm(data.playerId, data.amount);
+      socket.emit('economy:exchanged', result);
+    } else if (data.direction === 'sm_to_ec' && typeof data.amount === 'number' && data.amount > 0) {
+      const result = econ.sellSmForEc(data.playerId, data.amount);
+      socket.emit('economy:exchanged', result);
+    }
   });
 
   socket.on('disconnect', () => {

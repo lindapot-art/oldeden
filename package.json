@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch src/core/index.js",
     "start": "node src/core/index.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.json",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.json",
     "lint": "eslint src/ --ext .js",
     "build:contracts": "hardhat compile",
     "deploy:contracts": "hardhat run scripts/deploy.js --network polygon",

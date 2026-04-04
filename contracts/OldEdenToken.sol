@@ -40,9 +40,23 @@ contract OldEdenToken is ERC20, ERC20Burnable, ERC20Permit, Ownable {
         ERC20Permit("Old Eden Token")
         Ownable(initialOwner)
     {
-        // Mint the initial allocation to the owner (multisig/treasury)
-        // Full distribution is handled by vesting contracts post-deploy
-        _mint(initialOwner, MAX_SUPPLY);
+        // Mint 60% to owner (treasury) — the remaining 40% is reserved for
+        // player rewards, distributed via transferReward() from the treasury.
+        // Full distribution is handled by vesting contracts post-deploy.
+        uint256 treasuryAllocation = (MAX_SUPPLY * 60) / 100;
+        _mint(initialOwner, treasuryAllocation);
+    }
+
+    // ── Rewards Distribution ──────────────────────────────────────────────────
+
+    /// @notice Ukraine humanitarian donation wallet — receives 10% of all fees.
+    /// IMMUTABLE: This split MUST NEVER be reduced or removed.
+    address public ukraineDonationWallet;
+    uint256 public constant UKRAINE_DONATION_BPS = 1000; // 10% in basis points
+
+    function setUkraineDonationWallet(address _wallet) external onlyOwner {
+        require(_wallet != address(0), "OldEdenToken: zero address");
+        ukraineDonationWallet = _wallet;
     }
 
     // ── Minting (rewards) ─────────────────────────────────────────────────────
@@ -57,7 +71,7 @@ contract OldEdenToken is ERC20, ERC20Burnable, ERC20Permit, Ownable {
     }
 
     /**
-     * @notice Mint reward tokens to a player wallet.
+     * @notice Mint reward tokens to a player wallet (from the 40% reserve).
      * @dev Only callable by the designated rewards minter contract.
      * @param to     Recipient address
      * @param amount Amount in wei (18 decimals)

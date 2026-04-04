@@ -115,6 +115,19 @@ canvas{display:block;}
 /* ── Character Sheet ─────────────────────── */
 #screen-character{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
 #screen-character h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
+
+/* ── Rebirth ─────────────────────────────── */
+#screen-rebirth{background:radial-gradient(ellipse at center,#1a0a2e 0%,#0a0a0f 70%);z-index:80;flex-direction:column;align-items:center;justify-content:center;}
+#screen-rebirth h2{color:var(--gold);font-size:2rem;font-weight:300;letter-spacing:0.2em;margin-bottom:1rem;}
+.rebirth-info{max-width:600px;text-align:center;line-height:1.8;margin-bottom:2rem;}
+.rebirth-info strong{color:var(--gold);}
+.rebirth-lottery{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;}
+.lottery-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:15px 20px;min-width:120px;text-align:center;}
+.lottery-card .lbl{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.lottery-card .val{font-size:1.3rem;color:var(--gold);margin-top:4px;}
+
+/* ── Ukraine Donation Badge ──────────────── */
+.ukraine-badge{position:fixed;bottom:8px;right:8px;background:linear-gradient(180deg,#005BBB 50%,#FFD500 50%);color:#fff;font-size:0.65rem;padding:3px 8px;border-radius:3px;z-index:999;letter-spacing:0.05em;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
 .char-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
 @media(max-width:700px){.char-grid{grid-template-columns:1fr;}}
 .char-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
@@ -286,6 +299,29 @@ canvas{display:block;}
 </div>
 
 <!-- ════════════════════════════════════════════ -->
+<!--  REBIRTH SCREEN                              -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-rebirth">
+  <h2>&#10040; Rebirth</h2>
+  <div class="rebirth-info">
+    <p>In Old Eden, <strong>death is not the end — it is the mechanism of change.</strong></p>
+    <p>When you die, your character's consciousness is shattered into <strong>Soul Shards</strong> that scatter across the galaxy. Other players can absorb these shards to gain fragments of your skills, memories, and genetic traits.</p>
+    <p>You are then reborn into an NPC — inheriting their life, their genome, their place in the universe. Your new identity is determined by the <strong>Rebirth Lottery</strong>.</p>
+  </div>
+  <div class="rebirth-lottery" id="rebirth-lottery">
+    <div class="lottery-card"><div class="lbl">Lives Lived</div><div class="val" id="rb-lives">0</div></div>
+    <div class="lottery-card"><div class="lbl">Shards Created</div><div class="val" id="rb-shards">0</div></div>
+    <div class="lottery-card"><div class="lbl">Shards Absorbed</div><div class="val" id="rb-absorbed">0</div></div>
+    <div class="lottery-card"><div class="lbl">Genetic Drift</div><div class="val" id="rb-drift">0%</div></div>
+    <div class="lottery-card"><div class="lbl">Ascension Progress</div><div class="val" id="rb-ascension">0 / 1000</div></div>
+  </div>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Your current character's rebirth weight determines the quality of NPC you inherit.</p>
+  <div class="btn-row">
+    <button class="btn" id="btn-rebirth-back">&larr; Return to Bridge</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
 <!--  GAME CANVASES                               -->
 <!-- ════════════════════════════════════════════ -->
 <canvas id="game-canvas"></canvas>
@@ -301,9 +337,11 @@ canvas{display:block;}
   <button class="nav-btn" data-screen="starmap"><span class="nav-icon">&#9733;</span>Star Map</button>
   <button class="nav-btn" data-screen="station"><span class="nav-icon">&#9968;</span>Station</button>
   <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
+  <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
 </div>
 
-<div class="version-label">Old Eden v0.1.0-alpha</div>
+<div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
+<div class="version-label">Old Eden v0.1.0-alpha &bull; Free-to-Play</div>
 
 <!-- ════════════════════════════════════════════ -->
 <!--  THREE.JS + GAME CODE                        -->
@@ -394,6 +432,19 @@ async function connectSocket() {
         s.on('quests:data', (data) => {
           if (data.quests) state.quests = data.quests;
         });
+        s.on('character:created', (data) => {
+          if (data.wallet) {
+            state.player.credits = data.wallet.ec;
+            state.player.stellarMarks = data.wallet.sm;
+          }
+          addComms('System', `Character ${data.name} created on server (ID: ${data.id.slice(0,8)}...)`);
+        });
+        s.on('combat:result', (data) => {
+          if (data.hit) addComms('Combat', `Hit confirmed! ${data.damage} damage dealt.`);
+        });
+        s.on('economy:exchanged', (data) => {
+          if (data.success) addComms('Economy', 'Currency exchange completed.');
+        });
         resolve(s);
       } catch(e) { resolve(null); }
     };
@@ -423,7 +474,7 @@ function showScreen(name) {
 
   state.screen = name;
   const navBar = document.getElementById('nav-bar');
-  const showNav = ['bridge','starmap','station','character'].includes(name);
+  const showNav = ['bridge','starmap','station','character','rebirth'].includes(name);
   navBar.classList.toggle('visible', showNav);
 
   // Update nav active state
@@ -441,6 +492,7 @@ function showScreen(name) {
   if (name === 'starmap') { resizeStarMap(); renderStarMap(); }
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
+  if (name === 'rebirth') updateRebirthScreen();
   if (name === 'gunner') enterGunnerMode();
 }
 
@@ -560,6 +612,11 @@ function createCharacter() {
   state.player.genome = Array.from(createGenome);
   state.player.age = 20 + Math.floor(Math.random() * 15);
 
+  // Emit to server for authoritative character creation
+  if (state.socket) {
+    state.socket.emit('player:create', { name, faction: state.player.faction });
+  }
+
   // Set home system based on faction
   const factionObj = FACTIONS.find(f => f.id === state.player.faction);
   if (factionObj) {
@@ -568,7 +625,10 @@ function createCharacter() {
     addComms(factionObj.name, `The ${factionObj.name} acknowledges your service.`);
   }
 
-  generateQuests();
+  // Request quests from server
+  if (state.socket) state.socket.emit('quests:request');
+  else generateQuests();
+
   saveGame();
   showScreen('bridge');
 }
@@ -946,6 +1006,24 @@ function renderCharSheet() {
     <div class="stat-row" style="font-size:0.8rem;">Credits <span style="color:var(--gold)">${state.player.credits.toLocaleString()} EC</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Kills <span style="color:var(--danger)">${state.combat.kills}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Score <span style="color:var(--gold)">${state.combat.score.toLocaleString()}</span></div>`;
+}
+
+// ================================================================
+//  REBIRTH SCREEN
+// ================================================================
+function updateRebirthScreen() {
+  document.getElementById('rb-lives').textContent = state.player.rebirths;
+  document.getElementById('rb-shards').textContent = state.combat.kills * 3; // rough shard estimate
+  document.getElementById('rb-absorbed').textContent = Math.floor(state.combat.score / 100);
+  // Genetic drift: how much genome has changed from baseline
+  if (state.player.genome) {
+    const drift = state.player.genome.reduce((sum, g) => sum + Math.abs(g - 128), 0);
+    const driftPct = (drift / (256 * 128) * 100).toFixed(1);
+    document.getElementById('rb-drift').textContent = driftPct + '%';
+  }
+  // Ascension progress: based on score
+  const ascensionPts = Math.min(1000, Math.floor(state.combat.score / 10));
+  document.getElementById('rb-ascension').textContent = `${ascensionPts} / 1000`;
 }
 
 // ================================================================
@@ -1340,9 +1418,10 @@ document.getElementById('btn-reroll').addEventListener('click', randomizeGenome)
 document.getElementById('btn-create-char').addEventListener('click', createCharacter);
 document.getElementById('btn-back-title').addEventListener('click', () => showScreen('title'));
 
-// Station / Character backs
+// Station / Character / Rebirth backs
 document.getElementById('btn-undock').addEventListener('click', () => { state.location.docked = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
 document.getElementById('btn-char-back').addEventListener('click', () => showScreen('bridge'));
+document.getElementById('btn-rebirth-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-jump').addEventListener('click', () => {
   if (state.selectedSystem !== null) jumpToSystem(state.selectedSystem);
 });
@@ -1497,6 +1576,22 @@ async function init() {
       }
     }
   } catch(e) { /* offline mode — using client-generated data */ }
+
+  // Fetch server quests
+  try {
+    const qResp = await fetch('/api/game/quests');
+    if (qResp.ok) {
+      const qData = await qResp.json();
+      if (qData.quests && qData.quests.length) {
+        state.quests = qData.quests.map(q => ({
+          title: q.title || q.objective || 'Unknown Mission',
+          summary: q.description || q.hook || 'Complete this mission.',
+          reward: q.reward || Math.floor(Math.random() * 500 + 100),
+          active: false,
+        }));
+      }
+    }
+  } catch(e) { /* offline — quests generated on demand */ }
 
   // Check for saved game
   if (localStorage.getItem('oe-save')) {

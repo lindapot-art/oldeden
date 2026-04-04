@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
@@ -31,12 +32,16 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  *   - tokenURI points to IPFS JSON following the OpenSea metadata standard.
  *   - The JSON includes the full genome hex, visual traits, and skill snapshot.
  */
-contract CharacterNFT is ERC721, ERC721URIStorage, Ownable {
+contract CharacterNFT is ERC721, ERC721URIStorage, ERC2981, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
     /// @notice Address authorised to mint (game server / relayer)
     address public minter;
+
+    /// @notice Platform fee: 2.5% on secondary sales (250 basis points)
+    /// Split: 1% burn, 1.5% treasury. Ukraine 10% of the 1.5% treasury portion.
+    uint96 public constant DEFAULT_ROYALTY_BPS = 250;
 
     struct CharacterData {
         string  genomeHex;
@@ -77,7 +82,10 @@ contract CharacterNFT is ERC721, ERC721URIStorage, Ownable {
     constructor(address initialOwner)
         ERC721("Old Eden Character", "OECHAR")
         Ownable(initialOwner)
-    {}
+    {
+        // Set default 2.5% royalty to owner (treasury handles Ukraine split off-chain)
+        _setDefaultRoyalty(initialOwner, DEFAULT_ROYALTY_BPS);
+    }
 
     // ── Access control ────────────────────────────────────────────────────────
 
@@ -204,7 +212,7 @@ contract CharacterNFT is ERC721, ERC721URIStorage, Ownable {
     }
 
     function supportsInterface(bytes4 interfaceId)
-        public view override(ERC721, ERC721URIStorage)
+        public view override(ERC721, ERC721URIStorage, ERC2981)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

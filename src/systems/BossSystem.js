@@ -362,6 +362,13 @@ export class BossSystem {
     return Array.from(this._bosses.values()).filter(b => b.active);
   }
 
+  async init(engine) {
+    this._engine = engine;
+    console.log('[BossSystem] Initialised.');
+  }
+
+  async destroy() {}
+
   /**
    * Update boss AI and behaviors.
    * 
