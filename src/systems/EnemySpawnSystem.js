@@ -156,15 +156,16 @@ export class EnemySpawnSystem {
    * @param {object} centerPosition  { x, y, z } spawn center.
    * @param {number} difficulty      Wave difficulty (1-10).
    * @param {number} count           Number of enemies to spawn.
+   * @param {string} [faction]       Faction ID (defaults to random hostile factions).
    */
-  spawnWave(centerPosition, difficulty, count) {
+  spawnWave(centerPosition, difficulty, count, faction = null) {
     this._playerPosition = centerPosition;
     this._currentDifficulty = difficulty;
 
     const enemies = [];
     for (let i = 0; i < count; i++) {
       const enemyType = this._selectEnemyType(difficulty);
-      const enemy = this._spawnEnemy(enemyType, centerPosition);
+      const enemy = this._spawnEnemy(enemyType, centerPosition, faction);
       enemies.push(enemy);
     }
 
@@ -173,6 +174,7 @@ export class EnemySpawnSystem {
       waveNumber: this._waveCount,
       difficulty,
       count,
+      faction: faction || 'hostile',
       enemies: enemies.map(e => e.id),
     });
 
@@ -364,9 +366,10 @@ export class EnemySpawnSystem {
    * Spawn a single enemy.
    * @param {string} typeKey
    * @param {object} centerPosition
+   * @param {string} [faction]  Faction ID (null = hostile).
    * @returns {object} Enemy data.
    */
-  _spawnEnemy(typeKey, centerPosition) {
+  _spawnEnemy(typeKey, centerPosition, faction = null) {
     const template = this.ENEMY_TYPES[typeKey];
     if (!template) {
       throw new Error(`Unknown enemy type: ${typeKey}`);
@@ -384,11 +387,15 @@ export class EnemySpawnSystem {
     };
 
     const id = `enemy-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    
+    // Determine faction (default to hostile if not specified)
+    const enemyFaction = faction || this._selectHostileFaction();
 
     const enemy = {
       id,
       type: typeKey,
       name: template.name,
+      faction: enemyFaction,
       position,
       velocity: { x: 0, y: 0, z: 0 },
       health: template.health,
@@ -423,10 +430,20 @@ export class EnemySpawnSystem {
     this._emitEvent('enemy:spawned', {
       enemyId: id,
       type: typeKey,
+      faction: enemyFaction,
       position,
     });
 
     return enemy;
+  }
+
+  /**
+   * Select a random hostile faction for procedural enemies.
+   * @returns {string} Faction ID.
+   */
+  _selectHostileFaction() {
+    const hostileFactions = ['syndicate', 'iron_pact', 'remnant_clans'];
+    return hostileFactions[Math.floor(Math.random() * hostileFactions.length)];
   }
 
   /**
