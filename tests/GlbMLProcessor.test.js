@@ -2,7 +2,7 @@
  * Tests for GlbMLProcessor — ML-enhanced GLB asset processing.
  */
 
-import { describe, it, expect, beforeEach, vi } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { GlbMLProcessor } from '../src/ai/GlbMLProcessor.js';
 
 describe('GlbMLProcessor', () => {
@@ -159,7 +159,7 @@ describe('GlbMLProcessor', () => {
 
     it('should flag models exceeding poly count', async () => {
       // Mock a model with high poly count
-      processor._glbProcessor.inspect = vi.fn().mockResolvedValue({
+      processor._glbProcessor.inspect = jest.fn().mockResolvedValue({
         polyCount: 100000,
         materials: [],
       });
@@ -174,7 +174,7 @@ describe('GlbMLProcessor', () => {
     });
 
     it('should validate models within requirements', async () => {
-      processor._glbProcessor.inspect = vi.fn().mockResolvedValue({
+      processor._glbProcessor.inspect = jest.fn().mockResolvedValue({
         polyCount: 15000,
         materials: [{ name: 'Material1' }, { name: 'Material2' }],
       });
@@ -312,7 +312,7 @@ describe('GlbMLProcessor', () => {
       const proc = new GlbMLProcessor({ mock: false });
 
       // Mock fetch to delay
-      global.fetch = vi.fn(() =>
+      global.fetch = jest.fn(() =>
         new Promise((resolve) => setTimeout(resolve, 100000))
       );
 
