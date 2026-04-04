@@ -10,7 +10,12 @@
     "test": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.json",
     "lint": "eslint src/ --ext .js",
     "build:contracts": "hardhat compile",
-    "deploy:contracts": "hardhat run scripts/deploy.js --network polygon"
+    "deploy:contracts": "hardhat run scripts/deploy.js --network polygon",
+    "guardian:baseline": "bash scripts/guardian-snapshot.sh --baseline",
+    "guardian:compare": "bash scripts/guardian-snapshot.sh --compare",
+    "guardian:report": "bash scripts/guardian-snapshot.sh --report",
+    "qa": "bash scripts/qa-protocol.sh",
+    "qa:full": "npm run guardian:compare && npm run qa"
   },
   "keywords": [
     "space-game",
