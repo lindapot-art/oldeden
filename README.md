@@ -248,6 +248,22 @@ For online testing of your private repository:
 
 👉 See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment guide
 
+### 📦 Uploading 3D Assets (GLB Files)
+
+To upload large 3D models to the glbs repository:
+
+```bash
+# One-time setup
+./setup-glbs-lfs.sh
+
+# Upload GLB files
+./upload-glbs.sh /path/to/your/models/*.glb
+```
+
+**Important:** GitHub's web UI (github.com/lindapot-art/glbs/upload) has a hard 25MB limit. Files larger than 25MB **must** be uploaded via Git CLI.
+
+👉 See [GLB_UPLOAD_README.md](GLB_UPLOAD_README.md) or [docs/uploading-large-files.md](docs/uploading-large-files.md) for detailed instructions
+
 ### Environment Variables
 
 ```env

@@ -36,7 +36,7 @@ else
     git commit -m "Add GLB assets: $(date +%Y-%m-%d)"
     
     echo "🚀 Pushing to GitHub (this may take a while for large files)..."
-    git push
+    git push origin main
     
     echo "✅ Upload complete!"
 fi

@@ -63,12 +63,10 @@ export class GunnerHUD {
     this._pulsePhase = 0;
     this._scanlineOffset = 0;
 
-    /** Gyro control state */
-    this._gyroStatus = {
-      enabled: false,
-      supported: false,
-      calibrating: false,
-    };
+    /** Boss warning state */
+    this._bossWarning = null;
+    this._phaseChangeNotification = null;
+    this._bossVictoryNotification = null;
 
     this._resize();
   }
@@ -148,6 +146,11 @@ export class GunnerHUD {
     this._drawGyroIndicator(ctx, w, h);
     this._drawScanlines(ctx, w, h);
     this._drawVignette(ctx, w, h);
+
+    // Draw boss-specific elements
+    this._drawBossWarning(ctx, w, h);
+    this._drawPhaseChange(ctx, w, h);
+    this._drawBossVictory(ctx, w, h);
   }
 
   /**
@@ -350,42 +353,58 @@ export class GunnerHUD {
     ctx.globalAlpha = 0.9;
     
     if (this._targetLock.locked) {
-      // Target name
-      ctx.fillStyle = this._accentColor;
+      // Target name (with boss indicator)
+      const prefix = this._targetLock.isBoss ? '★' : '◎';
+      const nameColor = this._targetLock.isBoss ? this._warningColor : this._accentColor;
+      
+      ctx.fillStyle = nameColor;
       ctx.font = 'bold 20px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`◎ ${this._targetLock.targetName}`, cx, y);
+      ctx.fillText(`${prefix} ${this._targetLock.targetName}`, cx, y);
+      
+      // Boss phase indicator
+      if (this._targetLock.isBoss && this._targetLock.phase) {
+        ctx.fillStyle = this._warningColor;
+        ctx.font = '14px monospace';
+        ctx.fillText(`PHASE ${this._targetLock.phase}/${this._targetLock.maxPhases}`, cx, y + 20);
+      }
       
       // Distance
       ctx.fillStyle = this._primaryColor;
-      ctx.font = '16px monospace';
-      ctx.fillText(`${Math.round(this._targetLock.distance)}m`, cx, y + 25);
+      ctx.font = '14px monospace';
+      const yOffset = this._targetLock.isBoss ? y + 40 : y + 20;
+      ctx.fillText(`${Math.round(this._targetLock.distance)}m`, cx - 100, yOffset);
       
       // Health bar
       const barWidth = 150;
-      const barHeight = 6;
+      const barHeight = 8;
       const barX = cx - barWidth / 2;
-      const barY = y + 35;
+      const barY = yOffset + 10;
       
       // Background
-      ctx.fillStyle = 'rgba(100, 180, 255, 0.2)';
+      ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
       ctx.fillRect(barX, barY, barWidth, barHeight);
       
       // Health fill
       const healthRatio = this._targetLock.health / 100;
-      let healthColor = this._accentColor;
-      if (healthRatio < 0.3) healthColor = this._dangerColor;
-      else if (healthRatio < 0.6) healthColor = this._warningColor;
+      const healthColor = healthRatio > 0.5 ? this._accentColor 
+        : healthRatio > 0.25 ? this._warningColor 
+        : this._dangerColor;
       
       ctx.fillStyle = healthColor;
       ctx.fillRect(barX, barY, barWidth * healthRatio, barHeight);
+      
+      // Health percentage
+      ctx.fillStyle = healthColor;
+      ctx.font = '12px monospace';
+      ctx.fillText(`${Math.round(this._targetLock.health)}%`, cx + 100, yOffset);
     } else {
-      // No target
+      // No lock - scanning indicator
       ctx.fillStyle = this._primaryColor;
-      ctx.font = '16px monospace';
+      ctx.font = '14px monospace';
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.5;
-      ctx.fillText('[ NO TARGET ]', cx, y);
+      ctx.fillText('- SCANNING -', cx, y);
     }
 
     ctx.restore();
@@ -484,80 +503,156 @@ export class GunnerHUD {
     ctx.restore();
   }
 
+  // ── Boss HUD Methods ────────────────────────────────────────────────────────
+
   /**
-   * Draw gyroscope control indicator (mobile only).
+   * Show boss warning message.
+   * @param {string} bossType
+   * @param {number} warningTimeMs
    */
-  _drawGyroIndicator(ctx, w, h) {
-    if (!this._gyroStatus.enabled && !this._gyroStatus.supported) return;
+  showBossWarning(bossType, warningTimeMs) {
+    this._bossWarning = {
+      bossType,
+      expiresAt: Date.now() + warningTimeMs,
+    };
+  }
+
+  /**
+   * Show phase change notification.
+   * @param {number} phase
+   * @param {number} maxPhases
+   */
+  showPhaseChange(phase, maxPhases) {
+    this._phaseChangeNotification = {
+      phase,
+      maxPhases,
+      expiresAt: Date.now() + 3000, // Show for 3 seconds
+    };
+  }
+
+  /**
+   * Show boss victory message.
+   * @param {string} bossName
+   * @param {object[]} loot
+   */
+  showBossVictory(bossName, loot) {
+    this._bossVictoryNotification = {
+      bossName,
+      loot,
+      expiresAt: Date.now() + 5000, // Show for 5 seconds
+    };
+  }
+
+  /**
+   * Draw boss warning overlay.
+   */
+  _drawBossWarning(ctx, w, h) {
+    if (!this._bossWarning || Date.now() > this._bossWarning.expiresAt) {
+      this._bossWarning = null;
+      return;
+    }
+
+    const timeLeft = (this._bossWarning.expiresAt - Date.now()) / 1000;
+    const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
 
     ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-    const x = w - 100;
-    const y = h - 80;
+    // Warning background
+    ctx.fillStyle = `rgba(255, 68, 68, ${0.2 * pulse})`;
+    ctx.fillRect(0, h / 2 - 100, w, 200);
 
-    // Background panel
-    ctx.fillStyle = 'rgba(5, 10, 25, 0.7)';
-    ctx.fillRect(x - 50, y - 30, 90, 60);
-    
-    ctx.strokeStyle = this._primaryColor;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x - 50, y - 30, 90, 60);
+    // Main warning text
+    ctx.fillStyle = this._dangerColor;
+    ctx.font = 'bold 48px monospace';
+    ctx.fillText('⚠ BOSS INCOMING ⚠', w / 2, h / 2 - 40);
 
-    // Gyro icon (device with rotation arrows)
-    const iconSize = 20;
-    const iconX = x - 25;
-    const iconY = y;
+    // Boss type
+    ctx.fillStyle = this._warningColor;
+    ctx.font = 'bold 32px monospace';
+    ctx.fillText(this._bossWarning.bossType, w / 2, h / 2 + 10);
 
-    // Device outline (phone/tablet)
-    ctx.strokeStyle = this._gyroStatus.enabled ? this._accentColor : this._primaryColor;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize * 1.5);
+    // Countdown
+    ctx.fillStyle = this._primaryColor;
+    ctx.font = '24px monospace';
+    ctx.fillText(`ETA: ${timeLeft.toFixed(1)}s`, w / 2, h / 2 + 50);
 
-    // Rotation arrows
-    if (this._gyroStatus.enabled) {
-      ctx.strokeStyle = this._accentColor;
-      ctx.lineWidth = 1.5;
-      
-      // Left arrow (counter-clockwise)
-      ctx.beginPath();
-      ctx.arc(iconX - iconSize / 2 - 8, iconY, 6, Math.PI * 0.5, Math.PI * 1.5);
-      ctx.stroke();
-      
-      // Right arrow (clockwise)
-      ctx.beginPath();
-      ctx.arc(iconX + iconSize / 2 + 8, iconY, 6, Math.PI * 1.5, Math.PI * 0.5);
-      ctx.stroke();
+    ctx.restore();
+  }
+
+  /**
+   * Draw phase change notification.
+   */
+  _drawPhaseChange(ctx, w, h) {
+    if (!this._phaseChangeNotification || Date.now() > this._phaseChangeNotification.expiresAt) {
+      this._phaseChangeNotification = null;
+      return;
     }
 
-    // Status text
-    ctx.font = '10px monospace';
-    ctx.textAlign = 'left';
-    
-    if (this._gyroStatus.calibrating) {
-      ctx.fillStyle = this._warningColor;
-      ctx.fillText('CALIBRATING', x + 5, y - 5);
-      
-      // Pulse effect for calibrating
-      const pulse = Math.sin(this._pulsePhase * 4) * 0.3 + 0.7;
-      ctx.globalAlpha = pulse;
-      ctx.fillText('...', x + 5, y + 8);
-      ctx.globalAlpha = 1.0;
-    } else if (this._gyroStatus.enabled) {
-      ctx.fillStyle = this._accentColor;
-      ctx.fillText('GYRO', x + 5, y - 5);
-      ctx.fillText('ACTIVE', x + 5, y + 8);
-    } else if (this._gyroStatus.supported) {
-      ctx.fillStyle = this._primaryColor;
-      ctx.fillText('GYRO', x + 5, y - 5);
-      ctx.fillText('OFF', x + 5, y + 8);
+    const { phase, maxPhases } = this._phaseChangeNotification;
+    const alpha = Math.min(1, (this._phaseChangeNotification.expiresAt - Date.now()) / 1000);
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = alpha;
+
+    // Phase change text
+    ctx.fillStyle = this._warningColor;
+    ctx.font = 'bold 36px monospace';
+    ctx.fillText(`PHASE ${phase}/${maxPhases}`, w / 2, h / 4);
+
+    ctx.restore();
+  }
+
+  /**
+   * Draw boss victory notification.
+   */
+  _drawBossVictory(ctx, w, h) {
+    if (!this._bossVictoryNotification || Date.now() > this._bossVictoryNotification.expiresAt) {
+      this._bossVictoryNotification = null;
+      return;
     }
 
-    // Calibration hint (when enabled)
-    if (this._gyroStatus.enabled && !this._gyroStatus.calibrating) {
-      ctx.font = '9px monospace';
-      ctx.fillStyle = 'rgba(100, 180, 255, 0.5)';
-      ctx.textAlign = 'center';
-      ctx.fillText('TAP TO RECENTER', w - 55, h - 15);
+    const { bossName, loot } = this._bossVictoryNotification;
+    const pulse = Math.sin(Date.now() * 0.003) * 0.2 + 0.8;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Victory background
+    ctx.fillStyle = `rgba(0, 255, 136, ${0.15 * pulse})`;
+    ctx.fillRect(0, h / 2 - 150, w, 300);
+
+    // Victory text
+    ctx.fillStyle = this._accentColor;
+    ctx.font = 'bold 48px monospace';
+    ctx.fillText('BOSS DEFEATED', w / 2, h / 2 - 80);
+
+    // Boss name
+    ctx.fillStyle = this._primaryColor;
+    ctx.font = '32px monospace';
+    ctx.fillText(bossName, w / 2, h / 2 - 30);
+
+    // Loot summary
+    ctx.fillStyle = this._warningColor;
+    ctx.font = '20px monospace';
+    ctx.fillText(`Rewards: ${loot.length} items`, w / 2, h / 2 + 20);
+
+    // Loot details
+    ctx.fillStyle = this._accentColor;
+    ctx.font = '16px monospace';
+    let yOffset = h / 2 + 50;
+    for (const item of loot.slice(0, 3)) { // Show first 3 items
+      const itemText = item.type === 'credits' 
+        ? `${item.amount} Credits`
+        : item.itemId 
+          ? `${item.itemId} x${item.quantity || 1}`
+          : `Unknown Item x${item.quantity || 1}`;
+      ctx.fillText(itemText, w / 2, yOffset);
+      yOffset += 25;
     }
 
     ctx.restore();
