@@ -28,6 +28,8 @@ export class EnemySpawnSystem {
    * @param {number} [options.spawnRadius=150]       Distance from player to spawn.
    * @param {number} [options.maxActiveEnemies=20]   Max enemies at once.
    * @param {number} [options.waveIntervalMs=30000]  Time between auto-waves.
+   * @param {object} [options.bossSystem]            Optional BossSystem for boss spawning.
+   * @param {number} [options.bossWaveInterval=5]    Spawn boss every N waves.
    */
   constructor(npcSystem, combatSystem, options = {}) {
     this._npcSystem = npcSystem;
@@ -36,6 +38,8 @@ export class EnemySpawnSystem {
     this._spawnRadius = options.spawnRadius ?? 150;
     this._maxActiveEnemies = options.maxActiveEnemies ?? 20;
     this._waveIntervalMs = options.waveIntervalMs ?? 30000;
+    this._bossSystem = options.bossSystem || null;
+    this._bossWaveInterval = options.bossWaveInterval ?? 5;
 
     /** Active enemies: Map<enemyId, enemyData> */
     this._enemies = new Map();
@@ -243,11 +247,90 @@ export class EnemySpawnSystem {
    * Auto-spawn a wave based on current difficulty.
    */
   _autoSpawnWave() {
+    // Check if it's time for a boss wave
+    if (this._bossSystem && this._waveCount > 0 && this._waveCount % this._bossWaveInterval === 0) {
+      this._spawnBossWave();
+      return;
+    }
+
     const count = Math.min(5, this._maxActiveEnemies - this._enemies.size);
     if (count > 0) {
       this.spawnWave(this._playerPosition, this._currentDifficulty, count);
       // Increase difficulty over time
       this._currentDifficulty = Math.min(10, this._currentDifficulty + 0.1);
+    }
+  }
+
+  /**
+   * Spawn a boss wave with warning and clear area.
+   */
+  _spawnBossWave() {
+    // Determine boss type based on difficulty
+    const bossType = this._selectBossType(this._currentDifficulty);
+    
+    // Calculate boss spawn position (in front of player)
+    const spawnDistance = 300;
+    const spawnPos = {
+      x: this._playerPosition.x,
+      y: this._playerPosition.y,
+      z: this._playerPosition.z + spawnDistance,
+    };
+
+    // Emit warning event
+    if (this.events) {
+      this.events.emit('boss:warning', {
+        bossType,
+        spawnPosition: spawnPos,
+        difficulty: this._currentDifficulty,
+        warningTimeMs: 5000,
+      });
+    }
+
+    console.log(`[EnemySpawnSystem] WARNING: ${bossType} boss incoming! Prepare for battle!`);
+
+    // Delay boss spawn for dramatic effect
+    setTimeout(() => {
+      if (this._bossSystem) {
+        const bossId = this._bossSystem.spawnBoss(bossType, spawnPos, this._currentDifficulty);
+        
+        // Emit boss spawned event
+        if (this.events) {
+          this.events.emit('boss:wave_spawned', {
+            bossId,
+            bossType,
+            wave: this._waveCount,
+            difficulty: this._currentDifficulty,
+          });
+        }
+      }
+    }, 5000);
+
+    // Increase difficulty significantly after boss wave
+    this._currentDifficulty = Math.min(10, this._currentDifficulty + 0.5);
+  }
+
+  /**
+   * Select boss type based on difficulty.
+   * @param {number} difficulty
+   * @returns {string} Boss type key.
+   */
+  _selectBossType(difficulty) {
+    if (difficulty < 3) {
+      return 'DESTROYER'; // Early game boss
+    } else if (difficulty < 6) {
+      return Math.random() < 0.6 ? 'DESTROYER' : 'CARRIER'; // Mid game
+    } else if (difficulty < 8) {
+      const roll = Math.random();
+      if (roll < 0.3) return 'DESTROYER';
+      if (roll < 0.6) return 'CARRIER';
+      return 'DREADNOUGHT'; // Late game
+    } else {
+      // Endgame: any boss type, including mothership
+      const roll = Math.random();
+      if (roll < 0.2) return 'DESTROYER';
+      if (roll < 0.4) return 'CARRIER';
+      if (roll < 0.7) return 'DREADNOUGHT';
+      return 'MOTHERSHIP'; // Ultimate boss
     }
   }
 
