@@ -226,6 +226,8 @@ canvas{display:block;}
   <div class="bridge-panel" id="bridge-right">
     <div class="panel-title">Communications</div>
     <div id="comms-feed"></div>
+    <div class="panel-title" style="margin-top:16px;">Cargo</div>
+    <div id="bridge-inventory"></div>
     <div class="panel-title" style="margin-top:16px;">Active Quests</div>
     <div id="quest-tracker"></div>
   </div>
@@ -370,6 +372,50 @@ window.addEventListener('unhandledrejection', function(e) {
 import * as THREE from 'three';
 
 // ================================================================
+//  AUDIO SFX SYSTEM
+// ================================================================
+const AudioSFX = {
+  ctx: null,
+  init() {
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  },
+  ensure() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  play(type) {
+    if (!this.ctx) return;
+    this.ensure();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    const osc = ctx.createOscillator();
+    osc.connect(gain);
+    switch(type) {
+      case 'fire': osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.exponentialRampToValueAtTime(40, now+0.15); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.15); osc.start(now); osc.stop(now+0.15); break;
+      case 'hit': osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now+0.08); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.08); osc.start(now); osc.stop(now+0.08); break;
+      case 'explode': { const dur = 0.35; const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i/d.length); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now+dur); src.start(now); return; }
+      case 'charge': osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(1200, now+0.6); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0.12, now+0.6); osc.start(now); osc.stop(now+0.6); break;
+      case 'shield_hit': osc.type = 'sine'; osc.frequency.setValueAtTime(2000, now); osc.frequency.exponentialRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.2); osc.start(now); osc.stop(now+0.2); break;
+      case 'jump': osc.type = 'sine'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(2000, now+0.5); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); osc.start(now); osc.stop(now+0.8); break;
+      case 'boss_warn': osc.type = 'square'; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(280, now+0.2); osc.frequency.setValueAtTime(220, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.setValueAtTime(0.001, now+0.6); osc.start(now); osc.stop(now+0.6); break;
+      case 'quest_complete': osc.type = 'sine'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.15); osc.frequency.setValueAtTime(784, now+0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.5); osc.start(now); osc.stop(now+0.5); break;
+    }
+  },
+  ambience: null,
+  startAmbience() {
+    if (!this.ctx || this.ambience) return;
+    this.ensure();
+    const ctx = this.ctx;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.008;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 300;
+    src.connect(filt); filt.connect(ctx.destination); src.start();
+    this.ambience = src;
+  },
+};
+
+// ================================================================
 //  FACTION DATA (mirrors FactionSystem.js)
 // ================================================================
 const FACTIONS = [
@@ -406,7 +452,7 @@ const state = {
     ammo: 24, maxAmmo: 24, heat: 0, score: 0, kills: 0, cycle: 1,
     weaponReady: true, charging: false, chargeStart: 0, chargeLevel: 0,
     cooling: false, coolEnd: 0, recoilOffset: 0, recoilVel: 0,
-    yaw: 0, pitch: 0, locked: false,
+    yaw: 0, pitch: 0, locked: false, damageFlash: 0, dead: false, bossActive: false,
   },
   starSystems: [],
   selectedSystem: null,
@@ -480,6 +526,7 @@ async function connectSocket() {
           const q = state.quests.find(q => q.id === data.questId);
           if (q) { q.active = false; q.completed = true; }
           showToast(`Quest complete! +${data.rewards?.credits || 0} EC`);
+          AudioSFX.play('quest_complete');
           addComms('Mission Board', `Mission complete! Reward: ${data.rewards?.credits || 0} EC`);
           if (state.screen === 'bridge') updateBridgeUI();
         });
@@ -782,6 +829,14 @@ function updateBridgeUI() {
   document.getElementById('bridge-conn').textContent = state.connected ? '\u25CF Online' : '\u25CB Offline';
   document.getElementById('bridge-conn').style.color = state.connected ? 'var(--green)' : 'var(--warn)';
 
+  // Inventory on bridge
+  const invEl = document.getElementById('bridge-inventory');
+  if (invEl) {
+    invEl.innerHTML = state.inventory.length
+      ? state.inventory.map(item => `<div style="font-size:0.75rem;color:var(--muted);padding:2px 0;border-bottom:1px solid #111">${item.name} <span style="float:right">x${item.quantity||1}</span></div>`).join('')
+      : '<div style="font-size:0.75rem;color:var(--muted)">Empty hold</div>';
+  }
+
   // Comms
   const feed = document.getElementById('comms-feed');
   feed.innerHTML = '';
@@ -989,6 +1044,7 @@ function renderSystemDetail(idx) {
 }
 
 function jumpToSystem(idx) {
+  AudioSFX.play('jump');
   state.location.systemIndex = idx;
   state.location.docked = false;
   state.ship.fuel = Math.max(0, state.ship.fuel - 5);
@@ -1385,6 +1441,7 @@ const CHARGE_TIME = 600, COOLDOWN_TIME = 400, MOUSE_SENS = 0.002, MAX_PITCH = 1.
 
 function enterGunnerMode() {
   c.active = true;
+  AudioSFX.startAmbience();
   canvas3d.requestPointerLock();
   addComms('System', 'Gunner mode activated — Mouse aim, Click fire, R reload, ESC exit');
 }
@@ -1423,6 +1480,7 @@ function createEnemy(type) {
 function fireRailgun() {
   if (!c.weaponReady || c.ammo <= 0) return;
   c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
+  AudioSFX.play('charge');
 }
 
 function spawnNail() {
@@ -1430,6 +1488,7 @@ function spawnNail() {
   c.heat = Math.min(1, c.heat + 0.12);
   c.recoilVel = -8;
   muzzleMat.opacity = 1;
+  AudioSFX.play('fire');
   const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
   const nail = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.015,0.5,6), new THREE.MeshBasicMaterial({ color: 0xaabbcc }));
@@ -1439,6 +1498,31 @@ function spawnNail() {
   trail.quaternion.copy(nail.quaternion); trail.position.copy(origin);
   const g = new THREE.Group(); g.add(nail); g.add(trail); scene.add(g);
   c.projectiles.push({ group: g, dir: dir.clone(), speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat2 });
+}
+
+function createBossEnemy() {
+  const g = new THREE.Group();
+  const bossMat = new THREE.MeshStandardMaterial({ color: 0xff2200, roughness: 0.3, metalness: 0.9, emissive: 0xff4400, emissiveIntensity: 0.5 });
+  // Main body
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2, 10), bossMat));
+  // Wings
+  const wingMat = new THREE.MeshStandardMaterial({ color: 0xcc1100, roughness: 0.4, metalness: 0.8, emissive: 0xcc2200, emissiveIntensity: 0.3 });
+  { const w1 = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 5), wingMat); w1.position.set(-8, 0, 0); g.add(w1); }
+  { const w2 = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 5), wingMat); w2.position.set(8, 0, 0); g.add(w2); }
+  // Engine glow
+  const glowMat2 = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 });
+  { const eg1 = new THREE.Mesh(new THREE.CircleGeometry(1.2, 12), glowMat2); eg1.position.set(-3, 0, 5.5); g.add(eg1); }
+  { const eg2 = new THREE.Mesh(new THREE.CircleGeometry(1.2, 12), glowMat2); eg2.position.set(3, 0, 5.5); g.add(eg2); }
+  // Turrets
+  const turretMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+  { const t1 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 6), turretMat); t1.rotation.x = Math.PI/2; t1.position.set(-5, 1, -2); g.add(t1); }
+  { const t2 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 6), turretMat); t2.rotation.x = Math.PI/2; t2.position.set(5, 1, -2); g.add(t2); }
+  const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
+  const r = SPAWN_RADIUS + 200;
+  g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
+  g.lookAt(ship.position);
+  scene.add(g);
+  c.enemies.push({ group: g, hp: 30, maxHp: 30, speed: ENEMY_SPEED * 0.4, type: 'boss', points: 500, cfg: { scale: 3, color: 0xff2200 }, hitFlash: 0, isBoss: true });
 }
 
 function spawnExplosion(pos, scale) {
@@ -1517,6 +1601,55 @@ function renderHUD() {
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
   hudCtx.font = 'bold 22px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
+
+  // Credits (bottom-left)
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('CREDITS', 24, H-60);
+  hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(state.player.credits.toLocaleString() + ' EC', 24, H-42);
+
+  // Minimap radar (bottom-center)
+  const mapR = 70, mapCx = cx, mapCy = H - mapR - 20;
+  hudCtx.globalAlpha = 0.15; hudCtx.fillStyle = '#003366';
+  hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, mapR, 0, Math.PI*2); hudCtx.fill();
+  hudCtx.globalAlpha = 0.4; hudCtx.strokeStyle = '#44aaff'; hudCtx.lineWidth = 1;
+  hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, mapR, 0, Math.PI*2); hudCtx.stroke();
+  hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, mapR*0.5, 0, Math.PI*2); hudCtx.stroke();
+  // Player dot
+  hudCtx.globalAlpha = 0.9; hudCtx.fillStyle = '#00ff88';
+  hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, 3, 0, Math.PI*2); hudCtx.fill();
+  // Enemy dots
+  c.enemies.forEach(e => {
+    const dx = e.group.position.x - ship.position.x;
+    const dz = e.group.position.z - ship.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    const mapScale = mapR / (SPAWN_RADIUS + 200);
+    const mx = mapCx + dx * mapScale;
+    const my = mapCy + dz * mapScale;
+    if (Math.abs(mx-mapCx) < mapR && Math.abs(my-mapCy) < mapR) {
+      hudCtx.fillStyle = e.isBoss ? '#ff2200' : '#ff4444';
+      hudCtx.beginPath(); hudCtx.arc(mx, my, e.isBoss ? 4 : 2, 0, Math.PI*2); hudCtx.fill();
+    }
+  });
+  hudCtx.globalAlpha = 1;
+  hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
+
+  // Damage flash
+  if (c.damageFlash > 0) {
+    hudCtx.globalAlpha = (c.damageFlash / 200) * 0.2;
+    hudCtx.fillStyle = '#ff0000';
+    hudCtx.fillRect(0, 0, W, H);
+    hudCtx.globalAlpha = 1;
+  }
+
+  // Boss HP bar (top-center)
+  const boss = c.enemies.find(e => e.isBoss);
+  if (boss) {
+    const bw = 300, bh = 12, bx = cx - bw/2, by = 60;
+    hudCtx.fillStyle = '#445566'; hudCtx.font = 'bold 13px "Segoe UI"';
+    hudCtx.fillText('\u26a0 BOSS', bx, by-6);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(bx, by, bw, bh);
+    hudCtx.fillStyle = '#ff2200'; hudCtx.fillRect(bx, by, bw*(boss.hp/boss.maxHp), bh);
+    hudCtx.strokeStyle = '#ff4422'; hudCtx.lineWidth = 1; hudCtx.strokeRect(bx, by, bw, bh);
+  }
 
   // Scanlines
   hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
@@ -1672,11 +1805,27 @@ function gameLoop() {
     railR.position.z = -2.0 + c.recoilOffset;
     c.heat = Math.max(0, c.heat - dt * 0.15);
 
+    // Shield regen (3/sec out of combat)
+    if (state.ship.shield < state.ship.maxShield) {
+      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * 3);
+    }
+    // Damage flash
+    if (c.damageFlash > 0) c.damageFlash = Math.max(0, c.damageFlash - dtMs);
+
     // Spawn enemies
     if (state.gameTime - state.lastEnemySpawn > SPAWN_INTERVAL) {
       state.lastEnemySpawn = state.gameTime;
-      createEnemy(['scout','fighter','bomber','interceptor'][Math.floor(Math.random()*4)]);
+      const types = ['scout','fighter','bomber','interceptor'];
+      const spawnCount = 1 + Math.floor(c.cycle / 3);
+      for (let si = 0; si < spawnCount; si++) createEnemy(types[Math.floor(Math.random()*4)]);
       if (c.kills > 0 && c.kills % 15 === 0) { c.cycle++; addComms('AI Director', `Cycle ${c.cycle} — hostiles intensifying`); }
+      // Boss spawn every 20 kills
+      if (c.kills > 0 && c.kills % 20 === 0 && !c.bossActive) {
+        c.bossActive = true;
+        AudioSFX.play('boss_warn');
+        addComms('AI Director', '\u26a0 BOSS DETECTED — massive hostile signature!');
+        createBossEnemy();
+      }
     }
 
     // Update projectiles
@@ -1691,11 +1840,14 @@ function gameLoop() {
         if (p.group.position.distanceTo(e.group.position) < 3 * (e.cfg.scale || 1)) {
           e.hp--;
           e.hitFlash = 150;
+          AudioSFX.play('hit');
           if (e.hp <= 0) {
             c.score += e.points; c.kills++;
             state.player.credits += e.points;
+            if (e.isBoss) { c.bossActive = false; addComms('AI Director', 'Boss destroyed! +500 points'); }
             // Report kill to server for economy credit + quest progress
             if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
+            AudioSFX.play('explode');
             spawnExplosion(e.group.position.clone(), e.cfg.scale);
             scene.remove(e.group); c.enemies.splice(j, 1);
           }
@@ -1712,8 +1864,16 @@ function gameLoop() {
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
       if (e.group.position.distanceTo(ship.position) < 5) {
-        state.ship.shield = Math.max(0, state.ship.shield - 0.5);
-        if (state.ship.shield <= 0) state.ship.hull = Math.max(0, state.ship.hull - 0.3);
+        if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); }
+        else state.ship.hull = Math.max(0, state.ship.hull - 0.3);
+        c.damageFlash = 200;
+        if (state.ship.hull <= 0 && !c.dead) {
+          c.dead = true;
+          addComms('AI Director', 'Your ship has been destroyed. Embrace rebirth...');
+          AudioSFX.play('explode');
+          spawnExplosion(ship.position.clone(), 3);
+          setTimeout(() => { c.dead = false; showScreen('rebirth'); exitGunnerMode(); }, 2500);
+        }
       }
     });
 
@@ -1797,6 +1957,10 @@ async function init() {
   }
 
   // Start
+  // Init audio on first user interaction
+  document.addEventListener('click', () => AudioSFX.init(), { once: true });
+  document.addEventListener('keydown', () => AudioSFX.init(), { once: true });
+
   addComms('AI Director', 'Old Eden systems initialising...');
   addComms('AI Director', 'The universe awaits, pilot.');
   if (threeReady) gameLoop();
