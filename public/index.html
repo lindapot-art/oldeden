@@ -1310,8 +1310,8 @@ const wingGeo = new THREE.BoxGeometry(8,0.15,4);
 const wL = new THREE.Mesh(wingGeo, hullMat); wL.position.set(-4.5,0,1); wL.rotation.z=-0.08; ship.add(wL);
 const wR = new THREE.Mesh(wingGeo, hullMat); wR.position.set(4.5,0,1); wR.rotation.z=0.08; ship.add(wR);
 const finGeo = new THREE.BoxGeometry(0.15,1.5,2);
-ship.add(Object.assign(new THREE.Mesh(finGeo, accentMat), { position: new THREE.Vector3(-8.4,0.6,1) }));
-ship.add(Object.assign(new THREE.Mesh(finGeo, accentMat), { position: new THREE.Vector3(8.4,0.6,1) }));
+{ const fL = new THREE.Mesh(finGeo, accentMat); fL.position.set(-8.4,0.6,1); ship.add(fL); }
+{ const fR = new THREE.Mesh(finGeo, accentMat); fR.position.set(8.4,0.6,1); ship.add(fR); }
 const tfGeo = new THREE.BoxGeometry(0.15,2,2.5);
 const tL = new THREE.Mesh(tfGeo, hullMat); tL.position.set(-1.2,1.2,4.5); tL.rotation.z=0.15; ship.add(tL);
 const tR = new THREE.Mesh(tfGeo, hullMat); tR.position.set(1.2,1.2,4.5); tR.rotation.z=-0.15; ship.add(tR);
@@ -1320,10 +1320,10 @@ const eL = new THREE.Mesh(eGeo, accentMat); eL.rotation.x=Math.PI/2; eL.position
 const eR = new THREE.Mesh(eGeo, accentMat); eR.rotation.x=Math.PI/2; eR.position.set(1,-0.2,5.5); ship.add(eR);
 const glowGeo = new THREE.CircleGeometry(0.65,16);
 const glowMat = new THREE.MeshBasicMaterial({ color:0x44aaff, transparent:true, opacity:0.7 });
-ship.add(Object.assign(new THREE.Mesh(glowGeo, glowMat), { position: new THREE.Vector3(-1,-0.2,6.51) }));
-ship.add(Object.assign(new THREE.Mesh(glowGeo, glowMat), { position: new THREE.Vector3(1,-0.2,6.51) }));
-ship.add(new THREE.Mesh(new THREE.SphereGeometry(1,16,12,0,Math.PI*2,0,Math.PI/2), shipCanopyMat)).position.set(0,0.5,-3);
-ship.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.4,8), gunMat)).position.set(0,0.8,-1);
+{ const gl1 = new THREE.Mesh(glowGeo, glowMat); gl1.position.set(-1,-0.2,6.51); ship.add(gl1); }
+{ const gl2 = new THREE.Mesh(glowGeo, glowMat); gl2.position.set(1,-0.2,6.51); ship.add(gl2); }
+{ const canopyM = new THREE.Mesh(new THREE.SphereGeometry(1,16,12,0,Math.PI*2,0,Math.PI/2), shipCanopyMat); canopyM.position.set(0,0.5,-3); ship.add(canopyM); }
+{ const gunMount = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.4,8), gunMat); gunMount.position.set(0,0.8,-1); ship.add(gunMount); }
 const bbGeo = new THREE.CylinderGeometry(0.08,0.08,3,6);
 const bL2 = new THREE.Mesh(bbGeo, gunMat); bL2.rotation.x=Math.PI/2; bL2.position.set(-0.25,0.95,-2.5); ship.add(bL2);
 const bR2 = new THREE.Mesh(bbGeo, gunMat); bR2.rotation.x=Math.PI/2; bR2.position.set(0.25,0.95,-2.5); ship.add(bR2);
@@ -1343,11 +1343,11 @@ for (let i = 0; i < 6; i++) {
   strut.rotation.x = Math.PI*0.3; strut.rotation.z = angle; cockpit.add(strut);
 }
 const seatMat = new THREE.MeshBasicMaterial({ color: 0x2a3540, transparent: true, opacity: 0.7 });
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.6,0.08), seatMat), { position: new THREE.Vector3(0,-0.1,0.4) }));
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.08,0.5), seatMat), { position: new THREE.Vector3(0,-0.5,0.1) }));
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat), { position: new THREE.Vector3(-0.35,-0.35,0) }));
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat), { position: new THREE.Vector3(0.35,-0.35,0) }));
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.3,8), frameMat), { position: new THREE.Vector3(0,-0.75,0.1) }));
+{ const sb = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.6,0.08), seatMat); sb.position.set(0,-0.1,0.4); cockpit.add(sb); }
+{ const ss = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.08,0.5), seatMat); ss.position.set(0,-0.5,0.1); cockpit.add(ss); }
+{ const aL = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat); aL.position.set(-0.35,-0.35,0); cockpit.add(aL); }
+{ const aR = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat); aR.position.set(0.35,-0.35,0); cockpit.add(aR); }
+{ const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.3,8), frameMat); sp.position.set(0,-0.75,0.1); cockpit.add(sp); }
 
 // Railgun barrels + glow
 const railMat = new THREE.MeshBasicMaterial({ color: 0x556677, transparent: true, opacity: 0.8 });
@@ -1357,8 +1357,8 @@ railL = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
 railL.rotation.x=Math.PI/2; railL.position.set(-0.18,-0.3,-2.0); cockpit.add(railL);
 railR = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
 railR.rotation.x=Math.PI/2; railR.position.set(0.18,-0.3,-2.0); cockpit.add(railR);
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatL), { rotation: new THREE.Euler(Math.PI/2,0,0), position: new THREE.Vector3(-0.18,-0.3,-2.0) }));
-cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatR), { rotation: new THREE.Euler(Math.PI/2,0,0), position: new THREE.Vector3(0.18,-0.3,-2.0) }));
+{ const rgL = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatL); rgL.rotation.set(Math.PI/2,0,0); rgL.position.set(-0.18,-0.3,-2.0); cockpit.add(rgL); }
+{ const rgR = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatR); rgR.rotation.set(Math.PI/2,0,0); rgR.position.set(0.18,-0.3,-2.0); cockpit.add(rgR); }
 muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
 const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), muzzleMat);
 muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
@@ -1407,10 +1407,10 @@ function createEnemy(type) {
   const mat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.5, metalness: 0.7, emissive: cfg.color, emissiveIntensity: 0.25 });
   g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5*cfg.scale,0.5*cfg.scale,3*cfg.scale), mat));
   const wg = new THREE.BoxGeometry(4*cfg.scale,0.1*cfg.scale,1.5*cfg.scale);
-  g.add(Object.assign(new THREE.Mesh(wg, mat), { position: new THREE.Vector3(-2*cfg.scale,0,0) }));
-  g.add(Object.assign(new THREE.Mesh(wg, mat), { position: new THREE.Vector3(2*cfg.scale,0,0) }));
+  { const wL = new THREE.Mesh(wg, mat); wL.position.set(-2*cfg.scale,0,0); g.add(wL); }
+  { const wR = new THREE.Mesh(wg, mat); wR.position.set(2*cfg.scale,0,0); g.add(wR); }
   const eg = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.6 });
-  g.add(Object.assign(new THREE.Mesh(new THREE.CircleGeometry(0.3*cfg.scale,8), eg), { position: new THREE.Vector3(0,0,1.6*cfg.scale) }));
+  { const eM = new THREE.Mesh(new THREE.CircleGeometry(0.3*cfg.scale,8), eg); eM.position.set(0,0,1.6*cfg.scale); g.add(eM); }
 
   const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
   const r = SPAWN_RADIUS + Math.random()*100;
