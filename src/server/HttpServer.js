@@ -46,10 +46,14 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
   // ── Asset upload API ──────────────────────────────────────────────────────
   app.use('/api/assets', createAssetUploadRouter({ uploadDir, maxFileSize }));
 
-  // ── Fallback: serve index.html for any unmatched GET ──────────────────────
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(publicDir, 'index.html'));
-  });
+  /**
+   * Add the SPA fallback — call AFTER registering game API routes in index.js.
+   */
+  function addFallback() {
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(publicDir, 'index.html'));
+    });
+  }
 
   /**
    * Start the HTTP server on the given port.
@@ -65,5 +69,5 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
     });
   }
 
-  return { app, start };
+  return { app, start, addFallback };
 }

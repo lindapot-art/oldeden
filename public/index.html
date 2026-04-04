@@ -1,880 +1,1515 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Old Eden</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0a0a0a;
-      color: #c8b89a;
-      font-family: 'Segoe UI', sans-serif;
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-      cursor: none;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Old Eden</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --panel: rgba(13,17,23,0.92);
+  --panel-solid: #0d1117;
+  --border: #1a2535;
+  --text: #c8d6e5;
+  --gold: #d4a856;
+  --blue: #44aaff;
+  --green: #00ff88;
+  --warn: #ffaa00;
+  --danger: #ff4444;
+  --muted: #445566;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;width:100vw;height:100vh;}
+canvas{display:block;}
 
-    /* ── Title Screen ─────────────────────────────── */
-    #title-screen {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: radial-gradient(ellipse at center, #1a1510 0%, #0a0a0a 70%);
-      z-index: 100;
-      cursor: default;
-    }
-    #title-screen h1 {
-      font-size: 4rem;
-      color: #d4a856;
-      text-shadow: 0 0 40px rgba(212,168,86,0.5), 0 0 80px rgba(212,168,86,0.2);
-      letter-spacing: 0.25em;
-      margin-bottom: 0.3rem;
-    }
-    #title-screen .sub {
-      color: #887755;
-      font-style: italic;
-      font-size: 1.15rem;
-      margin-bottom: 3rem;
-    }
-    .menu-btn {
-      display: block;
-      width: 300px;
-      padding: 15px 0;
-      margin: 8px 0;
-      background: linear-gradient(135deg, #1a1a1a, #222);
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #d4a856;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: all 0.25s;
-      letter-spacing: 0.06em;
-      font-family: inherit;
-    }
-    .menu-btn:hover {
-      background: linear-gradient(135deg, #2a2218, #332a1a);
-      border-color: #d4a856;
-      box-shadow: 0 0 25px rgba(212,168,86,0.2);
-      transform: scale(1.04);
-    }
-    .version-label {
-      position: fixed;
-      bottom: 12px;
-      right: 16px;
-      color: #333;
-      font-size: 0.75rem;
-      z-index: 200;
-    }
+/* ── Screens ─────────────────────────────── */
+.screen{position:absolute;inset:0;display:none;z-index:50;}
+.screen.active{display:flex;}
 
-    /* ── HUD Overlay ──────────────────────────────── */
-    #hud-canvas {
-      position: absolute;
-      inset: 0;
-      z-index: 10;
-      pointer-events: none;
-    }
+/* ── Title ───────────────────────────────── */
+#screen-title{flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(ellipse at center,#12100d 0%,#0a0a0f 70%);z-index:100;}
+#screen-title h1{font-size:clamp(2rem,6vw,5rem);color:var(--gold);text-shadow:0 0 60px rgba(212,168,86,0.4),0 0 120px rgba(212,168,86,0.15);letter-spacing:0.3em;margin-bottom:0.2rem;font-weight:300;}
+#screen-title .sub{color:#776644;font-style:italic;font-size:1.1rem;margin-bottom:3rem;letter-spacing:0.15em;}
+.title-stars{position:absolute;inset:0;overflow:hidden;z-index:-1;}
+.title-star{position:absolute;width:2px;height:2px;background:#ccc;border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:0.2;}50%{opacity:1;}}
+.menu-btn{display:block;width:320px;padding:16px 0;margin:8px 0;background:linear-gradient(135deg,#141414,#1a1a1a);border:1px solid #2a2a2a;border-radius:6px;color:var(--gold);font-size:1.05rem;cursor:pointer;transition:all 0.3s;letter-spacing:0.08em;font-family:inherit;}
+.menu-btn:hover{background:linear-gradient(135deg,#1f1a12,#2a2218);border-color:var(--gold);box-shadow:0 0 30px rgba(212,168,86,0.15);transform:scale(1.03);}
+.menu-btn:disabled{opacity:0.3;pointer-events:none;}
+#server-status{margin-top:1.5rem;color:var(--muted);font-size:0.8rem;}
 
-    /* ── 3D Canvas ────────────────────────────────── */
-    #game-canvas {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-    }
+/* ── Character Creation ──────────────────── */
+#screen-create{flex-direction:column;align-items:center;background:var(--bg);overflow-y:auto;padding:40px 20px;z-index:90;}
+#screen-create h2{color:var(--gold);font-size:1.8rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
+.create-section{width:100%;max-width:900px;margin-bottom:2rem;}
+.create-section h3{color:var(--blue);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:0.8rem;font-weight:400;}
+.faction-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:800px){.faction-grid{grid-template-columns:repeat(2,1fr);}}
+.faction-card{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:14px;cursor:pointer;transition:all 0.25s;position:relative;border-top:3px solid var(--border);}
+.faction-card:hover{border-color:var(--muted);transform:translateY(-2px);}
+.faction-card.selected{border-color:var(--gold);box-shadow:0 0 20px rgba(212,168,86,0.15);}
+.faction-card .fname{font-size:0.95rem;font-weight:600;margin-bottom:2px;}
+.faction-card .fdetail{font-size:0.72rem;color:var(--muted);line-height:1.3;}
+.name-input{background:#0d1117;border:1px solid var(--border);border-radius:4px;padding:12px 16px;color:var(--text);font-size:1rem;width:100%;max-width:400px;font-family:inherit;outline:none;}
+.name-input:focus{border-color:var(--blue);}
+.genome-row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
+#genome-canvas{border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;}
+.gene-stats{flex:1;min-width:200px;}
+.gene-bar{margin-bottom:8px;}
+.gene-bar-label{font-size:0.75rem;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between;}
+.gene-bar-track{height:6px;background:#111;border-radius:3px;overflow:hidden;}
+.gene-bar-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+.btn{padding:12px 32px;border:1px solid var(--gold);border-radius:4px;background:transparent;color:var(--gold);font-size:1rem;cursor:pointer;font-family:inherit;letter-spacing:0.06em;transition:all 0.25s;}
+.btn:hover{background:rgba(212,168,86,0.1);box-shadow:0 0 20px rgba(212,168,86,0.1);}
+.btn-sm{padding:8px 16px;font-size:0.8rem;}
+.btn-row{display:flex;gap:12px;margin-top:1rem;}
 
-    /* ── Click-to-lock prompt ─────────────────────── */
-    #lock-prompt {
-      display: none;
-      position: absolute;
-      inset: 0;
-      z-index: 50;
-      background: rgba(0,0,0,0.7);
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-    }
-    #lock-prompt span {
-      color: #d4a856;
-      font-size: 1.4rem;
-      letter-spacing: 0.08em;
-      text-shadow: 0 0 20px rgba(212,168,86,0.4);
-    }
-  </style>
+/* ── Bridge ──────────────────────────────── */
+#screen-bridge{z-index:10;pointer-events:none;}
+.bridge-panel{pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px;backdrop-filter:blur(8px);}
+#bridge-left{position:absolute;left:16px;top:80px;width:220px;}
+#bridge-right{position:absolute;right:16px;top:80px;width:260px;max-height:calc(100vh - 180px);overflow-y:auto;}
+#bridge-top{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;}
+.bridge-location{font-size:0.85rem;color:var(--gold);letter-spacing:0.1em;}
+.bridge-connection{font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2);}
+.panel-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:10px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.8rem;}
+.stat-bar{height:5px;background:#111;border-radius:3px;flex:1;margin-left:10px;overflow:hidden;}
+.stat-fill{height:100%;border-radius:3px;}
+.quest-item{background:rgba(68,170,255,0.05);border:1px solid rgba(68,170,255,0.1);border-radius:4px;padding:8px 10px;margin-bottom:6px;font-size:0.75rem;line-height:1.3;}
+.quest-item .qt{color:var(--gold);font-weight:600;margin-bottom:2px;}
+.comms-msg{border-left:2px solid var(--blue);padding:6px 10px;margin-bottom:6px;font-size:0.75rem;color:var(--muted);line-height:1.3;}
+.comms-msg .sender{color:var(--blue);font-weight:600;font-size:0.7rem;}
+
+/* ── Nav Bar ─────────────────────────────── */
+#nav-bar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:none;z-index:25;pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 8px;gap:4px;backdrop-filter:blur(8px);}
+#nav-bar.visible{display:flex;}
+.nav-btn{padding:10px 18px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);font-size:0.8rem;cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.04em;}
+.nav-btn:hover{background:rgba(68,170,255,0.08);border-color:var(--border);}
+.nav-btn.active{background:rgba(212,168,86,0.1);border-color:var(--gold);color:var(--gold);}
+.nav-btn .nav-icon{font-size:1rem;display:block;margin-bottom:2px;}
+
+/* ── Star Map ────────────────────────────── */
+#screen-starmap{background:rgba(0,0,0,0.85);z-index:80;flex-direction:row;}
+#starmap-canvas{flex:1;cursor:crosshair;}
+#starmap-sidebar{width:280px;background:var(--panel-solid);border-left:1px solid var(--border);padding:16px;overflow-y:auto;}
+.system-info{margin-top:16px;}
+.system-info h3{color:var(--gold);font-size:1rem;margin-bottom:8px;}
+.system-info p{font-size:0.78rem;color:var(--muted);margin-bottom:4px;}
+.system-info .tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:0.7rem;margin:2px;background:rgba(68,170,255,0.1);color:var(--blue);border:1px solid rgba(68,170,255,0.15);}
+
+/* ── Station ─────────────────────────────── */
+#screen-station{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
+#screen-station h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
+@media(max-width:700px){.station-grid{grid-template-columns:1fr;}}
+.station-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
+.trade-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #111;font-size:0.8rem;}
+.trade-row:last-child{border-bottom:none;}
+.trade-buy,.trade-sell{padding:4px 10px;border-radius:3px;border:1px solid;font-size:0.7rem;cursor:pointer;background:transparent;font-family:inherit;}
+.trade-buy{color:var(--green);border-color:rgba(0,255,136,0.3);}
+.trade-buy:hover{background:rgba(0,255,136,0.1);}
+.trade-sell{color:var(--warn);border-color:rgba(255,170,0,0.3);}
+.trade-sell:hover{background:rgba(255,170,0,0.1);}
+
+/* ── Character Sheet ─────────────────────── */
+#screen-character{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
+#screen-character h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
+.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
+@media(max-width:700px){.char-grid{grid-template-columns:1fr;}}
+.char-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
+.rep-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;}
+.rep-bar{height:4px;flex:1;margin-left:8px;background:#111;border-radius:2px;overflow:hidden;position:relative;}
+.rep-fill{height:100%;border-radius:2px;}
+
+/* ── Gunner HUD ──────────────────────────── */
+#hud-canvas{position:absolute;inset:0;z-index:15;pointer-events:none;display:none;}
+#hud-canvas.active{display:block;}
+#lock-prompt{display:none;position:absolute;inset:0;z-index:55;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;cursor:pointer;}
+#lock-prompt span{color:var(--gold);font-size:1.3rem;letter-spacing:0.1em;text-shadow:0 0 20px rgba(212,168,86,0.4);}
+
+/* ── 3D Canvas ───────────────────────────── */
+#game-canvas{position:absolute;inset:0;z-index:1;}
+
+/* ── Misc ────────────────────────────────── */
+.version-label{position:fixed;bottom:8px;right:12px;color:#222;font-size:0.7rem;z-index:200;}
+.fade-in{animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
+</style>
 </head>
 <body>
 
-  <!-- ── Title Screen ──────────────────────────── -->
-  <div id="title-screen">
-    <h1>OLD EDEN</h1>
-    <p class="sub">A world that remembers</p>
-    <button class="menu-btn" id="btn-start">&#9876; Enter Gunner Mode</button>
-    <div style="margin-top:1.5rem;color:#555;font-size:0.8rem" id="server-status">Connecting&#8230;</div>
+<!-- ════════════════════════════════════════════ -->
+<!--  TITLE SCREEN                               -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen active" id="screen-title">
+  <div class="title-stars" id="title-stars"></div>
+  <h1>OLD EDEN</h1>
+  <p class="sub">A world that remembers</p>
+  <button class="menu-btn" id="btn-new">&#9733; New Game</button>
+  <button class="menu-btn" id="btn-continue" disabled>&#9654; Continue</button>
+  <button class="menu-btn" id="btn-settings" disabled>&#9881; Settings</button>
+  <div id="server-status">Connecting&#8230;</div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  CHARACTER CREATION                          -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-create">
+  <h2>CREATE YOUR PILOT</h2>
+
+  <div class="create-section">
+    <h3>Choose Your Faction</h3>
+    <div class="faction-grid" id="faction-grid"></div>
   </div>
 
-  <!-- ── Game Canvases ─────────────────────────── -->
-  <canvas id="game-canvas"></canvas>
-  <canvas id="hud-canvas"></canvas>
+  <div class="create-section">
+    <h3>Pilot Name</h3>
+    <input class="name-input" id="pilot-name" type="text" placeholder="Enter callsign..." maxlength="24" autocomplete="off"/>
+  </div>
 
-  <!-- ── Pointer lock prompt ───────────────────── -->
-  <div id="lock-prompt"><span>Click to resume control</span></div>
+  <div class="create-section">
+    <h3>Genome &mdash; 256 Gene Sequence</h3>
+    <div class="genome-row">
+      <canvas id="genome-canvas" width="256" height="256"></canvas>
+      <div class="gene-stats" id="gene-stats"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
+    </div>
+  </div>
 
-  <div class="version-label">Old Eden v0.1.0-alpha</div>
+  <div class="btn-row" style="justify-content:center;margin-top:1rem;">
+    <button class="btn" id="btn-back-title">&larr; Back</button>
+    <button class="btn" id="btn-create-char">Create Pilot &rarr;</button>
+  </div>
+</div>
 
-  <!-- ── Three.js from CDN (r163) ──────────────── -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js"
-    }
+<!-- ════════════════════════════════════════════ -->
+<!--  BRIDGE (Main Hub — overlays 3D viewport)   -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-bridge">
+  <div id="bridge-top">
+    <span class="bridge-location" id="bridge-location">Sol Sector</span>
+    <span class="bridge-connection" id="bridge-conn">&#9679; Online</span>
+  </div>
+
+  <div class="bridge-panel" id="bridge-left">
+    <div class="panel-title">Ship Status</div>
+    <div class="stat-row">Hull <div class="stat-bar"><div class="stat-fill" id="bar-hull" style="width:100%;background:var(--danger)"></div></div></div>
+    <div class="stat-row">Shield <div class="stat-bar"><div class="stat-fill" id="bar-shield" style="width:100%;background:var(--blue)"></div></div></div>
+    <div class="stat-row">Fuel <div class="stat-bar"><div class="stat-fill" id="bar-fuel" style="width:100%;background:var(--warn)"></div></div></div>
+    <div class="stat-row">Power <div class="stat-bar"><div class="stat-fill" id="bar-power" style="width:100%;background:var(--green)"></div></div></div>
+    <div style="margin-top:12px;">
+      <div class="panel-title">Credits</div>
+      <div style="font-size:1.1rem;color:var(--gold);font-weight:600;" id="bridge-credits">1,000 EC</div>
+      <div style="font-size:0.75rem;color:var(--muted);" id="bridge-sm">0 SM</div>
+    </div>
+  </div>
+
+  <div class="bridge-panel" id="bridge-right">
+    <div class="panel-title">Communications</div>
+    <div id="comms-feed"></div>
+    <div class="panel-title" style="margin-top:16px;">Active Quests</div>
+    <div id="quest-tracker"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  STAR MAP                                    -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-starmap">
+  <canvas id="starmap-canvas"></canvas>
+  <div id="starmap-sidebar">
+    <div class="panel-title">Star Map</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Click a system to inspect. Double-click to jump.</p>
+    <div id="system-detail">
+      <p style="color:var(--muted);font-size:0.8rem;">Select a system...</p>
+    </div>
+    <button class="btn btn-sm" id="btn-jump" style="margin-top:12px;display:none;">&#9889; Jump To System</button>
+    <hr style="border-color:#1a2535;margin:16px 0;"/>
+    <div class="panel-title">Legend</div>
+    <div id="map-legend"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  STATION                                     -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-station">
+  <h2 id="station-name">&#9968; Orbital Station</h2>
+  <div class="station-grid">
+    <div class="station-panel">
+      <div class="panel-title">Trade Market</div>
+      <div id="trade-market"></div>
+    </div>
+    <div class="station-panel">
+      <div class="panel-title">Mission Board</div>
+      <div id="mission-board"></div>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:2rem;">
+    <button class="btn" id="btn-undock">&larr; Undock</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  CHARACTER SHEET                             -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-character">
+  <h2 id="char-name">Pilot Profile</h2>
+  <div class="char-grid">
+    <div class="char-panel">
+      <div class="panel-title">Genome</div>
+      <canvas id="char-genome-canvas" width="192" height="192" style="border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;"></canvas>
+      <div id="char-gene-stats" style="margin-top:10px;"></div>
+    </div>
+    <div class="char-panel">
+      <div class="panel-title">Faction Standings</div>
+      <div id="faction-standings"></div>
+    </div>
+    <div class="char-panel">
+      <div class="panel-title">Aptitude Skills</div>
+      <div id="skill-list"></div>
+    </div>
+    <div class="char-panel">
+      <div class="panel-title">Character Info</div>
+      <div id="char-info"></div>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:1.5rem;">
+    <button class="btn" id="btn-char-back">&larr; Back to Bridge</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  GAME CANVASES                               -->
+<!-- ════════════════════════════════════════════ -->
+<canvas id="game-canvas"></canvas>
+<canvas id="hud-canvas"></canvas>
+<div id="lock-prompt"><span>Click to resume control</span></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  NAV BAR                                     -->
+<!-- ════════════════════════════════════════════ -->
+<div id="nav-bar">
+  <button class="nav-btn" data-screen="bridge"><span class="nav-icon">&#9678;</span>Bridge</button>
+  <button class="nav-btn" data-screen="gunner"><span class="nav-icon">&#9876;</span>Gunner</button>
+  <button class="nav-btn" data-screen="starmap"><span class="nav-icon">&#9733;</span>Star Map</button>
+  <button class="nav-btn" data-screen="station"><span class="nav-icon">&#9968;</span>Station</button>
+  <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
+</div>
+
+<div class="version-label">Old Eden v0.1.0-alpha</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  THREE.JS + GAME CODE                        -->
+<!-- ════════════════════════════════════════════ -->
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ================================================================
+//  FACTION DATA (mirrors FactionSystem.js)
+// ================================================================
+const FACTIONS = [
+  { id:'terran_dominion',   name:'Terran Dominion',    ideology:'Order',         home:'Sol Sector',       color:'#3B82F6', desc:'Military empire maintaining galactic order from the Core systems.' },
+  { id:'free_colonies',     name:'Free Colonies',      ideology:'Liberty',       home:'Frontier Expanse', color:'#22C55E', desc:'Independent settlements valuing freedom above all else.' },
+  { id:'syndicate',         name:'Syndicate',          ideology:'Profit',        home:'Nexus Ring',       color:'#EAB308', desc:'Merchant megacorp controlling trade lanes and black markets.' },
+  { id:'covenant_of_stars', name:'Covenant of Stars',  ideology:'Faith',         home:'Hallowed Nebula',  color:'#A855F7', desc:'Theocratic order seeking divine truth among the stars.' },
+  { id:'void_collective',   name:'Void Collective',    ideology:'Knowledge',     home:'Deep Void',        color:'#06B6D4', desc:'Scientific alliance pushing the boundaries of understanding.' },
+  { id:'iron_pact',         name:'Iron Pact',          ideology:'Survival',      home:'Ashfields',        color:'#F97316', desc:'Hardy survivalists thriving where others cannot endure.' },
+  { id:'ascendant_order',   name:'Ascendant Order',    ideology:'Transcendence', home:'Luminous Reach',   color:'#EC4899', desc:'Mystics pursuing transhumanist evolution and ascension.' },
+  { id:'remnant_clans',     name:'Remnant Clans',      ideology:'Tradition',     home:'Old Territories',  color:'#78716C', desc:'Ancient clans preserving the old ways of pre-diaspora humanity.' },
+];
+
+// ================================================================
+//  GAME STATE
+// ================================================================
+const state = {
+  screen: 'title',
+  connected: false,
+  socket: null,
+  player: {
+    name: '',
+    faction: null,
+    genome: null,
+    credits: 1000,
+    stellarMarks: 0,
+    rebirths: 0,
+    age: 0,
+  },
+  ship: { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 },
+  location: { systemIndex: 0, docked: false },
+  combat: {
+    active: false, enemies: [], projectiles: [], explosions: [],
+    ammo: 24, maxAmmo: 24, heat: 0, score: 0, kills: 0, cycle: 1,
+    weaponReady: true, charging: false, chargeStart: 0, chargeLevel: 0,
+    cooling: false, coolEnd: 0, recoilOffset: 0, recoilVel: 0,
+    yaw: 0, pitch: 0, locked: false,
+  },
+  starSystems: [],
+  selectedSystem: null,
+  quests: [],
+  inventory: [],
+  factionRep: {},
+  commsLog: [],
+  gameTime: 0,
+  lastEnemySpawn: 0,
+};
+
+// Initialise faction rep at neutral
+FACTIONS.forEach(f => { state.factionRep[f.id] = 0; });
+
+// ================================================================
+//  SOCKET.IO CONNECTION
+// ================================================================
+async function connectSocket() {
+  return new Promise(resolve => {
+    const script = document.createElement('script');
+    script.src = '/socket.io/socket.io.js';
+    script.onload = () => {
+      try {
+        const s = io({ reconnection: true, reconnectionDelay: 3000 });
+        s.on('connect', () => {
+          state.connected = true;
+          updateServerStatus(true);
+        });
+        s.on('disconnect', () => {
+          state.connected = false;
+          updateServerStatus(false);
+        });
+        s.on('game:init', (data) => {
+          addComms('AI Director', `Systems online: ${data.systems.join(', ')}`);
+        });
+        s.on('starmap:data', (data) => {
+          if (data.systems) state.starSystems = data.systems;
+        });
+        s.on('quests:data', (data) => {
+          if (data.quests) state.quests = data.quests;
+        });
+        resolve(s);
+      } catch(e) { resolve(null); }
+    };
+    script.onerror = () => resolve(null);
+    document.head.appendChild(script);
+  });
+}
+
+function updateServerStatus(online) {
+  const el = document.getElementById('server-status');
+  if (online) {
+    el.textContent = '\u25CF Server online';
+    el.style.color = '#4caf50';
+  } else {
+    el.textContent = '\u25CB Offline mode';
+    el.style.color = '#c0392b';
   }
-  </script>
+}
 
-  <script type="module">
-    import * as THREE from 'three';
+// ================================================================
+//  SCREEN MANAGEMENT
+// ================================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) { el.classList.add('active'); el.classList.add('fade-in'); }
 
-    // ================================================================
-    //  CONFIG
-    // ================================================================
-    const SPAWN_RADIUS   = 250;
-    const SPAWN_INTERVAL = 2200;
-    const ENEMY_SPEED    = 18;
-    const NAIL_SPEED     = 400;
-    const MAX_AMMO       = 24;
-    const CHARGE_TIME    = 600;
-    const COOLDOWN_TIME  = 400;
-    const MOUSE_SENS     = 0.002;
-    const MAX_PITCH      = 1.2;
-    const MAX_YAW        = 1.5;
+  state.screen = name;
+  const navBar = document.getElementById('nav-bar');
+  const showNav = ['bridge','starmap','station','character'].includes(name);
+  navBar.classList.toggle('visible', showNav);
 
-    // ================================================================
-    //  STATE
-    // ================================================================
-    let yaw = 0, pitch = 0;
-    let ammo = MAX_AMMO;
-    let hp = 100, maxHp = 100;
-    let shield = 100, maxShield = 100;
-    let score = 0, kills = 0, cycle = 1;
-    let weaponReady = true;
-    let charging = false, chargeStart = 0, chargeLevel = 0;
-    let cooling = false, coolEnd = 0;
-    let recoilOffset = 0, recoilVel = 0;
-    let heat = 0;
-    let running = false;
-    let locked = false;
+  // Update nav active state
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.screen === name);
+  });
 
-    const enemies = [];
-    const projectiles = [];
-    const explosions = [];
-    const logLines = [];
-    let nextEnemyId = 0;
-    let nextProjId = 0;
-    let gameTime = 0;
-    let lastSpawn = 0;
+  // HUD for gunner
+  document.getElementById('hud-canvas').classList.toggle('active', name === 'gunner');
 
-    // ================================================================
-    //  SERVER CHECK
-    // ================================================================
-    fetch('/health').then(r => r.json()).then(d => {
-      document.getElementById('server-status').textContent =
-        '\u25CF Server online \u2014 uptime ' + Math.floor(d.uptime) + 's';
-      document.getElementById('server-status').style.color = '#4caf50';
-    }).catch(() => {
-      document.getElementById('server-status').textContent = '\u25CB Server offline';
-      document.getElementById('server-status').style.color = '#c0392b';
+  // Cursor
+  document.body.style.cursor = name === 'gunner' ? 'none' : 'default';
+
+  if (name === 'bridge') updateBridgeUI();
+  if (name === 'starmap') { resizeStarMap(); renderStarMap(); }
+  if (name === 'station') renderStation();
+  if (name === 'character') renderCharSheet();
+  if (name === 'gunner') enterGunnerMode();
+}
+
+// ================================================================
+//  TITLE SCREEN — animated stars
+// ================================================================
+(function initTitleStars() {
+  const container = document.getElementById('title-stars');
+  for (let i = 0; i < 120; i++) {
+    const star = document.createElement('div');
+    star.className = 'title-star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = (Math.random() * 5) + 's';
+    star.style.animationDuration = (2 + Math.random() * 4) + 's';
+    star.style.width = star.style.height = (1 + Math.random() * 2) + 'px';
+    container.appendChild(star);
+  }
+})();
+
+// Server health check
+fetch('/health').then(r => r.json()).then(d => {
+  updateServerStatus(true);
+  document.getElementById('btn-continue').disabled = !localStorage.getItem('oe-save');
+}).catch(() => updateServerStatus(false));
+
+// ================================================================
+//  CHARACTER CREATION
+// ================================================================
+let createGenome = null;
+
+function initCreateScreen() {
+  const grid = document.getElementById('faction-grid');
+  grid.innerHTML = '';
+  FACTIONS.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'faction-card';
+    card.style.borderTopColor = f.color;
+    card.innerHTML = `<div class="fname" style="color:${f.color}">${f.name}</div>
+      <div class="fdetail">${f.ideology} &mdash; ${f.home}</div>
+      <div class="fdetail" style="margin-top:4px;">${f.desc}</div>`;
+    card.addEventListener('click', () => {
+      grid.querySelectorAll('.faction-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.player.faction = f.id;
     });
+    grid.appendChild(card);
+  });
+  randomizeGenome();
+}
 
-    // ================================================================
-    //  THREE.JS SETUP
-    // ================================================================
-    const canvas3d = document.getElementById('game-canvas');
-    const hudCanvas = document.getElementById('hud-canvas');
-    const hudCtx = hudCanvas.getContext('2d');
+function randomizeGenome() {
+  createGenome = new Uint8Array(256);
+  crypto.getRandomValues(createGenome);
+  drawGenome(createGenome, document.getElementById('genome-canvas'), 256);
+  renderGeneStats(createGenome, document.getElementById('gene-stats'));
+}
 
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+function drawGenome(genome, canvas, size) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = size;
+  canvas.height = size;
+  const cellSize = size / 16;
+  const clusterColors = [
+    [255, 80, 80],   // Physical 0-31
+    [68, 170, 255],  // Aptitude 32-63
+    [180, 100, 255], // Personality 64-95
+    [0, 255, 136],   // Resistance 96-127
+    [212, 168, 86],  // Appearance 128-159
+    [100, 110, 130], // Reserved 160-255
+  ];
+  for (let i = 0; i < 256; i++) {
+    const x = (i % 16) * cellSize;
+    const y = Math.floor(i / 16) * cellSize;
+    let ci = 5;
+    if (i < 32) ci = 0;
+    else if (i < 64) ci = 1;
+    else if (i < 96) ci = 2;
+    else if (i < 128) ci = 3;
+    else if (i < 160) ci = 4;
+    const [r, g, b] = clusterColors[ci];
+    const v = genome[i] / 255;
+    const brightness = 0.15 + v * 0.85;
+    ctx.fillStyle = `rgba(${Math.round(r*brightness)},${Math.round(g*brightness)},${Math.round(b*brightness)},1)`;
+    ctx.fillRect(x, y, cellSize - 1, cellSize - 1);
+  }
+}
 
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x000010, 0.00025);
+function renderGeneStats(genome, container) {
+  const clusters = [
+    { name: 'Physical', start: 0, end: 32, color: '#ff5050' },
+    { name: 'Aptitude', start: 32, end: 64, color: '#44aaff' },
+    { name: 'Personality', start: 64, end: 96, color: '#b464ff' },
+    { name: 'Resistance', start: 96, end: 128, color: '#00ff88' },
+    { name: 'Appearance', start: 128, end: 160, color: '#d4a856' },
+  ];
+  container.innerHTML = '';
+  clusters.forEach(c => {
+    let sum = 0;
+    for (let i = c.start; i < c.end; i++) sum += genome[i];
+    const avg = sum / (c.end - c.start);
+    const pct = (avg / 255 * 100).toFixed(0);
+    container.innerHTML += `
+      <div class="gene-bar">
+        <div class="gene-bar-label"><span>${c.name}</span><span>${pct}%</span></div>
+        <div class="gene-bar-track"><div class="gene-bar-fill" style="width:${pct}%;background:${c.color}"></div></div>
+      </div>`;
+  });
+}
 
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
-    camera.position.set(0, 0, 0);
+function createCharacter() {
+  const name = document.getElementById('pilot-name').value.trim();
+  if (!name) { document.getElementById('pilot-name').style.borderColor = 'var(--danger)'; return; }
+  if (!state.player.faction) return;
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0x112244, 0.7));
-    const starLight = new THREE.DirectionalLight(0xfff5e0, 2.0);
-    starLight.position.set(500, 200, 300);
-    scene.add(starLight);
-    const fillLight = new THREE.DirectionalLight(0x4466aa, 0.4);
-    fillLight.position.set(-300, -100, -200);
-    scene.add(fillLight);
+  state.player.name = name;
+  state.player.genome = Array.from(createGenome);
+  state.player.age = 20 + Math.floor(Math.random() * 15);
 
-    function resize() {
-      const w = window.innerWidth, h = window.innerHeight;
-      renderer.setSize(w, h);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      hudCanvas.width = w;
-      hudCanvas.height = h;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+  // Set home system based on faction
+  const factionObj = FACTIONS.find(f => f.id === state.player.faction);
+  if (factionObj) {
+    state.factionRep[factionObj.id] = 100;
+    addComms('AI Director', `Welcome to ${factionObj.home}, pilot ${name}.`);
+    addComms(factionObj.name, `The ${factionObj.name} acknowledges your service.`);
+  }
 
-    // ================================================================
-    //  STARFIELD
-    // ================================================================
-    const starCount = 4000;
-    const starGeo = new THREE.BufferGeometry();
-    const starPos = new Float32Array(starCount * 3);
-    const starSizes = new Float32Array(starCount);
-    for (let i = 0; i < starCount; i++) {
-      const r = 500 + Math.random() * 9500;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      starPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-      starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      starPos[i*3+2] = r * Math.cos(phi);
-      starSizes[i] = 1 + Math.random() * 3;
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
-    const starMat = new THREE.PointsMaterial({
-      color: 0xccbbaa, size: 2, sizeAttenuation: true, transparent: true, opacity: 0.8,
+  generateQuests();
+  saveGame();
+  showScreen('bridge');
+}
+
+// ================================================================
+//  COMMS & QUESTS
+// ================================================================
+function addComms(sender, msg) {
+  state.commsLog.unshift({ sender, msg, time: Date.now() });
+  if (state.commsLog.length > 20) state.commsLog.pop();
+}
+
+function generateQuests() {
+  const objectives = ['Retrieve','Protect','Eliminate','Escort','Investigate','Sabotage','Explore','Deliver'];
+  const resources = ['Titanite Ore','Dark Matter Crystals','Hydrogen Fuel','Rare Earth Compounds','Bio-organic Materials','Ancient Artefacts','Quantum Processors'];
+  const hazards = ['Radiation Belt','Asteroid Field','Pirate Territory','Temporal Anomaly','Electromagnetic Storm'];
+  for (let i = 0; i < 5; i++) {
+    const obj = objectives[Math.floor(Math.random()*objectives.length)];
+    const res = resources[Math.floor(Math.random()*resources.length)];
+    const haz = hazards[Math.floor(Math.random()*hazards.length)];
+    const fac = FACTIONS[Math.floor(Math.random()*FACTIONS.length)];
+    const reward = 100 + Math.floor(Math.random()*900);
+    state.quests.push({
+      id: 'q-' + i,
+      title: `${obj} ${res}`,
+      summary: `${obj} ${res} in a sector threatened by ${haz}. Contact: ${fac.name}`,
+      reward: reward,
+      faction: fac.id,
+      active: i < 2,
     });
-    scene.add(new THREE.Points(starGeo, starMat));
+  }
+}
 
-    // Distant nebula planes
-    for (let i = 0; i < 3; i++) {
-      const nebGeo = new THREE.PlaneGeometry(3000, 3000);
-      const nebMat = new THREE.MeshBasicMaterial({
-        color: [0x1a0a2e, 0x0a1a2e, 0x2e0a1a][i],
-        transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false,
-      });
-      const neb = new THREE.Mesh(nebGeo, nebMat);
-      neb.position.set(
-        (Math.random()-0.5)*5000,
-        (Math.random()-0.5)*3000,
-        -3000 - i*2000
-      );
-      neb.rotation.set(Math.random(), Math.random(), Math.random());
-      scene.add(neb);
-    }
+// ================================================================
+//  BRIDGE UI
+// ================================================================
+function updateBridgeUI() {
+  document.getElementById('bar-hull').style.width = (state.ship.hull / state.ship.maxHull * 100) + '%';
+  document.getElementById('bar-shield').style.width = (state.ship.shield / state.ship.maxShield * 100) + '%';
+  document.getElementById('bar-fuel').style.width = (state.ship.fuel / state.ship.maxFuel * 100) + '%';
+  document.getElementById('bar-power').style.width = state.ship.power + '%';
+  document.getElementById('bridge-credits').textContent = state.player.credits.toLocaleString() + ' EC';
+  document.getElementById('bridge-sm').textContent = state.player.stellarMarks + ' SM';
 
-    // ================================================================
-    //  SHIP (PlaceholderShip style)
-    // ================================================================
-    const ship = new THREE.Group();
-    ship.name = 'player-ship';
-    const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
-    const accentMat = new THREE.MeshStandardMaterial({
-      color: 0x44aaff, roughness: 0.3, metalness: 0.6,
-      emissive: 0x44aaff, emissiveIntensity: 0.3,
+  const sys = state.starSystems[state.location.systemIndex];
+  document.getElementById('bridge-location').textContent = sys ? sys.name : 'Unknown Sector';
+  document.getElementById('bridge-conn').textContent = state.connected ? '\u25CF Online' : '\u25CB Offline';
+  document.getElementById('bridge-conn').style.color = state.connected ? 'var(--green)' : 'var(--warn)';
+
+  // Comms
+  const feed = document.getElementById('comms-feed');
+  feed.innerHTML = '';
+  state.commsLog.slice(0, 8).forEach(m => {
+    feed.innerHTML += `<div class="comms-msg"><div class="sender">${m.sender}</div>${m.msg}</div>`;
+  });
+
+  // Quest tracker
+  const qt = document.getElementById('quest-tracker');
+  qt.innerHTML = '';
+  state.quests.filter(q => q.active).forEach(q => {
+    qt.innerHTML += `<div class="quest-item"><div class="qt">${q.title}</div>${q.summary}<br/><span style="color:var(--gold)">${q.reward} EC</span></div>`;
+  });
+}
+
+// ================================================================
+//  STAR MAP
+// ================================================================
+function generateStarSystems() {
+  const systems = [];
+  for (let i = 0; i < 40; i++) {
+    const angle = i * 2.399;
+    const radius = 60 + Math.sqrt(i) * 55;
+    const jx = (Math.sin(i * 7.3) * 30);
+    const jy = (Math.cos(i * 11.1) * 30);
+    const x = Math.cos(angle) * radius + jx;
+    const y = Math.sin(angle) * radius + jy;
+    const factionIdx = Math.floor(i / 5) % 8;
+    const faction = FACTIONS[factionIdx];
+    const starTypes = ['M-class Red Dwarf','K-class Orange Dwarf','G-class Yellow Dwarf','F-class Yellow-White','A-class White','Neutron Star','Binary System'];
+    const resources = ['Titanite Ore','Dark Matter Crystals','Hydrogen Fuel','Rare Earth Compounds','Ancient Artefacts','Quantum Processors'];
+    const hazards = ['Radiation Belt','Asteroid Field','Pirate Territory','Temporal Anomaly'];
+    const prefixes = ['Alpha','Beta','Gamma','Delta','Zeta','Tau','Sigma','Nova','Kappa','Omega'];
+    const suffixes = ['Prime','Reach','Deep','Secundus','Minor','Expanse','Crossing','Haven','Nexus','Gate'];
+    const name = prefixes[i % prefixes.length] + ' ' + suffixes[Math.floor(i / prefixes.length) % suffixes.length];
+    systems.push({
+      id: 'sys-' + i, name, x, y,
+      starType: starTypes[i % starTypes.length],
+      controllingFaction: faction.id,
+      factionColor: faction.color,
+      resources: [resources[i % resources.length], resources[(i+3) % resources.length]],
+      hazards: i % 4 === 0 ? [hazards[i % hazards.length]] : [],
+      planetCount: 1 + (i % 7),
+      hasStation: i % 3 === 0,
     });
-    const shipCanopyMat = new THREE.MeshStandardMaterial({
-      color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35,
+  }
+  // Build jump routes — connect nearby systems
+  systems.forEach((s, i) => {
+    s.connections = [];
+    systems.forEach((t, j) => {
+      if (i === j) return;
+      const dist = Math.hypot(s.x - t.x, s.y - t.y);
+      if (dist < 120) s.connections.push(j);
     });
-    const gunMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4, metalness: 0.7 });
+  });
+  return systems;
+}
 
-    // Hull
-    ship.add(new THREE.Mesh(new THREE.BoxGeometry(3,1,10), hullMat));
-    // Nose
-    const nose = new THREE.Mesh(new THREE.ConeGeometry(1.5,4,4), hullMat);
-    nose.rotation.x = Math.PI/2; nose.position.z = -7; ship.add(nose);
-    // Wings
-    const wingGeo = new THREE.BoxGeometry(8,0.15,4);
-    const wL = new THREE.Mesh(wingGeo, hullMat); wL.position.set(-4.5,0,1); wL.rotation.z=-0.08; ship.add(wL);
-    const wR = new THREE.Mesh(wingGeo, hullMat); wR.position.set(4.5,0,1); wR.rotation.z=0.08; ship.add(wR);
-    // Fins
-    const finGeo = new THREE.BoxGeometry(0.15,1.5,2);
-    const fL = new THREE.Mesh(finGeo, accentMat); fL.position.set(-8.4,0.6,1); ship.add(fL);
-    const fR = new THREE.Mesh(finGeo, accentMat); fR.position.set(8.4,0.6,1); ship.add(fR);
-    // Tail fins
-    const tfGeo = new THREE.BoxGeometry(0.15,2,2.5);
-    const tL = new THREE.Mesh(tfGeo, hullMat); tL.position.set(-1.2,1.2,4.5); tL.rotation.z=0.15; ship.add(tL);
-    const tR = new THREE.Mesh(tfGeo, hullMat); tR.position.set(1.2,1.2,4.5); tR.rotation.z=-0.15; ship.add(tR);
-    // Engines
-    const eGeo = new THREE.CylinderGeometry(0.5,0.7,2,8);
-    const eL = new THREE.Mesh(eGeo, accentMat); eL.rotation.x=Math.PI/2; eL.position.set(-1,-0.2,5.5); ship.add(eL);
-    const eR = new THREE.Mesh(eGeo, accentMat); eR.rotation.x=Math.PI/2; eR.position.set(1,-0.2,5.5); ship.add(eR);
-    // Engine glow
-    const glowGeo = new THREE.CircleGeometry(0.65,16);
-    const glowMat = new THREE.MeshBasicMaterial({ color:0x44aaff, transparent:true, opacity:0.7 });
-    const gL = new THREE.Mesh(glowGeo, glowMat); gL.position.set(-1,-0.2,6.51); ship.add(gL);
-    const gR = new THREE.Mesh(glowGeo, glowMat); gR.position.set(1,-0.2,6.51); ship.add(gR);
-    // Canopy
-    const canGeo = new THREE.SphereGeometry(1,16,12,0,Math.PI*2,0,Math.PI/2);
-    const canMesh = new THREE.Mesh(canGeo, shipCanopyMat); canMesh.position.set(0,0.5,-3); ship.add(canMesh);
-    // Turret base
-    const tbGeo = new THREE.CylinderGeometry(0.6,0.7,0.4,8);
-    const tb = new THREE.Mesh(tbGeo, gunMat); tb.position.set(0,0.8,-1); ship.add(tb);
-    // Gun barrels
-    const bbGeo = new THREE.CylinderGeometry(0.08,0.08,3,6);
-    const bL = new THREE.Mesh(bbGeo, gunMat); bL.rotation.x=Math.PI/2; bL.position.set(-0.25,0.95,-2.5); ship.add(bL);
-    const bR = new THREE.Mesh(bbGeo, gunMat); bR.rotation.x=Math.PI/2; bR.position.set(0.25,0.95,-2.5); ship.add(bR);
+let smCanvas, smCtx;
+function resizeStarMap() {
+  smCanvas = document.getElementById('starmap-canvas');
+  smCtx = smCanvas.getContext('2d');
+  smCanvas.width = smCanvas.clientWidth;
+  smCanvas.height = smCanvas.clientHeight;
+}
 
-    // Turret mount
-    const turretMount = new THREE.Object3D();
-    turretMount.position.set(0, 1.2, -0.5);
-    ship.add(turretMount);
+function renderStarMap() {
+  if (!smCtx) return;
+  const W = smCanvas.width, H = smCanvas.height;
+  smCtx.clearRect(0, 0, W, H);
+  smCtx.fillStyle = '#050510';
+  smCtx.fillRect(0, 0, W, H);
 
-    scene.add(ship);
+  // Background grid
+  smCtx.strokeStyle = '#0a0f18';
+  smCtx.lineWidth = 0.5;
+  for (let x = 0; x < W; x += 40) { smCtx.beginPath(); smCtx.moveTo(x, 0); smCtx.lineTo(x, H); smCtx.stroke(); }
+  for (let y = 0; y < H; y += 40) { smCtx.beginPath(); smCtx.moveTo(0, y); smCtx.lineTo(W, y); smCtx.stroke(); }
 
-    // ================================================================
-    //  COCKPIT (attached to camera)
-    // ================================================================
-    const cockpit = new THREE.Group();
-    cockpit.name = 'gunner-cockpit';
+  const cx = W / 2, cy = H / 2;
+  const scale = Math.min(W, H) / 700;
 
-    // Glass canopy
-    const cpCanopyMat = new THREE.MeshBasicMaterial({
-      color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false,
+  // Draw jump routes
+  smCtx.lineWidth = 0.5;
+  state.starSystems.forEach((s) => {
+    const sx = cx + s.x * scale, sy = cy + s.y * scale;
+    (s.connections || []).forEach(ci => {
+      const t = state.starSystems[ci];
+      const tx = cx + t.x * scale, ty = cy + t.y * scale;
+      smCtx.strokeStyle = 'rgba(68,170,255,0.12)';
+      smCtx.beginPath(); smCtx.moveTo(sx, sy); smCtx.lineTo(tx, ty); smCtx.stroke();
     });
-    const cpCanopyGeo = new THREE.SphereGeometry(3.0, 32, 24, 0, Math.PI*2, 0, Math.PI*0.6);
-    const cpCanopy = new THREE.Mesh(cpCanopyGeo, cpCanopyMat);
-    cpCanopy.position.set(0, 0, -2.5);
-    cpCanopy.rotation.x = Math.PI;
-    cockpit.add(cpCanopy);
+  });
 
-    // Canopy frame struts
-    const frameMat = new THREE.MeshBasicMaterial({ color: 0x334466, transparent: true, opacity: 0.5 });
-    for (let i = 0; i < 6; i++) {
-      const angle = (i/6)*Math.PI*2;
-      const sGeo = new THREE.CylinderGeometry(0.015, 0.015, 3.5, 4);
-      const strut = new THREE.Mesh(sGeo, frameMat);
-      strut.position.set(Math.sin(angle)*2.8, Math.cos(angle)*2.0, -3.0);
-      strut.rotation.x = Math.PI*0.3;
-      strut.rotation.z = angle;
-      cockpit.add(strut);
+  // Draw systems
+  state.starSystems.forEach((s, i) => {
+    const sx = cx + s.x * scale, sy = cy + s.y * scale;
+    const isCurrent = i === state.location.systemIndex;
+    const isSelected = state.selectedSystem === i;
+    const r = isCurrent ? 6 : (isSelected ? 5 : 3.5);
+
+    // Glow
+    if (isCurrent || isSelected) {
+      const grad = smCtx.createRadialGradient(sx, sy, 0, sx, sy, 20);
+      grad.addColorStop(0, isCurrent ? 'rgba(212,168,86,0.3)' : 'rgba(68,170,255,0.2)');
+      grad.addColorStop(1, 'transparent');
+      smCtx.fillStyle = grad;
+      smCtx.beginPath(); smCtx.arc(sx, sy, 20, 0, Math.PI * 2); smCtx.fill();
     }
 
-    // Seat
-    const seatMat = new THREE.MeshBasicMaterial({ color: 0x2a3540, transparent: true, opacity: 0.7 });
-    const sBack = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.6,0.08), seatMat);
-    sBack.position.set(0,-0.1,0.4); cockpit.add(sBack);
-    const sBase = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.08,0.5), seatMat);
-    sBase.position.set(0,-0.5,0.1); cockpit.add(sBase);
-    const armGeo = new THREE.BoxGeometry(0.1,0.08,0.4);
-    const armL = new THREE.Mesh(armGeo, seatMat); armL.position.set(-0.35,-0.35,0); cockpit.add(armL);
-    const armR2 = new THREE.Mesh(armGeo, seatMat); armR2.position.set(0.35,-0.35,0); cockpit.add(armR2);
-    const pivotGeo = new THREE.CylinderGeometry(0.08,0.12,0.3,8);
-    const piv = new THREE.Mesh(pivotGeo, frameMat); piv.position.set(0,-0.75,0.1); cockpit.add(piv);
+    smCtx.fillStyle = s.factionColor || '#888';
+    smCtx.beginPath(); smCtx.arc(sx, sy, r, 0, Math.PI * 2); smCtx.fill();
 
-    // Railgun barrels (visible from cockpit)
-    const railMat = new THREE.MeshBasicMaterial({ color: 0x556677, transparent: true, opacity: 0.8 });
-    const railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
-    const railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
-    const railL = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
-    railL.rotation.x = Math.PI/2; railL.position.set(-0.18,-0.3,-2.0); cockpit.add(railL);
-    const railR = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
-    railR.rotation.x = Math.PI/2; railR.position.set(0.18,-0.3,-2.0); cockpit.add(railR);
-    // Rail glow
-    const rgL = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatL);
-    rgL.rotation.x = Math.PI/2; rgL.position.set(-0.18,-0.3,-2.0); cockpit.add(rgL);
-    const rgR = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatR);
-    rgR.rotation.x = Math.PI/2; rgR.position.set(0.18,-0.3,-2.0); cockpit.add(rgR);
-
-    // Muzzle flash
-    const muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
-    const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), muzzleMat);
-    muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
-
-    // Side instrument panels
-    const panelMat = new THREE.MeshBasicMaterial({ color: 0x1a2030, transparent: true, opacity: 0.6 });
-    const panelLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.8,1.2), panelMat);
-    panelLMesh.position.set(-1.3,-0.2,-0.5); panelLMesh.rotation.y = 0.4; cockpit.add(panelLMesh);
-    const panelRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.8,1.2), panelMat);
-    panelRMesh.position.set(1.3,-0.2,-0.5); panelRMesh.rotation.y = -0.4; cockpit.add(panelRMesh);
-
-    // Bottom console
-    const consoleMat2 = new THREE.MeshBasicMaterial({ color: 0x1a2030, transparent: true, opacity: 0.5 });
-    const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.08,0.8), consoleMat2);
-    consoleMesh.position.set(0,-0.6,-0.8); consoleMesh.rotation.x = -0.3; cockpit.add(consoleMesh);
-
-    // Console screen glow
-    const screenMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.15 });
-    const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6), screenMat);
-    screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; cockpit.add(screenMesh);
-
-    camera.add(cockpit);
-    scene.add(camera);
-
-    // ================================================================
-    //  ENEMY CREATION
-    // ================================================================
-    function createEnemy(type) {
-      const types = {
-        scout:       { color: 0xaa4444, scale: 0.6, hp: 2, points: 10, speed: 1.3 },
-        fighter:     { color: 0xcc6644, scale: 1.0, hp: 4, points: 25, speed: 1.0 },
-        bomber:      { color: 0x886644, scale: 1.5, hp: 8, points: 50, speed: 0.7 },
-        interceptor: { color: 0xcc44aa, scale: 0.8, hp: 3, points: 15, speed: 1.6 },
-      };
-      const cfg = types[type] || types.fighter;
-
-      const g = new THREE.Group();
-      const mat = new THREE.MeshStandardMaterial({
-        color: cfg.color, roughness: 0.5, metalness: 0.7,
-        emissive: cfg.color, emissiveIntensity: 0.25,
-      });
-      // Body
-      g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5*cfg.scale, 0.5*cfg.scale, 3*cfg.scale), mat));
-      // Wings
-      const wg = new THREE.BoxGeometry(4*cfg.scale, 0.1*cfg.scale, 1.5*cfg.scale);
-      const ew1 = new THREE.Mesh(wg, mat); ew1.position.set(-2*cfg.scale,0,0); g.add(ew1);
-      const ew2 = new THREE.Mesh(wg, mat); ew2.position.set(2*cfg.scale,0,0); g.add(ew2);
-      // Engine glow
-      const eg = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.6 });
-      const em = new THREE.Mesh(new THREE.CircleGeometry(0.3*cfg.scale,8), eg);
-      em.position.set(0,0,1.6*cfg.scale); g.add(em);
-
-      // Spawn from random direction
-      const theta = Math.random()*Math.PI*2;
-      const phi = Math.acos(2*Math.random()-1);
-      const r = SPAWN_RADIUS + Math.random()*100;
-      g.position.set(
-        ship.position.x + r*Math.sin(phi)*Math.cos(theta),
-        ship.position.y + r*Math.sin(phi)*Math.sin(theta) * 0.3,
-        ship.position.z + r*Math.cos(phi)
-      );
-      g.lookAt(ship.position);
-
-      scene.add(g);
-      enemies.push({
-        id: nextEnemyId++, group: g, hp: cfg.hp, maxHp: cfg.hp,
-        speed: ENEMY_SPEED * cfg.speed, type: type, points: cfg.points, cfg: cfg,
-        hitFlash: 0,
-      });
+    // Station indicator
+    if (s.hasStation) {
+      smCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+      smCtx.lineWidth = 0.8;
+      smCtx.beginPath(); smCtx.arc(sx, sy, r + 3, 0, Math.PI * 2); smCtx.stroke();
     }
 
-    // ================================================================
-    //  FIRE RAILGUN
-    // ================================================================
-    function fireRailgun() {
-      if (!weaponReady || ammo <= 0) return;
-      weaponReady = false;
-      charging = true;
-      chargeStart = performance.now();
+    // Label
+    if (isCurrent || isSelected || scale > 0.8) {
+      smCtx.fillStyle = isCurrent ? '#d4a856' : 'rgba(200,214,229,0.6)';
+      smCtx.font = `${isCurrent ? 11 : 9}px "Segoe UI"`;
+      smCtx.fillText(s.name, sx + r + 4, sy + 3);
     }
 
-    function spawnNail() {
-      ammo--;
-      heat = Math.min(1, heat + 0.12);
-      recoilVel = -8;
-
-      // Muzzle flash
-      muzzleMat.opacity = 1;
-
-      // Direction from camera
-      const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-      const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
-
-      // Nail mesh
-      const nailGeo = new THREE.CylinderGeometry(0.02, 0.015, 0.5, 6);
-      const nailMat2 = new THREE.MeshBasicMaterial({ color: 0xaabbcc });
-      const nail = new THREE.Mesh(nailGeo, nailMat2);
-      nail.quaternion.copy(camera.quaternion);
-      nail.rotateX(Math.PI/2);
-      nail.position.copy(origin);
-
-      // Trail
-      const trailMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.6 });
-      const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,2,4), trailMat);
-      trail.quaternion.copy(nail.quaternion);
-      trail.position.copy(origin);
-
-      const g = new THREE.Group();
-      g.add(nail); g.add(trail);
-      scene.add(g);
-
-      projectiles.push({
-        id: nextProjId++, group: g, dir: dir.clone(),
-        speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat,
-      });
-
-      addLog('Railgun fired', 'combat');
+    // Current system ring pulse
+    if (isCurrent) {
+      const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 400);
+      smCtx.strokeStyle = `rgba(212,168,86,${0.3 + pulse * 0.4})`;
+      smCtx.lineWidth = 1.5;
+      smCtx.beginPath(); smCtx.arc(sx, sy, 10 + pulse * 4, 0, Math.PI * 2); smCtx.stroke();
     }
+  });
 
-    // ================================================================
-    //  EXPLOSION EFFECT
-    // ================================================================
-    function spawnExplosion(pos, scale) {
-      const g = new THREE.Group();
-      const count = 8 + Math.floor(Math.random()*6);
-      for (let i = 0; i < count; i++) {
-        const mat = new THREE.MeshBasicMaterial({
-          color: [0xff4422, 0xffaa00, 0xff6600, 0xffcc44][Math.floor(Math.random()*4)],
-          transparent: true, opacity: 1,
-        });
-        const m = new THREE.Mesh(new THREE.SphereGeometry(0.2 + Math.random()*0.3, 6, 6), mat);
-        const dir = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize();
-        m.userData = { dir: dir, speed: 15 + Math.random()*25 };
-        g.add(m);
+  // Legend
+  renderMapLegend();
+}
+
+function renderMapLegend() {
+  const el = document.getElementById('map-legend');
+  el.innerHTML = FACTIONS.map(f =>
+    `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;">
+      <div style="width:10px;height:10px;border-radius:50%;background:${f.color}"></div>
+      <span style="color:var(--muted)">${f.name}</span>
+    </div>`
+  ).join('');
+}
+
+function onStarMapClick(e) {
+  if (!smCanvas) return;
+  const rect = smCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const cx = smCanvas.width / 2, cy = smCanvas.height / 2;
+  const scale = Math.min(smCanvas.width, smCanvas.height) / 700;
+
+  let closest = -1, closestDist = Infinity;
+  state.starSystems.forEach((s, i) => {
+    const sx = cx + s.x * scale, sy = cy + s.y * scale;
+    const d = Math.hypot(mx - sx, my - sy);
+    if (d < 15 && d < closestDist) { closest = i; closestDist = d; }
+  });
+
+  if (closest >= 0) {
+    state.selectedSystem = closest;
+    renderSystemDetail(closest);
+    document.getElementById('btn-jump').style.display = closest !== state.location.systemIndex ? 'block' : 'none';
+    renderStarMap();
+  }
+}
+
+function onStarMapDblClick(e) {
+  onStarMapClick(e);
+  if (state.selectedSystem !== null && state.selectedSystem !== state.location.systemIndex) {
+    jumpToSystem(state.selectedSystem);
+  }
+}
+
+function renderSystemDetail(idx) {
+  const s = state.starSystems[idx];
+  if (!s) return;
+  const faction = FACTIONS.find(f => f.id === s.controllingFaction) || { name: 'Unclaimed', color: '#888' };
+  const isCurrent = idx === state.location.systemIndex;
+  document.getElementById('system-detail').innerHTML = `
+    <div class="system-info">
+      <h3>${s.name} ${isCurrent ? '<span style="color:var(--gold);font-size:0.75rem">(Current)</span>' : ''}</h3>
+      <p>Star: ${s.starType}</p>
+      <p>Planets: ${s.planetCount}</p>
+      <p>Faction: <span style="color:${faction.color}">${faction.name}</span></p>
+      <p>Station: ${s.hasStation ? '<span style="color:var(--green)">Available</span>' : '<span style="color:var(--muted)">None</span>'}</p>
+      <p style="margin-top:6px;">Resources:</p>
+      <div>${(s.resources||[]).map(r => `<span class="tag">${r}</span>`).join('')}</div>
+      ${s.hazards && s.hazards.length ? `<p style="margin-top:6px;">Hazards:</p><div>${s.hazards.map(h => `<span class="tag" style="color:var(--warn);border-color:rgba(255,170,0,0.2);background:rgba(255,170,0,0.06)">${h}</span>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+function jumpToSystem(idx) {
+  state.location.systemIndex = idx;
+  state.location.docked = false;
+  state.ship.fuel = Math.max(0, state.ship.fuel - 5);
+  state.selectedSystem = null;
+  const sys = state.starSystems[idx];
+  addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
+  if (sys.hazards && sys.hazards.length) {
+    addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
+  }
+  document.getElementById('btn-jump').style.display = 'none';
+  renderStarMap();
+  saveGame();
+}
+
+// ================================================================
+//  STATION
+// ================================================================
+const COMMODITIES = [
+  { name: 'Titanite Ore', buy: 120, sell: 95 },
+  { name: 'Hydrogen Fuel', buy: 45, sell: 35 },
+  { name: 'Dark Matter Crystals', buy: 850, sell: 680 },
+  { name: 'Bio-organic Materials', buy: 200, sell: 160 },
+  { name: 'Quantum Processors', buy: 1200, sell: 950 },
+  { name: 'Anti-matter Reserves', buy: 2000, sell: 1600 },
+];
+
+function renderStation() {
+  const sys = state.starSystems[state.location.systemIndex];
+  document.getElementById('station-name').innerHTML = `&#9968; ${sys ? sys.name : 'Unknown'} Station`;
+
+  const market = document.getElementById('trade-market');
+  market.innerHTML = COMMODITIES.map(c => `
+    <div class="trade-row">
+      <span>${c.name}</span>
+      <span>
+        <button class="trade-buy" onclick="window._buy('${c.name}',${c.buy})">Buy ${c.buy} EC</button>
+        <button class="trade-sell" onclick="window._sell('${c.name}',${c.sell})">Sell ${c.sell} EC</button>
+      </span>
+    </div>`).join('');
+
+  const missions = document.getElementById('mission-board');
+  missions.innerHTML = state.quests.filter(q => !q.active).slice(0, 4).map(q => `
+    <div class="quest-item">
+      <div class="qt">${q.title}</div>${q.summary}<br/>
+      <span style="color:var(--gold)">${q.reward} EC</span>
+      <button class="btn btn-sm" style="margin-left:8px;padding:3px 10px;font-size:0.7rem" onclick="window._acceptQuest('${q.id}')">Accept</button>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No missions available.</p>';
+
+  state.location.docked = true;
+}
+
+window._buy = (name, price) => {
+  if (state.player.credits >= price) {
+    state.player.credits -= price;
+    state.inventory.push({ name, quantity: 1 });
+    addComms('Station', `Purchased ${name} for ${price} EC.`);
+    renderStation();
+  }
+};
+window._sell = (name, price) => {
+  const idx = state.inventory.findIndex(i => i.name === name);
+  if (idx >= 0) {
+    state.inventory.splice(idx, 1);
+    state.player.credits += price;
+    addComms('Station', `Sold ${name} for ${price} EC.`);
+    renderStation();
+  }
+};
+window._acceptQuest = (id) => {
+  const q = state.quests.find(q => q.id === id);
+  if (q) { q.active = true; addComms('Mission Board', `Accepted: ${q.title}`); renderStation(); }
+};
+
+// ================================================================
+//  CHARACTER SHEET
+// ================================================================
+function renderCharSheet() {
+  document.getElementById('char-name').textContent = state.player.name || 'Unknown Pilot';
+
+  if (state.player.genome) {
+    drawGenome(new Uint8Array(state.player.genome), document.getElementById('char-genome-canvas'), 192);
+    renderGeneStats(new Uint8Array(state.player.genome), document.getElementById('char-gene-stats'));
+  }
+
+  // Faction standings
+  const fs = document.getElementById('faction-standings');
+  fs.innerHTML = FACTIONS.map(f => {
+    const rep = state.factionRep[f.id] || 0;
+    const pct = ((rep + 1000) / 2000 * 100).toFixed(0);
+    const rank = rep >= 900 ? 'Exalted' : rep >= 700 ? 'Revered' : rep >= 500 ? 'Honoured' :
+      rep >= 300 ? 'Friendly' : rep >= 100 ? 'Accepted' : rep >= 0 ? 'Neutral' :
+      rep >= -200 ? 'Distrusted' : rep >= -500 ? 'Unfriendly' : 'Hostile';
+    return `<div class="rep-row">
+      <span style="color:${f.color};min-width:50px;">${f.name.split(' ')[0]}</span>
+      <span style="font-size:0.7rem;color:var(--muted);min-width:60px;text-align:center">${rank}</span>
+      <div class="rep-bar"><div class="rep-fill" style="width:${pct}%;background:${f.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Skills from genome
+  const skills = document.getElementById('skill-list');
+  if (state.player.genome) {
+    const g = state.player.genome;
+    const aptitudes = [
+      { name: 'Combat', gene: 32 }, { name: 'Piloting', gene: 33 },
+      { name: 'Engineering', gene: 34 }, { name: 'Trade', gene: 35 },
+      { name: 'Science', gene: 36 }, { name: 'Leadership', gene: 37 },
+      { name: 'Stealth', gene: 38 }, { name: 'Medicine', gene: 39 },
+    ];
+    skills.innerHTML = aptitudes.map(a => {
+      const val = g[a.gene];
+      const pct = (val / 255 * 100).toFixed(0);
+      return `<div class="stat-row" style="font-size:0.78rem;">
+        ${a.name} <div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+        <span style="min-width:30px;text-align:right;color:var(--muted);font-size:0.7rem">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Character info
+  const faction = FACTIONS.find(f => f.id === state.player.faction);
+  document.getElementById('char-info').innerHTML = `
+    <div class="stat-row" style="font-size:0.8rem;">Name <span style="color:var(--gold)">${state.player.name}</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Faction <span style="color:${faction?.color || '#888'}">${faction?.name || 'None'}</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Age <span style="color:var(--muted)">${state.player.age} years</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Rebirths <span style="color:var(--muted)">${state.player.rebirths}</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Credits <span style="color:var(--gold)">${state.player.credits.toLocaleString()} EC</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Kills <span style="color:var(--danger)">${state.combat.kills}</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Score <span style="color:var(--gold)">${state.combat.score.toLocaleString()}</span></div>`;
+}
+
+// ================================================================
+//  SAVE / LOAD
+// ================================================================
+function saveGame() {
+  const data = {
+    player: state.player,
+    ship: state.ship,
+    location: state.location,
+    factionRep: state.factionRep,
+    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle },
+    inventory: state.inventory,
+    quests: state.quests,
+  };
+  localStorage.setItem('oe-save', JSON.stringify(data));
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('oe-save');
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    Object.assign(state.player, data.player);
+    Object.assign(state.ship, data.ship);
+    Object.assign(state.location, data.location);
+    Object.assign(state.factionRep, data.factionRep || {});
+    state.combat.score = data.combat?.score || 0;
+    state.combat.kills = data.combat?.kills || 0;
+    state.combat.cycle = data.combat?.cycle || 1;
+    state.inventory = data.inventory || [];
+    state.quests = data.quests || [];
+    return true;
+  } catch(e) { return false; }
+}
+
+// ================================================================
+//  THREE.JS — 3D VIEWPORT
+// ================================================================
+const canvas3d = document.getElementById('game-canvas');
+const hudCanvas = document.getElementById('hud-canvas');
+const hudCtx = hudCanvas.getContext('2d');
+
+const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000010, 0.00025);
+
+const camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x112244, 0.7));
+const starLight = new THREE.DirectionalLight(0xfff5e0, 2.0);
+starLight.position.set(500, 200, 300);
+scene.add(starLight);
+const fillLight = new THREE.DirectionalLight(0x4466aa, 0.4);
+fillLight.position.set(-300, -100, -200);
+scene.add(fillLight);
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  hudCanvas.width = w;
+  hudCanvas.height = h;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── Starfield ────
+const starCount = 5000;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  const r = 500 + Math.random() * 9500;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  starPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+  starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+  starPos[i*3+2] = r * Math.cos(phi);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xccbbaa, size: 2, sizeAttenuation: true, transparent: true, opacity: 0.8 })));
+
+// Nebulae
+for (let i = 0; i < 4; i++) {
+  const nebMat = new THREE.MeshBasicMaterial({
+    color: [0x1a0a2e, 0x0a1a2e, 0x2e0a1a, 0x0a2a1a][i],
+    transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const neb = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), nebMat);
+  neb.position.set((Math.random()-0.5)*5000, (Math.random()-0.5)*3000, -2000 - i*2000);
+  neb.rotation.set(Math.random(), Math.random(), Math.random());
+  scene.add(neb);
+}
+
+// ── Ship ────
+const ship = new THREE.Group(); ship.name = 'player-ship';
+const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
+const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.3, metalness: 0.6, emissive: 0x44aaff, emissiveIntensity: 0.3 });
+const shipCanopyMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35 });
+const gunMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4, metalness: 0.7 });
+
+ship.add(new THREE.Mesh(new THREE.BoxGeometry(3,1,10), hullMat));
+const nose = new THREE.Mesh(new THREE.ConeGeometry(1.5,4,4), hullMat);
+nose.rotation.x = Math.PI/2; nose.position.z = -7; ship.add(nose);
+const wingGeo = new THREE.BoxGeometry(8,0.15,4);
+const wL = new THREE.Mesh(wingGeo, hullMat); wL.position.set(-4.5,0,1); wL.rotation.z=-0.08; ship.add(wL);
+const wR = new THREE.Mesh(wingGeo, hullMat); wR.position.set(4.5,0,1); wR.rotation.z=0.08; ship.add(wR);
+const finGeo = new THREE.BoxGeometry(0.15,1.5,2);
+ship.add(Object.assign(new THREE.Mesh(finGeo, accentMat), { position: new THREE.Vector3(-8.4,0.6,1) }));
+ship.add(Object.assign(new THREE.Mesh(finGeo, accentMat), { position: new THREE.Vector3(8.4,0.6,1) }));
+const tfGeo = new THREE.BoxGeometry(0.15,2,2.5);
+const tL = new THREE.Mesh(tfGeo, hullMat); tL.position.set(-1.2,1.2,4.5); tL.rotation.z=0.15; ship.add(tL);
+const tR = new THREE.Mesh(tfGeo, hullMat); tR.position.set(1.2,1.2,4.5); tR.rotation.z=-0.15; ship.add(tR);
+const eGeo = new THREE.CylinderGeometry(0.5,0.7,2,8);
+const eL = new THREE.Mesh(eGeo, accentMat); eL.rotation.x=Math.PI/2; eL.position.set(-1,-0.2,5.5); ship.add(eL);
+const eR = new THREE.Mesh(eGeo, accentMat); eR.rotation.x=Math.PI/2; eR.position.set(1,-0.2,5.5); ship.add(eR);
+const glowGeo = new THREE.CircleGeometry(0.65,16);
+const glowMat = new THREE.MeshBasicMaterial({ color:0x44aaff, transparent:true, opacity:0.7 });
+ship.add(Object.assign(new THREE.Mesh(glowGeo, glowMat), { position: new THREE.Vector3(-1,-0.2,6.51) }));
+ship.add(Object.assign(new THREE.Mesh(glowGeo, glowMat), { position: new THREE.Vector3(1,-0.2,6.51) }));
+ship.add(new THREE.Mesh(new THREE.SphereGeometry(1,16,12,0,Math.PI*2,0,Math.PI/2), shipCanopyMat)).position.set(0,0.5,-3);
+ship.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.4,8), gunMat)).position.set(0,0.8,-1);
+const bbGeo = new THREE.CylinderGeometry(0.08,0.08,3,6);
+const bL2 = new THREE.Mesh(bbGeo, gunMat); bL2.rotation.x=Math.PI/2; bL2.position.set(-0.25,0.95,-2.5); ship.add(bL2);
+const bR2 = new THREE.Mesh(bbGeo, gunMat); bR2.rotation.x=Math.PI/2; bR2.position.set(0.25,0.95,-2.5); ship.add(bR2);
+const turretMount = new THREE.Object3D(); turretMount.position.set(0, 1.2, -0.5); ship.add(turretMount);
+scene.add(ship);
+
+// ── Cockpit ────
+const cockpit = new THREE.Group(); cockpit.name = 'gunner-cockpit';
+const cpCanopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
+const cpCanopy = new THREE.Mesh(new THREE.SphereGeometry(3.0,32,24,0,Math.PI*2,0,Math.PI*0.6), cpCanopyMat);
+cpCanopy.position.set(0,0,-2.5); cpCanopy.rotation.x = Math.PI; cockpit.add(cpCanopy);
+const frameMat = new THREE.MeshBasicMaterial({ color: 0x334466, transparent: true, opacity: 0.5 });
+for (let i = 0; i < 6; i++) {
+  const angle = (i/6)*Math.PI*2;
+  const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,3.5,4), frameMat);
+  strut.position.set(Math.sin(angle)*2.8, Math.cos(angle)*2.0, -3.0);
+  strut.rotation.x = Math.PI*0.3; strut.rotation.z = angle; cockpit.add(strut);
+}
+const seatMat = new THREE.MeshBasicMaterial({ color: 0x2a3540, transparent: true, opacity: 0.7 });
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.6,0.08), seatMat), { position: new THREE.Vector3(0,-0.1,0.4) }));
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.08,0.5), seatMat), { position: new THREE.Vector3(0,-0.5,0.1) }));
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat), { position: new THREE.Vector3(-0.35,-0.35,0) }));
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat), { position: new THREE.Vector3(0.35,-0.35,0) }));
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.3,8), frameMat), { position: new THREE.Vector3(0,-0.75,0.1) }));
+
+// Railgun barrels + glow
+const railMat = new THREE.MeshBasicMaterial({ color: 0x556677, transparent: true, opacity: 0.8 });
+const railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
+const railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
+const railL = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
+railL.rotation.x=Math.PI/2; railL.position.set(-0.18,-0.3,-2.0); cockpit.add(railL);
+const railR = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
+railR.rotation.x=Math.PI/2; railR.position.set(0.18,-0.3,-2.0); cockpit.add(railR);
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatL), { rotation: new THREE.Euler(Math.PI/2,0,0), position: new THREE.Vector3(-0.18,-0.3,-2.0) }));
+cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatR), { rotation: new THREE.Euler(Math.PI/2,0,0), position: new THREE.Vector3(0.18,-0.3,-2.0) }));
+const muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), muzzleMat);
+muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
+
+// Side panels
+const panelMat = new THREE.MeshBasicMaterial({ color: 0x1a2030, transparent: true, opacity: 0.6 });
+const pnlL = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.8,1.2), panelMat);
+pnlL.position.set(-1.3,-0.2,-0.5); pnlL.rotation.y = 0.4; cockpit.add(pnlL);
+const pnlR = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.8,1.2), panelMat);
+pnlR.position.set(1.3,-0.2,-0.5); pnlR.rotation.y = -0.4; cockpit.add(pnlR);
+const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.08,0.8), new THREE.MeshBasicMaterial({ color: 0x1a2030, transparent: true, opacity: 0.5 }));
+consoleMesh.position.set(0,-0.6,-0.8); consoleMesh.rotation.x = -0.3; cockpit.add(consoleMesh);
+const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6), new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.15 }));
+screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; cockpit.add(screenMesh);
+
+camera.add(cockpit);
+scene.add(camera);
+
+// ================================================================
+//  GUNNER MODE — COMBAT
+// ================================================================
+const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
+const CHARGE_TIME = 600, COOLDOWN_TIME = 400, MOUSE_SENS = 0.002, MAX_PITCH = 1.2, MAX_YAW = 1.5;
+const c = state.combat;
+
+function enterGunnerMode() {
+  c.active = true;
+  canvas3d.requestPointerLock();
+  addComms('System', 'Gunner mode activated — Mouse aim, Click fire, R reload, ESC exit');
+}
+
+function exitGunnerMode() {
+  c.active = false;
+  if (document.pointerLockElement) document.exitPointerLock();
+  showScreen('bridge');
+}
+
+function createEnemy(type) {
+  const types = {
+    scout:       { color: 0xaa4444, scale: 0.6, hp: 2, points: 10, speed: 1.3 },
+    fighter:     { color: 0xcc6644, scale: 1.0, hp: 4, points: 25, speed: 1.0 },
+    bomber:      { color: 0x886644, scale: 1.5, hp: 8, points: 50, speed: 0.7 },
+    interceptor: { color: 0xcc44aa, scale: 0.8, hp: 3, points: 15, speed: 1.6 },
+  };
+  const cfg = types[type] || types.fighter;
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.5, metalness: 0.7, emissive: cfg.color, emissiveIntensity: 0.25 });
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5*cfg.scale,0.5*cfg.scale,3*cfg.scale), mat));
+  const wg = new THREE.BoxGeometry(4*cfg.scale,0.1*cfg.scale,1.5*cfg.scale);
+  g.add(Object.assign(new THREE.Mesh(wg, mat), { position: new THREE.Vector3(-2*cfg.scale,0,0) }));
+  g.add(Object.assign(new THREE.Mesh(wg, mat), { position: new THREE.Vector3(2*cfg.scale,0,0) }));
+  const eg = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.6 });
+  g.add(Object.assign(new THREE.Mesh(new THREE.CircleGeometry(0.3*cfg.scale,8), eg), { position: new THREE.Vector3(0,0,1.6*cfg.scale) }));
+
+  const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
+  const r = SPAWN_RADIUS + Math.random()*100;
+  g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
+  g.lookAt(ship.position);
+  scene.add(g);
+  c.enemies.push({ group: g, hp: cfg.hp, maxHp: cfg.hp, speed: ENEMY_SPEED * cfg.speed, type, points: cfg.points, cfg, hitFlash: 0 });
+}
+
+function fireRailgun() {
+  if (!c.weaponReady || c.ammo <= 0) return;
+  c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
+}
+
+function spawnNail() {
+  c.ammo--;
+  c.heat = Math.min(1, c.heat + 0.12);
+  c.recoilVel = -8;
+  muzzleMat.opacity = 1;
+  const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
+  const nail = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.015,0.5,6), new THREE.MeshBasicMaterial({ color: 0xaabbcc }));
+  nail.quaternion.copy(camera.quaternion); nail.rotateX(Math.PI/2); nail.position.copy(origin);
+  const trailMat2 = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.6 });
+  const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,2,4), trailMat2);
+  trail.quaternion.copy(nail.quaternion); trail.position.copy(origin);
+  const g = new THREE.Group(); g.add(nail); g.add(trail); scene.add(g);
+  c.projectiles.push({ group: g, dir: dir.clone(), speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat2 });
+}
+
+function spawnExplosion(pos, scale) {
+  const g = new THREE.Group();
+  for (let i = 0; i < 10; i++) {
+    const mat2 = new THREE.MeshBasicMaterial({ color: [0xff4422,0xffaa00,0xff6600,0xffcc44][i%4], transparent: true, opacity: 1 });
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.2+Math.random()*0.3,6,6), mat2);
+    m.userData = { dir: new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), speed: 15+Math.random()*25 };
+    g.add(m);
+  }
+  g.position.copy(pos); g.scale.setScalar(scale||1); scene.add(g);
+  c.explosions.push({ group: g, age: 0, maxAge: 600 });
+}
+
+// ================================================================
+//  HUD RENDERER (Gunner Mode)
+// ================================================================
+function renderHUD() {
+  const W = hudCanvas.width, H = hudCanvas.height;
+  const cx = W/2, cy = H/2;
+  hudCtx.clearRect(0, 0, W, H);
+  if (!c.active) return;
+
+  const primary = '#44aaff', accent = '#00ff88', warning = '#ffaa00', danger = '#ff4444';
+
+  // Crosshair
+  hudCtx.strokeStyle = primary; hudCtx.lineWidth = 1.5; hudCtx.globalAlpha = 0.8;
+  hudCtx.beginPath(); hudCtx.arc(cx, cy, 30, 0, Math.PI*2); hudCtx.stroke();
+  hudCtx.fillStyle = primary; hudCtx.globalAlpha = 0.9;
+  hudCtx.beginPath(); hudCtx.arc(cx, cy, 2, 0, Math.PI*2); hudCtx.fill();
+  hudCtx.globalAlpha = 0.5;
+  [[cx-40,cy,cx-15,cy],[cx+15,cy,cx+40,cy],[cx,cy-40,cx,cy-15],[cx,cy+15,cx,cy+40]].forEach(([x1,y1,x2,y2]) => {
+    hudCtx.beginPath(); hudCtx.moveTo(x1,y1); hudCtx.lineTo(x2,y2); hudCtx.stroke();
+  });
+
+  // Charge arc
+  if (c.charging) {
+    hudCtx.strokeStyle = '#ffcc00'; hudCtx.lineWidth = 3; hudCtx.globalAlpha = 0.9;
+    hudCtx.beginPath(); hudCtx.arc(cx, cy, 36, -Math.PI/2, -Math.PI/2 + c.chargeLevel*Math.PI*2); hudCtx.stroke();
+  }
+  hudCtx.globalAlpha = 1;
+
+  // Weapon (bottom-right)
+  const wrx = W-220, wry = H-140;
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('WEAPON', wrx, wry);
+  hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = primary; hudCtx.fillText('RAILGUN MK-II', wrx, wry+20);
+  hudCtx.font = '11px "Segoe UI"';
+  hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
+  hudCtx.fillText('AMMO  ' + c.ammo + ' / ' + c.maxAmmo, wrx, wry+42);
+  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
+  hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
+  hudCtx.fillRect(wrx, wry+48, 180*(c.ammo/c.maxAmmo), 6);
+  hudCtx.fillStyle = '#445566'; hudCtx.fillText('HEAT', wrx, wry+72);
+  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx+40, wry+64, 140, 6);
+  hudCtx.fillStyle = c.heat > 0.7 ? danger : c.heat > 0.4 ? warning : primary;
+  hudCtx.fillRect(wrx+40, wry+64, 140*c.heat, 6);
+  hudCtx.fillStyle = c.weaponReady ? accent : warning;
+  hudCtx.fillText(c.weaponReady ? '\u25CF READY' : c.charging ? '\u25D0 CHARGING' : '\u25CB COOLING', wrx, wry+92);
+
+  // Shield/Hull (top-left)
+  const slx = 24, sly = 30;
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SHIELD', slx, sly);
+  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+6, 180, 8);
+  hudCtx.fillStyle = state.ship.shield > 30 ? '#44aaff' : danger;
+  hudCtx.fillRect(slx, sly+6, 180*(state.ship.shield/state.ship.maxShield), 8);
+  hudCtx.fillStyle = '#445566'; hudCtx.fillText('HULL', slx, sly+32);
+  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+38, 180, 8);
+  hudCtx.fillStyle = state.ship.hull > 30 ? '#cc4444' : danger;
+  hudCtx.fillRect(slx, sly+38, 180*(state.ship.hull/state.ship.maxHull), 8);
+  hudCtx.fillStyle = '#778899';
+  hudCtx.fillText(Math.floor(state.ship.shield)+'%', slx+185, sly+14);
+  hudCtx.fillText(Math.floor(state.ship.hull)+'%', slx+185, sly+46);
+
+  // Score (top-right)
+  const srx = W-200, sry = 30;
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
+  hudCtx.font = 'bold 22px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
+
+  // Scanlines
+  hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
+  for (let sy = 0; sy < H; sy += 4) hudCtx.fillRect(0, sy, W, 1);
+  hudCtx.globalAlpha = 1;
+
+  // Corner brackets
+  hudCtx.strokeStyle = '#334455'; hudCtx.lineWidth = 1; hudCtx.globalAlpha = 0.4;
+  const bl = 40;
+  [[10,10+bl,10,10,10+bl,10],[W-10-bl,10,W-10,10,W-10,10+bl],[10,H-10-bl,10,H-10,10+bl,H-10],[W-10-bl,H-10,W-10,H-10,W-10,H-10-bl]].forEach(([x1,y1,x2,y2,x3,y3]) => {
+    hudCtx.beginPath(); hudCtx.moveTo(x1,y1); hudCtx.lineTo(x2,y2); hudCtx.lineTo(x3,y3); hudCtx.stroke();
+  });
+  hudCtx.globalAlpha = 1;
+}
+
+// ================================================================
+//  INPUT
+// ================================================================
+canvas3d.addEventListener('mousedown', (e) => {
+  if (state.screen !== 'gunner') return;
+  if (!c.locked) { canvas3d.requestPointerLock(); return; }
+  if (e.button === 0) fireRailgun();
+});
+
+document.addEventListener('pointerlockchange', () => {
+  c.locked = document.pointerLockElement === canvas3d;
+  document.getElementById('lock-prompt').style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
+});
+
+document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.requestPointerLock());
+
+document.addEventListener('mousemove', (e) => {
+  if (!c.locked || !c.active) return;
+  c.yaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, c.yaw - e.movementX * MOUSE_SENS));
+  c.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, c.pitch + e.movementY * MOUSE_SENS));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
+  if ((e.key === 'r' || e.key === 'R') && c.active) { c.ammo = c.maxAmmo; }
+});
+
+// Nav bar
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.screen;
+    if (target === 'gunner') { showScreen('gunner'); }
+    else if (target === 'station') {
+      const sys = state.starSystems[state.location.systemIndex];
+      if (sys && sys.hasStation) showScreen('station');
+      else addComms('Navigation', 'No station available in this system.');
+    }
+    else showScreen(target);
+  });
+});
+
+// Title buttons
+document.getElementById('btn-new').addEventListener('click', () => { initCreateScreen(); showScreen('create'); });
+document.getElementById('btn-continue').addEventListener('click', () => {
+  if (loadGame()) {
+    addComms('AI Director', `Welcome back, pilot ${state.player.name}.`);
+    showScreen('bridge');
+  }
+});
+
+// Create screen
+document.getElementById('btn-reroll').addEventListener('click', randomizeGenome);
+document.getElementById('btn-create-char').addEventListener('click', createCharacter);
+document.getElementById('btn-back-title').addEventListener('click', () => showScreen('title'));
+
+// Station / Character backs
+document.getElementById('btn-undock').addEventListener('click', () => { state.location.docked = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
+document.getElementById('btn-char-back').addEventListener('click', () => showScreen('bridge'));
+document.getElementById('btn-jump').addEventListener('click', () => {
+  if (state.selectedSystem !== null) jumpToSystem(state.selectedSystem);
+});
+
+// Star map clicks
+document.getElementById('starmap-canvas').addEventListener('click', onStarMapClick);
+document.getElementById('starmap-canvas').addEventListener('dblclick', onStarMapDblClick);
+
+// ================================================================
+//  GAME LOOP
+// ================================================================
+const clock = new THREE.Clock();
+
+function gameLoop() {
+  requestAnimationFrame(gameLoop);
+  const dt = clock.getDelta();
+  const dtMs = dt * 1000;
+  state.gameTime += dtMs;
+
+  // Camera — always positioned at turret mount
+  const worldPos = new THREE.Vector3();
+  turretMount.getWorldPosition(worldPos);
+  camera.position.copy(worldPos);
+
+  if (c.active) {
+    // Gunner look
+    const shipQuat = new THREE.Quaternion(); ship.getWorldQuaternion(shipQuat);
+    const lookEuler = new THREE.Euler(-c.pitch, -c.yaw, 0, 'YXZ');
+    camera.quaternion.copy(shipQuat).multiply(new THREE.Quaternion().setFromEuler(lookEuler));
+
+    // Weapon charge
+    if (c.charging) {
+      c.chargeLevel = Math.min(1, (performance.now() - c.chargeStart) / CHARGE_TIME);
+      railGlowMatL.opacity = c.chargeLevel * 0.8;
+      railGlowMatR.opacity = c.chargeLevel * 0.8;
+      if (c.chargeLevel >= 1) {
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME;
+        c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
+        spawnNail();
       }
-      g.position.copy(pos);
-      g.scale.setScalar(scale || 1);
-      scene.add(g);
-      explosions.push({ group: g, age: 0, maxAge: 600 });
+    }
+    if (c.cooling && performance.now() >= c.coolEnd) { c.cooling = false; c.weaponReady = true; }
+    if (muzzleMat.opacity > 0) muzzleMat.opacity = Math.max(0, muzzleMat.opacity - dt * 8);
+
+    // Recoil
+    if (Math.abs(c.recoilOffset) > 0.001 || Math.abs(c.recoilVel) > 0.001) {
+      c.recoilVel += (-15 * c.recoilOffset - 0.8 * c.recoilVel) * dt;
+      c.recoilOffset += c.recoilVel * dt;
+      if (Math.abs(c.recoilOffset) < 0.001 && Math.abs(c.recoilVel) < 0.001) { c.recoilOffset = 0; c.recoilVel = 0; }
+    }
+    railL.position.z = -2.0 + c.recoilOffset;
+    railR.position.z = -2.0 + c.recoilOffset;
+    c.heat = Math.max(0, c.heat - dt * 0.15);
+
+    // Spawn enemies
+    if (state.gameTime - state.lastEnemySpawn > SPAWN_INTERVAL) {
+      state.lastEnemySpawn = state.gameTime;
+      createEnemy(['scout','fighter','bomber','interceptor'][Math.floor(Math.random()*4)]);
+      if (c.kills > 0 && c.kills % 15 === 0) { c.cycle++; addComms('AI Director', `Cycle ${c.cycle} — hostiles intensifying`); }
     }
 
-    // ================================================================
-    //  LOG
-    // ================================================================
-    function addLog(msg, type) {
-      logLines.push({ msg: msg, type: type, age: 0 });
-      if (logLines.length > 10) logLines.shift();
-    }
-
-    // ================================================================
-    //  INPUT
-    // ================================================================
-    canvas3d.addEventListener('mousedown', function(e) {
-      if (!running) return;
-      if (!locked) { canvas3d.requestPointerLock(); return; }
-      if (e.button === 0) fireRailgun();
-    });
-
-    document.addEventListener('pointerlockchange', function() {
-      locked = document.pointerLockElement === canvas3d;
-      document.getElementById('lock-prompt').style.display = locked ? 'none' : (running ? 'flex' : 'none');
-    });
-
-    document.getElementById('lock-prompt').addEventListener('click', function() {
-      canvas3d.requestPointerLock();
-    });
-
-    document.addEventListener('mousemove', function(e) {
-      if (!locked || !running) return;
-      yaw   = Math.max(-MAX_YAW,   Math.min(MAX_YAW,   yaw   - e.movementX * MOUSE_SENS));
-      pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + e.movementY * MOUSE_SENS));
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'r' || e.key === 'R') {
-        ammo = MAX_AMMO;
-        addLog('Reloaded', 'system');
-      }
-    });
-
-    // ================================================================
-    //  START GAME
-    // ================================================================
-    document.getElementById('btn-start').addEventListener('click', function() {
-      document.getElementById('title-screen').style.display = 'none';
-      running = true;
-      canvas3d.requestPointerLock();
-      addLog('Gunner mode activated', 'event');
-      addLog('Mouse aim \u2014 Click to fire \u2014 R to reload', 'system');
-    });
-
-    // ================================================================
-    //  HUD RENDERER
-    // ================================================================
-    function renderHUD() {
-      var W = hudCanvas.width, H = hudCanvas.height;
-      var cx = W/2, cy = H/2;
-      hudCtx.clearRect(0, 0, W, H);
-
-      if (!running) return;
-
-      var primary = '#44aaff';
-      var accent = '#00ff88';
-      var warning = '#ffaa00';
-      var danger = '#ff4444';
-
-      // Crosshair
-      hudCtx.strokeStyle = primary;
-      hudCtx.lineWidth = 1.5;
-      hudCtx.globalAlpha = 0.8;
-      hudCtx.beginPath(); hudCtx.arc(cx, cy, 30, 0, Math.PI*2); hudCtx.stroke();
-      hudCtx.fillStyle = primary; hudCtx.globalAlpha = 0.9;
-      hudCtx.beginPath(); hudCtx.arc(cx, cy, 2, 0, Math.PI*2); hudCtx.fill();
-      hudCtx.globalAlpha = 0.5;
-      hudCtx.beginPath(); hudCtx.moveTo(cx-40, cy); hudCtx.lineTo(cx-15, cy); hudCtx.stroke();
-      hudCtx.beginPath(); hudCtx.moveTo(cx+15, cy); hudCtx.lineTo(cx+40, cy); hudCtx.stroke();
-      hudCtx.beginPath(); hudCtx.moveTo(cx, cy-40); hudCtx.lineTo(cx, cy-15); hudCtx.stroke();
-      hudCtx.beginPath(); hudCtx.moveTo(cx, cy+15); hudCtx.lineTo(cx, cy+40); hudCtx.stroke();
-
-      // Charge indicator
-      if (charging) {
-        hudCtx.strokeStyle = '#ffcc00';
-        hudCtx.lineWidth = 3;
-        hudCtx.globalAlpha = 0.9;
-        hudCtx.beginPath();
-        hudCtx.arc(cx, cy, 36, -Math.PI/2, -Math.PI/2 + chargeLevel*Math.PI*2);
-        hudCtx.stroke();
-      }
-
-      hudCtx.globalAlpha = 1;
-
-      // Weapon status (bottom-right)
-      var wrx = W - 220, wry = H - 140;
-      hudCtx.font = '11px "Segoe UI"';
-      hudCtx.fillStyle = '#445566';
-      hudCtx.fillText('WEAPON', wrx, wry);
-      hudCtx.font = 'bold 16px "Segoe UI"';
-      hudCtx.fillStyle = primary;
-      hudCtx.fillText('RAILGUN MK-II', wrx, wry + 20);
-      hudCtx.font = '11px "Segoe UI"';
-      hudCtx.fillStyle = ammo > 6 ? accent : (ammo > 0 ? warning : danger);
-      hudCtx.fillText('AMMO  ' + ammo + ' / ' + MAX_AMMO, wrx, wry + 42);
-      hudCtx.fillStyle = '#1a1a2a';
-      hudCtx.fillRect(wrx, wry+48, 180, 6);
-      hudCtx.fillStyle = ammo > 6 ? accent : (ammo > 0 ? warning : danger);
-      hudCtx.fillRect(wrx, wry+48, 180*(ammo/MAX_AMMO), 6);
-      hudCtx.fillStyle = '#445566';
-      hudCtx.fillText('HEAT', wrx, wry + 72);
-      hudCtx.fillStyle = '#1a1a2a';
-      hudCtx.fillRect(wrx + 40, wry+64, 140, 6);
-      hudCtx.fillStyle = heat > 0.7 ? danger : (heat > 0.4 ? warning : primary);
-      hudCtx.fillRect(wrx + 40, wry+64, 140*heat, 6);
-      hudCtx.fillStyle = weaponReady ? accent : warning;
-      hudCtx.fillText(weaponReady ? '\u25CF READY' : (charging ? '\u25D0 CHARGING' : '\u25CB COOLING'), wrx, wry + 92);
-
-      // Shields and Hull (top-left)
-      var slx = 24, sly = 30;
-      hudCtx.font = '11px "Segoe UI"';
-      hudCtx.fillStyle = '#445566';
-      hudCtx.fillText('SHIELD', slx, sly);
-      hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+6, 180, 8);
-      hudCtx.fillStyle = shield > 30 ? '#44aaff' : danger;
-      hudCtx.fillRect(slx, sly+6, 180*(shield/maxShield), 8);
-      hudCtx.fillStyle = '#445566';
-      hudCtx.fillText('HULL', slx, sly+32);
-      hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+38, 180, 8);
-      hudCtx.fillStyle = hp > 30 ? '#cc4444' : danger;
-      hudCtx.fillRect(slx, sly+38, 180*(hp/maxHp), 8);
-      hudCtx.fillStyle = '#778899';
-      hudCtx.fillText(Math.floor(shield)+'%', slx+185, sly+14);
-      hudCtx.fillText(Math.floor(hp)+'%', slx+185, sly+46);
-
-      // Score (top-right)
-      var srx = W - 200, sry = 30;
-      hudCtx.font = '11px "Segoe UI"';
-      hudCtx.fillStyle = '#445566';
-      hudCtx.fillText('SCORE', srx, sry);
-      hudCtx.font = 'bold 22px "Segoe UI"';
-      hudCtx.fillStyle = '#d4a856';
-      hudCtx.fillText(score.toLocaleString(), srx, sry + 26);
-      hudCtx.font = '11px "Segoe UI"';
-      hudCtx.fillStyle = '#445566';
-      hudCtx.fillText('KILLS ' + kills + '  |  CYCLE ' + cycle, srx, sry + 44);
-
-      // Log (bottom-left)
-      var lly = H - 24;
-      hudCtx.font = '12px "Segoe UI"';
-      for (var i = logLines.length-1, y=0; i >= 0 && y < 8; i--, y++) {
-        var l = logLines[i];
-        var alpha = Math.max(0, 1 - l.age/8000);
-        hudCtx.globalAlpha = alpha;
-        hudCtx.fillStyle = l.type==='combat'?danger : l.type==='event'?'#d4a856' : '#556688';
-        hudCtx.fillText('> ' + l.msg, 24, lly - y*18);
-      }
-      hudCtx.globalAlpha = 1;
-
-      // Scanlines
-      hudCtx.globalAlpha = 0.03;
-      hudCtx.fillStyle = '#44aaff';
-      for (var sy = 0; sy < H; sy += 4) {
-        hudCtx.fillRect(0, sy, W, 1);
-      }
-      hudCtx.globalAlpha = 1;
-
-      // Corner brackets
-      hudCtx.strokeStyle = '#334455';
-      hudCtx.lineWidth = 1;
-      hudCtx.globalAlpha = 0.4;
-      var bl = 40;
-      hudCtx.beginPath(); hudCtx.moveTo(10,10+bl); hudCtx.lineTo(10,10); hudCtx.lineTo(10+bl,10); hudCtx.stroke();
-      hudCtx.beginPath(); hudCtx.moveTo(W-10-bl,10); hudCtx.lineTo(W-10,10); hudCtx.lineTo(W-10,10+bl); hudCtx.stroke();
-      hudCtx.beginPath(); hudCtx.moveTo(10,H-10-bl); hudCtx.lineTo(10,H-10); hudCtx.lineTo(10+bl,H-10); hudCtx.stroke();
-      hudCtx.beginPath(); hudCtx.moveTo(W-10-bl,H-10); hudCtx.lineTo(W-10,H-10); hudCtx.lineTo(W-10,H-10-bl); hudCtx.stroke();
-      hudCtx.globalAlpha = 1;
-    }
-
-    // ================================================================
-    //  GAME LOOP
-    // ================================================================
-    var clock = new THREE.Clock();
-
-    function gameLoop() {
-      requestAnimationFrame(gameLoop);
-      var dt = clock.getDelta();
-      var dtMs = dt * 1000;
-      gameTime += dtMs;
-
-      if (!running) { renderer.render(scene, camera); return; }
-
-      // Camera from mouse look
-      var worldPos = new THREE.Vector3();
-      turretMount.getWorldPosition(worldPos);
-      camera.position.copy(worldPos);
-
-      var shipQuat = new THREE.Quaternion();
-      ship.getWorldQuaternion(shipQuat);
-      var lookEuler = new THREE.Euler(-pitch, -yaw, 0, 'YXZ');
-      var lookQuat = new THREE.Quaternion().setFromEuler(lookEuler);
-      camera.quaternion.copy(shipQuat).multiply(lookQuat);
-
-      // Weapon logic
-      if (charging) {
-        chargeLevel = Math.min(1, (performance.now() - chargeStart) / CHARGE_TIME);
-        railGlowMatL.opacity = chargeLevel * 0.8;
-        railGlowMatR.opacity = chargeLevel * 0.8;
-        if (chargeLevel >= 1) {
-          charging = false;
-          cooling = true;
-          coolEnd = performance.now() + COOLDOWN_TIME;
-          chargeLevel = 0;
-          railGlowMatL.opacity = 0;
-          railGlowMatR.opacity = 0;
-          spawnNail();
+    // Update projectiles
+    for (let i = c.projectiles.length - 1; i >= 0; i--) {
+      const p = c.projectiles[i];
+      p.age += dtMs;
+      p.group.position.addScaledVector(p.dir, p.speed * dt);
+      p.trailMat.opacity = Math.max(0, 0.6 - p.age/3000);
+      let hit = false;
+      for (let j = c.enemies.length - 1; j >= 0; j--) {
+        const e = c.enemies[j];
+        if (p.group.position.distanceTo(e.group.position) < 3 * (e.cfg.scale || 1)) {
+          e.hp--;
+          e.hitFlash = 150;
+          if (e.hp <= 0) {
+            c.score += e.points; c.kills++;
+            state.player.credits += e.points;
+            spawnExplosion(e.group.position.clone(), e.cfg.scale);
+            scene.remove(e.group); c.enemies.splice(j, 1);
+          }
+          hit = true; break;
         }
       }
-      if (cooling && performance.now() >= coolEnd) {
-        cooling = false;
-        weaponReady = true;
+      if (hit || p.age > p.life) { scene.remove(p.group); c.projectiles.splice(i, 1); }
+    }
+
+    // Update enemies
+    c.enemies.forEach(e => {
+      const dir = ship.position.clone().sub(e.group.position).normalize();
+      e.group.position.addScaledVector(dir, e.speed * dt);
+      e.group.lookAt(ship.position);
+      e.hitFlash = Math.max(0, e.hitFlash - dtMs);
+      if (e.group.position.distanceTo(ship.position) < 5) {
+        state.ship.shield = Math.max(0, state.ship.shield - 0.5);
+        if (state.ship.shield <= 0) state.ship.hull = Math.max(0, state.ship.hull - 0.3);
       }
+    });
 
-      // Muzzle flash fade
-      if (muzzleMat.opacity > 0) muzzleMat.opacity = Math.max(0, muzzleMat.opacity - dt * 8);
+    // Update explosions
+    for (let i = c.explosions.length - 1; i >= 0; i--) {
+      const ex = c.explosions[i];
+      ex.age += dtMs;
+      ex.group.children.forEach(ch => {
+        ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
+        if (ch.material) ch.material.opacity = Math.max(0, 1 - ex.age / ex.maxAge);
+      });
+      if (ex.age > ex.maxAge) { scene.remove(ex.group); c.explosions.splice(i, 1); }
+    }
 
-      // Recoil physics
-      if (Math.abs(recoilOffset) > 0.001 || Math.abs(recoilVel) > 0.001) {
-        var spring = -15 * recoilOffset;
-        var damp = -0.8 * recoilVel;
-        recoilVel += (spring + damp) * dt;
-        recoilOffset += recoilVel * dt;
-        if (Math.abs(recoilOffset) < 0.001 && Math.abs(recoilVel) < 0.001) {
-          recoilOffset = 0; recoilVel = 0;
-        }
-      }
-      railL.position.z = -2.0 + recoilOffset;
-      railR.position.z = -2.0 + recoilOffset;
+    renderHUD();
+  } else {
+    // Bridge — gentle idle camera
+    const time = state.gameTime * 0.0001;
+    const shipQuat2 = new THREE.Quaternion(); ship.getWorldQuaternion(shipQuat2);
+    const idleEuler = new THREE.Euler(Math.sin(time * 0.7) * 0.02, Math.sin(time) * 0.03, 0, 'YXZ');
+    camera.quaternion.copy(shipQuat2).multiply(new THREE.Quaternion().setFromEuler(idleEuler));
+  }
 
-      // Heat decay
-      heat = Math.max(0, heat - dt * 0.15);
+  renderer.render(scene, camera);
+}
 
-      // Spawn enemies
-      if (gameTime - lastSpawn > SPAWN_INTERVAL) {
-        lastSpawn = gameTime;
-        var etypes = ['scout','fighter','bomber','interceptor'];
-        var etype = etypes[Math.floor(Math.random()*etypes.length)];
-        createEnemy(etype);
-        if (kills > 0 && kills % 15 === 0) {
-          cycle++;
-          addLog('Cycle ' + cycle + ' \u2014 hostiles intensifying', 'event');
-        }
-      }
+// ================================================================
+//  INITIALIZATION
+// ================================================================
+async function init() {
+  // Generate star systems
+  state.starSystems = generateStarSystems();
 
-      // Update projectiles
-      for (var i = projectiles.length - 1; i >= 0; i--) {
-        var p = projectiles[i];
-        p.age += dtMs;
-        p.group.position.addScaledVector(p.dir, p.speed * dt);
-        p.trailMat.opacity = Math.max(0, 0.6 - p.age/3000);
+  // Try to connect Socket.IO
+  state.socket = await connectSocket();
 
-        var hitEnemy = false;
-        for (var j = enemies.length - 1; j >= 0; j--) {
-          var e = enemies[j];
-          var dist = p.group.position.distanceTo(e.group.position);
-          if (dist < 3 * (e.cfg.scale || 1)) {
-            e.hp--;
-            e.hitFlash = 150;
-            if (e.hp <= 0) {
-              score += e.points;
-              kills++;
-              spawnExplosion(e.group.position.clone(), e.cfg.scale);
-              scene.remove(e.group);
-              enemies.splice(j, 1);
-              addLog(e.type + ' destroyed (+' + e.points + ')', 'combat');
+  // Try to fetch server star map data
+  try {
+    const resp = await fetch('/api/game/starmap');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.systems && data.systems.length) {
+        // Merge server data (positions from client, metadata from server)
+        data.systems.forEach((s, i) => {
+          if (state.starSystems[i]) {
+            state.starSystems[i].name = s.name || state.starSystems[i].name;
+            state.starSystems[i].starType = s.starType || state.starSystems[i].starType;
+            state.starSystems[i].resources = s.resources || state.starSystems[i].resources;
+            state.starSystems[i].hazards = s.hazards || state.starSystems[i].hazards;
+            state.starSystems[i].planetCount = s.planetCount || state.starSystems[i].planetCount;
+            if (s.controllingFaction) {
+              state.starSystems[i].controllingFaction = s.controllingFaction;
+              const f = FACTIONS.find(f2 => f2.id === s.controllingFaction || f2.name === s.controllingFaction);
+              if (f) state.starSystems[i].factionColor = f.color;
             }
-            hitEnemy = true;
-            break;
-          }
-        }
-
-        if (hitEnemy || p.age > p.life) {
-          scene.remove(p.group);
-          projectiles.splice(i, 1);
-        }
-      }
-
-      // Update enemies
-      for (var ei = enemies.length - 1; ei >= 0; ei--) {
-        var en = enemies[ei];
-        var edir = new THREE.Vector3().subVectors(ship.position, en.group.position).normalize();
-        en.group.position.addScaledVector(edir, en.speed * dt);
-        en.group.lookAt(ship.position);
-
-        if (en.hitFlash > 0) {
-          en.hitFlash -= dtMs;
-          en.group.children.forEach(function(c) {
-            if (c.material && c.material.emissiveIntensity !== undefined) {
-              c.material.emissiveIntensity = en.hitFlash > 0 ? 1.5 : 0.25;
-            }
-          });
-        }
-
-        var distToShip = en.group.position.distanceTo(ship.position);
-        if (distToShip < 5) {
-          var dmg = en.cfg.scale * 8;
-          if (shield > 0) {
-            shield = Math.max(0, shield - dmg);
-            addLog('Shield hit! -' + Math.floor(dmg), 'combat');
-          } else {
-            hp = Math.max(0, hp - dmg);
-            addLog('Hull breach! -' + Math.floor(dmg), 'combat');
-          }
-          spawnExplosion(en.group.position.clone(), 0.5);
-          scene.remove(en.group);
-          enemies.splice(ei, 1);
-          if (hp <= 0) {
-            addLog('Ship destroyed \u2014 rebirth cycle initiated', 'event');
-            hp = maxHp; shield = maxShield; ammo = MAX_AMMO;
-            score = Math.floor(score * 0.7);
-            cycle++;
-          }
-        }
-      }
-
-      // Update explosions
-      for (var xi = explosions.length - 1; xi >= 0; xi--) {
-        var ex = explosions[xi];
-        ex.age += dtMs;
-        var t = ex.age / ex.maxAge;
-        ex.group.children.forEach(function(c) {
-          if (c.userData.dir) {
-            c.position.addScaledVector(c.userData.dir, c.userData.speed * dt * (1 - t));
-          }
-          if (c.material) {
-            c.material.opacity = Math.max(0, 1 - t);
-            c.scale.setScalar(1 + t * 2);
           }
         });
-        if (ex.age >= ex.maxAge) {
-          scene.remove(ex.group);
-          explosions.splice(xi, 1);
-        }
       }
-
-      // Shield regen
-      shield = Math.min(maxShield, shield + dt * 2);
-
-      // Age log
-      logLines.forEach(function(l) { l.age += dtMs; });
-
-      // Render
-      renderer.render(scene, camera);
-      renderHUD();
     }
+  } catch(e) { /* offline mode — using client-generated data */ }
 
-    gameLoop();
-  </script>
+  // Check for saved game
+  if (localStorage.getItem('oe-save')) {
+    document.getElementById('btn-continue').disabled = false;
+  }
+
+  // Start
+  addComms('AI Director', 'Old Eden systems initialising...');
+  addComms('AI Director', 'The universe awaits, pilot.');
+  gameLoop();
+}
+
+init();
+</script>
 </body>
 </html>
