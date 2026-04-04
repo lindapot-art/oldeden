@@ -397,39 +397,6 @@ export class GunnerHUD {
 
     ctx.restore();
   }
-      ctx.fillStyle = this._primaryColor;
-      ctx.font = '16px monospace';
-      ctx.fillText(`${Math.round(this._targetLock.distance)}m`, cx, y + 25);
-      
-      // Health bar
-      const barWidth = 150;
-      const barHeight = 6;
-      const barX = cx - barWidth / 2;
-      const barY = y + 35;
-      
-      // Background
-      ctx.fillStyle = 'rgba(100, 180, 255, 0.2)';
-      ctx.fillRect(barX, barY, barWidth, barHeight);
-      
-      // Health fill
-      const healthRatio = this._targetLock.health / 100;
-      let healthColor = this._accentColor;
-      if (healthRatio < 0.3) healthColor = this._dangerColor;
-      else if (healthRatio < 0.6) healthColor = this._warningColor;
-      
-      ctx.fillStyle = healthColor;
-      ctx.fillRect(barX, barY, barWidth * healthRatio, barHeight);
-    } else {
-      // No target
-      ctx.fillStyle = this._primaryColor;
-      ctx.font = '16px monospace';
-      ctx.textAlign = 'center';
-      ctx.globalAlpha = 0.5;
-      ctx.fillText('[ NO TARGET ]', cx, y);
-    }
-
-    ctx.restore();
-  }
 
   /**
    * Draw shield and hull status in top-right corner.
