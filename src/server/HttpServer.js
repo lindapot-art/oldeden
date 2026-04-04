@@ -11,7 +11,12 @@
 
 import express from 'express';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createAssetUploadRouter } from './AssetUploadRouter.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicDir = path.resolve(__dirname, '..', '..', 'public');
 
 /**
  * Create and configure the Express application.
@@ -27,6 +32,9 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
   // JSON body parsing for non-upload routes
   app.use(express.json());
 
+  // ── Serve frontend static files ───────────────────────────────────────────
+  app.use(express.static(publicDir));
+
   // ── Health check ──────────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', uptime: process.uptime() });
@@ -37,6 +45,11 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
 
   // ── Asset upload API ──────────────────────────────────────────────────────
   app.use('/api/assets', createAssetUploadRouter({ uploadDir, maxFileSize }));
+
+  // ── Fallback: serve index.html for any unmatched GET ──────────────────────
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
 
   /**
    * Start the HTTP server on the given port.
