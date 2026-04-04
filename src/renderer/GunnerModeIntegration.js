@@ -37,6 +37,7 @@ import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { EnemySpawnSystem } from '../systems/EnemySpawnSystem.js';
 import { BossSystem } from '../systems/BossSystem.js';
 import { RailgunWeapon } from './RailgunWeapon.js';
+import { VectorGunWeapon } from './VectorGunWeapon.js';
 import { GunnerView } from './GunnerView.js';
 import { GunnerHUD } from './GunnerHUD.js';
 import { ProjectileRenderer } from './ProjectileRenderer.js';
@@ -117,6 +118,16 @@ export class GunnerModeIntegration {
       cooldownTimeMs: 1200,
     });
 
+    /** Vector gun weapon */
+    this._vectorGun = new VectorGunWeapon(this._THREE, {
+      fireRateMs: 150,
+      heatCapacity: 100,
+      heatPerShot: 8,
+    });
+
+    /** Active weapon (default: railgun) */
+    this._activeWeapon = 'railgun';
+
     /** Gunner view (first-person cockpit) */
     this._gunnerView = new GunnerView(
       this._THREE,
@@ -125,6 +136,11 @@ export class GunnerModeIntegration {
       this._railgun
     );
     this._gunnerView.attachToShip(this._shipGroup, this._turretMount);
+    
+    // Add vector gun to cockpit view
+    if (this._gunnerView._cockpitGroup) {
+      this._gunnerView._cockpitGroup.add(this._vectorGun.group);
+    }
 
     /** HUD overlay */
     this._hud = new GunnerHUD(this._hudCanvas);
@@ -142,6 +158,15 @@ export class GunnerModeIntegration {
     this._canvas.addEventListener('gunner:fire', (e) => {
       this._handleFire(e.detail);
     });
+    
+    // Listen for weapon switch key (Tab)
+    this._weaponSwitchHandler = (e) => {
+      if (e.key === 'Tab' && this._gunnerView.isActive) {
+        e.preventDefault();
+        this.switchWeapon();
+      }
+    };
+    document.addEventListener('keydown', this._weaponSwitchHandler);
 
     // Register systems with GameEngine (if not already registered)
     if (this._gameEngine) {
@@ -247,6 +272,10 @@ export class GunnerModeIntegration {
     // Update gunner view
     this._gunnerView.update(deltaMs);
 
+    // Update both weapons
+    this._railgun.update(deltaMs);
+    this._vectorGun.update(deltaMs);
+
     // Update systems (only if not registered with GameEngine)
     if (!this._gameEngine) {
       this._projectileSystem.tick(deltaMs);
@@ -281,6 +310,32 @@ export class GunnerModeIntegration {
   }
 
   /**
+   * Switch between railgun and vector gun.
+   */
+  switchWeapon() {
+    if (this._activeWeapon === 'railgun') {
+      this._activeWeapon = 'vectorgun';
+      console.log('[GunnerModeIntegration] Switched to Vector Gun');
+    } else {
+      this._activeWeapon = 'railgun';
+      console.log('[GunnerModeIntegration] Switched to Railgun');
+    }
+    
+    // Update HUD to reflect new weapon
+    if (this._hud) {
+      this._hud.setActiveWeapon(this._activeWeapon);
+    }
+  }
+
+  /**
+   * Get the currently active weapon.
+   * @returns {'railgun'|'vectorgun'}
+   */
+  getActiveWeapon() {
+    return this._activeWeapon;
+  }
+
+  /**
    * Dispose of all resources.
    */
   dispose() {
@@ -288,6 +343,11 @@ export class GunnerModeIntegration {
     this._railgun.dispose();
     this._projectileRenderer.dispose();
     this._enemyRenderer.dispose();
+    
+    // Remove event listener
+    if (this._weaponSwitchHandler) {
+      document.removeEventListener('keydown', this._weaponSwitchHandler);
+    }
   }
 
   // ── Private Helpers ─────────────────────────────────────────────────────────
@@ -297,17 +357,41 @@ export class GunnerModeIntegration {
    * @param {object} detail  { origin, direction, weaponType }
    */
   _handleFire(detail) {
-    // Spawn projectile
-    this._projectileSystem.fireProjectile({
-      type: 'RAILGUN',
-      origin: detail.origin,
-      direction: detail.direction,
-      damage: 75,
-      shooterId: 'player',
-      weaponType: WEAPON_TYPE.RAILGUN,
-      speed: 500,
-      targetId: this._targetLock ? this._targetLock.id : null,
-    });
+    // Determine which weapon is active and fire it
+    if (this._activeWeapon === 'railgun') {
+      if (!this._railgun.fire()) {
+        return; // Railgun not ready
+      }
+      
+      // Spawn railgun projectile
+      this._projectileSystem.fireProjectile({
+        type: 'RAILGUN',
+        origin: detail.origin,
+        direction: detail.direction,
+        damage: 75,
+        shooterId: 'player',
+        weaponType: WEAPON_TYPE.RAILGUN,
+        speed: 500,
+        targetId: this._targetLock ? this._targetLock.id : null,
+      });
+    } else if (this._activeWeapon === 'vectorgun') {
+      if (!this._vectorGun.fire()) {
+        return; // Vector gun not ready or overheated
+      }
+      
+      // Spawn vector gun projectile (hitscan-style, very fast)
+      this._projectileSystem.fireProjectile({
+        type: 'LASER',
+        origin: detail.origin,
+        direction: detail.direction,
+        damage: 45,
+        shooterId: 'player',
+        weaponType: WEAPON_TYPE.LASER,
+        speed: 1000, // Very fast
+        targetId: this._targetLock ? this._targetLock.id : null,
+      });
+    }
+  }
 
     console.log('[GunnerModeIntegration] Fired railgun projectile.');
   }
@@ -570,15 +654,26 @@ export class GunnerModeIntegration {
    * Update HUD with current status.
    */
   _updateHUD() {
-    // Weapon status
-    this._hud.updateWeaponStatus({
-      ammo: this._railgun.ammo,
-      maxAmmo: this._railgun.maxAmmo,
-      weaponType: 'RAILGUN',
-      charge: this._railgun.chargeLevel,
-      heat: 0,
-      ready: this._railgun.isReady,
-    });
+    // Weapon status - show both weapons
+    if (this._activeWeapon === 'railgun') {
+      this._hud.updateWeaponStatus({
+        ammo: this._railgun.ammo,
+        maxAmmo: this._railgun.maxAmmo,
+        weaponType: 'RAILGUN',
+        charge: this._railgun.chargeLevel,
+        heat: 0,
+        ready: this._railgun.isReady,
+      });
+    } else if (this._activeWeapon === 'vectorgun') {
+      this._hud.updateWeaponStatus({
+        ammo: 100, // Vector gun doesn't use ammo
+        maxAmmo: 100,
+        weaponType: 'VECTOR GUN',
+        charge: 0,
+        heat: this._vectorGun.heatLevel,
+        ready: this._vectorGun.isReady,
+      });
+    }
 
     // Target lock
     if (this._targetLock) {
