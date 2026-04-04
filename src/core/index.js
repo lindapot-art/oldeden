@@ -20,8 +20,26 @@ import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { BossSystem } from '../systems/BossSystem.js';
 import { createHttpServer } from '../server/HttpServer.js';
 import { FileStore } from '../persistence/FileStore.js';
+import { MongoStore } from '../persistence/MongoStore.js';
 import { Server as SocketServer } from 'socket.io';
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import fs from 'node:fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
+
+// ── Process safety ──────────────────────────────────────────────────────────
+process.on('unhandledRejection', (reason) => {
+  console.error('[Main] Unhandled promise rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Main] Uncaught exception:', err);
+  process.exit(1);
+});
 
 const engine = new GameEngine({ tickRateMs: parseInt(process.env.GAME_TICK_MS ?? '100', 10) });
 
@@ -70,8 +88,24 @@ engine
   .registerSystem('director', director);
 
 // ── Persistence ──────────────────────────────────────────────────────────────
-const fileStore = new FileStore(process.env.SAVE_DIR ?? 'saves');
-await fileStore.init();
+let store;
+if (process.env.MONGODB_URI) {
+  store = new MongoStore(process.env.MONGODB_URI);
+  await store.init();
+  if (!store.connected) {
+    console.warn('[Main] MongoDB unavailable — falling back to FileStore');
+    store = new FileStore(path.resolve(PROJECT_ROOT, process.env.SAVE_DIR ?? 'saves'));
+    await store.init();
+    console.log('[Main] Persistence: FileStore (fallback)');
+  } else {
+    console.log('[Main] Persistence: MongoStore');
+  }
+} else {
+  store = new FileStore(path.resolve(PROJECT_ROOT, process.env.SAVE_DIR ?? 'saves'));
+  await store.init();
+  console.log('[Main] Persistence: FileStore');
+}
+const fileStore = store;
 
 /** In-memory player state keyed by socketId → { playerId, name, faction, wallet, quests, inventory } */
 const players = new Map();
@@ -92,7 +126,8 @@ STARTER_QUESTS.forEach(q => quests.registerQuest(q));
 
 // ── HTTP Server ──────────────────────────────────────────────────────────────
 const httpPort = parseInt(process.env.PORT ?? '3000', 10);
-const uploadDir = process.env.UPLOAD_DIR ?? 'uploads';
+const uploadDir = path.resolve(PROJECT_ROOT, process.env.UPLOAD_DIR ?? 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
 const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE ?? '157286400', 10); // 150 MB default
 
 const { app, start: startHttp, addFallback } = createHttpServer({ uploadDir, maxFileSize });
@@ -163,11 +198,14 @@ addFallback();
 
 // Graceful shutdown
 let httpServer;
+let io;
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, async () => {
     console.log(`\n[Main] Received ${signal} — shutting down…`);
-    httpServer?.close();
+    io?.close();
+    await new Promise(resolve => httpServer?.close(resolve) ?? resolve());
     await engine.stop();
+    console.log('[Main] Shutdown complete.');
     process.exit(0);
   });
 }
@@ -175,12 +213,15 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 await engine.start();
 httpServer = await startHttp(httpPort);
 
+// Resolve actual port (may differ from httpPort if auto-rotated)
+const actualPort = httpServer.address().port;
+
 // ── Socket.IO ────────────────────────────────────────────────────────────────
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
-  : [`http://localhost:${httpPort}`];
+  : [`http://localhost:${actualPort}`];
 
-const io = new SocketServer(httpServer, {
+io = new SocketServer(httpServer, {
   cors: { origin: allowedOrigins },
 });
 

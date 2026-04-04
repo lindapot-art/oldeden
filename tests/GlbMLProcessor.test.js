@@ -311,9 +311,17 @@ describe('GlbMLProcessor', () => {
     it('should handle timeout scenarios', async () => {
       const proc = new GlbMLProcessor({ mock: false });
 
-      // Mock fetch to delay
-      global.fetch = jest.fn(() =>
-        new Promise((resolve) => setTimeout(resolve, 100000))
+      // Mock fetch that respects AbortSignal to avoid leaked timers
+      global.fetch = jest.fn((_url, opts) =>
+        new Promise((resolve, reject) => {
+          const timer = setTimeout(resolve, 100000);
+          if (opts?.signal) {
+            opts.signal.addEventListener('abort', () => {
+              clearTimeout(timer);
+              reject(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }));
+            });
+          }
+        })
       );
 
       await expect(

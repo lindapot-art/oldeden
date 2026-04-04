@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
  * @title CharacterNFT
@@ -33,8 +32,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  *   - The JSON includes the full genome hex, visual traits, and skill snapshot.
  */
 contract CharacterNFT is ERC721, ERC721URIStorage, ERC2981, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIdCounter;
+    uint256 private _nextTokenId;
 
     /// @notice Address authorised to mint (game server / relayer)
     address public minter;
@@ -122,8 +120,8 @@ contract CharacterNFT is ERC721, ERC721URIStorage, ERC2981, Ownable {
         require(bytes(genomeHex).length == 512, "CharacterNFT: genome must be 512 hex chars (256 bytes)");
         require(statusScore <= 1000, "CharacterNFT: statusScore exceeds 1000");
 
-        _tokenIdCounter.increment();
-        uint256 tokenId = _tokenIdCounter.current();
+        _nextTokenId++;
+        uint256 tokenId = _nextTokenId;
 
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
@@ -199,7 +197,7 @@ contract CharacterNFT is ERC721, ERC721URIStorage, ERC2981, Ownable {
      * @notice Total number of characters ever minted.
      */
     function totalSupply() external view returns (uint256) {
-        return _tokenIdCounter.current();
+        return _nextTokenId;
     }
 
     // ── Overrides ─────────────────────────────────────────────────────────────

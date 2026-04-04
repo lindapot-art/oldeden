@@ -1,679 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Old Eden</title>
-<style>
-:root {
-  --bg: #0a0a0f;
-  --panel: rgba(13,17,23,0.92);
-  --panel-solid: #0d1117;
-  --border: #1a2535;
-  --text: #c8d6e5;
-  --gold: #d4a856;
-  --blue: #44aaff;
-  --green: #00ff88;
-  --warn: #ffaa00;
-  --danger: #ff4444;
-  --muted: #445566;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;width:100vw;height:100vh;}
-canvas{display:block;}
-
-/* ── Screens ─────────────────────────────── */
-.screen{position:absolute;inset:0;display:none;z-index:50;}
-.screen.active{display:flex;}
-
-/* ── Title ───────────────────────────────── */
-#screen-title{flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(ellipse at center,#12100d 0%,#0a0a0f 70%);z-index:100;}
-#screen-title h1{font-size:clamp(2rem,6vw,5rem);color:var(--gold);text-shadow:0 0 60px rgba(212,168,86,0.4),0 0 120px rgba(212,168,86,0.15);letter-spacing:0.3em;margin-bottom:0.2rem;font-weight:300;}
-#screen-title .sub{color:#776644;font-style:italic;font-size:1.1rem;margin-bottom:3rem;letter-spacing:0.15em;}
-.title-stars{position:absolute;inset:0;overflow:hidden;z-index:-1;}
-.title-star{position:absolute;width:2px;height:2px;background:#ccc;border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
-@keyframes twinkle{0%,100%{opacity:0.2;}50%{opacity:1;}}
-.menu-btn{display:block;width:320px;padding:16px 0;margin:8px 0;background:linear-gradient(135deg,#141414,#1a1a1a);border:1px solid #2a2a2a;border-radius:6px;color:var(--gold);font-size:1.05rem;cursor:pointer;transition:all 0.3s;letter-spacing:0.08em;font-family:inherit;}
-.menu-btn:hover{background:linear-gradient(135deg,#1f1a12,#2a2218);border-color:var(--gold);box-shadow:0 0 30px rgba(212,168,86,0.15);transform:scale(1.03);}
-.menu-btn:disabled{opacity:0.3;pointer-events:none;}
-#server-status{margin-top:1.5rem;color:var(--muted);font-size:0.8rem;}
-
-/* ── Character Creation ──────────────────── */
-#screen-create{flex-direction:column;align-items:center;background:var(--bg);overflow-y:auto;padding:40px 20px;z-index:90;}
-#screen-create h2{color:var(--gold);font-size:1.8rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
-.create-section{width:100%;max-width:900px;margin-bottom:2rem;}
-.create-section h3{color:var(--blue);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:0.8rem;font-weight:400;}
-.faction-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:800px){.faction-grid{grid-template-columns:repeat(2,1fr);}}
-.faction-card{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:14px;cursor:pointer;transition:all 0.25s;position:relative;border-top:3px solid var(--border);}
-.faction-card:hover{border-color:var(--muted);transform:translateY(-2px);}
-.faction-card.selected{border-color:var(--gold);box-shadow:0 0 20px rgba(212,168,86,0.15);}
-.faction-card .fname{font-size:0.95rem;font-weight:600;margin-bottom:2px;}
-.faction-card .fdetail{font-size:0.72rem;color:var(--muted);line-height:1.3;}
-.name-input{background:#0d1117;border:1px solid var(--border);border-radius:4px;padding:12px 16px;color:var(--text);font-size:1rem;width:100%;max-width:400px;font-family:inherit;outline:none;}
-.name-input:focus{border-color:var(--blue);}
-.genome-row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
-#genome-canvas{border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;}
-.gene-stats{flex:1;min-width:200px;}
-.gene-bar{margin-bottom:8px;}
-.gene-bar-label{font-size:0.75rem;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between;}
-.gene-bar-track{height:6px;background:#111;border-radius:3px;overflow:hidden;}
-.gene-bar-fill{height:100%;border-radius:3px;transition:width 0.4s;}
-.btn{padding:12px 32px;border:1px solid var(--gold);border-radius:4px;background:transparent;color:var(--gold);font-size:1rem;cursor:pointer;font-family:inherit;letter-spacing:0.06em;transition:all 0.25s;}
-.btn:hover{background:rgba(212,168,86,0.1);box-shadow:0 0 20px rgba(212,168,86,0.1);}
-.btn-sm{padding:8px 16px;font-size:0.8rem;}
-.btn-row{display:flex;gap:12px;margin-top:1rem;}
-
-/* ── Bridge ──────────────────────────────── */
-#screen-bridge{z-index:10;pointer-events:none;}
-.bridge-panel{pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px;backdrop-filter:blur(8px);}
-#bridge-left{position:absolute;left:16px;top:80px;width:220px;}
-#bridge-right{position:absolute;right:16px;top:80px;width:260px;max-height:calc(100vh - 180px);overflow-y:auto;}
-#bridge-top{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;}
-.bridge-location{font-size:0.85rem;color:var(--gold);letter-spacing:0.1em;}
-.bridge-connection{font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2);}
-.panel-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:10px;}
-.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.8rem;}
-.stat-bar{height:5px;background:#111;border-radius:3px;flex:1;margin-left:10px;overflow:hidden;}
-.stat-fill{height:100%;border-radius:3px;}
-.quest-item{background:rgba(68,170,255,0.05);border:1px solid rgba(68,170,255,0.1);border-radius:4px;padding:8px 10px;margin-bottom:6px;font-size:0.75rem;line-height:1.3;}
-.quest-item .qt{color:var(--gold);font-weight:600;margin-bottom:2px;}
-.comms-msg{border-left:2px solid var(--blue);padding:6px 10px;margin-bottom:6px;font-size:0.75rem;color:var(--muted);line-height:1.3;}
-.comms-msg .sender{color:var(--blue);font-weight:600;font-size:0.7rem;}
-
-/* ── Nav Bar ─────────────────────────────── */
-#nav-bar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:none;z-index:25;pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 8px;gap:4px;backdrop-filter:blur(8px);}
-#nav-bar.visible{display:flex;}
-.nav-btn{padding:10px 18px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);font-size:0.8rem;cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.04em;}
-.nav-btn:hover{background:rgba(68,170,255,0.08);border-color:var(--border);}
-.nav-btn.active{background:rgba(212,168,86,0.1);border-color:var(--gold);color:var(--gold);}
-.nav-btn .nav-icon{font-size:1rem;display:block;margin-bottom:2px;}
-
-/* ── Star Map ────────────────────────────── */
-#screen-starmap{background:rgba(0,0,0,0.85);z-index:80;flex-direction:row;}
-#starmap-canvas{flex:1;cursor:crosshair;}
-#starmap-sidebar{width:280px;background:var(--panel-solid);border-left:1px solid var(--border);padding:16px;overflow-y:auto;}
-.system-info{margin-top:16px;}
-.system-info h3{color:var(--gold);font-size:1rem;margin-bottom:8px;}
-.system-info p{font-size:0.78rem;color:var(--muted);margin-bottom:4px;}
-.system-info .tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:0.7rem;margin:2px;background:rgba(68,170,255,0.1);color:var(--blue);border:1px solid rgba(68,170,255,0.15);}
-
-/* ── Station ─────────────────────────────── */
-#screen-station{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
-#screen-station h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
-.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
-@media(max-width:700px){.station-grid{grid-template-columns:1fr;}}
-.station-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
-.trade-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #111;font-size:0.8rem;}
-.trade-row:last-child{border-bottom:none;}
-.trade-buy,.trade-sell{padding:4px 10px;border-radius:3px;border:1px solid;font-size:0.7rem;cursor:pointer;background:transparent;font-family:inherit;}
-.trade-buy{color:var(--green);border-color:rgba(0,255,136,0.3);}
-.trade-buy:hover{background:rgba(0,255,136,0.1);}
-.trade-sell{color:var(--warn);border-color:rgba(255,170,0,0.3);}
-.trade-sell:hover{background:rgba(255,170,0,0.1);}
-
-/* ── Character Sheet ─────────────────────── */
-#screen-character{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
-#screen-character h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
-
-/* ── Rebirth ─────────────────────────────── */
-#screen-rebirth{background:radial-gradient(ellipse at center,#1a0a2e 0%,#0a0a0f 70%);z-index:80;flex-direction:column;align-items:center;justify-content:center;}
-#screen-rebirth h2{color:var(--gold);font-size:2rem;font-weight:300;letter-spacing:0.2em;margin-bottom:1rem;}
-.rebirth-info{max-width:600px;text-align:center;line-height:1.8;margin-bottom:2rem;}
-.rebirth-info strong{color:var(--gold);}
-.rebirth-lottery{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;}
-.lottery-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:15px 20px;min-width:120px;text-align:center;}
-.lottery-card .lbl{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
-.lottery-card .val{font-size:1.3rem;color:var(--gold);margin-top:4px;}
-
-/* ── Soul Fracture UI ────────────────────── */
-.sf-tabs{flex-wrap:wrap;}
-.sf-tab{font-size:0.75rem;padding:4px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
-.sf-tab.active{color:#a855f7;border-color:#a855f7;background:rgba(168,85,247,0.1);}
-.sf-panel{width:100%;max-width:700px;}
-.sf-fragment-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;width:140px;text-align:center;cursor:pointer;transition:all 0.2s;}
-.sf-fragment-card:hover{border-color:#a855f7;transform:translateY(-2px);}
-.sf-fragment-card.selected{border-color:#a855f7;box-shadow:0 0 12px rgba(168,85,247,0.3);}
-.sf-fragment-card .frag-id{font-size:0.7rem;color:var(--muted);margin-bottom:4px;}
-.sf-fragment-card .frag-power{font-size:1.1rem;color:var(--gold);font-weight:bold;}
-.sf-fragment-card .frag-stats{font-size:0.65rem;color:var(--muted);margin-top:4px;}
-.sf-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.sf-bar-label{width:60px;font-size:0.75rem;color:var(--muted);text-align:right;}
-.sf-bar-track{flex:1;height:12px;background:rgba(255,255,255,0.05);border-radius:6px;overflow:hidden;}
-.sf-bar-fill{height:100%;border-radius:6px;transition:width 0.4s ease;}
-.sf-bar-val{width:40px;font-size:0.75rem;color:var(--gold);}
-.sf-legacy-node{display:flex;align-items:center;gap:10px;padding:8px;border-left:2px solid rgba(168,85,247,0.3);margin-left:12px;margin-bottom:4px;}
-.sf-legacy-node .ln-num{color:#a855f7;font-weight:bold;font-size:0.85rem;min-width:24px;}
-.sf-legacy-node .ln-info{font-size:0.75rem;color:var(--muted);}
-.sf-milestone{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;}
-.sf-milestone.claimed{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05);}
-.sf-milestone.available{border-color:var(--gold);background:rgba(212,168,86,0.05);animation:pulse 2s infinite;}
-.sf-milestone .ms-icon{font-size:1.2rem;}
-.sf-milestone .ms-info{flex:1;}
-.sf-milestone .ms-name{font-size:0.8rem;color:#ddd;}
-.sf-milestone .ms-desc{font-size:0.65rem;color:var(--muted);}
-.sf-milestone .ms-reward{color:var(--gold);font-size:0.8rem;font-weight:bold;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
-
-/* ── Ukraine Donation Badge ──────────────── */
-.ukraine-badge{position:fixed;bottom:8px;right:8px;background:linear-gradient(180deg,#005BBB 50%,#FFD500 50%);color:#fff;font-size:0.65rem;padding:3px 8px;border-radius:3px;z-index:999;letter-spacing:0.05em;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
-.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
-@media(max-width:700px){.char-grid{grid-template-columns:1fr;}}
-.char-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
-.rep-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;}
-.rep-bar{height:4px;flex:1;margin-left:8px;background:#111;border-radius:2px;overflow:hidden;position:relative;}
-.rep-fill{height:100%;border-radius:2px;}
-
-/* ── Gunner HUD ──────────────────────────── */
-#hud-canvas{position:absolute;inset:0;z-index:15;pointer-events:none;display:none;}
-#hud-canvas.active{display:block;}
-#lock-prompt{display:none;position:absolute;inset:0;z-index:55;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;cursor:pointer;}
-#lock-prompt span{color:var(--gold);font-size:1.3rem;letter-spacing:0.1em;text-shadow:0 0 20px rgba(212,168,86,0.4);}
-
-/* ── 3D Canvas ───────────────────────────── */
-#game-canvas{position:absolute;inset:0;z-index:1;}
-
-/* ── Misc ────────────────────────────────── */
-.version-label{position:fixed;bottom:8px;right:12px;color:#222;font-size:0.7rem;z-index:200;}
-.fade-in{animation:fadeIn 0.4s ease;}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
-
-/* ── Market Screen ───────────────────────── */
-#screen-market{background:rgba(0,0,0,0.92);z-index:80;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;}
-.market-table{width:100%;max-width:900px;border-collapse:collapse;font-size:0.78rem;}
-.market-table th{text-align:left;padding:8px 6px;color:var(--muted);border-bottom:1px solid var(--border);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;}
-.market-table td{padding:6px;border-bottom:1px solid #111;}
-.market-buy{color:var(--green);}
-.market-sell{color:var(--danger);}
-.order-input{background:#0d1117;border:1px solid var(--border);border-radius:3px;padding:4px 8px;color:var(--text);font-size:0.78rem;width:70px;font-family:inherit;}
-
-/* ── Chatbot ─────────────────────────────── */
-#chatbot-panel{position:fixed;right:16px;bottom:80px;width:320px;max-height:420px;background:var(--panel);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(8px);z-index:60;display:none;flex-direction:column;}
-#chatbot-panel.open{display:flex;}
-#chatbot-messages{flex:1;overflow-y:auto;padding:10px;max-height:300px;}
-.chat-msg{margin-bottom:8px;font-size:0.78rem;line-height:1.4;}
-.chat-msg.ai{color:var(--blue);border-left:2px solid var(--blue);padding-left:8px;}
-.chat-msg.user{color:var(--text);text-align:right;}
-#chatbot-input-row{display:flex;border-top:1px solid var(--border);padding:6px;}
-#chatbot-input{flex:1;background:#0d1117;border:1px solid var(--border);border-radius:3px;padding:6px 10px;color:var(--text);font-size:0.8rem;font-family:inherit;outline:none;}
-#chatbot-send{padding:6px 12px;background:transparent;border:1px solid var(--blue);color:var(--blue);border-radius:3px;cursor:pointer;margin-left:4px;font-family:inherit;}
-.chat-toggles{display:flex;gap:6px;padding:6px 10px;border-top:1px solid var(--border);}
-.chat-toggle{font-size:0.7rem;padding:3px 8px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;}
-.chat-toggle.on{border-color:var(--green);color:var(--green);background:rgba(0,255,136,0.08);}
-
-/* ── Skin Selector ───────────────────────── */
-#skin-panel{position:fixed;left:16px;bottom:80px;width:280px;background:var(--panel);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(8px);z-index:60;display:none;padding:12px;}
-#skin-panel.open{display:block;}
-.skin-preview{width:100%;height:80px;background:#111;border-radius:4px;margin-bottom:8px;border:1px solid var(--border);}
-.skin-row{display:flex;gap:6px;flex-wrap:wrap;}
-.skin-swatch{width:32px;height:32px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;}
-.skin-swatch:hover{transform:scale(1.15);}
-.skin-swatch.active{border-color:var(--gold);}
-
-/* ── Mining laser beam ───────────────────── */
-@keyframes miningPulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
-
-/* ── Action Buttons (Gunner Mode) ────────── */
-#action-bar{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:50;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:90vw;}
-#action-bar.active{display:flex;}
-.action-btn{
-  width:52px;height:52px;border-radius:10px;border:1px solid var(--border);
-  background:rgba(10,15,25,0.75);backdrop-filter:blur(6px);
-  color:var(--text);font-size:0.6rem;text-align:center;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  transition:all 0.15s;user-select:none;-webkit-user-select:none;
-  font-family:inherit;padding:2px;line-height:1.1;
-}
-.action-btn .act-icon{font-size:1.1rem;}
-.action-btn .act-label{font-size:0.55rem;color:var(--muted);letter-spacing:0.04em;}
-.action-btn .act-key{font-size:0.5rem;color:#445566;margin-top:1px;}
-.action-btn:hover,.action-btn:active{background:rgba(68,170,255,0.12);border-color:var(--blue);}
-.action-btn.active-state{border-color:var(--green);background:rgba(0,255,136,0.1);color:var(--green);}
-.action-btn.warn-state{border-color:var(--warn);background:rgba(255,170,0,0.1);color:var(--warn);}
-
-/* ── Mobile: Virtual Joystick + Fire ─────── */
-#mobile-controls{position:fixed;bottom:0;left:0;right:0;display:none;z-index:45;pointer-events:none;}
-#mobile-controls.active{display:block;}
-#touch-fire{
-  position:absolute;right:20px;bottom:130px;width:72px;height:72px;border-radius:50%;
-  background:rgba(255,68,68,0.15);border:2px solid rgba(255,68,68,0.5);
-  display:flex;align-items:center;justify-content:center;pointer-events:auto;
-  color:var(--danger);font-size:0.7rem;font-weight:600;user-select:none;
-}
-#touch-fire:active{background:rgba(255,68,68,0.35);border-color:var(--danger);}
-#touch-reload{
-  position:absolute;right:100px;bottom:130px;width:48px;height:48px;border-radius:50%;
-  background:rgba(68,170,255,0.1);border:1px solid rgba(68,170,255,0.4);
-  display:flex;align-items:center;justify-content:center;pointer-events:auto;
-  color:var(--blue);font-size:0.6rem;user-select:none;
-}
-#touch-move-zone{
-  position:absolute;left:10px;bottom:100px;width:140px;height:140px;border-radius:50%;
-  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
-  pointer-events:auto;touch-action:none;
-}
-#touch-stick{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:44px;height:44px;border-radius:50%;
-  background:rgba(68,170,255,0.2);border:1px solid rgba(68,170,255,0.4);
-  pointer-events:none;
-}
-
-/* ── Mobile Responsive ───────────────────── */
-@media(max-width:900px){
-  #nav-bar{flex-wrap:wrap;gap:2px;padding:4px 6px;}
-  .nav-btn{font-size:0.65rem;padding:6px 8px;min-width:0;}
-  .nav-icon{font-size:0.8rem;}
-  #chatbot-panel{width:260px;right:8px;bottom:130px;}
-  #skin-panel{width:220px;left:8px;bottom:130px;}
-  .action-btn{width:46px;height:46px;}
-  .action-btn .act-key{display:none;}
-}
-@media(max-width:600px){
-  .nav-btn span.nav-icon{display:block;}.nav-btn{font-size:0;padding:8px 10px;}.nav-icon{font-size:1.1rem;}
-  .station-grid,.char-grid{grid-template-columns:1fr;}
-  #chatbot-panel{width:calc(100vw - 32px);right:16px;bottom:130px;max-height:50vh;}
-  #skin-panel{width:calc(100vw - 32px);left:16px;bottom:130px;}
-  .action-btn{width:42px;height:42px;border-radius:8px;}
-  .action-btn .act-icon{font-size:0.95rem;}
-  .action-btn .act-label{font-size:0.48rem;}
-  h1{font-size:2.5rem !important;}
-  .menu-btn{font-size:0.75rem;padding:10px 28px;}
-  #action-bar{bottom:116px;gap:5px;}
-}
-@media(hover:none) and (pointer:coarse){
-  /* Touch device: show mobile controls, make buttons larger */
-  #mobile-controls.active{display:block;}
-  .action-btn{width:50px;height:50px;}
-  #lock-prompt span{font-size:1rem;}
-}
-</style>
-</head>
-<body>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  TITLE SCREEN                               -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen active" id="screen-title">
-  <div class="title-stars" id="title-stars"></div>
-  <h1>OLD EDEN</h1>
-  <p class="sub">A world that remembers</p>
-  <button class="menu-btn" id="btn-new">&#9733; New Game</button>
-  <button class="menu-btn" id="btn-continue" disabled>&#9654; Continue</button>
-  <button class="menu-btn" id="btn-settings">&#9881; Settings</button>
-  <div id="server-status">Connecting&#8230;</div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  CHARACTER CREATION                          -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-create">
-  <h2>CREATE YOUR PILOT</h2>
-
-  <div class="create-section">
-    <h3>Choose Your Faction</h3>
-    <div class="faction-grid" id="faction-grid"></div>
-  </div>
-
-  <div class="create-section">
-    <h3>Pilot Name</h3>
-    <input class="name-input" id="pilot-name" type="text" placeholder="Enter callsign..." maxlength="24" autocomplete="off"/>
-  </div>
-
-  <div class="create-section">
-    <h3>Genome &mdash; 256 Gene Sequence</h3>
-    <div class="genome-row">
-      <canvas id="genome-canvas" width="256" height="256"></canvas>
-      <div class="gene-stats" id="gene-stats"></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
-    </div>
-  </div>
-
-  <div class="btn-row" style="justify-content:center;margin-top:1rem;">
-    <button class="btn" id="btn-back-title">&larr; Back</button>
-    <button class="btn" id="btn-create-char">Create Pilot &rarr;</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  BRIDGE (Main Hub — overlays 3D viewport)   -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-bridge">
-  <div id="bridge-top">
-    <span class="bridge-location" id="bridge-location">Sol Sector</span>
-    <span class="bridge-connection" id="bridge-conn">&#9679; Online</span>
-  </div>
-
-  <div class="bridge-panel" id="bridge-left">
-    <div class="panel-title">Ship Status</div>
-    <div class="stat-row">Hull <div class="stat-bar"><div class="stat-fill" id="bar-hull" style="width:100%;background:var(--danger)"></div></div></div>
-    <div class="stat-row">Shield <div class="stat-bar"><div class="stat-fill" id="bar-shield" style="width:100%;background:var(--blue)"></div></div></div>
-    <div class="stat-row">Fuel <div class="stat-bar"><div class="stat-fill" id="bar-fuel" style="width:100%;background:var(--warn)"></div></div></div>
-    <div class="stat-row">Power <div class="stat-bar"><div class="stat-fill" id="bar-power" style="width:100%;background:var(--green)"></div></div></div>
-    <div style="margin-top:12px;">
-      <div class="panel-title">Credits</div>
-      <div style="font-size:1.1rem;color:var(--gold);font-weight:600;" id="bridge-credits">1,000 EC</div>
-      <div style="font-size:0.75rem;color:var(--muted);" id="bridge-sm">0 SM</div>
-    </div>
-  </div>
-
-  <div class="bridge-panel" id="bridge-right">
-    <div class="panel-title">Communications</div>
-    <div id="comms-feed"></div>
-    <div class="panel-title" style="margin-top:16px;">Cargo</div>
-    <div id="bridge-inventory"></div>
-    <div class="panel-title" style="margin-top:16px;">Active Quests</div>
-    <div id="quest-tracker"></div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  STAR MAP                                    -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-starmap">
-  <canvas id="starmap-canvas"></canvas>
-  <div id="starmap-sidebar">
-    <div class="panel-title">Star Map</div>
-    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Click a system to inspect. Double-click to jump.</p>
-    <div id="system-detail">
-      <p style="color:var(--muted);font-size:0.8rem;">Select a system...</p>
-    </div>
-    <button class="btn btn-sm" id="btn-jump" style="margin-top:12px;display:none;">&#9889; Jump To System</button>
-    <hr style="border-color:#1a2535;margin:16px 0;"/>
-    <div class="panel-title">Legend</div>
-    <div id="map-legend"></div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  STATION                                     -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-station">
-  <h2 id="station-name">&#9968; Orbital Station</h2>
-  <div class="station-grid">
-    <div class="station-panel">
-      <div class="panel-title">Trade Market</div>
-      <div id="trade-market"></div>
-    </div>
-    <div class="station-panel">
-      <div class="panel-title">Mission Board</div>
-      <div id="mission-board"></div>
-    </div>
-  </div>
-  <div class="btn-row" style="margin-top:2rem;">
-    <button class="btn" id="btn-undock">&larr; Undock</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  CHARACTER SHEET                             -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-character">
-  <h2 id="char-name">Pilot Profile</h2>
-  <div class="char-grid">
-    <div class="char-panel">
-      <div class="panel-title">Genome</div>
-      <canvas id="char-genome-canvas" width="192" height="192" style="border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;"></canvas>
-      <div id="char-gene-stats" style="margin-top:10px;"></div>
-    </div>
-    <div class="char-panel">
-      <div class="panel-title">Faction Standings</div>
-      <div id="faction-standings"></div>
-    </div>
-    <div class="char-panel">
-      <div class="panel-title">Aptitude Skills</div>
-      <div id="skill-list"></div>
-    </div>
-    <div class="char-panel">
-      <div class="panel-title">Character Info</div>
-      <div id="char-info"></div>
-    </div>
-  </div>
-  <div class="btn-row" style="margin-top:1.5rem;">
-    <button class="btn" id="btn-char-back">&larr; Back to Bridge</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  REBIRTH SCREEN                              -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-settings" style="z-index:90;background:var(--bg);flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
-  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;">Settings</h2>
-  <div style="width:100%;max-width:500px;">
-    <div style="margin-bottom:20px;">
-      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Master Volume</label>
-      <input type="range" id="vol-master" min="0" max="100" value="70" style="width:100%;accent-color:var(--gold);">
-      <span id="vol-master-val" style="color:var(--gold);font-size:0.8rem;">70%</span>
-    </div>
-    <div style="margin-bottom:20px;">
-      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">SFX Volume</label>
-      <input type="range" id="vol-sfx" min="0" max="100" value="80" style="width:100%;accent-color:var(--blue);">
-      <span id="vol-sfx-val" style="color:var(--blue);font-size:0.8rem;">80%</span>
-    </div>
-    <div style="margin-bottom:20px;">
-      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Mouse Sensitivity</label>
-      <input type="range" id="setting-sens" min="1" max="10" value="5" style="width:100%;accent-color:var(--green);">
-      <span id="setting-sens-val" style="color:var(--green);font-size:0.8rem;">5</span>
-    </div>
-    <div style="margin-bottom:20px;">
-      <label style="font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" id="setting-scanlines" checked> Show HUD scan lines
-      </label>
-    </div>
-    <div style="margin-bottom:20px;">
-      <label style="font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" id="setting-screenshake" checked> Screen shake on damage
-      </label>
-    </div>
-  </div>
-  <div class="btn-row"><button class="btn" id="btn-settings-back">&larr; Back</button></div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  REBIRTH SCREEN                              -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-rebirth">
-  <h2>&#10040; Soul Fracture</h2>
-  <div class="rebirth-info">
-    <p>In Old Eden, <strong>death shatters your soul into fragments</strong> — each one an NFT-mintable echo of who you were.</p>
-    <p>Combine compatible fragments for <strong>Resonance Bonuses</strong> — permanent power that carries across every rebirth.</p>
-    <p>Your <strong>Legacy Chain</strong> records every life lived. Hit milestones to earn <strong>EDEN tokens</strong>.</p>
-  </div>
-
-  <!-- Tabs -->
-  <div class="sf-tabs" style="display:flex;gap:6px;margin-bottom:16px;">
-    <button class="btn btn-sm sf-tab active" data-tab="overview" onclick="window._sfTab('overview')">Overview</button>
-    <button class="btn btn-sm sf-tab" data-tab="fragments" onclick="window._sfTab('fragments')">Soul Fragments</button>
-    <button class="btn btn-sm sf-tab" data-tab="resonance" onclick="window._sfTab('resonance')">Resonance</button>
-    <button class="btn btn-sm sf-tab" data-tab="legacy" onclick="window._sfTab('legacy')">Legacy Chain</button>
-    <button class="btn btn-sm sf-tab" data-tab="milestones" onclick="window._sfTab('milestones')">Milestones</button>
-  </div>
-
-  <!-- Overview Tab -->
-  <div class="sf-panel" id="sf-overview">
-    <div class="rebirth-lottery" id="rebirth-lottery">
-      <div class="lottery-card"><div class="lbl">Lives Lived</div><div class="val" id="rb-lives">0</div></div>
-      <div class="lottery-card"><div class="lbl">Soul Fragments</div><div class="val" id="rb-fragments">0</div></div>
-      <div class="lottery-card"><div class="lbl">Resonance Power</div><div class="val" id="rb-resonance">0%</div></div>
-      <div class="lottery-card"><div class="lbl">EDEN Earned</div><div class="val" id="rb-eden" style="color:#a855f7;">0</div></div>
-      <div class="lottery-card"><div class="lbl">Legacy Length</div><div class="val" id="rb-legacy-len">0</div></div>
-    </div>
-    <div id="rb-lifetime-stats" style="margin:12px 0;padding:12px;background:rgba(68,170,255,0.05);border:1px solid rgba(68,170,255,0.2);border-radius:6px;text-align:center;font-size:0.8rem;color:#aabbcc;"></div>
-  </div>
-
-  <!-- Fragments Tab -->
-  <div class="sf-panel" id="sf-fragments" style="display:none;">
-    <div id="sf-fragment-gallery" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-height:300px;overflow-y:auto;padding:8px;"></div>
-    <p style="color:var(--muted);font-size:0.75rem;margin-top:8px;text-align:center;">Each fragment is an echo of a past life. Select two compatible fragments to fuse for Resonance.</p>
-  </div>
-
-  <!-- Resonance Tab -->
-  <div class="sf-panel" id="sf-resonance" style="display:none;">
-    <div style="text-align:center;margin-bottom:12px;">
-      <p style="color:var(--gold);font-size:0.9rem;">Permanent Bonuses from Fragment Fusion</p>
-    </div>
-    <div id="sf-resonance-bars" style="max-width:400px;margin:0 auto;"></div>
-    <div id="sf-fuse-area" style="margin-top:16px;text-align:center;">
-      <p style="color:var(--muted);font-size:0.8rem;">Select 2 compatible fragments from the Fragments tab, then fuse here.</p>
-      <div id="sf-fuse-slots" style="display:flex;gap:16px;justify-content:center;margin:12px 0;">
-        <div class="sf-fuse-slot" id="sf-slot-a" onclick="window._sfClearSlot('a')" style="width:80px;height:80px;border:1px dashed rgba(168,85,247,0.4);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.7rem;cursor:pointer;">Slot A</div>
-        <div style="display:flex;align-items:center;color:var(--gold);font-size:1.5rem;">+</div>
-        <div class="sf-fuse-slot" id="sf-slot-b" onclick="window._sfClearSlot('b')" style="width:80px;height:80px;border:1px dashed rgba(168,85,247,0.4);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.7rem;cursor:pointer;">Slot B</div>
-      </div>
-      <button class="btn" id="btn-fuse-fragments" onclick="window._sfFuse()" style="border-color:#a855f7;color:#a855f7;">&#9733; Fuse Fragments</button>
-    </div>
-  </div>
-
-  <!-- Legacy Chain Tab -->
-  <div class="sf-panel" id="sf-legacy" style="display:none;">
-    <div id="sf-legacy-chain" style="max-height:300px;overflow-y:auto;padding:4px;"></div>
-  </div>
-
-  <!-- Milestones Tab -->
-  <div class="sf-panel" id="sf-milestones" style="display:none;">
-    <div id="sf-milestone-list" style="max-width:500px;margin:0 auto;"></div>
-  </div>
-
-  <p style="color:var(--muted);font-size:0.85rem;margin:1.5rem 0 0.5rem;">Your soul's resonance determines the quality of your next vessel.</p>
-  <div class="btn-row">
-    <button class="btn" id="btn-embrace-rebirth" style="border-color:var(--danger);color:var(--danger);">&#9760; Shatter Soul &amp; Rebirth</button>
-    <button class="btn" id="btn-mint-fragment" style="border-color:#a855f7;color:#a855f7;">&#9830; Mint Last Fragment as NFT</button>
-    <button class="btn" id="btn-rebirth-back">&larr; Return to Bridge</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  MARKET SCREEN (EVE-style)                   -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-market">
-  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1rem;">&#9878; Galactic Market</h2>
-  <div style="display:flex;gap:8px;margin-bottom:16px;">
-    <button class="btn btn-sm" id="market-tab-buy" onclick="window._marketTab('buy')">Buy Orders</button>
-    <button class="btn btn-sm" id="market-tab-sell" onclick="window._marketTab('sell')">Sell Orders</button>
-    <button class="btn btn-sm" id="market-tab-history" onclick="window._marketTab('history')">History</button>
-    <button class="btn btn-sm" id="market-tab-place" onclick="window._marketTab('place')">Place Order</button>
-  </div>
-  <div id="market-content" style="width:100%;max-width:900px;"></div>
-  <div class="btn-row" style="margin-top:1.5rem;"><button class="btn" id="btn-market-back">&larr; Back</button></div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  GAME CANVASES                               -->
-<!-- ════════════════════════════════════════════ -->
-<canvas id="game-canvas"></canvas>
-<canvas id="hud-canvas"></canvas>
-<div id="lock-prompt"><span>Click to resume control</span></div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  ACTION BUTTONS (Gunner Mode HUD)            -->
-<!-- ════════════════════════════════════════════ -->
-<div id="action-bar">
-  <button class="action-btn" id="act-mine" data-action="mine"><span class="act-icon">&#9874;</span><span class="act-label">Mine</span><span class="act-key">M</span></button>
-  <button class="action-btn" id="act-chat" data-action="chat"><span class="act-icon">&#9733;</span><span class="act-label">AI Chat</span><span class="act-key">T</span></button>
-  <button class="action-btn" id="act-skins" data-action="skins"><span class="act-icon">&#9998;</span><span class="act-label">Skins</span><span class="act-key">K</span></button>
-  <button class="action-btn" id="act-gate" data-action="gate"><span class="act-icon">&#10026;</span><span class="act-label">Gate</span><span class="act-key">G</span></button>
-  <button class="action-btn" id="act-collect" data-action="collect"><span class="act-icon">&#10024;</span><span class="act-label">Collect</span><span class="act-key">C</span></button>
-  <button class="action-btn" id="act-reload" data-action="reload"><span class="act-icon">&#8635;</span><span class="act-label">Reload</span><span class="act-key">R</span></button>
-  <button class="action-btn" id="act-warp" data-action="warp"><span class="act-icon">&#9889;</span><span class="act-label">Warp</span><span class="act-key">F</span></button>
-  <button class="action-btn" id="act-dock" data-action="dock"><span class="act-icon">&#9875;</span><span class="act-label">Dock</span><span class="act-key">B</span></button>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  MOBILE TOUCH CONTROLS                       -->
-<!-- ════════════════════════════════════════════ -->
-<div id="mobile-controls">
-  <div id="touch-move-zone"><div id="touch-stick"></div></div>
-  <div id="touch-fire">FIRE</div>
-  <div id="touch-reload">R</div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  CHATBOT PANEL                               -->
-<!-- ════════════════════════════════════════════ -->
-<div id="chatbot-panel">
-  <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-    <span style="color:var(--blue);font-size:0.8rem;font-weight:600;">&#9733; EDEN AI</span>
-    <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;" onclick="document.getElementById('chatbot-panel').classList.remove('open')">&times;</button>
-  </div>
-  <div id="chatbot-messages"></div>
-  <div class="chat-toggles">
-    <button class="chat-toggle" id="btn-auto-target" onclick="window._toggleAutoTarget()">Auto-Target</button>
-    <button class="chat-toggle" id="btn-auto-mine" onclick="window._toggleAutoMine()">Auto-Mine</button>
-  </div>
-  <div id="chatbot-input-row">
-    <input id="chatbot-input" type="text" placeholder="Ask EDEN AI..." autocomplete="off"/>
-    <button id="chatbot-send" onclick="window._chatSend()">&#9654;</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  SKIN PANEL                                  -->
-<!-- ════════════════════════════════════════════ -->
-<div id="skin-panel">
-  <div class="panel-title">Ship Skin</div>
-  <canvas id="skin-preview-canvas" class="skin-preview" width="260" height="80"></canvas>
-  <div style="margin-bottom:8px;">
-    <button class="btn btn-sm" id="btn-random-skin" onclick="window._randomSkin()" style="width:100%;">&#127922; Random Skin</button>
-  </div>
-  <div class="panel-title" style="margin-top:8px;">Manual Colors</div>
-  <div class="skin-row" id="skin-swatches"></div>
-  <div style="margin-top:8px;display:flex;gap:6px;">
-    <label style="font-size:0.75rem;color:var(--muted);">Primary</label>
-    <input type="color" id="skin-primary" value="#334455" style="width:40px;height:24px;border:none;cursor:pointer;">
-    <label style="font-size:0.75rem;color:var(--muted);">Accent</label>
-    <input type="color" id="skin-accent" value="#44aaff" style="width:40px;height:24px;border:none;cursor:pointer;">
-    <button class="btn btn-sm" onclick="window._applySkinManual()" style="padding:2px 8px;font-size:0.7rem;">Apply</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  NAV BAR                                     -->
-<!-- ════════════════════════════════════════════ -->
-<div id="nav-bar">
-  <button class="nav-btn" data-screen="bridge"><span class="nav-icon">&#9678;</span>Bridge</button>
-  <button class="nav-btn" data-screen="gunner"><span class="nav-icon">&#9876;</span>Gunner</button>
-  <button class="nav-btn" data-screen="starmap"><span class="nav-icon">&#9733;</span>Star Map</button>
-  <button class="nav-btn" data-screen="station"><span class="nav-icon">&#9968;</span>Station</button>
-  <button class="nav-btn" data-screen="market"><span class="nav-icon">&#9878;</span>Market</button>
-  <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
-  <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
-  <button class="nav-btn" data-screen="settings"><span class="nav-icon">&#9881;</span>Settings</button>
-</div>
-
-<div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
-<div class="version-label">Old Eden v0.1.0-alpha &bull; Free-to-Play</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  THREE.JS + GAME CODE                        -->
-<!-- ════════════════════════════════════════════ -->
-<script>
-// Global error catcher — shows JS errors on screen for debugging
-window.onerror = function(msg, src, line, col, err) {
-  var d = document.createElement('div');
-  d.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:12px;background:red;color:white;font-size:14px;z-index:99999;font-family:monospace;white-space:pre-wrap;';
-  d.textContent = 'JS ERROR: ' + msg + '\nSource: ' + src + ':' + line + ':' + col;
-  document.body.appendChild(d);
-};
-window.addEventListener('unhandledrejection', function(e) {
-  var d = document.createElement('div');
-  d.style.cssText = 'position:fixed;top:40px;left:0;right:0;padding:12px;background:darkred;color:white;font-size:14px;z-index:99999;font-family:monospace;white-space:pre-wrap;';
-  d.textContent = 'UNHANDLED PROMISE: ' + (e.reason && e.reason.message || e.reason || 'unknown');
-  document.body.appendChild(d);
-});
-</script>
-<script type="importmap">
-{"imports":{
-  "three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
-  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
-}}
-</script>
-
-<script type="module">
+﻿
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -788,13 +113,6 @@ const state = {
     stellarMarks: 0,
     rebirths: 0,
     age: 0,
-    // ── Soul Fracture System ──
-    soulFragments: [],       // Array of { id, rebirthNum, kills, score, bestStreak, credits, faction, genome, bossKills, deathCause, lifespan, resonanceAffinity, powerLevel, timestamp }
-    legacyChain: [],         // Array of { rebirthNum, fragmentId, resonanceBonus } - permanent history
-    resonanceBonuses: { dmg: 0, shield: 0, speed: 0, luck: 0 }, // Permanent bonuses from combining fragments
-    lifetimeStats: { totalKills: 0, totalScore: 0, totalDeaths: 0, totalCredits: 0, bossKills: 0, peakStreak: 0 },
-    milestonesClaimed: [],   // Array of claimed milestone IDs
-    edenTokens: 0,           // EDEN tokens earned
   },
   ship: { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 },
   location: { systemIndex: 0, docked: false },
@@ -813,14 +131,6 @@ const state = {
     spaceDust: [],
     lastAutoSave: 0,
     deathStats: null,
-  },
-  // EVE Online-style ship flight
-  flight: {
-    thrust: 0, strafe: 0, vertical: 0,
-    velocity: { x: 0, y: 0, z: 0 },
-    speed: 0, maxSpeed: 60, accel: 40, drag: 0.92,
-    warpSpeed: 300, warping: false, warpTarget: null,
-    afterburner: false, afterburnerMult: 2.5,
   },
   starSystems: [],
   selectedSystem: null,
@@ -846,20 +156,20 @@ const state = {
   commsLog: [],
   gameTime: 0,
   lastEnemySpawn: 0,
-  // ── Alt Universe / Stargate ──
+  // â”€â”€ Alt Universe / Stargate â”€â”€
   altUniverse: null,        // { systems:[], artifacts:[], artifactsCollected:0, artifactsNeeded:3, returnPortal:null }
   inAltUniverse: false,
-  // ── Mining ──
+  // â”€â”€ Mining â”€â”€
   mining: { active: false, target: null, progress: 0, laserBeam: null },
-  // ── NPC ships ──
+  // â”€â”€ NPC ships â”€â”€
   npcShips: [],
-  // ── Market ──
+  // â”€â”€ Market â”€â”€
   market: { orders: [], history: [] },
-  // ── AI Chatbot ──
+  // â”€â”€ AI Chatbot â”€â”€
   chatbot: { visible: false, messages: [], autoTarget: false, autoMine: false },
-  // ── Skins ──
+  // â”€â”€ Skins â”€â”€
   currentSkin: null,
-  // ── GLB loaded models cache ──
+  // â”€â”€ GLB loaded models cache â”€â”€
   loadedModels: {},
 };
 
@@ -963,22 +273,15 @@ async function connectSocket() {
         });
         // Rebirth result
         s.on('rebirth:result', (data) => {
-          // Soul Fragment was already created in the click handler
           state.player.genome = data.genome;
           state.player.rebirths++;
           state.player.credits = data.wallet.ec;
           state.player.stellarMarks = data.wallet.sm;
-          state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+          state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1;
           state.ship = { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 };
           state.inventory = [];
           state.quests = state.quests.filter(q => !q.active);
-          // Apply resonance bonuses to new life
-          const r = state.player.resonanceBonuses;
-          if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
-          if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
-          if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
-          addComms('AI Director', 'You have been reborn. Your soul echoes with resonance.');
-          checkAndClaimMilestones();
+          addComms('AI Director', 'You have been reborn. A new life awaits.');
           saveGame();
           showScreen('bridge');
         });
@@ -1009,13 +312,6 @@ function loadFromServerData(data) {
   if (data.quests) state.quests = data.quests;
   if (data.upgrades) Object.assign(state.upgrades, data.upgrades);
   if (data.settings) Object.assign(state.settings, data.settings);
-  // Soul Fracture migration for old saves
-  if (!state.player.soulFragments) state.player.soulFragments = [];
-  if (!state.player.legacyChain) state.player.legacyChain = [];
-  if (!state.player.resonanceBonuses) state.player.resonanceBonuses = { dmg: 0, shield: 0, speed: 0, luck: 0 };
-  if (!state.player.lifetimeStats) state.player.lifetimeStats = { totalKills: 0, totalScore: 0, totalDeaths: 0, totalCredits: 0, bossKills: 0, peakStreak: 0 };
-  if (!state.player.milestonesClaimed) state.player.milestonesClaimed = [];
-  if (state.player.edenTokens === undefined) state.player.edenTokens = 0;
   applyUpgrades();
 }
 
@@ -1065,7 +361,7 @@ function showScreen(name) {
 }
 
 // ================================================================
-//  TITLE SCREEN — animated stars
+//  TITLE SCREEN â€” animated stars
 // ================================================================
 (function initTitleStars() {
   const container = document.getElementById('title-stars');
@@ -1318,7 +614,7 @@ function generateStarSystems() {
       hasStation: i % 3 === 0,
     });
   }
-  // Build jump routes — connect nearby systems
+  // Build jump routes â€” connect nearby systems
   systems.forEach((s, i) => {
     s.connections = [];
     systems.forEach((t, j) => {
@@ -1520,7 +816,7 @@ function jumpToSystem(idx) {
   const sys = state.starSystems[idx];
   // Report visit to server for quest progress
   if (state.socket) state.socket.emit('system:visit', { systemId: sys.id });
-  addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
+  addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected â€” docking available.' : 'No stations in range.'}`);
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
   }
@@ -1730,297 +1026,43 @@ function renderCharSheet() {
     <div class="stat-row" style="font-size:0.8rem;">Faction <span style="color:${faction?.color || '#888'}">${faction?.name || 'None'}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Age <span style="color:var(--muted)">${state.player.age} years</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Rebirths <span style="color:var(--muted)">${state.player.rebirths}</span></div>
-    <div class="stat-row" style="font-size:0.8rem;">Soul Fragments <span style="color:#a855f7">${state.player.soulFragments.length}</span></div>
-    <div class="stat-row" style="font-size:0.8rem;">EDEN Tokens <span style="color:#a855f7">${state.player.edenTokens}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Credits <span style="color:var(--gold)">${state.player.credits.toLocaleString()} EC</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Kills <span style="color:var(--danger)">${state.combat.kills}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Score <span style="color:var(--gold)">${state.combat.score.toLocaleString()}</span></div>`;
 }
 
 // ================================================================
-//  SOUL FRACTURE REBIRTH SYSTEM
+//  REBIRTH SCREEN
 // ================================================================
-
-// Milestones — EDEN token rewards for lifetime achievements
-const SOUL_MILESTONES = [
-  { id: 'first_kill',     name: 'First Blood',          desc: 'Get your first kill',                  check: s => s.totalKills >= 1,    reward: 10,   icon: '⚔' },
-  { id: 'kills_100',      name: 'Centurion',             desc: 'Reach 100 lifetime kills',             check: s => s.totalKills >= 100,  reward: 50,   icon: '🗡' },
-  { id: 'kills_1000',     name: 'Warmaster',             desc: 'Reach 1,000 lifetime kills',           check: s => s.totalKills >= 1000, reward: 200,  icon: '☠' },
-  { id: 'score_10k',      name: 'Rising Star',           desc: 'Accumulate 10,000 lifetime score',     check: s => s.totalScore >= 10000, reward: 30,  icon: '★' },
-  { id: 'score_100k',     name: 'Legend',                desc: 'Accumulate 100,000 lifetime score',    check: s => s.totalScore >= 100000, reward: 150, icon: '✦' },
-  { id: 'boss_1',         name: 'Giant Slayer',          desc: 'Defeat your first boss',               check: s => s.bossKills >= 1,     reward: 75,   icon: '👑' },
-  { id: 'boss_10',        name: 'Boss Hunter',           desc: 'Defeat 10 bosses',                     check: s => s.bossKills >= 10,    reward: 300,  icon: '🏆' },
-  { id: 'deaths_10',      name: 'Soul Veteran',          desc: 'Die 10 times (experience is wisdom)',  check: s => s.totalDeaths >= 10,  reward: 25,   icon: '💀' },
-  { id: 'streak_25',      name: 'Unstoppable',           desc: 'Achieve a 25 kill streak',             check: s => s.peakStreak >= 25,   reward: 100,  icon: '🔥' },
-  { id: 'rebirths_5',     name: 'Phoenix',               desc: 'Complete 5 rebirths',                  check: s => s.totalDeaths >= 5,   reward: 60,   icon: '🐦' },
-  { id: 'fragments_10',   name: 'Soul Collector',        desc: 'Collect 10 soul fragments',            check: (s, p) => p.soulFragments.length >= 10, reward: 80, icon: '💎' },
-  { id: 'resonance_50',   name: 'Resonant Being',        desc: 'Reach 50% total resonance',            check: (s, p) => { const r = p.resonanceBonuses; return (r.dmg + r.shield + r.speed + r.luck) >= 50; }, reward: 200, icon: '✧' },
-  { id: 'credits_100k',   name: 'Space Tycoon',          desc: 'Earn 100,000 lifetime credits',        check: s => s.totalCredits >= 100000, reward: 120, icon: '💰' },
-];
-
-// Resonance affinity types
-const RESONANCE_TYPES = ['combat', 'defense', 'speed', 'fortune'];
-
-function createSoulFragment() {
-  const c = state.combat;
-  const p = state.player;
-  const affinity = RESONANCE_TYPES[Math.floor(Math.random() * RESONANCE_TYPES.length)];
-  const powerLevel = Math.floor((c.kills * 2) + (c.score / 100) + (c.bestStreak * 5));
-  const fragment = {
-    id: 'SF-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(),
-    rebirthNum: p.rebirths + 1,
-    kills: c.kills,
-    score: c.score,
-    bestStreak: c.bestStreak,
-    credits: p.credits,
-    faction: p.faction,
-    genome: p.genome ? Array.from(p.genome.slice(0, 8)) : [],
-    bossKills: c.enemies.filter(e => e.boss && e.hp <= 0).length,
-    deathCause: c.dead ? 'combat' : 'rebirth',
-    lifespan: Math.floor(state.gameTime),
-    resonanceAffinity: affinity,
-    powerLevel: powerLevel,
-    timestamp: Date.now(),
-  };
-  p.soulFragments.push(fragment);
-  // Update lifetime stats
-  p.lifetimeStats.totalKills += c.kills;
-  p.lifetimeStats.totalScore += c.score;
-  p.lifetimeStats.totalDeaths++;
-  p.lifetimeStats.totalCredits += p.credits;
-  p.lifetimeStats.peakStreak = Math.max(p.lifetimeStats.peakStreak, c.bestStreak);
-  // Add to legacy chain
-  p.legacyChain.push({
-    rebirthNum: p.rebirths + 1,
-    fragmentId: fragment.id,
-    kills: c.kills,
-    score: c.score,
-    faction: p.faction,
-    timestamp: Date.now(),
-  });
-  return fragment;
-}
-
-function computeResonanceBonus(fragA, fragB) {
-  // Compatible = same affinity. Bonus scales with combined power.
-  const compatible = fragA.resonanceAffinity === fragB.resonanceAffinity;
-  const combinedPower = fragA.powerLevel + fragB.powerLevel;
-  const basePct = compatible ? 5 : 2; // 5% for same affinity, 2% for cross
-  const bonus = Math.min(basePct + Math.floor(combinedPower / 500), 15); // Cap at 15% per fuse
-  const affinityMap = { combat: 'dmg', defense: 'shield', speed: 'speed', fortune: 'luck' };
-  const stat = affinityMap[fragA.resonanceAffinity] || 'dmg';
-  return { stat, bonus, compatible };
-}
-
-function fuseFragments(idxA, idxB) {
-  const p = state.player;
-  if (idxA === idxB || !p.soulFragments[idxA] || !p.soulFragments[idxB]) return null;
-  const fragA = p.soulFragments[idxA];
-  const fragB = p.soulFragments[idxB];
-  const result = computeResonanceBonus(fragA, fragB);
-  // Apply permanent bonus (capped at 50 per stat)
-  p.resonanceBonuses[result.stat] = Math.min(50, p.resonanceBonuses[result.stat] + result.bonus);
-  // Remove consumed fragments (higher index first to avoid shift)
-  const toRemove = [idxA, idxB].sort((a, b) => b - a);
-  toRemove.forEach(i => p.soulFragments.splice(i, 1));
-  AudioSFX.play('quest_complete');
-  addComms('Soul Fracture', `Fused fragments! +${result.bonus}% ${result.stat} (${result.compatible ? 'perfect resonance!' : 'partial resonance'})`);
-  saveGame();
-  return result;
-}
-
-function checkAndClaimMilestones() {
-  const p = state.player;
-  const s = p.lifetimeStats;
-  let claimed = 0;
-  SOUL_MILESTONES.forEach(m => {
-    if (p.milestonesClaimed.includes(m.id)) return;
-    if (m.check(s, p)) {
-      p.milestonesClaimed.push(m.id);
-      p.edenTokens += m.reward;
-      claimed++;
-      addComms('EDEN Tokens', `Milestone "${m.name}" claimed! +${m.reward} EDEN`);
-    }
-  });
-  if (claimed > 0) {
-    AudioSFX.play('quest_complete');
-    saveGame();
-  }
-  return claimed;
-}
-
-// Tab switching
-window._sfTab = (tab) => {
-  document.querySelectorAll('.sf-panel').forEach(p => p.style.display = 'none');
-  document.querySelectorAll('.sf-tab').forEach(t => t.classList.remove('active'));
-  const panel = document.getElementById('sf-' + tab);
-  if (panel) panel.style.display = '';
-  document.querySelector(`.sf-tab[data-tab="${tab}"]`)?.classList.add('active');
-  if (tab === 'fragments') renderFragmentGallery();
-  if (tab === 'resonance') renderResonancePanel();
-  if (tab === 'legacy') renderLegacyChain();
-  if (tab === 'milestones') renderMilestoneList();
-};
-
-let sfSelectedSlots = { a: null, b: null };
-
-function renderFragmentGallery() {
-  const gallery = document.getElementById('sf-fragment-gallery');
-  const frags = state.player.soulFragments;
-  if (frags.length === 0) {
-    gallery.innerHTML = '<p style="color:var(--muted);text-align:center;width:100%;">No fragments yet. Die or rebirth to create your first soul fragment.</p>';
-    return;
-  }
-  gallery.innerHTML = frags.map((f, i) => {
-    const affinityColors = { combat: '#ef4444', defense: '#3b82f6', speed: '#22c55e', fortune: '#eab308' };
-    const col = affinityColors[f.resonanceAffinity] || '#a855f7';
-    const selected = (sfSelectedSlots.a === i || sfSelectedSlots.b === i) ? ' selected' : '';
-    return `<div class="sf-fragment-card${selected}" onclick="window._sfSelectFrag(${i})" style="border-color:${selected ? col : 'var(--border)'}">
-      <div class="frag-id">${f.id}</div>
-      <div class="frag-power" style="color:${col}">${f.powerLevel}</div>
-      <div style="font-size:0.7rem;color:${col};text-transform:uppercase;">${f.resonanceAffinity}</div>
-      <div class="frag-stats">K:${f.kills} S:${f.score} ☆${f.bestStreak}</div>
-      <div class="frag-stats">Life #${f.rebirthNum}</div>
-    </div>`;
-  }).join('');
-}
-
-window._sfSelectFrag = (idx) => {
-  if (sfSelectedSlots.a === null) sfSelectedSlots.a = idx;
-  else if (sfSelectedSlots.b === null && sfSelectedSlots.a !== idx) sfSelectedSlots.b = idx;
-  else { sfSelectedSlots = { a: idx, b: null }; }
-  renderFragmentGallery();
-  updateFuseSlots();
-};
-
-window._sfClearSlot = (slot) => {
-  sfSelectedSlots[slot] = null;
-  renderFragmentGallery();
-  updateFuseSlots();
-};
-
-function updateFuseSlots() {
-  const slotA = document.getElementById('sf-slot-a');
-  const slotB = document.getElementById('sf-slot-b');
-  const frags = state.player.soulFragments;
-  if (sfSelectedSlots.a !== null && frags[sfSelectedSlots.a]) {
-    const f = frags[sfSelectedSlots.a];
-    slotA.innerHTML = `<div style="font-size:0.7rem;color:#a855f7;">${f.id.slice(0,8)}<br>⚡${f.powerLevel}</div>`;
-  } else { slotA.innerHTML = 'Slot A'; }
-  if (sfSelectedSlots.b !== null && frags[sfSelectedSlots.b]) {
-    const f = frags[sfSelectedSlots.b];
-    slotB.innerHTML = `<div style="font-size:0.7rem;color:#a855f7;">${f.id.slice(0,8)}<br>⚡${f.powerLevel}</div>`;
-  } else { slotB.innerHTML = 'Slot B'; }
-}
-
-window._sfFuse = () => {
-  if (sfSelectedSlots.a === null || sfSelectedSlots.b === null) {
-    addComms('Soul Fracture', 'Select 2 fragments first.');
-    return;
-  }
-  const result = fuseFragments(sfSelectedSlots.a, sfSelectedSlots.b);
-  if (result) {
-    sfSelectedSlots = { a: null, b: null };
-    renderFragmentGallery();
-    renderResonancePanel();
-    updateFuseSlots();
-    updateRebirthScreen();
-  }
-};
-
-function renderResonancePanel() {
-  const bars = document.getElementById('sf-resonance-bars');
-  const r = state.player.resonanceBonuses;
-  const items = [
-    { label: 'Damage', key: 'dmg', color: '#ef4444' },
-    { label: 'Shield', key: 'shield', color: '#3b82f6' },
-    { label: 'Speed', key: 'speed', color: '#22c55e' },
-    { label: 'Luck', key: 'luck', color: '#eab308' },
-  ];
-  bars.innerHTML = items.map(it => `<div class="sf-bar-row">
-    <div class="sf-bar-label">${it.label}</div>
-    <div class="sf-bar-track"><div class="sf-bar-fill" style="width:${r[it.key] * 2}%;background:${it.color};"></div></div>
-    <div class="sf-bar-val">+${r[it.key]}%</div>
-  </div>`).join('');
-}
-
-function renderLegacyChain() {
-  const container = document.getElementById('sf-legacy-chain');
-  const chain = state.player.legacyChain;
-  if (chain.length === 0) {
-    container.innerHTML = '<p style="color:var(--muted);text-align:center;">Your Legacy Chain is empty. Each rebirth adds a link.</p>';
-    return;
-  }
-  container.innerHTML = chain.slice().reverse().map(l => {
-    const age = Math.floor((Date.now() - l.timestamp) / 60000);
-    const ageStr = age < 60 ? `${age}m ago` : age < 1440 ? `${Math.floor(age/60)}h ago` : `${Math.floor(age/1440)}d ago`;
-    return `<div class="sf-legacy-node">
-      <div class="ln-num">#${l.rebirthNum}</div>
-      <div class="ln-info">
-        <div style="color:#ddd;">K:${l.kills} S:${l.score.toLocaleString()} ${l.faction ? '(' + l.faction + ')' : ''}</div>
-        <div style="color:var(--muted);font-size:0.65rem;">${l.fragmentId} · ${ageStr}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderMilestoneList() {
-  const container = document.getElementById('sf-milestone-list');
-  const p = state.player;
-  const s = p.lifetimeStats;
-  container.innerHTML = SOUL_MILESTONES.map(m => {
-    const claimed = p.milestonesClaimed.includes(m.id);
-    const available = !claimed && m.check(s, p);
-    const cls = claimed ? 'claimed' : available ? 'available' : '';
-    return `<div class="sf-milestone ${cls}">
-      <div class="ms-icon">${m.icon}</div>
-      <div class="ms-info">
-        <div class="ms-name">${m.name}${claimed ? ' ✓' : ''}</div>
-        <div class="ms-desc">${m.desc}</div>
-      </div>
-      <div class="ms-reward">${claimed ? '✓' : ''} ${m.reward} EDEN</div>
-      ${available ? `<button class="btn btn-sm" onclick="window._claimMilestone('${m.id}')" style="padding:2px 8px;border-color:var(--gold);color:var(--gold);">Claim</button>` : ''}
-    </div>`;
-  }).join('');
-}
-
-window._claimMilestone = (id) => {
-  const m = SOUL_MILESTONES.find(m => m.id === id);
-  if (!m || state.player.milestonesClaimed.includes(id)) return;
-  if (m.check(state.player.lifetimeStats, state.player)) {
-    state.player.milestonesClaimed.push(id);
-    state.player.edenTokens += m.reward;
-    AudioSFX.play('quest_complete');
-    addComms('EDEN Tokens', `Claimed "${m.name}"! +${m.reward} EDEN`);
-    showToast(`+${m.reward} EDEN Tokens!`);
-    renderMilestoneList();
-    updateRebirthScreen();
-    saveGame();
-  }
-};
-
 function updateRebirthScreen() {
-  const p = state.player;
-  const c = state.combat;
-  // Overview stats
-  document.getElementById('rb-lives').textContent = p.rebirths;
-  document.getElementById('rb-fragments').textContent = p.soulFragments.length;
-  const totalRes = p.resonanceBonuses.dmg + p.resonanceBonuses.shield + p.resonanceBonuses.speed + p.resonanceBonuses.luck;
-  document.getElementById('rb-resonance').textContent = totalRes + '%';
-  document.getElementById('rb-eden').textContent = p.edenTokens.toLocaleString();
-  document.getElementById('rb-legacy-len').textContent = p.legacyChain.length;
-
-  // Lifetime stats
-  const ls = p.lifetimeStats;
-  document.getElementById('rb-lifetime-stats').innerHTML =
-    `<span style="color:#44aaff;">Total Kills: ${ls.totalKills.toLocaleString()}</span> · ` +
-    `<span style="color:var(--gold);">Total Score: ${ls.totalScore.toLocaleString()}</span> · ` +
-    `<span style="color:#ff6644;">Deaths: ${ls.totalDeaths}</span> · ` +
-    `<span style="color:#22c55e;">Peak Streak: x${ls.peakStreak}</span> · ` +
-    `<span style="color:#eab308;">Credits Earned: ${ls.totalCredits.toLocaleString()} EC</span>`;
-
-  // Check for new milestones (auto-notify)
-  checkAndClaimMilestones();
+  document.getElementById('rb-lives').textContent = state.player.rebirths;
+  document.getElementById('rb-shards').textContent = state.combat.kills * 3; // rough shard estimate
+  document.getElementById('rb-absorbed').textContent = Math.floor(state.combat.score / 100);
+  // Death recap stats
+  if (c.deathStats) {
+    const ds = c.deathStats;
+    let recap = document.getElementById('rb-death-recap');
+    if (!recap) {
+      recap = document.createElement('div');
+      recap.id = 'rb-death-recap';
+      recap.style.cssText = 'margin:12px 0;padding:10px;background:rgba(255,40,40,0.08);border:1px solid rgba(255,60,60,0.3);border-radius:6px;text-align:center;';
+      const rebirthScreen = document.getElementById('screen-rebirth');
+      const btnRow = rebirthScreen.querySelector('.btn-row');
+      rebirthScreen.insertBefore(recap, btnRow);
+    }
+    recap.innerHTML = `<div style="color:#ff6644;font-weight:bold;margin-bottom:8px;">\u2620 KILL RECAP</div>
+      <div style="color:#aabbcc;">Kills: <span style="color:#44aaff;font-weight:bold;">${ds.kills}</span> &nbsp;|&nbsp; Score: <span style="color:#d4a856;font-weight:bold;">${ds.score.toLocaleString()}</span></div>
+      <div style="color:#aabbcc;">Best streak: <span style="color:#ff8800;font-weight:bold;">x${ds.streak}</span> &nbsp;|&nbsp; Credits: <span style="color:#d4a856;font-weight:bold;">${ds.credits.toLocaleString()} EC</span></div>`;
+  }
+  // Genetic drift: how much genome has changed from baseline
+  if (state.player.genome) {
+    const drift = state.player.genome.reduce((sum, g) => sum + Math.abs(g - 128), 0);
+    const driftPct = (drift / (256 * 128) * 100).toFixed(1);
+    document.getElementById('rb-drift').textContent = driftPct + '%';
+  }
+  // Ascension progress: based on score
+  const ascensionPts = Math.min(1000, Math.floor(state.combat.score / 10));
+  document.getElementById('rb-ascension').textContent = `${ascensionPts} / 1000`;
 }
 
 // ================================================================
@@ -2096,7 +1138,7 @@ function loadGame() {
 }
 
 // ================================================================
-//  THREE.JS — 3D VIEWPORT
+//  THREE.JS â€” 3D VIEWPORT
 // ================================================================
 const canvas3d = document.getElementById('game-canvas');
 const hudCanvas = document.getElementById('hud-canvas');
@@ -2140,7 +1182,7 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ── Starfield ────
+// â”€â”€ Starfield â”€â”€â”€â”€
 const starCount = 5000;
 const starGeo = new THREE.BufferGeometry();
 const starPos = new Float32Array(starCount * 3);
@@ -2167,7 +1209,7 @@ for (let i = 0; i < 4; i++) {
   scene.add(neb);
 }
 
-// ── Ship ────
+// â”€â”€ Ship â”€â”€â”€â”€
 ship = new THREE.Group(); ship.name = 'player-ship';
 const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
 const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.3, metalness: 0.6, emissive: 0x44aaff, emissiveIntensity: 0.3 });
@@ -2201,7 +1243,7 @@ const bR2 = new THREE.Mesh(bbGeo, gunMat); bR2.rotation.x=Math.PI/2; bR2.positio
 turretMount = new THREE.Object3D(); turretMount.position.set(0, 1.2, -0.5); ship.add(turretMount);
 scene.add(ship);
 
-// ── Cockpit ────
+// â”€â”€ Cockpit â”€â”€â”€â”€
 cockpit = new THREE.Group(); cockpit.name = 'gunner-cockpit';
 const cpCanopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
 const cpCanopy = new THREE.Mesh(new THREE.SphereGeometry(3.0,32,24,0,Math.PI*2,0,Math.PI*0.6), cpCanopyMat);
@@ -2248,16 +1290,7 @@ screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; c
 camera.add(cockpit);
 scene.add(camera);
 
-threeReady = true;
-} catch(err) {
-  console.error('[Old Eden] 3D engine failed to initialise:', err);
-  const errBanner = document.createElement('div');
-  errBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#cc0000;color:#fff;font:13px monospace;z-index:99999;';
-  errBanner.textContent = '3D engine error: ' + err.message + ' — game menus still work';
-  document.body.appendChild(errBanner);
-}
-
-// ── Engine exhaust particles ────
+// â”€â”€ Engine exhaust particles â”€â”€â”€â”€
 const exhaustParticles = [];
 const exhaustMat = new THREE.PointsMaterial({ color: 0x44aaff, size: 0.3, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
 function spawnExhaust() {
@@ -2277,12 +1310,10 @@ function spawnExhaust() {
 }
 
 // ================================================================
-//  GUNNER MODE — COMBAT
+//  GUNNER MODE â€” COMBAT
 // ================================================================
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
-const CHARGE_TIME = 600, COOLDOWN_TIME = 400, MOUSE_SENS = 0.002;
-// Full 360° turret — no clamp
-const keysDown = new Set();
+const CHARGE_TIME = 600, COOLDOWN_TIME = 400, MOUSE_SENS = 0.002, MAX_PITCH = 1.2, MAX_YAW = 1.5;
 
 function enterGunnerMode() {
   c.active = true;
@@ -2290,22 +1321,15 @@ function enterGunnerMode() {
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   canvas3d.requestPointerLock();
-  // Reset flight
-  state.flight.velocity = { x: 0, y: 0, z: 0 };
-  state.flight.speed = 0;
-  state.flight.thrust = 0; state.flight.strafe = 0; state.flight.vertical = 0;
   spawnAsteroids();
   if (c.spaceDust.length === 0) spawnSpaceDust();
   // Initialize new systems
   createStargate();
   spawnSystemNPCs();
-  spawnStationModel();
-  loadRailgunTurretGLB();
-  spawnShipLibrary();
-  replaceShipWithGLB();
-  addComms('EDEN AI', 'All systems online. WASD fly, Shift boost, Space up, Ctrl down.');
-  addComms('System', 'Gunner mode — Mouse aim (360°), Click fire, R reload, ESC exit');
-  addComms('System', 'P = autopilot | T = chatbot | L = toggle library labels');
+  spawnStationModel(new THREE.Vector3(120, 10, -200));
+  createRailgun3DModel();
+  addComms('EDEN AI', 'All systems online. Press T for chatbot, M to mine, G for stargate, K for skins.');
+  addComms('System', 'Gunner mode activated â€” Mouse aim, Click fire, R reload, ESC exit');
 }
 
 function spawnAsteroids() {
@@ -2374,12 +1398,11 @@ function exitGunnerMode() {
   c.spaceDust.forEach(d => scene.remove(d)); c.spaceDust = [];
   c.dmgNumbers = [];
   // Clean up new systems
-  if (state.npcShips) { state.npcShips.forEach(n => scene.remove(n.group)); state.npcShips = []; }
-  if (stargateGroup) { scene.remove(stargateGroup); stargateGroup = null; }
-  if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
-  stationModels.forEach(m => scene.remove(m)); stationModels = [];
-  glbSceneObjects.forEach(o => scene.remove(o)); glbSceneObjects = []; libraryLabels = [];
-  if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
+  if (state.npcShips) { state.npcShips.forEach(n => scene.remove(n.mesh)); state.npcShips = []; }
+  if (c.stargate) { scene.remove(c.stargate); c.stargate = null; }
+  if (c.stargateParticles) { c.stargateParticles.forEach(p => scene.remove(p)); c.stargateParticles = []; }
+  if (c.railgun3D) { scene.remove(c.railgun3D); c.railgun3D = null; }
+  if (c.npcStation) { scene.remove(c.npcStation); c.npcStation = null; }
   stopMining();
   state.mining.active = false;
   state.chatbot.visible = false;
@@ -2428,49 +1451,13 @@ function spawnNail() {
   AudioSFX.play('fire');
   const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
-
-  // Realistic railgun slug — glowing core + plasma trail + spark particles
-  const g = new THREE.Group();
-
-  // Slug core — bright white-blue cylinder
-  const slugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
-  const slug = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6), slugMat);
-  slug.quaternion.copy(camera.quaternion); slug.rotateX(Math.PI/2);
-  g.add(slug);
-
-  // Plasma glow trail — additive blending
-  const trailMat2 = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
-  const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.01, 3, 6), trailMat2);
-  trail.quaternion.copy(camera.quaternion); trail.rotateX(Math.PI/2);
-  g.add(trail);
-
-  // Outer heat glow
-  const heatMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
-  const heat = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6), heatMat);
-  heat.quaternion.copy(camera.quaternion); heat.rotateX(Math.PI/2);
-  g.add(heat);
-
-  // Point light on slug for environment illumination
-  const slugLight = new THREE.PointLight(0x44aaff, 2, 15);
-  g.add(slugLight);
-
-  g.position.copy(origin);
-  scene.add(g);
-  c.projectiles.push({ group: g, dir: dir.clone(), speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat2, heatMat, slugLight });
-
-  // Muzzle flash particles
-  for (let i = 0; i < 6; i++) {
-    const spark = new THREE.Mesh(
-      new THREE.SphereGeometry(0.03 + Math.random() * 0.04, 4, 4),
-      new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 })
-    );
-    const sparkDir = dir.clone().add(new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3));
-    spark.position.copy(origin);
-    scene.add(spark);
-    // Quick spark animation — reuse explosion system
-    const sparkG = new THREE.Group(); sparkG.add(spark); sparkG.position.copy(origin); scene.add(sparkG);
-    c.explosions.push({ group: sparkG, age: 0, maxAge: 150 });
-  }
+  const nail = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.015,0.5,6), new THREE.MeshBasicMaterial({ color: 0xaabbcc }));
+  nail.quaternion.copy(camera.quaternion); nail.rotateX(Math.PI/2); nail.position.copy(origin);
+  const trailMat2 = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.6 });
+  const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,2,4), trailMat2);
+  trail.quaternion.copy(nail.quaternion); trail.position.copy(origin);
+  const g = new THREE.Group(); g.add(nail); g.add(trail); scene.add(g);
+  c.projectiles.push({ group: g, dir: dir.clone(), speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat2 });
 }
 
 function createBossEnemy() {
@@ -2585,20 +1572,6 @@ function renderHUD() {
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('CREDITS', 24, H-60);
   hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(state.player.credits.toLocaleString() + ' EC', 24, H-42);
 
-  // Speed indicator (left side, below shield/hull)
-  const fl = state.flight;
-  const spdPct = fl.speed / (fl.maxSpeed * fl.afterburnerMult * state.upgrades.engineSpeed);
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SPEED', slx, sly+66);
-  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+72, 180, 8);
-  hudCtx.fillStyle = fl.afterburner ? '#ff8800' : '#44aaff';
-  hudCtx.fillRect(slx, sly+72, 180 * Math.min(1, spdPct), 8);
-  hudCtx.fillStyle = '#778899';
-  hudCtx.fillText(Math.floor(fl.speed) + ' m/s' + (fl.afterburner ? ' [AB]' : ''), slx+185, sly+80);
-  // Controls reminder
-  hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.6;
-  hudCtx.fillText('WASD fly | Shift boost | Space/Ctrl vert', slx, sly+98);
-  hudCtx.globalAlpha = 1;
-
   // Minimap radar (bottom-center)
   const mapR = 70, mapCx = cx, mapCy = H - mapR - 20;
   hudCtx.globalAlpha = 0.15; hudCtx.fillStyle = '#003366';
@@ -2708,9 +1681,9 @@ function renderHUD() {
   if (state.npcShips && state.npcShips.length > 0) {
     const mapScale = mapR / (SPAWN_RADIUS + 200);
     state.npcShips.forEach(n => {
-      if (!n.group) return;
-      const dx = n.group.position.x - ship.position.x;
-      const dz = n.group.position.z - ship.position.z;
+      if (!n.mesh) return;
+      const dx = n.mesh.position.x - ship.position.x;
+      const dz = n.mesh.position.z - ship.position.z;
       const mx2 = mapCx + dx * mapScale;
       const my2 = mapCy + dz * mapScale;
       if (Math.abs(mx2 - mapCx) < mapR && Math.abs(my2 - mapCy) < mapR) {
@@ -2721,9 +1694,9 @@ function renderHUD() {
   }
 
   // Stargate indicator on radar
-  if (stargateGroup) {
-    const sgDx = stargateGroup.position.x - ship.position.x;
-    const sgDz = stargateGroup.position.z - ship.position.z;
+  if (c.stargate) {
+    const sgDx = c.stargate.position.x - ship.position.x;
+    const sgDz = c.stargate.position.z - ship.position.z;
     const mapScale2 = mapR / (SPAWN_RADIUS + 200);
     const sgMx = mapCx + sgDx * mapScale2;
     const sgMy = mapCy + sgDz * mapScale2;
@@ -2738,7 +1711,7 @@ function renderHUD() {
   // Alt universe status
   if (state.inAltUniverse) {
     hudCtx.font = 'bold 12px "Segoe UI"'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.003);
-    hudCtx.fillText('\u2726 ALT UNIVERSE — Artifacts: ' + (state.altUniverse ? state.altUniverse.artifactsCollected : 0), cx - 100, 22);
+    hudCtx.fillText('\u2726 ALT UNIVERSE â€” Artifacts: ' + (state.altUniverse ? state.altUniverse.artifactsCollected : 0), cx - 100, 22);
     hudCtx.globalAlpha = 1;
   }
 
@@ -2782,22 +1755,23 @@ document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.
 
 document.addEventListener('mousemove', (e) => {
   if (!c.locked || !c.active) return;
-  // Full 360° turret — no clamping, free rotation
-  c.yaw -= e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5);
-  c.pitch += e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5);
-  // Clamp pitch to prevent flipping (±85°)
-  c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
+  c.yaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, c.yaw - e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5)));
+  c.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, c.pitch + e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5)));
 });
 
-// EVE Online flight: WASD + Space/Ctrl + Shift(boost)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
   if ((e.key === 'r' || e.key === 'R') && c.active) { c.ammo = c.maxAmmo; }
-  keysDown.add(e.key.toLowerCase());
 });
-document.addEventListener('keyup', (e) => {
-  keysDown.delete(e.key.toLowerCase());
-});
+
+threeReady = true;
+} catch(err) {
+  console.error('[Old Eden] 3D engine failed to initialise:', err);
+  const errBanner = document.createElement('div');
+  errBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#cc0000;color:#fff;font:13px monospace;z-index:99999;';
+  errBanner.textContent = '3D engine error: ' + err.message + ' â€” game menus still work';
+  document.body.appendChild(errBanner);
+}
 
 // Nav bar
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2837,45 +1811,22 @@ document.getElementById('btn-undock').addEventListener('click', () => { state.lo
 document.getElementById('btn-char-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-rebirth-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-embrace-rebirth').addEventListener('click', () => {
-  if (!confirm('Shatter your soul and rebirth? A Soul Fragment will be created from this life. Credits, inventory, and quests will be lost.')) return;
-  // Create soul fragment from current life
-  const fragment = createSoulFragment();
-  addComms('Soul Fracture', `Soul Fragment ${fragment.id} created! Power: ${fragment.powerLevel}, Affinity: ${fragment.resonanceAffinity}`);
+  if (!confirm('Embrace rebirth? Your current character will be reborn into a new body. All credits, inventory, and active quests will be lost.')) return;
   if (state.socket) {
-    state.socket.emit('rebirth:perform', { genome: state.player.genome, fragment: fragment });
+    state.socket.emit('rebirth:perform', { genome: state.player.genome });
   } else {
     // Offline rebirth
     state.player.rebirths++;
     state.player.credits = 500;
     state.player.stellarMarks = 0;
-    state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+    state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1;
     state.inventory = [];
     state.quests = state.quests.filter(q => !q.active);
     crypto.getRandomValues(new Uint8Array(256)).forEach((v, i) => { if (state.player.genome) state.player.genome[i] = v; });
-    // Apply resonance bonuses to new life
-    const r = state.player.resonanceBonuses;
-    if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
-    if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
-    if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
-    addComms('AI Director', `You have been reborn. Soul Fragment ${fragment.id} echoes in the void.`);
-    checkAndClaimMilestones();
+    addComms('AI Director', 'You have been reborn. A new life awaits.');
     saveGame();
     showScreen('bridge');
   }
-});
-
-// Mint fragment as NFT (placeholder — requires wallet connection)
-document.getElementById('btn-mint-fragment').addEventListener('click', () => {
-  const frags = state.player.soulFragments;
-  if (frags.length === 0) {
-    addComms('Soul Fracture', 'No fragments to mint. Die or rebirth first.');
-    return;
-  }
-  const latest = frags[frags.length - 1];
-  addComms('Blockchain', `Minting Soul Fragment ${latest.id} as NFT on Polygon...`);
-  // In production, this would call NFTManager.mintSoulFragment(latest)
-  showToast(`NFT mint queued: ${latest.id} (Power: ${latest.powerLevel})`);
-  addComms('Blockchain', `Fragment NFT metadata: Power ${latest.powerLevel}, Affinity: ${latest.resonanceAffinity}, Kills: ${latest.kills}, Score: ${latest.score}`);
 });
 document.getElementById('btn-jump').addEventListener('click', () => {
   if (state.selectedSystem !== null) jumpToSystem(state.selectedSystem);
@@ -2889,37 +1840,27 @@ document.getElementById('starmap-canvas').addEventListener('dblclick', onStarMap
 document.getElementById('btn-market-back').addEventListener('click', () => showScreen('bridge'));
 
 // ================================================================
-//  GLB MODEL LOADER — Asset Registry
+//  GLB MODEL LOADER â€” Asset Registry
 // ================================================================
 const GLB_ASSETS = {
-  cyborg_ship:    { path: '/3d/glb/optimized/cyborg_ship.glb',    role: 'npc',     scale: 0.5 },
-  station_a:      { path: '/3d/glb/optimized/station_a.glb',      role: 'station', scale: 1.0 },
-  station_b:      { path: '/3d/glb/optimized/station_b.glb',      role: 'station', scale: 1.0 },
-  freighter:      { path: '/3d/glb/optimized/freighter.glb',      role: 'npc',     scale: 0.8 },
-  iron_sentinel:  { path: '/3d/glb/optimized/iron_sentinel.glb',  role: 'npc',     scale: 0.8 },
-  evac_pod_a:     { path: '/3d/glb/optimized/evac_pod_a.glb',     role: 'npc',     scale: 0.6 },
-  evac_pod_b:     { path: '/3d/glb/optimized/evac_pod_b.glb',     role: 'npc',     scale: 0.6 },
-  railgun_turret: { path: '/3d/glb/optimized/railgun_turret.glb', role: 'weapon',  scale: 0.3 },
-  railgun_ship:   { path: '/3d/glb/optimized/railgun_ship.glb',   role: 'weapon',  scale: 0.6 },
-  titan_a:          { path: '/3d/glb/optimized/titan_a.glb',          role: 'boss',    scale: 1.2 },
-  titan_b:          { path: '/3d/glb/optimized/titan_b.glb',          role: 'boss',    scale: 1.2 },
-  demon_battleship: { path: '/3d/glb/optimized/demon_battleship.glb', role: 'boss',    scale: 1.0 },
-  alien_battleship: { path: '/3d/glb/optimized/alien_battleship.glb', role: 'enemy',   scale: 0.9 },
-  cargo_shuttle:    { path: '/3d/glb/optimized/cargo_shuttle.glb',    role: 'npc',     scale: 0.7 },
-  shuttle:          { path: '/3d/glb/optimized/shuttle.glb',          role: 'npc',     scale: 0.6 },
-  fighter_alpha:    { path: '/3d/glb/optimized/fighter_alpha.glb',    role: 'enemy',   scale: 0.5 },
-  fighter_beta:     { path: '/3d/glb/optimized/fighter_beta.glb',     role: 'enemy',   scale: 0.5 },
-  blaster_turret:   { path: '/3d/glb/optimized/blaster_turret.glb',   role: 'weapon',  scale: 0.3 },
+  stargate:       { path: '/3d/glb/cyborg_ship.glb',    role: 'portal',  scale: 0.01 },
+  station_a:      { path: '/3d/glb/station_a.glb',      role: 'station', scale: 0.005 },
+  station_b:      { path: '/3d/glb/station_b.glb',      role: 'station', scale: 0.005 },
+  freighter:      { path: '/3d/glb/freighter.glb',      role: 'npc',     scale: 0.008 },
+  iron_sentinel:  { path: '/3d/glb/iron_sentinel.glb',  role: 'npc',     scale: 0.01 },
+  evac_pod_a:     { path: '/3d/glb/evac_pod_a.glb',     role: 'npc',     scale: 0.01 },
+  evac_pod_b:     { path: '/3d/glb/evac_pod_b.glb',     role: 'npc',     scale: 0.01 },
+  railgun_turret: { path: '/3d/glb/railgun_turret.glb', role: 'weapon',  scale: 0.005 },
+  railgun_ship:   { path: '/3d/glb/railgun_ship.glb',   role: 'weapon',  scale: 0.008 },
+  titan_a:        { path: '/3d/glb/titan_a.glb',        role: 'boss',    scale: 0.006 },
+  titan_b:        { path: '/3d/glb/titan_b.glb',        role: 'boss',    scale: 0.006 },
 };
 
-// Set up DRACO decoder for compressed GLBs
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
 const gltfLoader = new GLTFLoader();
-gltfLoader.setDRACOLoader(dracoLoader);
+// Note: DRACOLoader optional â€” these are standard textured GLBs
 const modelLoadQueue = [];
 let modelsLoading = 0;
-const MAX_CONCURRENT_LOADS = 3;
+const MAX_CONCURRENT_LOADS = 2;
 
 function loadGLBModel(key) {
   return new Promise((resolve, reject) => {
@@ -2930,7 +1871,7 @@ function loadGLBModel(key) {
       (gltf) => {
         const model = gltf.scene;
         model.scale.setScalar(asset.scale);
-        // Optimise — reduce draw calls by merging small meshes
+        // Optimise â€” reduce draw calls by merging small meshes
         model.traverse(child => {
           if (child.isMesh) {
             child.frustumCulled = true;
@@ -2948,99 +1889,17 @@ function loadGLBModel(key) {
   });
 }
 
-// ================================================================
-//  SHIP LIBRARY — Lineup display with labels + rotation
-// ================================================================
-let glbSceneObjects = [];  // track placed GLB objects for cleanup
-let libraryLabels = [];    // CSS2D-style label data for HUD rendering
-const LIBRARY_SPACING = 30; // spacing between ships in lineup
-
-// All displayable ship keys (excludes weapons/stations)
-const LIBRARY_SHIPS = [
-  'cyborg_ship', 'freighter', 'iron_sentinel', 'evac_pod_a', 'evac_pod_b',
-  'railgun_ship', 'titan_a', 'titan_b', 'demon_battleship', 'alien_battleship',
-  'cargo_shuttle', 'shuttle', 'fighter_alpha', 'fighter_beta',
-  'station_a', 'station_b', 'blaster_turret', 'railgun_turret',
-];
-
-async function spawnShipLibrary() {
-  // Clean old
-  glbSceneObjects.forEach(o => scene.remove(o));
-  glbSceneObjects = [];
-  libraryLabels = [];
-
-  const startX = ship.position.x + 40;
-  const baseZ = ship.position.z - 20;
-  const baseY = ship.position.y;
-
-  for (let i = 0; i < LIBRARY_SHIPS.length; i++) {
-    const key = LIBRARY_SHIPS[i];
-    try {
-      const model = await loadGLBModel(key);
-      const instance = model.clone();
-      const xPos = startX + (i % 6) * LIBRARY_SPACING;
-      const zPos = baseZ - Math.floor(i / 6) * LIBRARY_SPACING * 1.2;
-      const yPos = baseY;
-      instance.position.set(xPos, yPos, zPos);
-      instance.userData.libraryIndex = i;
-      instance.userData.libraryKey = key;
-      instance.userData.rotSpeed = 0.3 + Math.random() * 0.2; // slow Y rotation
-      scene.add(instance);
-      glbSceneObjects.push(instance);
-      libraryLabels.push({
-        obj: instance,
-        index: i + 1,
-        name: key.replace(/_/g, ' ').toUpperCase(),
-        role: GLB_ASSETS[key].role,
-      });
-    } catch(e) { /* skip failed model */ }
-  }
-  addComms('System', `Ship Library: ${glbSceneObjects.length} models loaded in lineup.`);
-}
-
-// Render library labels above each ship on HUD
-function renderLibraryLabels() {
-  if (!c.active || libraryLabels.length === 0) return;
-  const W = hudCanvas.width, H = hudCanvas.height;
-  for (const lbl of libraryLabels) {
-    if (!lbl.obj || !lbl.obj.parent) continue;
-    // Project 3D position to 2D screen
-    const pos = lbl.obj.position.clone();
-    pos.y += 8; // above model
-    pos.project(camera);
-    if (pos.z > 1) continue; // behind camera
-    const sx = (pos.x * 0.5 + 0.5) * W;
-    const sy = (-pos.y * 0.5 + 0.5) * H;
-    if (sx < 0 || sx > W || sy < 0 || sy > H) continue;
-    // Number badge
-    hudCtx.fillStyle = '#0d1117cc';
-    hudCtx.fillRect(sx - 40, sy - 18, 80, 36);
-    hudCtx.strokeStyle = '#44aaff66';
-    hudCtx.strokeRect(sx - 40, sy - 18, 80, 36);
-    hudCtx.font = 'bold 11px "Segoe UI"';
-    hudCtx.fillStyle = '#ffcc00';
-    hudCtx.textAlign = 'center';
-    hudCtx.fillText(`#${lbl.index}`, sx, sy - 4);
-    hudCtx.font = '9px "Segoe UI"';
-    hudCtx.fillStyle = '#44aaff';
-    hudCtx.fillText(lbl.name, sx, sy + 8);
-    hudCtx.fillStyle = '#667788';
-    hudCtx.fillText(lbl.role, sx, sy + 17);
-  }
-  hudCtx.textAlign = 'left'; // reset
-}
-
-// Rotate library ships slowly on Y axis (called from game loop)
-function updateLibraryRotation(dt) {
-  for (const obj of glbSceneObjects) {
-    if (obj.userData.rotSpeed) {
-      obj.rotation.y += obj.userData.rotSpeed * dt;
-    }
-  }
+// Progressive loader â€” loads models on demand without blocking
+async function preloadCriticalModels() {
+  try {
+    // Load station models first (most visible)
+    await loadGLBModel('station_a');
+    addComms('System', 'Station model loaded.');
+  } catch(e) { /* model loading is optional â€” game works with procedural fallback */ }
 }
 
 // ================================================================
-//  STARGATE PORTAL — Procedural 3D Stargate
+//  STARGATE PORTAL â€” Procedural 3D Stargate
 // ================================================================
 let stargateGroup = null;
 let stargatePortalMat = null;
@@ -3050,13 +1909,13 @@ function createStargate() {
   stargateGroup = new THREE.Group();
   stargateGroup.name = 'stargate';
 
-  // Outer ring — torus
+  // Outer ring â€” torus
   const ringGeo = new THREE.TorusGeometry(18, 2.5, 16, 48);
   const ringMat = new THREE.MeshStandardMaterial({ color: 0x556688, roughness: 0.3, metalness: 0.9, emissive: 0x223344, emissiveIntensity: 0.2 });
   const ring = new THREE.Mesh(ringGeo, ringMat);
   stargateGroup.add(ring);
 
-  // Inner chevrons — 8 glowing markers around the ring
+  // Inner chevrons â€” 8 glowing markers around the ring
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
     const chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
@@ -3067,7 +1926,7 @@ function createStargate() {
     stargateGroup.add(chev);
   }
 
-  // Portal surface — shimmering circle
+  // Portal surface â€” shimmering circle
   stargatePortalMat = new THREE.MeshBasicMaterial({
     color: 0x2244cc, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false,
   });
@@ -3107,7 +1966,7 @@ function animateStargate(time) {
 }
 
 // ================================================================
-//  ALT UNIVERSE — Procedural Generation
+//  ALT UNIVERSE â€” Procedural Generation
 // ================================================================
 function generateAltUniverse() {
   const altSystems = [];
@@ -3152,7 +2011,7 @@ function enterAltUniverse() {
   state._origSystemIndex = state.location.systemIndex;
   state.starSystems = state.altUniverse.systems;
   state.location.systemIndex = 0;
-  addComms('Stargate', '\u26a0 DIMENSIONAL BREACH — You have entered an alternate universe!');
+  addComms('Stargate', '\u26a0 DIMENSIONAL BREACH â€” You have entered an alternate universe!');
   addComms('Stargate', `Collect ${state.altUniverse.artifactsNeeded} artifacts to unlock the return portal.`);
   AudioSFX.play('jump');
   showScreen('bridge');
@@ -3161,7 +2020,7 @@ function enterAltUniverse() {
 function exitAltUniverse() {
   if (!state.inAltUniverse || !state.altUniverse) return;
   if (state.altUniverse.artifactsCollected < state.altUniverse.artifactsNeeded) {
-    addComms('Stargate', `Cannot return — need ${state.altUniverse.artifactsNeeded - state.altUniverse.artifactsCollected} more artifacts.`);
+    addComms('Stargate', `Cannot return â€” need ${state.altUniverse.artifactsNeeded - state.altUniverse.artifactsCollected} more artifacts.`);
     return;
   }
   state.starSystems = state._origSystems;
@@ -3187,7 +2046,7 @@ function collectArtifact() {
   addComms('Discovery', `Artifact collected: ${name} (${state.altUniverse.artifactsCollected}/${state.altUniverse.artifactsNeeded})`);
   AudioSFX.play('quest_complete');
   if (state.altUniverse.artifactsCollected >= state.altUniverse.artifactsNeeded) {
-    addComms('Stargate', '\u2728 RETURN PORTAL ACTIVATED — You may now return to the origin universe!');
+    addComms('Stargate', '\u2728 RETURN PORTAL ACTIVATED â€” You may now return to the origin universe!');
   }
 }
 
@@ -3234,7 +2093,7 @@ function updateMining(dt) {
   }
 
   if (state.mining.progress >= 100) {
-    // Mining complete — yield resources
+    // Mining complete â€” yield resources
     const ores = ['Titanite Ore', 'Iron Fragments', 'Dark Matter Crystals', 'Rare Earth Compounds', 'Platinum Dust'];
     const ore = ores[Math.floor(Math.random() * ores.length)];
     const qty = 1 + Math.floor(Math.random() * 3);
@@ -3261,7 +2120,7 @@ function stopMining() {
 }
 
 // ================================================================
-//  NPC SHIPS — Friendly & Enemy with behaviours
+//  NPC SHIPS â€” Friendly & Enemy with behaviours
 // ================================================================
 const NPC_TYPES = [
   { type: 'trader',    color: 0x22cc66, speed: 8,  hp: 5,  friendly: true,  name: 'Trader' },
@@ -3364,34 +2223,26 @@ function updateNPCShips(dt) {
 }
 
 // ================================================================
-//  NPC STATIONS — Procedural 3D
+//  NPC STATIONS â€” Procedural 3D
 // ================================================================
 let stationModels = [];
 
-async function spawnStationModel() {
+function spawnStationModel() {
   // Remove old station models
   stationModels.forEach(m => scene.remove(m));
   stationModels = [];
   const sys = state.starSystems[state.location.systemIndex];
   if (!sys || !sys.hasStation) return;
-  // Try GLB station model first, procedural fallback
-  const stationKey = Math.random() > 0.5 ? 'station_a' : 'station_b';
-  try {
-    const model = await loadGLBModel(stationKey);
-    const inst = model.clone();
-    inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
-    scene.add(inst);
-    stationModels.push(inst);
-    addComms('System', `${stationKey.replace(/_/g,' ')} deployed.`);
-    return;
-  } catch(e) { /* fallback to procedural */ }
   const g = new THREE.Group();
+  // Central hub
   const hubMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.4, metalness: 0.7 });
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 4, 12), hubMat));
+  // Ring
   const ringMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.3, metalness: 0.8, emissive: 0x223344, emissiveIntensity: 0.1 });
   const torusM = new THREE.Mesh(new THREE.TorusGeometry(12, 1.5, 8, 24), ringMat);
   torusM.rotation.x = Math.PI/2;
   g.add(torusM);
+  // Solar panels
   for (let i = 0; i < 4; i++) {
     const angle = (i/4)*Math.PI*2;
     const panel = new THREE.Mesh(new THREE.BoxGeometry(2, 10, 0.1), new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5}));
@@ -3399,13 +2250,14 @@ async function spawnStationModel() {
     panel.lookAt(0,0,0);
     g.add(panel);
   }
+  // Dock lights
   for (let i = 0; i < 8; i++) {
     const angle = (i/8)*Math.PI*2;
     const light = new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8), new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8}));
     light.position.set(Math.cos(angle)*12, 0, Math.sin(angle)*12);
     g.add(light);
   }
-  g.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+  g.position.set(-60, 10, -80);
   scene.add(g);
   stationModels.push(g);
 }
@@ -3436,7 +2288,7 @@ function generateNPCMarketOrders() {
     // NPC sell orders (player can buy from these)
     const sellCount = 1 + Math.floor(Math.random() * 3);
     for (let i = 0; i < sellCount; i++) {
-      const priceVar = 0.8 + Math.random() * 0.4; // ±20%
+      const priceVar = 0.8 + Math.random() * 0.4; // Â±20%
       state.market.orders.push({
         id: 'npc-s-' + item.name + '-' + i,
         item: item.name,
@@ -3564,12 +2416,12 @@ window._placeOrder = () => {
 };
 
 // ================================================================
-//  AI CHATBOT — EDEN AI (cockpit assistant)
+//  AI CHATBOT â€” EDEN AI (cockpit assistant)
 // ================================================================
 const EDEN_AI_RESPONSES = {
   'help':       'Commands: target, mine, status, market, jump, navigate, artifacts, dock. Toggle Auto-Target or Auto-Mine with the buttons below.',
   'status':     () => `Hull: ${Math.floor(state.ship.hull)}/${state.ship.maxHull} | Shield: ${Math.floor(state.ship.shield)}/${state.ship.maxShield} | Credits: ${state.player.credits} EC | Kills: ${c.kills}`,
-  'target':     () => { if (c.enemies.length === 0) return 'No hostiles detected.'; const nearest = c.enemies.reduce((a,b) => a.group.position.distanceTo(ship.position) < b.group.position.distanceTo(ship.position) ? a : b); return `Nearest hostile: ${nearest.type} at ${Math.floor(nearest.group.position.distanceTo(ship.position))}m — ${nearest.hp}/${nearest.maxHp} HP`; },
+  'target':     () => { if (c.enemies.length === 0) return 'No hostiles detected.'; const nearest = c.enemies.reduce((a,b) => a.group.position.distanceTo(ship.position) < b.group.position.distanceTo(ship.position) ? a : b); return `Nearest hostile: ${nearest.type} at ${Math.floor(nearest.group.position.distanceTo(ship.position))}m â€” ${nearest.hp}/${nearest.maxHp} HP`; },
   'mine':       () => { if (c.asteroids.length === 0) return 'No asteroids nearby.'; startMining(0); return 'Mining laser engaged on nearest asteroid.'; },
   'market':     () => `Market has ${state.market.orders.length} active orders. Use the Market screen (nav bar) for trading.`,
   'jump':       () => `Current system: ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}. Use Star Map for navigation.`,
@@ -3648,8 +2500,8 @@ function updateAutoSystems(dt) {
     // Smooth tracking
     c.yaw += (targetYaw - 0) * dt * 2;
     c.pitch += (targetPitch - 0) * dt * 2;
-    // Clamp pitch only to prevent flipping
-    c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
+    c.yaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, c.yaw));
+    c.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, c.pitch));
   }
   // Auto-mine: mine nearest asteroid when no enemies in range
   if (state.chatbot.autoMine && c.active && !state.mining.active && c.enemies.length === 0 && c.asteroids.length > 0) {
@@ -3658,7 +2510,7 @@ function updateAutoSystems(dt) {
 }
 
 // ================================================================
-//  SHIP SKINS — Procedural Metallic & Grunge
+//  SHIP SKINS â€” Procedural Metallic & Grunge
 // ================================================================
 const SKIN_PRESETS = [
   { name: 'Stealth',     primary: 0x111118, accent: 0x44aaff, roughness: 0.8, metalness: 0.9, emissive: 0x001122 },
@@ -3713,7 +2565,7 @@ function renderSkinPreview(skin) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   canvas.width = 260; canvas.height = 80;
-  // Gradient background showing primary → accent
+  // Gradient background showing primary â†’ accent
   const grad = ctx.createLinearGradient(0, 0, 260, 0);
   grad.addColorStop(0, '#' + skin.primary.toString(16).padStart(6, '0'));
   grad.addColorStop(0.6, '#' + skin.primary.toString(16).padStart(6, '0'));
@@ -3768,41 +2620,36 @@ window._applySkinPreset = (idx) => {
 };
 
 // ================================================================
-//  RAILGUN 3D MODEL — Enhanced procedural + GLB fallback
+//  RAILGUN 3D MODEL â€” Enhanced procedural + GLB fallback
 // ================================================================
 let railgunModel = null;
 
-// Load the actual railgun_turret GLB model from optimized assets
-async function loadRailgunTurretGLB() {
-  if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
-  try {
-    const model = await loadGLBModel('railgun_turret');
-    const gun = model.clone();
-    // Position in front of gunner view
-    gun.position.set(0, -0.4, -2.5);
-    gun.scale.setScalar(GLB_ASSETS.railgun_turret.scale);
-    cockpit.add(gun);
-    railgunModel = gun;
-    addComms('System', 'Railgun turret model loaded.');
-  } catch(e) {
-    // Fallback: procedural railgun if GLB fails
-    createProceduralRailgun();
-  }
-}
-
-function createProceduralRailgun() {
+function createRailgun3DModel() {
   const g = new THREE.Group();
   const bodyMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.3, metalness: 0.8 });
   const glowMat3 = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.5 });
+  const coilMat = new THREE.MeshStandardMaterial({ color: 0x667788, roughness: 0.4, metalness: 0.9 });
+
+  // Main barrel housing
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 5, 8), bodyMat));
+  // Twin rails
   const railGeo = new THREE.BoxGeometry(0.04, 0.04, 5.5);
   { const r1 = new THREE.Mesh(railGeo, glowMat3); r1.position.set(-0.08, 0.12, 0); g.add(r1); }
   { const r2 = new THREE.Mesh(railGeo, glowMat3); r2.position.set(0.08, 0.12, 0); g.add(r2); }
+  // Electromagnetic coils (5 rings along barrel)
   for (let i = 0; i < 5; i++) {
-    const coil = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.02, 8, 12), new THREE.MeshStandardMaterial({ color: 0x667788, roughness: 0.4, metalness: 0.9 }));
-    coil.position.y = -2 + i; coil.rotation.x = Math.PI / 2; g.add(coil);
+    const coil = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.02, 8, 12), coilMat);
+    coil.position.y = -2 + i * 1;
+    coil.rotation.x = Math.PI / 2;
+    g.add(coil);
   }
+  // Muzzle brake
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.12, 0.5, 8), bodyMat).translateY(-2.8));
+  // Energy capacitor (rear box)
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.3), bodyMat).translateY(2.5));
+  // Scope
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6), bodyMat).translateY(0).translateX(0).translateZ(0.15));
+  // Mount it
   g.rotation.x = Math.PI / 2;
   g.position.set(0, -0.3, -2);
   g.scale.setScalar(0.4);
@@ -3811,129 +2658,26 @@ function createProceduralRailgun() {
 }
 
 // ================================================================
-//  PLAYER SHIP GLB REPLACEMENT
-// ================================================================
-let playerShipGLB = null;
-const PLAYER_SHIP_MODEL = 'iron_sentinel'; // our ship model
-
-async function replaceShipWithGLB() {
-  if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
-  try {
-    const model = await loadGLBModel(PLAYER_SHIP_MODEL);
-    playerShipGLB = model.clone();
-    playerShipGLB.scale.setScalar(1.5);
-    playerShipGLB.position.set(0, -1, 0);
-    // Hide procedural meshes
-    ship.children.forEach(ch => {
-      if (ch !== turretMount && ch !== playerShipGLB && ch.isMesh) ch.visible = false;
-    });
-    ship.add(playerShipGLB);
-    addComms('System', 'Ship hull loaded: ' + PLAYER_SHIP_MODEL.replace(/_/g,' ').toUpperCase());
-  } catch(e) {
-    // Keep procedural ship
-    addComms('System', 'Using procedural ship hull (GLB unavailable).');
-  }
-}
-
-// ================================================================
-//  AUTOPILOT SYSTEM
-// ================================================================
-let autopilotTarget = null;
-let autopilotActive = false;
-let showLibraryLabelsFlag = true;
-
-function setAutopilot(targetPos) {
-  autopilotTarget = targetPos.clone();
-  autopilotActive = true;
-  addComms('NAV', `Autopilot engaged. Distance: ${Math.floor(ship.position.distanceTo(targetPos))}m`);
-}
-
-function disengageAutopilot() {
-  autopilotActive = false;
-  autopilotTarget = null;
-  addComms('NAV', 'Autopilot disengaged.');
-}
-
-function updateAutopilot(dt) {
-  if (!autopilotActive || !autopilotTarget) return;
-  const fl = state.flight;
-  const toTarget = autopilotTarget.clone().sub(ship.position);
-  const dist = toTarget.length();
-
-  if (dist < 15) {
-    disengageAutopilot();
-    fl.thrust = 0;
-    return;
-  }
-
-  // Rotate ship towards target
-  const targetDir = toTarget.normalize();
-  const currentFwd = new THREE.Vector3(0, 0, -1).applyQuaternion(ship.quaternion);
-  const cross = new THREE.Vector3().crossVectors(currentFwd, targetDir);
-  const dot = currentFwd.dot(targetDir);
-
-  // Yaw towards target
-  ship.rotation.y += cross.y * 2.0 * dt;
-  // Pitch towards target
-  const pitchAngle = Math.asin(Math.max(-1, Math.min(1, targetDir.y)));
-  ship.rotation.x += (pitchAngle - ship.rotation.x) * dt * 1.5;
-
-  // Thrust
-  const speedFactor = dist > 100 ? 1.0 : dist / 100;
-  fl.velocity.x += targetDir.x * fl.accel * speedFactor * dt;
-  fl.velocity.y += targetDir.y * fl.accel * speedFactor * dt;
-  fl.velocity.z += targetDir.z * fl.accel * speedFactor * dt;
-}
-
-// ================================================================
 //  ADDITIONAL KEYBINDS
 // ================================================================
 document.addEventListener('keydown', (e) => {
   if (!c.active) return;
-  // Skip keybinds when chatbot input is focused (let player type freely)
-  const chatInput = document.getElementById('chatbot-input');
-  if (document.activeElement === chatInput) return;
   // M = mining toggle
   if (e.key === 'm' || e.key === 'M') {
     if (state.mining.active) stopMining();
     else if (c.asteroids.length > 0) startMining(0);
   }
-  // T = chatbot toggle (release pointer lock to allow typing)
+  // T = chatbot toggle
   if (e.key === 't' || e.key === 'T') {
-    const panel = document.getElementById('chatbot-panel');
-    panel.classList.toggle('open');
-    state.chatbot.visible = panel.classList.contains('open');
-    if (state.chatbot.visible) {
-      if (document.pointerLockElement) document.exitPointerLock();
-      setTimeout(() => chatInput.focus(), 100);
-    } else {
-      canvas3d.requestPointerLock();
+    if (document.activeElement !== document.getElementById('chatbot-input')) {
+      const panel = document.getElementById('chatbot-panel');
+      panel.classList.toggle('open');
+      state.chatbot.visible = panel.classList.contains('open');
     }
   }
   // K = skin panel toggle
   if (e.key === 'k' || e.key === 'K') {
     document.getElementById('skin-panel').classList.toggle('open');
-  }
-  // P = autopilot to nearest station or stargate
-  if (e.key === 'p' || e.key === 'P') {
-    if (autopilotActive) { disengageAutopilot(); return; }
-    // Find nearest targetable object
-    let nearest = null, nearDist = Infinity;
-    if (stargateGroup) {
-      const d = ship.position.distanceTo(stargateGroup.position);
-      if (d < nearDist) { nearest = stargateGroup.position; nearDist = d; }
-    }
-    stationModels.forEach(s => {
-      const d = ship.position.distanceTo(s.position);
-      if (d < nearDist) { nearest = s.position; nearDist = d; }
-    });
-    if (nearest) setAutopilot(nearest);
-    else addComms('NAV', 'No autopilot target found.');
-  }
-  // L = toggle library labels
-  if (e.key === 'l' || e.key === 'L') {
-    showLibraryLabelsFlag = !showLibraryLabelsFlag;
-    addComms('System', 'Library labels: ' + (showLibraryLabelsFlag ? 'ON' : 'OFF'));
   }
   // G = enter stargate
   if (e.key === 'g' || e.key === 'G') {
@@ -3961,65 +2705,13 @@ function gameLoop() {
   const dtMs = dt * 1000;
   state.gameTime += dtMs;
 
-  // Camera — always positioned at turret mount
+  // Camera â€” always positioned at turret mount
   const worldPos = new THREE.Vector3();
   turretMount.getWorldPosition(worldPos);
   camera.position.copy(worldPos);
 
   if (c.active) {
-    // ── EVE Online-style ship flight ──
-    const fl = state.flight;
-    fl.thrust = 0; fl.strafe = 0; fl.vertical = 0;
-    if (keysDown.has('w')) fl.thrust = 1;
-    if (keysDown.has('s')) fl.thrust = -0.5;
-    if (keysDown.has('a')) fl.strafe = -1;
-    if (keysDown.has('d')) fl.strafe = 1;
-    if (keysDown.has(' ')) fl.vertical = 1;    // Space = up
-    if (keysDown.has('control')) fl.vertical = -1; // Ctrl = down
-    fl.afterburner = keysDown.has('shift');
-    const speedMult = fl.afterburner ? fl.afterburnerMult : 1;
-    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed;
-    // Ship forward direction from its current rotation
-    const shipFwd = new THREE.Vector3(0, 0, -1).applyQuaternion(ship.quaternion);
-    const shipRight = new THREE.Vector3(1, 0, 0).applyQuaternion(ship.quaternion);
-    const shipUp = new THREE.Vector3(0, 1, 0);
-    // Apply thrust
-    if (fl.thrust !== 0) {
-      fl.velocity.x += shipFwd.x * fl.thrust * fl.accel * dt;
-      fl.velocity.y += shipFwd.y * fl.thrust * fl.accel * dt;
-      fl.velocity.z += shipFwd.z * fl.thrust * fl.accel * dt;
-    }
-    if (fl.strafe !== 0) {
-      fl.velocity.x += shipRight.x * fl.strafe * fl.accel * 0.6 * dt;
-      fl.velocity.y += shipRight.y * fl.strafe * fl.accel * 0.6 * dt;
-      fl.velocity.z += shipRight.z * fl.strafe * fl.accel * 0.6 * dt;
-    }
-    if (fl.vertical !== 0) {
-      fl.velocity.y += fl.vertical * fl.accel * 0.5 * dt;
-    }
-    // Drag
-    fl.velocity.x *= fl.drag;
-    fl.velocity.y *= fl.drag;
-    fl.velocity.z *= fl.drag;
-    // Clamp speed
-    fl.speed = Math.sqrt(fl.velocity.x**2 + fl.velocity.y**2 + fl.velocity.z**2);
-    if (fl.speed > maxSpd) {
-      const scale = maxSpd / fl.speed;
-      fl.velocity.x *= scale; fl.velocity.y *= scale; fl.velocity.z *= scale;
-      fl.speed = maxSpd;
-    }
-    // Move ship
-    ship.position.x += fl.velocity.x * dt;
-    ship.position.y += fl.velocity.y * dt;
-    ship.position.z += fl.velocity.z * dt;
-    // Ship rotation: yaw with A/D, pitch with W/S (gentle tilt)
-    if (keysDown.has('a')) ship.rotation.y += 0.8 * dt;
-    if (keysDown.has('d')) ship.rotation.y -= 0.8 * dt;
-    // Bank on strafe
-    const targetBank = -fl.strafe * 0.3;
-    ship.rotation.z += (targetBank - ship.rotation.z) * 3 * dt;
-
-    // ── Full 360° turret look + screen shake ──
+    // Gunner look + screen shake
     const shipQuat = new THREE.Quaternion(); ship.getWorldQuaternion(shipQuat);
     const lookEuler = new THREE.Euler(-c.pitch + c.shakeY * 0.02, -c.yaw + c.shakeX * 0.02, 0, 'YXZ');
     camera.quaternion.copy(shipQuat).multiply(new THREE.Quaternion().setFromEuler(lookEuler));
@@ -4081,12 +2773,12 @@ function gameLoop() {
       const types = ['scout','fighter','bomber','interceptor'];
       const spawnCount = 1 + Math.floor(c.cycle / 3);
       for (let si = 0; si < spawnCount; si++) createEnemy(types[Math.floor(Math.random()*4)]);
-      if (c.kills > 0 && c.kills % 15 === 0) { c.cycle++; addComms('AI Director', `Cycle ${c.cycle} — hostiles intensifying`); }
+      if (c.kills > 0 && c.kills % 15 === 0) { c.cycle++; addComms('AI Director', `Cycle ${c.cycle} â€” hostiles intensifying`); }
       // Boss spawn every 20 kills
       if (c.kills > 0 && c.kills % 20 === 0 && !c.bossActive) {
         c.bossActive = true;
         AudioSFX.play('boss_warn');
-        addComms('AI Director', '\u26a0 BOSS DETECTED — massive hostile signature!');
+        addComms('AI Director', '\u26a0 BOSS DETECTED â€” massive hostile signature!');
         createBossEnemy();
       }
     }
@@ -4143,7 +2835,7 @@ function gameLoop() {
       e.group.position.addScaledVector(dir, e.speed * dt);
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
-      // Enemy firing — shoot red bolt at player every 3-6 seconds
+      // Enemy firing â€” shoot red bolt at player every 3-6 seconds
       if (!e.lastShot) e.lastShot = state.gameTime;
       const fireInterval = e.isBoss ? 1500 : (3000 + Math.random() * 3000);
       if (state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
@@ -4170,11 +2862,10 @@ function gameLoop() {
         if (state.ship.hull <= 0 && !c.dead) {
           c.dead = true;
           c.deathStats = { kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
-          const frag = createSoulFragment();
-          addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
+          addComms('AI Director', 'Your ship has been destroyed. Embrace rebirth...');
           AudioSFX.play('explode');
           spawnExplosion(ship.position.clone(), 3);
-          setTimeout(() => { c.dead = false; updateRebirthScreen(); showScreen('rebirth'); exitGunnerMode(); }, 2500);
+          setTimeout(() => { c.dead = false; showScreen('rebirth'); exitGunnerMode(); }, 2500);
         }
       }
     });
@@ -4195,10 +2886,9 @@ function gameLoop() {
         if (state.ship.hull <= 0 && !c.dead) {
           c.dead = true;
           c.deathStats = { kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
-          const frag = createSoulFragment();
-          addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
+          addComms('AI Director', 'Your ship has been destroyed. Embrace rebirth...');
           AudioSFX.play('explode'); spawnExplosion(ship.position.clone(), 3);
-          setTimeout(() => { c.dead = false; updateRebirthScreen(); showScreen('rebirth'); exitGunnerMode(); }, 2500);
+          setTimeout(() => { c.dead = false; showScreen('rebirth'); exitGunnerMode(); }, 2500);
         }
         continue;
       }
@@ -4225,7 +2915,7 @@ function gameLoop() {
       if (ep.age > ep.maxAge) { scene.remove(ep.mesh); ep.mesh.geometry.dispose(); ep.mesh.material.dispose(); exhaustParticles.splice(i, 1); }
     }
 
-    // Loot drops — bob, spin, collect on proximity
+    // Loot drops â€” bob, spin, collect on proximity
     for (let i = c.lootDrops.length - 1; i >= 0; i--) {
       const l = c.lootDrops[i];
       l.age += dtMs;
@@ -4267,9 +2957,7 @@ function gameLoop() {
     updateNPCShips(dt);
     updateMining(dt);
     updateAutoSystems(dt);
-    if (stargateGroup) animateStargate(state.gameTime);
-    updateLibraryRotation(dt);
-    updateAutopilot(dt);
+    if (c.stargate) animateStargate(state.gameTime);
 
     // Auto-save every 60s
     if (state.gameTime - c.lastAutoSave > 60000) {
@@ -4278,9 +2966,8 @@ function gameLoop() {
     }
 
     renderHUD();
-    if (showLibraryLabelsFlag) renderLibraryLabels();
   } else {
-    // Bridge — gentle idle camera
+    // Bridge â€” gentle idle camera
     const time = state.gameTime * 0.0001;
     const shipQuat2 = new THREE.Quaternion(); ship.getWorldQuaternion(shipQuat2);
     const idleEuler = new THREE.Euler(Math.sin(time * 0.7) * 0.02, Math.sin(time) * 0.03, 0, 'YXZ');
@@ -4323,7 +3010,7 @@ async function init() {
         });
       }
     }
-  } catch(e) { /* offline mode — using client-generated data */ }
+  } catch(e) { /* offline mode â€” using client-generated data */ }
 
   // Fetch server quests
   try {
@@ -4339,7 +3026,7 @@ async function init() {
         }));
       }
     }
-  } catch(e) { /* offline — quests generated on demand */ }
+  } catch(e) { /* offline â€” quests generated on demand */ }
 
   // Check for saved game
   if (localStorage.getItem('oe-save')) {
@@ -4357,6 +3044,4 @@ async function init() {
 }
 
 init();
-</script>
-</body>
-</html>
+

@@ -30,10 +30,14 @@ User requested to hardcode the complete AI agent system prompt (multi-agent orch
 4. ✅ Create qa-protocol.sh for mandatory QA
 5. ✅ Create agent hierarchy and ML patterns
 6. ✅ Create initial memory files
-7. ⏳ Update package.json with new scripts
-8. ⏳ Test the system
-9. ⏳ Store facts to memory
-10. ⏳ Commit all changes
+7. ✅ Update package.json with new scripts
+8. ✅ Fix all test failures (GunnerView 7 tests, GlbMLProcessor 1 test)
+9. ✅ Write missing tests (EnemySpawn, NPC, Projectile — 94 new tests)
+10. ✅ Add Mongoose models + MongoStore persistence layer
+11. ✅ Setup Hardhat + upgrade contracts to OZ v5, 49 contract tests passing
+12. ✅ Full test suite: 573/573 Jest + 49/49 Hardhat = 622 tests passing
+13. ✅ Live QA: Server UP, 9 API endpoints OK, 6 GLB assets OK, braces balanced
+14. ⏳ Commit all changes
 
 ## Progress Checklist
 

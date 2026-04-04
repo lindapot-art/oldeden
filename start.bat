@@ -83,6 +83,7 @@ echo   STARTING OLD EDEN SERVER
 echo ========================================
 echo.
 echo The game server will start on http://localhost:3000
+echo (If port 3000 is busy, it will auto-rotate to the next available port)
 echo Press Ctrl+C to stop the server
 echo.
 echo ----------------------------------------

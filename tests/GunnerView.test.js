@@ -112,6 +112,7 @@ function createTHREEStub() {
     SphereGeometry: MockGeometry,
     CircleGeometry: MockGeometry,
     RingGeometry: MockGeometry,
+    PlaneGeometry: MockGeometry,
     MeshBasicMaterial: MockMaterial,
     MeshStandardMaterial: MockMaterial,
     FrontSide: 0,
@@ -166,7 +167,7 @@ describe('GunnerView', () => {
   });
 
   test('constructor accepts custom options', () => {
-    const gv = new GunnerView(THREE, camera, canvas, {
+    const gv = new GunnerView(THREE, camera, canvas, null, {
       sensitivity: 0.005,
       maxPitch: 1.0,
       maxYaw: 2.0,

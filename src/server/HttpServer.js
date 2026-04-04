@@ -57,15 +57,40 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
 
   /**
    * Start the HTTP server on the given port.
+   * If the port is busy, automatically tries the next port (up to maxRetries).
    * @param {number} port
+   * @param {object} [opts]
+   * @param {number} [opts.maxRetries=10]
    * @returns {Promise<import('http').Server>}
    */
-  function start(port) {
-    return new Promise((resolve) => {
-      const server = app.listen(port, () => {
-        console.log(`[HttpServer] Listening on port ${port}`);
-        resolve(server);
-      });
+  function start(port, { maxRetries = 10 } = {}) {
+    return new Promise((resolve, reject) => {
+      let attempt = 0;
+
+      function tryListen(p) {
+        const server = app.listen(p);
+
+        server.once('listening', () => {
+          if (p !== port) {
+            console.log(`[HttpServer] Port ${port} was busy — auto-rotated to port ${p}`);
+          }
+          console.log(`[HttpServer] Listening on port ${p}`);
+          resolve(server);
+        });
+
+        server.once('error', (err) => {
+          if (err.code === 'EADDRINUSE' && attempt < maxRetries) {
+            attempt++;
+            const next = port + attempt;
+            console.log(`[HttpServer] Port ${p} in use, trying ${next}…`);
+            tryListen(next);
+          } else {
+            reject(err);
+          }
+        });
+      }
+
+      tryListen(port);
     });
   }
 
