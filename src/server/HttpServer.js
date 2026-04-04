@@ -32,6 +32,12 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
     res.json({ status: 'ok', uptime: process.uptime() });
   });
 
+  // ── Serve public directory (static HTML/CSS/JS) ───────────────────────────
+  app.use(express.static(path.resolve('public')));
+
+  // ── Serve src directory for ES modules ────────────────────────────────────
+  app.use('/src', express.static(path.resolve('src')));
+
   // ── Static serving of uploaded assets ─────────────────────────────────────
   app.use('/assets', express.static(path.resolve(uploadDir)));
 

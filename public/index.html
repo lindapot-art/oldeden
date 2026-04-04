@@ -405,7 +405,8 @@
     <div id="controls-hint">
       Drag to orbit &bull; Scroll to zoom<br/>
       Click star to explore &bull; Press <b>G</b> to generate new system<br/>
-      Press <b>F</b> to toggle Gunner Mode
+      Press <b>F</b> to toggle Gunner Mode &bull; Press <b>M</b> to mine asteroids<br/>
+      Press <b>Y</b> to toggle Gyro (mobile)
     </div>
   </div>
 
@@ -466,7 +467,23 @@
       <div class="gt-dist" id="gt-dist">&mdash;</div>
     </div>
 
-    <div id="mode-hint">Press <kbd>F</kbd> to exit &bull; <kbd>LMB</kbd> to fire</div>
+    <div id="mining-panel" style="position:absolute;bottom:140px;right:20px;background:rgba(5,10,25,0.85);border:1px solid rgba(100,180,255,0.15);border-radius:8px;padding:16px;backdrop-filter:blur(8px);min-width:240px;display:none;">
+      <div style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:#6ab0de;margin-bottom:10px;font-weight:600;">Mining Status</div>
+      <div id="mining-target" style="font-size:0.9rem;color:#e0e6ed;margin-bottom:8px;">No Target</div>
+      <div id="mining-ore-type" style="font-size:0.75rem;color:#88a;margin-bottom:8px;">-</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;height:8px;background:rgba(100,180,255,0.1);border-radius:4px;overflow:hidden;">
+          <div id="mining-progress-bar" style="height:100%;background:#00ff00;border-radius:4px;width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="mining-progress-val" style="font-size:0.65rem;color:#6ab0de;min-width:40px;">0%</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="automine-btn" onclick="toggleAutoMine()" style="flex:1;background:rgba(100,180,255,0.2);border:1px solid rgba(100,180,255,0.3);border-radius:4px;padding:8px;color:#6ab0de;cursor:pointer;font-size:0.75rem;font-weight:600;">AUTO-MINE</button>
+        <button id="mine-btn" onclick="toggleManualMine()" style="flex:1;background:rgba(100,180,255,0.2);border:1px solid rgba(100,180,255,0.3);border-radius:4px;padding:8px;color:#6ab0de;cursor:pointer;font-size:0.75rem;font-weight:600;">MINE</button>
+      </div>
+    </div>
+
+    <div id="mode-hint">Press <kbd>F</kbd> to exit &bull; <kbd>LMB</kbd> to fire &bull; <kbd>M</kbd> to mine</div>
   </div>
 
   <!-- Three.js + OrbitControls from CDN -->
@@ -481,6 +498,9 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { AsteroidSystem } from '../src/systems/AsteroidSystem.js';
+    import { MiningBeam } from '../src/renderer/MiningBeam.js';
+    import { CockpitGyroControls } from '../src/controls/CockpitGyroControls.js';
 
     // ─── Seeded RNG (simplified seedrandom) ───────────────────────────
     function mulberry32(seed) {
@@ -657,6 +677,17 @@
     let npcPool = [];
     let activeEvents = [];
     let wallet = { ec: 12450, sm: 35, eden: 2.7 };
+
+    // ─── Asteroid Mining System ───────────────────────────────────────
+    let asteroidSystem = null;
+    let miningBeam = null;
+    let miningActive = false;
+    let autoMineActive = false;
+    let miningTargetId = null;
+
+    // ─── Gyroscope Controls ───────────────────────────────────────────
+    let gyroControls = null;
+    let gyroEnabled = false;
 
     // ─── Gunner Mode State ────────────────────────────────────────────
     let gunnerMode = false;
@@ -972,12 +1003,27 @@
       // Request pointer lock
       canvas.requestPointerLock();
 
+      // Auto-enable gyro on mobile if supported
+      if (gyroControls.isMobile() && !gyroEnabled) {
+        toggleGyro();
+      }
+
       console.log('[Gunner] Entered gunner mode.');
     }
 
     function exitGunnerMode() {
       if (!gunnerMode) return;
       gunnerMode = false;
+
+      // Stop any active mining
+      if (miningActive) {
+        stopMining();
+      }
+      if (autoMineActive) {
+        autoMineActive = false;
+        document.getElementById('automine-btn').textContent = 'AUTO-MINE';
+        document.getElementById('automine-btn').style.background = 'rgba(100,180,255,0.2)';
+      }
 
       // Remove cockpit from camera
       if (cockpitGroup) {
@@ -1187,10 +1233,186 @@
       activeEvents = activeEvents.filter(e => e.endsAt > Date.now());
     }
 
+    // ─── Mining Functions ─────────────────────────────────────────────
+    window.toggleManualMine = function() {
+      if (!gunnerMode) {
+        console.log('[Mining] Must be in gunner mode to mine');
+        return;
+      }
+
+      if (miningActive) {
+        stopMining();
+      } else {
+        startMining(false);
+      }
+    };
+
+    window.toggleAutoMine = function() {
+      if (!gunnerMode) {
+        console.log('[Mining] Must be in gunner mode to mine');
+        return;
+      }
+
+      autoMineActive = !autoMineActive;
+      const btn = document.getElementById('automine-btn');
+      
+      if (autoMineActive) {
+        btn.textContent = 'STOP AUTO';
+        btn.style.background = 'rgba(255,100,100,0.3)';
+        startMining(true);
+      } else {
+        btn.textContent = 'AUTO-MINE';
+        btn.style.background = 'rgba(100,180,255,0.2)';
+        stopMining();
+      }
+    };
+
+    function startMining(auto) {
+      // Get ship position
+      const shipPos = new THREE.Vector3();
+      playerShipGroup.getWorldPosition(shipPos);
+
+      let target = null;
+
+      if (auto) {
+        // Auto-mining: find best asteroid
+        target = asteroidSystem.getBestAsteroid(shipPos, 200);
+        if (!target) {
+          console.log('[Mining] No asteroids in range');
+          autoMineActive = false;
+          document.getElementById('automine-btn').textContent = 'AUTO-MINE';
+          document.getElementById('automine-btn').style.background = 'rgba(100,180,255,0.2)';
+          return;
+        }
+      } else {
+        // Manual mining: raycast from camera
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        
+        const asteroids = Array.from(asteroidSystem._asteroids.values())
+          .filter(a => !a.mined)
+          .map(a => a.mesh);
+        
+        const intersects = raycaster.intersectObjects(asteroids);
+        
+        if (intersects.length > 0) {
+          const asteroidId = intersects[0].object.userData.asteroidId;
+          const asteroidData = asteroidSystem._asteroids.get(asteroidId);
+          target = {
+            id: asteroidId,
+            position: asteroidData.position,
+            oreType: asteroidData.oreType,
+            mesh: asteroidData.mesh
+          };
+        } else {
+          console.log('[Mining] No asteroid targeted');
+          return;
+        }
+      }
+
+      // Start mining the target
+      miningActive = true;
+      miningTargetId = target.id;
+      asteroidSystem.startMining(target.id);
+
+      // Get turret position for beam
+      const turretPos = new THREE.Vector3();
+      turretMountPoint.getWorldPosition(turretPos);
+
+      // Start mining beam
+      miningBeam.start(turretPos, target.position);
+
+      // Show mining panel
+      document.getElementById('mining-panel').style.display = 'block';
+      updateMiningHUD();
+
+      console.log(`[Mining] Started mining asteroid ${target.id} (${target.oreType.name})`);
+    }
+
+    function stopMining() {
+      miningActive = false;
+      asteroidSystem.stopMining();
+      miningBeam.stop();
+      miningTargetId = null;
+
+      // Hide mining panel
+      document.getElementById('mining-panel').style.display = 'none';
+
+      // Reset button
+      const btn = document.getElementById('mine-btn');
+      btn.textContent = 'MINE';
+      btn.style.background = 'rgba(100,180,255,0.2)';
+
+      console.log('[Mining] Stopped mining');
+    }
+
+    function updateMiningHUD() {
+      const status = asteroidSystem.getMiningStatus();
+      
+      if (!status) {
+        document.getElementById('mining-target').textContent = 'No Target';
+        document.getElementById('mining-ore-type').textContent = '-';
+        document.getElementById('mining-progress-bar').style.width = '0%';
+        document.getElementById('mining-progress-val').textContent = '0%';
+        return;
+      }
+
+      const asteroid = asteroidSystem._asteroids.get(status.asteroidId);
+      document.getElementById('mining-target').textContent = `Asteroid ${status.asteroidId}`;
+      document.getElementById('mining-ore-type').textContent = `${status.oreType} (${status.value} EC)`;
+      document.getElementById('mining-progress-bar').style.width = `${status.progress * 100}%`;
+      document.getElementById('mining-progress-val').textContent = `${Math.floor(status.progress * 100)}%`;
+    }
+
+    // Listen for mining complete event
+    window.addEventListener('asteroid:mined', (e) => {
+      console.log(`[Mining] Collected ${e.detail.oreType} worth ${e.detail.value} EC`);
+      
+      // Award credits
+      wallet.ec += e.detail.value * 10;
+      updateWallet();
+
+      // Stop mining
+      stopMining();
+
+      // If auto-mine is active, find next target
+      if (autoMineActive) {
+        setTimeout(() => startMining(true), 1000);
+      }
+    });
+
+    // ─── Gyroscope Functions ──────────────────────────────────────────
+    async function toggleGyro() {
+      if (!gyroControls.isSupported()) {
+        console.warn('[Gyro] Not supported on this device');
+        return;
+      }
+
+      if (gyroEnabled) {
+        gyroControls.disable();
+        gyroEnabled = false;
+        console.log('[Gyro] Disabled');
+      } else {
+        const enabled = await gyroControls.enable();
+        if (enabled) {
+          gyroEnabled = true;
+          console.log('[Gyro] Enabled');
+        } else {
+          console.warn('[Gyro] Failed to enable');
+        }
+      }
+    }
+
     // ─── Key handler ──────────────────────────────────────────────────
     document.addEventListener('keydown', (e) => {
       if (e.key === 'f' || e.key === 'F') {
         toggleGunnerMode();
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        toggleManualMine();
+      }
+      if (e.key === 'y' || e.key === 'Y') {
+        toggleGyro();
       }
       if (e.key === 'g' || e.key === 'G') {
         if (gunnerMode) return; // don't regenerate while in gunner
@@ -1229,6 +1451,26 @@
     playerShipGroup.position.set(15, 3, 20);
     playerShipGroup.rotation.y = -0.5;
     scene.add(playerShipGroup);
+
+    // Initialize asteroid system
+    asteroidSystem = new AsteroidSystem(THREE, scene, {
+      beltRadius: 500,
+      beltThickness: 100,
+      asteroidCount: 50,
+      minSize: 2,
+      maxSize: 15
+    });
+    asteroidSystem.initialize();
+
+    // Initialize mining beam
+    miningBeam = new MiningBeam(THREE, scene);
+
+    // Initialize gyroscope controls
+    gyroControls = new CockpitGyroControls({
+      gyroSensitivity: 0.015,
+      gyroDeadZone: 0.02,
+      autoEnableGyro: true
+    });
 
     currentGenome = generateGenome(mulberry32(hashSeed('player-genome')));
     updateGenomePanel(currentGenome);
@@ -1273,6 +1515,42 @@
       if (playerShipGroup) {
         playerShipGroup.position.y = 3 + Math.sin(elapsed * 0.5) * 0.3;
         playerShipGroup.rotation.z = Math.sin(elapsed * 0.3) * 0.02;
+
+        // Apply gyro controls if enabled and not in gunner mode
+        if (gyroEnabled && !gunnerMode) {
+          const orientation = gyroControls.getOrientation();
+          // Apply gyro pitch/roll to ship rotation
+          playerShipGroup.rotation.x = orientation.pitch * 2;
+          playerShipGroup.rotation.z = orientation.roll * 2;
+          // Yaw affects camera orbit
+          if (controls.enabled) {
+            controls.autoRotateSpeed = orientation.yaw * 5;
+          }
+        }
+      }
+
+      // Update asteroid system
+      if (asteroidSystem) {
+        asteroidSystem.update(delta);
+      }
+
+      // Update mining beam and HUD
+      if (miningActive && miningBeam && miningTargetId) {
+        const asteroid = asteroidSystem._asteroids.get(miningTargetId);
+        if (asteroid && !asteroid.mined) {
+          // Get turret position for beam
+          const turretPos = new THREE.Vector3();
+          turretMountPoint.getWorldPosition(turretPos);
+          
+          // Update beam
+          miningBeam.update(delta, turretPos, asteroid.position);
+          
+          // Update HUD
+          updateMiningHUD();
+        } else {
+          // Asteroid was mined or destroyed
+          stopMining();
+        }
       }
 
       // ── Gunner mode camera update ──────────────────────────────────
@@ -1286,8 +1564,22 @@
         const shipQuat = new THREE.Quaternion();
         playerShipGroup.getWorldQuaternion(shipQuat);
 
-        // Apply mouse look on top of ship orientation
-        const lookEuler = new THREE.Euler(-gunnerPitch, -gunnerYaw, 0, 'YXZ');
+        // Apply gyro or mouse look on top of ship orientation
+        let lookYaw = gunnerYaw;
+        let lookPitch = gunnerPitch;
+
+        if (gyroEnabled && gyroControls.isEnabled()) {
+          const orientation = gyroControls.getOrientation();
+          // Add gyro input to mouse look (allows both to work together)
+          lookYaw += orientation.yaw * 2;
+          lookPitch += orientation.pitch * 2;
+          
+          // Clamp after combining
+          lookYaw = Math.max(-GUNNER_MAX_YAW, Math.min(GUNNER_MAX_YAW, lookYaw));
+          lookPitch = Math.max(-GUNNER_MAX_PITCH, Math.min(GUNNER_MAX_PITCH, lookPitch));
+        }
+
+        const lookEuler = new THREE.Euler(-lookPitch, -lookYaw, 0, 'YXZ');
         const lookQuat = new THREE.Quaternion().setFromEuler(lookEuler);
 
         camera.quaternion.copy(shipQuat).multiply(lookQuat);
