@@ -69,15 +69,30 @@ export class ModelLoader {
    * Initialize the GLTFLoader. Lazy-loaded to avoid issues in server/test environments.
    * @private
    */
-  _initLoader() {
+  async _initLoader() {
     if (this._loader) return;
     
     // Import GLTFLoader from Three.js examples
-    // Note: This assumes GLTFLoader is available in the Three.js build
-    if (this._THREE.GLTFLoader) {
-      this._loader = new this._THREE.GLTFLoader();
-    } else {
-      console.warn('GLTFLoader not available in THREE namespace. Models will not load.');
+    // This works in browser with the importmap defined in index.html
+    try {
+      if (typeof window !== 'undefined') {
+        // Browser environment - dynamic import
+        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+        const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
+        
+        // Setup DRACO decoder for compressed models
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        
+        this._loader = new GLTFLoader();
+        this._loader.setDRACOLoader(dracoLoader);
+      } else {
+        // Server/test environment - no loader
+        console.warn('GLTFLoader not available in non-browser environment.');
+        this._loader = null;
+      }
+    } catch (err) {
+      console.warn('Failed to load GLTFLoader:', err);
       this._loader = null;
     }
   }
@@ -92,7 +107,7 @@ export class ModelLoader {
    * @returns {Promise<THREE.Group>}
    */
   async load(modelName, options = {}) {
-    this._initLoader();
+    await this._initLoader();
     
     if (!this._loader) {
       console.error('GLTFLoader not available. Returning empty group.');

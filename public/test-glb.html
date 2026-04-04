@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Old Eden — GLB Model Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: monospace;
+      overflow: hidden;
+    }
+    #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+    #info {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.8);
+      padding: 15px;
+      border: 1px solid #0af;
+      border-radius: 5px;
+      max-width: 300px;
+    }
+    #info h1 { font-size: 16px; margin-bottom: 10px; color: #0af; }
+    #info p { font-size: 12px; margin: 5px 0; }
+    .status { color: #0f0; }
+    .error { color: #f00; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="info">
+    <h1>GLB Model Test</h1>
+    <p>Testing optimized GLB loading...</p>
+    <p id="status" class="status">Initializing...</p>
+    <p id="models"></p>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { ModelLoader } from '/src/renderer/ModelLoader.js';
+
+    const canvas = document.getElementById('canvas');
+    const statusEl = document.getElementById('status');
+    const modelsEl = document.getElementById('models');
+
+    // Setup scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000510);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    camera.position.set(0, 5, 15);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(10, 10, 10);
+    scene.add(dirLight);
+
+    // Grid
+    const gridHelper = new THREE.GridHelper(100, 20, 0x0088ff, 0x004488);
+    scene.add(gridHelper);
+
+    // Test model loading
+    const loader = new ModelLoader(THREE);
+    
+    async function testModels() {
+      statusEl.textContent = 'Loading models...';
+      statusEl.className = 'status';
+
+      try {
+        // Test loading Garrisons habitat
+        const station = await loader.load('garrisons_habitat', { 
+          faction: 'garrisons',
+          scale: 2.0 
+        });
+        station.position.set(0, 2, 0);
+        scene.add(station);
+        
+        // Test loading ships
+        const sentinel = await loader.load('ship_sentinel', {
+          faction: 'garrisons',
+          scale: 1.0
+        });
+        sentinel.position.set(-10, 2, 0);
+        scene.add(sentinel);
+
+        const titan = await loader.load('ship_titan', {
+          faction: 'garrisons',
+          scale: 1.2
+        });
+        titan.position.set(10, 2, 0);
+        scene.add(titan);
+
+        const railgun = await loader.load('railgun_weapon', {
+          scale: 1.0
+        });
+        railgun.position.set(0, 2, 10);
+        scene.add(railgun);
+
+        statusEl.textContent = '✓ Models loaded successfully!';
+        statusEl.className = 'status';
+        modelsEl.innerHTML = `
+          <strong>Loaded:</strong><br>
+          • Garrisons Habitat<br>
+          • Sentinel Fighter<br>
+          • Titan Cruiser<br>
+          • Railgun Weapon<br>
+        `;
+      } catch (err) {
+        statusEl.textContent = '✗ Error: ' + err.message;
+        statusEl.className = 'error';
+        console.error('Model loading error:', err);
+      }
+    }
+
+    testModels();
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
