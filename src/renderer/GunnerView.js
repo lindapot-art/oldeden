@@ -704,9 +704,12 @@ export class GunnerView {
    */
   _detectMobile() {
     // Check user agent and touch support
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const userAgent = (typeof navigator !== 'undefined' ? navigator.userAgent : '') || 
+                      (typeof navigator !== 'undefined' ? navigator.vendor : '') || 
+                      (typeof window !== 'undefined' ? window.opera : '') || '';
     const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-    const hasTouchScreen = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    const hasTouchScreen = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || 
+                          (typeof window !== 'undefined' && 'ontouchstart' in window);
     
     return isMobileUA || hasTouchScreen;
   }
