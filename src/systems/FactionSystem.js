@@ -25,6 +25,7 @@ export const FACTIONS = Object.freeze([
   { id: 'iron_pact',         name: 'Iron Pact',          ideology: 'survival',       homeRegion: 'Ashfields',          color: '#F97316' },
   { id: 'ascendant_order',   name: 'Ascendant Order',    ideology: 'transcendence',  homeRegion: 'Luminous Reach',     color: '#EC4899' },
   { id: 'remnant_clans',     name: 'Remnant Clans',      ideology: 'tradition',      homeRegion: 'Old Territories',    color: '#78716C' },
+  { id: 'garrisons',         name: 'Garrisons',          ideology: 'fortification',  homeRegion: 'Fortified Nexus',    color: '#FF6B35' },
 ]);
 
 export const FACTION_IDS = Object.freeze(FACTIONS.map(f => f.id));
@@ -86,11 +87,13 @@ export const FACTION_EQUIPMENT = Object.freeze([
   { id: 'dominion_shield',      name: 'Dominion Bulwark Shield',  factionId: 'terran_dominion',   minRank: 5 },
   { id: 'colony_drive',         name: 'Liberty Warp Drive',       factionId: 'free_colonies',     minRank: 6 },
   { id: 'syndicate_cloak',      name: 'Shadow Cloak Module',      factionId: 'syndicate',         minRank: 7 },
-  { id: 'covenant_relic',       name: 'Starbound Relic',          factionId: 'covenant_of_stars', minRank: 8 },
+  { id: 'covenant_relic',        name: 'Starbound Relic',          factionId: 'covenant_of_stars', minRank: 8 },
   { id: 'void_scanner',         name: 'Omniscient Scanner',       factionId: 'void_collective',   minRank: 5 },
   { id: 'iron_plating',         name: 'Hardened Iron Plating',    factionId: 'iron_pact',         minRank: 6 },
   { id: 'ascendant_core',       name: 'Transcendence Core',       factionId: 'ascendant_order',   minRank: 9 },
   { id: 'remnant_cannon',       name: 'Ancestral Plasma Cannon',  factionId: 'remnant_clans',     minRank: 7 },
+  { id: 'garrison_railgun',     name: 'Garrison Heavy Railgun',   factionId: 'garrisons',         minRank: 6 },
+  { id: 'garrison_armor',       name: 'Mutant Exo-Armor',         factionId: 'garrisons',         minRank: 7 },
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
