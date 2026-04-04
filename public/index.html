@@ -346,6 +346,21 @@ canvas{display:block;}
 <!-- ════════════════════════════════════════════ -->
 <!--  THREE.JS + GAME CODE                        -->
 <!-- ════════════════════════════════════════════ -->
+<script>
+// Global error catcher — shows JS errors on screen for debugging
+window.onerror = function(msg, src, line, col, err) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:12px;background:red;color:white;font-size:14px;z-index:99999;font-family:monospace;white-space:pre-wrap;';
+  d.textContent = 'JS ERROR: ' + msg + '\nSource: ' + src + ':' + line + ':' + col;
+  document.body.appendChild(d);
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:40px;left:0;right:0;padding:12px;background:darkred;color:white;font-size:14px;z-index:99999;font-family:monospace;white-space:pre-wrap;';
+  d.textContent = 'UNHANDLED PROMISE: ' + (e.reason && e.reason.message || e.reason || 'unknown');
+  document.body.appendChild(d);
+});
+</script>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js"}}
 </script>
@@ -493,7 +508,7 @@ function showScreen(name) {
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
   if (name === 'rebirth') updateRebirthScreen();
-  if (name === 'gunner') enterGunnerMode();
+  if (name === 'gunner') { if (threeReady) enterGunnerMode(); else addComms('System', '3D engine not available.'); }
 }
 
 // ================================================================
@@ -1066,18 +1081,24 @@ function loadGame() {
 const canvas3d = document.getElementById('game-canvas');
 const hudCanvas = document.getElementById('hud-canvas');
 const hudCtx = hudCanvas.getContext('2d');
+const c = state.combat;
+let renderer, scene, camera, ship, turretMount, cockpit;
+let railGlowMatL, railGlowMatR, muzzleMat, railL, railR;
+let threeReady = false;
 
-const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
+try {
+
+renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-const scene = new THREE.Scene();
+scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x000010, 0.00025);
 
-const camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
+camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
 
 // Lighting
 scene.add(new THREE.AmbientLight(0x112244, 0.7));
@@ -1127,7 +1148,7 @@ for (let i = 0; i < 4; i++) {
 }
 
 // ── Ship ────
-const ship = new THREE.Group(); ship.name = 'player-ship';
+ship = new THREE.Group(); ship.name = 'player-ship';
 const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
 const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.3, metalness: 0.6, emissive: 0x44aaff, emissiveIntensity: 0.3 });
 const shipCanopyMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35 });
@@ -1157,11 +1178,11 @@ ship.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.4,8), gunMat)).posi
 const bbGeo = new THREE.CylinderGeometry(0.08,0.08,3,6);
 const bL2 = new THREE.Mesh(bbGeo, gunMat); bL2.rotation.x=Math.PI/2; bL2.position.set(-0.25,0.95,-2.5); ship.add(bL2);
 const bR2 = new THREE.Mesh(bbGeo, gunMat); bR2.rotation.x=Math.PI/2; bR2.position.set(0.25,0.95,-2.5); ship.add(bR2);
-const turretMount = new THREE.Object3D(); turretMount.position.set(0, 1.2, -0.5); ship.add(turretMount);
+turretMount = new THREE.Object3D(); turretMount.position.set(0, 1.2, -0.5); ship.add(turretMount);
 scene.add(ship);
 
 // ── Cockpit ────
-const cockpit = new THREE.Group(); cockpit.name = 'gunner-cockpit';
+cockpit = new THREE.Group(); cockpit.name = 'gunner-cockpit';
 const cpCanopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
 const cpCanopy = new THREE.Mesh(new THREE.SphereGeometry(3.0,32,24,0,Math.PI*2,0,Math.PI*0.6), cpCanopyMat);
 cpCanopy.position.set(0,0,-2.5); cpCanopy.rotation.x = Math.PI; cockpit.add(cpCanopy);
@@ -1181,15 +1202,15 @@ cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.
 
 // Railgun barrels + glow
 const railMat = new THREE.MeshBasicMaterial({ color: 0x556677, transparent: true, opacity: 0.8 });
-const railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
-const railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
-const railL = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
+railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
+railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
+railL = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
 railL.rotation.x=Math.PI/2; railL.position.set(-0.18,-0.3,-2.0); cockpit.add(railL);
-const railR = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
+railR = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
 railR.rotation.x=Math.PI/2; railR.position.set(0.18,-0.3,-2.0); cockpit.add(railR);
 cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatL), { rotation: new THREE.Euler(Math.PI/2,0,0), position: new THREE.Vector3(-0.18,-0.3,-2.0) }));
 cockpit.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatR), { rotation: new THREE.Euler(Math.PI/2,0,0), position: new THREE.Vector3(0.18,-0.3,-2.0) }));
-const muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
 const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), muzzleMat);
 muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
 
@@ -1212,7 +1233,6 @@ scene.add(camera);
 // ================================================================
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
 const CHARGE_TIME = 600, COOLDOWN_TIME = 400, MOUSE_SENS = 0.002, MAX_PITCH = 1.2, MAX_YAW = 1.5;
-const c = state.combat;
 
 function enterGunnerMode() {
   c.active = true;
@@ -1389,6 +1409,15 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
   if ((e.key === 'r' || e.key === 'R') && c.active) { c.ammo = c.maxAmmo; }
 });
+
+threeReady = true;
+} catch(err) {
+  console.error('[Old Eden] 3D engine failed to initialise:', err);
+  const errBanner = document.createElement('div');
+  errBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#cc0000;color:#fff;font:13px monospace;z-index:99999;';
+  errBanner.textContent = '3D engine error: ' + err.message + ' — game menus still work';
+  document.body.appendChild(errBanner);
+}
 
 // Nav bar
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1601,7 +1630,7 @@ async function init() {
   // Start
   addComms('AI Director', 'Old Eden systems initialising...');
   addComms('AI Director', 'The universe awaits, pilot.');
-  gameLoop();
+  if (threeReady) gameLoop();
 }
 
 init();
