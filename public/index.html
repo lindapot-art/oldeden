@@ -1031,6 +1031,7 @@ const AudioSFX = {
   stopBGM() {
     if (!this.bgm) return;
     try { this.bgm.bass.stop(); this.bgm.pad.stop(); this.bgm.lfo.stop(); this.bgm.noise.stop(); } catch(e) {}
+    try { if (this.bgm.masterGain) this.bgm.masterGain.disconnect(); } catch(e) {}
     this.bgm = null;
   },
   engineHum: null,
@@ -1062,6 +1063,7 @@ const AudioSFX = {
   stopEngineHum() {
     if (!this.engineHum) return;
     try { this.engineHum.osc1.stop(); this.engineHum.osc2.stop(); } catch(e) {}
+    try { this.engineHum.gain.disconnect(); this.engineHum.lp.disconnect(); } catch(e) {}
     this.engineHum = null;
   },
   stopAmbience() {
@@ -1991,14 +1993,22 @@ async function connectSocket() {
           state.player.credits = data.wallet.ec;
           state.player.stellarMarks = data.wallet.sm;
           state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
-          state.ship = { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 };
+          state.combat.bossActive = false;
           state.inventory = [];
           state.quests = state.quests.filter(q => !q.active);
-          // Apply resonance bonuses to new life
+          // Reset upgrades to baseline before applying resonance
+          state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
+          state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
+          state.upgrades.maxShield = 100; state.upgrades.engineSpeed = 1;
           const r = state.player.resonanceBonuses;
           if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
           if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
-          if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+          state.flight.maxSpeed = 120 * (1 + (r.speed || 0) / 100);
+          applyUpgrades();
+          state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield;
+          state.ship.fuel = state.ship.maxFuel;
+          state.combat.ammo = state.combat.maxAmmo;
+          state.combat.heat = 0; state.combat.godMode = false;
           addComms('AI Director', 'You have been reborn. Your soul echoes with resonance.');
           checkAndClaimMilestones();
           saveGame();
@@ -2055,6 +2065,7 @@ function loadFromServerData(data) {
   if (data.currentSkin) { state.currentSkin = data.currentSkin; }
   if (data.market) state.market = data.market;
   if (data.insuredItemId) state.insuredItemId = data.insuredItemId;
+  if (data.flight && data.flight.maxSpeed) state.flight.maxSpeed = data.flight.maxSpeed;
   // Soul Fracture migration for old saves
   if (!state.player.soulFragments) state.player.soulFragments = [];
   if (!state.player.legacyChain) state.player.legacyChain = [];
@@ -2105,7 +2116,12 @@ function _showScreenInner(name) {
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
-  if (el) { el.classList.add('active'); el.classList.add('fade-in'); }
+  if (el) {
+    el.classList.remove('fade-in');
+    el.classList.add('active');
+    void el.offsetWidth;
+    el.classList.add('fade-in');
+  }
 
   // Hide lock-prompt on non-gunner screens to prevent click blocking
   const lp = document.getElementById('lock-prompt');
@@ -2444,6 +2460,21 @@ function generateStarSystems() {
       if (dist < 120) s.connections.push(j);
     });
   });
+  // Guarantee every system has at least 1 connection
+  systems.forEach((s, i) => {
+    if (s.connections.length === 0) {
+      let _nearIdx = -1, _nearDist = Infinity;
+      systems.forEach((t, j) => {
+        if (i === j) return;
+        const d = Math.hypot(s.x - t.x, s.y - t.y);
+        if (d < _nearDist) { _nearDist = d; _nearIdx = j; }
+      });
+      if (_nearIdx >= 0) {
+        s.connections.push(_nearIdx);
+        if (!systems[_nearIdx].connections.includes(i)) systems[_nearIdx].connections.push(i);
+      }
+    }
+  });
   return systems;
 }
 
@@ -2648,6 +2679,15 @@ function jumpToSystem(idx) {
   }
   drawStreaks();
 
+  // Enforce jump route connectivity
+  if (!state.inAltUniverse) {
+    const _curSys = state.starSystems[state.location.systemIndex];
+    if (_curSys && _curSys.connections && !_curSys.connections.includes(idx)) {
+      addComms('Navigation', 'No jump route to that system. Select a connected system.');
+      AudioSFX.play('shield_hit');
+      return;
+    }
+  }
   state.location.systemIndex = idx;
   state.location.docked = false;
   state.ship.fuel = Math.max(0, state.ship.fuel - 5);
@@ -3408,6 +3448,7 @@ function saveGame() {
     quests: state.quests,
     upgrades: state.upgrades,
     settings: state.settings,
+    flight: { maxSpeed: state.flight.maxSpeed },
     // Persist new systems across sessions
     pastLives: state.pastLives,
     skills: state.skills,
@@ -3911,6 +3952,7 @@ function spawnLootDrop(pos, type, creditValue) {
 
 function exitGunnerMode(skipScreenChange) {
   c.active = false;
+  mouseHeld = false;
   if (document.pointerLockElement) document.exitPointerLock();
   // Clean up all 3D objects (guard each removal) + dispose GPU resources
   c.enemyBolts.forEach(b => { if (b && b._poolRef) returnBoltToPool(b._poolRef); else if (b && b.group) { scene.remove(b.group); disposeObject(b.group); } }); c.enemyBolts = [];
@@ -4936,7 +4978,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -5017,7 +5059,7 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   const r = state.player.resonanceBonuses;
   if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
   if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
-  if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+  state.flight.maxSpeed = 120 * (1 + (r.speed || 0) / 100);
   applyUpgrades();
   // Reset ship
   state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield;
@@ -6625,9 +6667,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'c' || e.key === 'C') {
     if (state.inAltUniverse) collectArtifact();
   }
-  // F = warp (open star map)
+  // F = warp (exit gunner first so 3D scene is cleaned)
   if (e.key === 'f' || e.key === 'F') {
     if (c.dead) return;
+    if (c.active) exitGunnerMode(true);
     showScreen('starmap');
   }
   // B = dock at station

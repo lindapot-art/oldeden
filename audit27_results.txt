@@ -1,0 +1,488 @@
+================================================================================
+  AUDIT 27 — Old Eden (public/index.html ~7361 lines)
+  Date: 2026-04-05
+  Scope: 10 fresh categories — rebirth, boss, upgrades, star systems,
+         HUD/canvas, audio, localStorage, CSS/layout, keyboard, event leaks
+================================================================================
+
+FINDING 1 — Rebirth: Base speed wrong after rebirth (halved or stale)
+Lines: 5017–5023 (client karma-accept handler), 2001 (server rebirth:result)
+Category: Rebirth bugs
+
+What's wrong:
+Both the client and server rebirth handlers use 60 as the base speed instead
+of the initial value 120.  When the player has NO speed resonance bonus,
+`state.flight.maxSpeed` is never reset at all — it retains whatever value it
+had from the previous life (could be 60, 120, or any resonance-tweaked value).
+
+--- OLD CODE (line 5017–5023) ---
+  state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
+  state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
+  state.upgrades.maxShield = 100; state.upgrades.engineSpeed = 1;
+  // Apply resonance bonuses (the soul remembers)
+  const r = state.player.resonanceBonuses;
+  if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
+  if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
+  if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+
+--- NEW CODE ---
+  state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
+  state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
+  state.upgrades.maxShield = 100; state.upgrades.engineSpeed = 1;
+  // Apply resonance bonuses (the soul remembers)
+  const r = state.player.resonanceBonuses;
+  if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
+  if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
+  state.flight.maxSpeed = 120 * (1 + (r.speed || 0) / 100);
+
+Why it matters:
+Without this fix, reborn players get base speed 60 (half of normal 120) if
+they have any speed resonance.  With 0% resonance the speed carries over from
+the dead life — inconsistent and confusing.  The same 60-vs-120 bug exists in
+the server handler at line 2001.
+
+--- ALSO FIX (line 2001, server rebirth:result) ---
+OLD:  if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+NEW:  state.flight.maxSpeed = 120 * (1 + (r.speed || 0) / 100);
+
+
+================================================================================
+
+FINDING 2 — Rebirth: Server rebirth:result handler doesn't call applyUpgrades()
+Lines: 1987–2006
+Category: Rebirth bugs / Upgrade bugs
+
+What's wrong:
+The server `rebirth:result` socket handler sets `state.upgrades.maxShield` and
+`state.flight.maxSpeed` from resonance data, but never calls `applyUpgrades()`.
+This means `state.ship.maxShield` is never synced — the player's actual in-game
+max shield stays at whatever the old value was.  It also doesn't reset the old
+upgrade values to baseline first, so previous-life upgrades silently carry over.
+
+--- OLD CODE (lines 1987–2006) ---
+        s.on('rebirth:result', (data) => {
+          // Soul Fragment was already created in the click handler
+          state.player.genome = data.genome;
+          state.player.rebirths++;
+          state.player.credits = data.wallet.ec;
+          state.player.stellarMarks = data.wallet.sm;
+          state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+          state.ship = { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 };
+          state.inventory = [];
+          state.quests = state.quests.filter(q => !q.active);
+          // Apply resonance bonuses to new life
+          const r = state.player.resonanceBonuses;
+          if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
+          if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
+          if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+          addComms('AI Director', 'You have been reborn. Your soul echoes with resonance.');
+          checkAndClaimMilestones();
+          saveGame();
+          showScreen('bridge');
+        });
+
+--- NEW CODE ---
+        s.on('rebirth:result', (data) => {
+          // Soul Fragment was already created in the click handler
+          state.player.genome = data.genome;
+          state.player.rebirths++;
+          state.player.credits = data.wallet.ec;
+          state.player.stellarMarks = data.wallet.sm;
+          state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+          state.combat.bossActive = false;
+          state.combat._nextCycleAt = 15; state.combat._nextBossAt = 20;
+          state.combat._nextBreatherAt = 10; state.combat._breatherStart = 0;
+          state.inventory = [];
+          state.quests = state.quests.filter(q => !q.active);
+          resetSkills();
+          // Reset upgrades to baseline before applying resonance
+          state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
+          state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
+          state.upgrades.maxShield = 100; state.upgrades.engineSpeed = 1;
+          const r = state.player.resonanceBonuses;
+          if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
+          if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
+          state.flight.maxSpeed = 120 * (1 + (r.speed || 0) / 100);
+          applyUpgrades();
+          // Reset ship to new max values
+          state.ship.hull = state.ship.maxHull;
+          state.ship.shield = state.ship.maxShield;
+          state.ship.fuel = state.ship.maxFuel;
+          state.combat.ammo = state.combat.maxAmmo;
+          state.combat.heat = 0;
+          state.combat.godMode = false;
+          addComms('AI Director', 'You have been reborn. Your soul echoes with resonance.');
+          checkAndClaimMilestones();
+          saveGame();
+          showScreen('bridge');
+        });
+
+Why it matters:
+Online rebirths via server response silently keep old-life upgrades, don't sync
+maxShield to ship, and don't reset combat counters like bossActive or ammo.
+This makes server rebirth behave differently from the local rebirth handler,
+causing desynced ship stats and potential boss-already-active softlock.
+
+
+================================================================================
+
+FINDING 3 — Input: mouseHeld not reset when exiting gunner mode
+Lines: 3912 (exitGunnerMode), 4742 (mouseHeld declaration), 6790 (laser fire)
+Category: Keyboard/input handling
+
+What's wrong:
+`exitGunnerMode()` does not set `mouseHeld = false`.  If the player is holding
+the fire button when they die or press ESC, `mouseHeld` stays true.  On the
+next `enterGunnerMode()`, the game loop at line 6790 checks:
+    if (mouseHeld && state.activeWeapon === 'laser' && c.locked && !c.dead) fireLaser();
+The laser immediately fires without player input.
+
+--- OLD CODE (line 3912–3913) ---
+function exitGunnerMode(skipScreenChange) {
+  c.active = false;
+
+--- NEW CODE ---
+function exitGunnerMode(skipScreenChange) {
+  c.active = false;
+  mouseHeld = false;
+
+Why it matters:
+Players re-entering gunner after dying or docking get surprise laser fire that
+wastes heat, reveals position to enemies, and breaks the "death immunity"
+experience intended by the 5-second invulnerability window.
+
+
+================================================================================
+
+FINDING 4 — Scene: System jump during gunner leaves stale 3D objects
+Lines: 6610 (F key handler), 2653 (jumpToSystem), 3912 (exitGunnerMode)
+Category: HUD/Canvas rendering bugs
+
+What's wrong:
+Pressing F while in gunner mode opens the star map.  `c.active` stays true and
+the game loop keeps running — enemies attack, projectiles move, and the player
+can die while browsing the star map.  After jumping to a new system via
+`jumpToSystem()`, only `state.location.systemIndex` changes.  The old system's
+enemies, asteroids, NPC ships, stargate, station models, and police patrols all
+remain in the 3D scene.  No new system objects are spawned because
+`enterGunnerMode()` (which spawns them) is never called.
+
+--- OLD CODE (line 6610–6613) ---
+  // F = warp (open star map)
+  if (e.key === 'f' || e.key === 'F') {
+    if (c.dead) return;
+    showScreen('starmap');
+  }
+
+--- NEW CODE ---
+  // F = warp (open star map — exit gunner first so scene is properly cleaned)
+  if (e.key === 'f' || e.key === 'F') {
+    if (c.dead) return;
+    exitGunnerMode(true);
+    showScreen('starmap');
+  }
+
+Why it matters:
+Without this fix, jumping mid-combat leaves the player in a ghost system:
+old enemies wander aimlessly, the stargate points to the old alt-universe,
+stations don't match the new system, and no new content spawns.  The player
+must manually exit to bridge and re-enter gunner to get proper new-system
+content.  Additionally, enemies can kill the player while they're on the
+star-map screen with no way to dodge or return fire.
+
+
+================================================================================
+
+FINDING 5 — Upgrade: Action bar dock button skips station range check
+Lines: 4938 (action bar handler), 6622–6630 (B key handler)
+Category: Upgrade/station bugs
+
+What's wrong:
+The B key handler properly checks docking range:
+    const stationInRange = stationModels.length === 0 ||
+        stationModels.some(m => ship.position.distanceTo(m.position) < 80);
+    if (!stationInRange) { addComms('Navigation', 'Station out of docking range...'); return; }
+But the action bar "dock" button handler at line 4938 doesn't check range at
+all — it docks immediately if the system has a station, regardless of distance.
+
+--- OLD CODE (line 4938) ---
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
+
+--- NEW CODE ---
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
+
+Why it matters:
+Mobile/touch players primarily use the action bar.  Without the range check,
+they can dock from across the map — bypassing the intended fly-to-station
+gameplay.  The inconsistency between keyboard and action-bar is confusing.
+
+
+================================================================================
+
+FINDING 6 — Audio: Gain and filter nodes leak on every gunner enter/exit cycle
+Lines: 1027–1048 (startEngineHum), 1075–1083 (stopEngineHum)
+Category: Audio lifecycle
+
+What's wrong:
+`startEngineHum()` creates two oscillators, a GainNode, and a BiquadFilterNode,
+all connected:  osc → gain → lp → destination.
+`stopEngineHum()` calls `osc.stop()` on both oscillators and nulls the
+reference, but never disconnects the GainNode or BiquadFilterNode from
+`ctx.destination`.  Stopped oscillators are eventually GC'd, but the gain and
+filter nodes remain connected.
+
+The same pattern applies to `stopBGM()` and `stopAmbience()` — oscillators
+are stopped but the gain/filter chain is not disconnected.
+
+--- OLD CODE (line 1075–1083) ---
+  stopEngineHum() {
+    if (!this.engineHum) return;
+    try { this.engineHum.osc1.stop(); this.engineHum.osc2.stop(); } catch(e) {}
+    this.engineHum = null;
+  },
+  stopAmbience() {
+    if (!this.ambience) return;
+    try { this.ambience.stop(); } catch(e) {}
+    this.ambience = null;
+  },
+
+--- NEW CODE ---
+  stopEngineHum() {
+    if (!this.engineHum) return;
+    try { this.engineHum.osc1.stop(); this.engineHum.osc2.stop(); } catch(e) {}
+    try { this.engineHum.gain.disconnect(); this.engineHum.lp.disconnect(); } catch(e) {}
+    this.engineHum = null;
+  },
+  stopAmbience() {
+    if (!this.ambience) return;
+    try { this.ambience.stop(); } catch(e) {}
+    try { if (this._ambienceGain) { this._ambienceGain.disconnect(); this._ambienceGain = null; } } catch(e) {}
+    this.ambience = null;
+  },
+
+Why it matters:
+Each gunner enter/exit cycle leaks 3+ AudioNodes.  After ~100 cycles in a long
+session (very possible with the 10-minute death loop), hundreds of orphaned
+nodes sit connected to the audio destination, bloating memory and potentially
+causing crackling/glitches on low-end devices.
+
+NOTE: The same pattern exists in `stopBGM()` — check its gain chain too.
+
+
+================================================================================
+
+FINDING 7 — Star Map: jumpToSystem ignores connection graph
+Lines: 2653, 5095–5098, 2438–2455
+Category: Star system generation
+
+What's wrong:
+`generateStarSystems()` builds a connectivity graph at lines 2448–2455:
+    systems.forEach((s, i) => {
+      s.connections = [];
+      systems.forEach((t, j) => {
+        if (i === j) return;
+        const dist = Math.hypot(s.x - t.x, s.y - t.y);
+        if (dist < 120) s.connections.push(j);
+      });
+    });
+But `jumpToSystem()` at line 2653 never checks whether the target system is in
+the current system's `connections` array.  The btn-jump handler (line 5095)
+also calls jumpToSystem unconditionally.
+
+--- OLD CODE (line 2653, inside jumpToSystem after fuel check) ---
+  state.location.systemIndex = idx;
+
+--- NEW CODE ---
+  // Enforce jump route connectivity (skip check if in alt universe)
+  if (!state.inAltUniverse) {
+    const current = state.starSystems[state.location.systemIndex];
+    if (current && current.connections && !current.connections.includes(idx)) {
+      addComms('Navigation', 'No jump route to that system. Plot a route through connected systems.');
+      AudioSFX.play('shield_hit');
+      return;
+    }
+  }
+  state.location.systemIndex = idx;
+
+Why it matters:
+Jump routes are shown on the star map as connecting lines, implying they
+constrain navigation.  Without this check, the entire route network is
+decorative — any system is reachable in one jump from anywhere.  This removes
+the strategic value of system positions, fuel planning, and faction territory.
+
+
+================================================================================
+
+FINDING 8 — Star System: Outer spiral systems can have 0 connections
+Lines: 2408–2455
+Category: Star system generation
+
+What's wrong:
+The golden-angle spiral places system i at radius `60 + sqrt(i) * 55`.  For
+i=39 (last system), radius ≈ 404.  The jitter adds ±30.  Connection threshold
+is 120 units.  At the outer edge, systems are spaced by golden-angle rotation
+(~137.5°) across large radii, so consecutive systems can easily be > 120 units
+apart.  This leaves some outer systems with `connections = []` — they appear
+on the map with no jump lines.
+
+--- OLD CODE (lines 2448–2454) ---
+  systems.forEach((s, i) => {
+    s.connections = [];
+    systems.forEach((t, j) => {
+      if (i === j) return;
+      const dist = Math.hypot(s.x - t.x, s.y - t.y);
+      if (dist < 120) s.connections.push(j);
+    });
+  });
+
+--- NEW CODE ---
+  systems.forEach((s, i) => {
+    s.connections = [];
+    systems.forEach((t, j) => {
+      if (i === j) return;
+      const dist = Math.hypot(s.x - t.x, s.y - t.y);
+      if (dist < 120) s.connections.push(j);
+    });
+  });
+  // Guarantee every system has at least 1 connection (nearest neighbor fallback)
+  systems.forEach((s, i) => {
+    if (s.connections.length === 0) {
+      let nearIdx = -1, nearDist = Infinity;
+      systems.forEach((t, j) => {
+        if (i === j) return;
+        const d = Math.hypot(s.x - t.x, s.y - t.y);
+        if (d < nearDist) { nearDist = d; nearIdx = j; }
+      });
+      if (nearIdx >= 0) {
+        s.connections.push(nearIdx);
+        if (!systems[nearIdx].connections.includes(i)) systems[nearIdx].connections.push(i);
+      }
+    }
+  });
+
+Why it matters:
+If Finding 7's connectivity check is applied, any system with 0 connections
+becomes permanently unreachable — a dead end from which the player cannot
+leave or a system they can never visit.  Even without the connectivity fix,
+the star map looks broken with isolated nodes having no visible routes.
+
+
+================================================================================
+
+FINDING 9 — CSS: fade-in class never removed from screen divs
+Lines: 178 (CSS), 2105–2108 (_showScreenInner)
+Category: CSS/layout bugs
+
+What's wrong:
+`_showScreenInner()` adds the `fade-in` class to the target screen element:
+    if (el) { el.classList.add('active'); el.classList.add('fade-in'); }
+But `fade-in` is never removed.  The CSS animation:
+    .fade-in{animation:fadeIn 0.4s ease;}
+plays once when the class is first added.  On subsequent visits to the same
+screen, `classList.add('fade-in')` is a no-op (class already present), so the
+animation never replays — the screen just snaps into view without a fade.
+
+--- OLD CODE (line 2108) ---
+  if (el) { el.classList.add('active'); el.classList.add('fade-in'); }
+
+--- NEW CODE ---
+  if (el) {
+    el.classList.remove('fade-in');
+    el.classList.add('active');
+    // Force reflow to restart CSS animation
+    void el.offsetWidth;
+    el.classList.add('fade-in');
+  }
+
+Why it matters:
+The first time you visit each screen it fades in smoothly.  Every subsequent
+visit (which is 99% of gameplay) has no transition — screens snap harshly.
+This makes the carefully designed screen-transition-overlay fade (lines 2095–
+2100) look inconsistent since the overlay fades out to reveal an already-
+visible screen.
+
+
+================================================================================
+
+FINDING 10 — Save/Load: state.flight.maxSpeed not persisted
+Lines: 3408–3430 (saveGame), 2038–2070 (loadFromServerData)
+Category: localStorage/save corruption
+
+What's wrong:
+`saveGame()` saves `state.upgrades` (which includes `engineSpeed` multiplier)
+but does not save `state.flight` (which contains `maxSpeed`, `drag`, `accel`,
+etc.).  When `loadGame()` restores data via `loadFromServerData()`, the flight
+object retains its initial values from the state definition (maxSpeed: 120).
+
+This creates two bugs:
+1. Speed resonance bonus: After rebirth, `state.flight.maxSpeed` is set to
+   `120 * (1 + speed/100)`.  On save/load, it reverts to 120 — resonance lost.
+2. Any future upgrades that modify `state.flight.maxSpeed` directly would be
+   lost on save/load.
+
+--- OLD CODE (saveGame, lines 3408–3430) ---
+  const data = {
+    player: state.player,
+    ship: state.ship,
+    location: state.location,
+    factionRep: state.factionRep,
+    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle },
+    inventory: state.inventory,
+    quests: state.quests,
+    upgrades: state.upgrades,
+    settings: state.settings,
+    // Persist new systems across sessions
+    pastLives: state.pastLives,
+    skills: state.skills,
+    soulMemory: state.soulMemory,
+    economy: state.economy,
+    activeWeapon: state.activeWeapon,
+
+--- NEW CODE ---
+  const data = {
+    player: state.player,
+    ship: state.ship,
+    location: state.location,
+    factionRep: state.factionRep,
+    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle },
+    inventory: state.inventory,
+    quests: state.quests,
+    upgrades: state.upgrades,
+    settings: state.settings,
+    flight: { maxSpeed: state.flight.maxSpeed },
+    // Persist new systems across sessions
+    pastLives: state.pastLives,
+    skills: state.skills,
+    soulMemory: state.soulMemory,
+    economy: state.economy,
+    activeWeapon: state.activeWeapon,
+
+--- ALSO ADD to loadFromServerData (after line 2060): ---
+  if (data.flight) { if (data.flight.maxSpeed) state.flight.maxSpeed = data.flight.maxSpeed; }
+
+Why it matters:
+Speed resonance is a permanent reward for combining soul fragments — one of
+the game's core progression mechanics.  Losing it on every save/load makes the
+Rebirth → Soul Fracture → Resonance loop feel broken.  Players who invest in
+speed bonuses get them reset to default every time they reload the game.
+
+
+================================================================================
+
+SUMMARY
+────────────────────────────────────────────────────────────────────────────────
+ #  Title                                           Category          Severity
+────────────────────────────────────────────────────────────────────────────────
+ 1  Rebirth base speed halved (60 vs 120)           Rebirth           HIGH
+ 2  Server rebirth:result missing applyUpgrades     Rebirth/Upgrade   HIGH
+ 3  mouseHeld not reset on exit gunner              Input             MEDIUM
+ 4  System jump mid-gunner leaves stale 3D scene    HUD/Canvas        HIGH
+ 5  Action bar dock skips range check               Upgrade/Station   MEDIUM
+ 6  Audio gain/filter nodes leak per gunner cycle    Audio lifecycle   MEDIUM
+ 7  jumpToSystem ignores connection graph            Star system       MEDIUM
+ 8  Outer star systems can have 0 connections        Star system       LOW
+ 9  fade-in class never removed (anim plays once)    CSS/layout        LOW
+10  state.flight.maxSpeed not saved/loaded           Save corruption   HIGH
+────────────────────────────────────────────────────────────────────────────────
+
+HIGH = 4    MEDIUM = 4    LOW = 2    Total findings: 10
