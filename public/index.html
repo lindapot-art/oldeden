@@ -6356,7 +6356,7 @@ function gameLoop() {
         scene.add(boltObj.group);
         c.enemyBolts.push({ group: boltObj.group, dir: _tmpV3b.clone(), speed: 120, age: 0, life: 4000, _poolRef: boltObj });
       }
-      if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && performance.now() > c.deathImmunityUntil) {
+      if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
         if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
         else { state.ship.hull = Math.max(0, state.ship.hull - 0.3); AudioSFX.play('hull_hit'); }
@@ -6377,7 +6377,7 @@ function gameLoop() {
       b.group.position.addScaledVector(b.dir, b.speed * dt);
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
-        if (!c.godMode && performance.now() > c.deathImmunityUntil) {
+        if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
           const dmg = 3 + Math.random() * 4;
           const hadShield = state.ship.shield > 0;
           if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
@@ -6483,7 +6483,7 @@ function gameLoop() {
     c.spaceDust.forEach(d => { if (d && d.position && d.userData) d.position.addScaledVector(d.userData.drift, dt); });
 
     // Asteroid collision (with cooldown to prevent per-frame damage spam)
-    if (!c.godMode && performance.now() > c.deathImmunityUntil) {
+    if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
       if (!c._asteroidHitCooldown) c._asteroidHitCooldown = 0;
       if (performance.now() > c._asteroidHitCooldown) {
         c.asteroids.forEach(a => {
@@ -6501,6 +6501,7 @@ function gameLoop() {
             AudioSFX.play('shield_hit'); triggerShieldShimmer();
             c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
             addComms('EDEN AI', '\u26a0 Asteroid collision! Watch your heading.');
+            if (state.ship.hull <= 0 && !c.dead) { playerDeathSequence('Destroyed by asteroid collision'); }
           }
         });
       }
