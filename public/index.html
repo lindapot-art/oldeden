@@ -3660,6 +3660,7 @@ function triggerShieldShimmer() {
   shieldShimmerTimer = 300;
   shieldShimmerMat.opacity = 0.35;
   shieldShimmerMat.color.setHex(0x44aaff);
+  shieldShimmer.visible = true;
 }
 // Nebulae
 for (let i = 0; i < 4; i++) {
@@ -3866,6 +3867,7 @@ function enterGunnerMode() {
   _deathSequenceActive = false;
   c.streak = 0; c.streakTimer = 0; c.streakMultiplier = 1;
   c.playerHasAttacked = false;
+  c.sessionStartTime = state.gameTime; // Track when this combat session began
   // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
   c.deathImmunityUntil = performance.now() + 5000;
   AudioSFX.startAmbience();
@@ -5679,11 +5681,14 @@ function createStargate() {
 
   // Inner chevrons — 8 glowing markers around the ring
   const _chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
-  const _chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
+  if (!createStargate._chevGeo) {
+    createStargate._chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
+    createStargate._chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
+    createStargate._chevMat._pooled = true;
+  }
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
-    const chev = new THREE.Mesh(_chevGeo, _chevMat);
-    chev.position.set(Math.cos(angle) * 18, Math.sin(angle) * 18, 0);
+    const chev = new THREE.Mesh(createStargate._chevGeo, createStargate., Math.sin(angle) * 18, 0);
     chev.lookAt(0, 0, 0);
     stargateGroup.add(chev);
   }
@@ -5766,6 +5771,7 @@ function generateAltUniverse() {
 }
 
 function enterAltUniverse() {
+  if (state.inAltUniverse) return; // Prevent double-entry overwriting original systems
   state.altUniverse = generateAltUniverse();
   state.inAltUniverse = true;
   // Save original systems
@@ -5793,18 +5799,24 @@ function exitAltUniverse() {
   state.player.credits += bonus;
   addComms('Stargate', `Returned to origin universe! +${bonus} EC artifact bonus.`);
   state.altUniverse = null;
+  state._origSystems = null;
+  state._origSystemIndex = null;
   AudioSFX.play('jump');
   showScreen('bridge');
 }
 
 function collectArtifact() {
-  if (!state.altUniverse) return;
+  const existingArt = state.inventory.find(i => i.name === name);
+  if (existingArt) existingArt.quantity++;
+  else if (!state.altUniverse) return;
   const sys = state.starSystems[state.location.systemIndex];
   if (!sys || !sys.hasArtifact) { addComms('System', 'No artifact in this system.'); return; }
   sys.hasArtifact = false;
   state.altUniverse.artifactsCollected++;
   const name = sys.resources[0] || 'Unknown Artifact';
-  state.inventory.push({ name, quantity: 1 });
+  const _existArt = state.inventory.find(i => i.name === name);
+  if (_existArt) _existArt.quantity += 1;
+  else state.inventory.push({ name, quantity: 1 });
   addComms('Discovery', `Artifact collected: ${name} (${state.altUniverse.artifactsCollected}/${state.altUniverse.artifactsNeeded})`);
   AudioSFX.play('quest_complete');
   if (state.altUniverse.artifactsCollected >= state.altUniverse.artifactsNeeded) {
@@ -5848,8 +5860,9 @@ function updateMining(dt) {
     const dist = from.distanceTo(to);
     miningLaserBeam.position.copy(mid);
     miningLaserBeam.scale.set(1, dist, 1);
-    miningLaserBeam.lookAt(to);
-    miningLaserBeam.rotateX(Math.PI/2);
+    // Align cylinder (Y-axis) along beam direction via quaternion
+    _tmpV3a.copy(to).sub(from).normalize();
+    miningLaserBeam.quaternion.setFromUnitVectors(_upVec, _tmpV3a);
     miningLaserBeam.material.opacity = 0.4 + Math.sin(state.gameTime * 0.01) * 0.3;
     miningLaserBeam.material.color.setHSL(0.33 + Math.sin(state.gameTime * 0.005) * 0.05, 1, 0.5);
   }
@@ -5929,6 +5942,7 @@ function spawnNPCShip(type) {
     window._npcEngineMatF = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7 });
     window._npcEngineMatH = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.7 });
   }
+  window._npcEngineMatF._pooled = true; window._npcEngineMatH._pooled = true;
   { const eM = new THREE.Mesh(window._npcEngineGeo, npcDef.friendly ? window._npcEngineMatF : window._npcEngineMatH); eM.position.set(0, 0, 1.6); g.add(eM); }
   // Name label (stored in userData)
   const factionNames = ['Vanguard', 'Traders', 'Void Cult', 'Syndicate', 'Remnants', 'Church'];
@@ -5982,7 +5996,7 @@ function spawnSystemNPCs() {
       // Ghost tint — ethereal blue-white
       const _ghostColor = new THREE.Color(0x6688ff);
       lastNpc.group.traverse(child => {
-        if (child.isMesh && child.material) {
+        if (child.isMesh && child.material && !child.material.isMeshBasicMaterial) {
           child.material = child.material.clone();
           child.material.emissive = _ghostColor;
           child.material.emissiveIntensity = 0.6;
@@ -6239,8 +6253,13 @@ window._placeOrder = () => {
   addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
   // NPC auto-fill: match player orders against NPC counter-orders
   const _rebirthSnapshot = state.player.rebirths;
+  const _screenSnapshot = state.currentScreen;
+  const _altSnapshot = state.inAltUniverse;
   setTimeout(() => {
     if (state.player.rebirths !== _rebirthSnapshot) return; // Guard: abort if rebirth happened
+    if (c.dead) return; // Guard: abort if player died
+    if (state.inAltUniverse !== _altSnapshot) return; // Guard: abort if dimension changed
+    if (state.currentScreen !== _screenSnapshot) return; // Guard: abort if navigated away
     const _ord = state.market.orders.find(o => o.id === _orderId);
     if (!_ord || _ord.quantity <= 0) return;
     const _matches = state.market.orders.filter(o =>
@@ -7193,12 +7212,14 @@ function gameLoop() {
       if (!e.lastShot) e.lastShot = state.gameTime;
       const fireInterval = e.isBoss ? Math.max(600, 1500 - (c.cycle - 1) * 100) : (e.shootRate || 3000);
       const MAX_BOLTS = 30;
+      // Boss accuracy improves at higher cycles
+      const _inaccuracy = e.isBoss ? Math.max(0.04, 0.15 - c.cycle * 0.01) : 0.15;
       if ((c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
         e.lastShot = state.gameTime;
         _tmpV3b.copy(ship.position).sub(e.group.position).normalize();
         // Add slight inaccuracy
-        _tmpV3b.x += (Math.random() - 0.5) * 0.15;
-        _tmpV3b.y += (Math.random() - 0.5) * 0.15;
+        _tmpV3b.x += (Math.random() - 0.5) * _inaccuracy;
+        _tmpV3b.y += (Math.random() - 0.5) * _inaccuracy;
         _tmpV3b.normalize();
         const boltObj = getBoltFromPool();
         boltObj.bolt.position.copy(e.group.position);
@@ -7302,6 +7323,7 @@ function gameLoop() {
       shieldShimmerTimer -= dtMs;
       shieldShimmerMat.opacity = Math.max(0, (shieldShimmerTimer / 300) * 0.35);
       shieldShimmer.rotation.y += dt * 3;
+      if (shieldShimmerTimer <= 0) shieldShimmer.visible = false;
       shieldShimmer.rotation.x += dt * 1.5;
       if (shieldShimmerTimer <= 100) shieldShimmerMat.color.setHex(0x2266cc);
     }
@@ -7377,7 +7399,7 @@ function gameLoop() {
             } else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); }
             if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
             c.damageFlash = 350;
-            AudioSFX.play('shield_hit'); triggerShieldShimmer();
+            if (hadShield) { AudioSFX.play('shield_hit'); triggerShieldShimmer(); } else { AudioSFX.play('hull_hit'); }
             c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
             addComms('EDEN AI', '\u26a0 Asteroid collision! Watch your heading.');
             if (state.ship.hull <= 0 && !c.dead) { playerDeathSequence('Destroyed by asteroid collision'); }
