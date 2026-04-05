@@ -1854,13 +1854,12 @@ function fireLaser() {
   const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
   
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+  const beamMat = _laserBeamTpl.clone();
   const beam = new THREE.Mesh(_laserBeamGeo, beamMat);
   beam.quaternion.copy(camera.quaternion); beam.rotateX(Math.PI / 2);
   g.add(beam);
   
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
-  const glow = new THREE.Mesh(_laserGlowGeo, glowMat);
+  const glow = new THREE.Mesh(_laserGlowGeo, _laserGlowMat);
   glow.quaternion.copy(camera.quaternion); glow.rotateX(Math.PI / 2);
   g.add(glow);
   
@@ -1886,7 +1885,7 @@ function purchaseLifeInsurance() {
     return;
   }
   // Insure the most valuable item (by market base price)
-  const _getItemVal = (n) => (MARKET_ITEMS.find(m => m.name === n)?.basePrice || 0);
+  const _getItemVal = (n) => { const _m = MARKET_ITEMS.find(m => m.name === n); return _m ? _m.basePrice : 5000; };
   let best = state.inventory[0];
   state.inventory.forEach(item => {
     if (_getItemVal(item.name) > _getItemVal(best.name)) best = item;
@@ -2287,7 +2286,12 @@ function renderGeneStats(genome, container) {
 function createCharacter() {
   const name = document.getElementById('pilot-name').value.trim();
   if (!name || name.length < 2 || name.length > 24) { document.getElementById('pilot-name').style.borderColor = 'var(--danger)'; return; }
-  if (!state.player.faction) return;
+  document.getElementById('pilot-name').style.borderColor = '';
+  if (!state.player.faction) {
+    const _fg = document.getElementById('faction-grid');
+    if (_fg) { _fg.style.outline = '2px solid var(--danger)'; setTimeout(() => _fg.style.outline = '', 2000); }
+    return;
+  }
 
   state.player.name = name;
   state.player.genome = Array.from(createGenome);
@@ -2779,8 +2783,8 @@ function renderStation() {
   const sys = state.starSystems[state.location.systemIndex];
   document.getElementById('station-name').innerHTML = `&#9968; ${sys ? sys.name : 'Unknown'} Station`;
 
-  // Request dynamic prices from server
-  if (state.socket) state.socket.emit('station:enter', { systemIndex: state.location.systemIndex });
+  // Request dynamic prices from server — only on initial dock
+  if (state.socket && !state.location.docked) state.socket.emit('station:enter', { systemIndex: state.location.systemIndex });
 
   const prices = state.stationPrices || COMMODITIES;
   const market = document.getElementById('trade-market');
@@ -2944,9 +2948,10 @@ function renderStation() {
       addComms('Station', `Docking fee: -${state.economy.dockingFee} EC`);
     }
     gainSkillXP('trading', 0.1);
+    AudioSFX.play('dock');
   }
 
-  state.location.docked = true; AudioSFX.play('dock');
+  state.location.docked = true;
 }
 
 window._buy = (name, price) => {
@@ -2968,11 +2973,13 @@ window._sell = (name, price) => {
   const idx = state.inventory.findIndex(i => i.name === name);
   if (idx < 0) { addComms('Station', 'You don\'t have that item.'); return; }
   if (state.socket) {
-    state.inventory.splice(idx, 1);
+    state.inventory[idx].quantity = (state.inventory[idx].quantity || 1) - 1;
+    if (state.inventory[idx].quantity <= 0) state.inventory.splice(idx, 1);
     state.socket.emit('station:sell', { name, price });
   } else {
     const boostedPrice = Math.floor(price * getPlayerTradeMult());
-    state.inventory.splice(idx, 1);
+    state.inventory[idx].quantity = (state.inventory[idx].quantity || 1) - 1;
+    if (state.inventory[idx].quantity <= 0) state.inventory.splice(idx, 1);
     state.player.credits += boostedPrice;
     AudioSFX.play('loot_credits');
     addComms('Station', `Sold ${name} for ${boostedPrice} EC${boostedPrice > price ? ' (trade bonus!)' : ''}.`);
@@ -3822,6 +3829,7 @@ function returnBoltToPool(b) {
   if (!b || !b.group) return;
   b.group.parent?.remove(b.group);
   if (_boltPool.length < BOLT_POOL_MAX) _boltPool.push(b);
+  else { disposeObject(b.group); }
 }
 
 // ---- EXHAUST PARTICLE POOL ----
@@ -4099,7 +4107,7 @@ function createEnemy(type) {
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-    const diffScale = 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08;
+    const diffScale = Math.min(5, 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08);
   c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)) });
 }
 
@@ -4153,19 +4161,18 @@ function spawnNail() {
   const g = new THREE.Group();
 
   // Slug core — bright white-blue cylinder
-  const slugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
-  const slug = new THREE.Mesh(_nailSlugGeo, slugMat);
+  const slug = new THREE.Mesh(_nailSlugGeo, _nailSlugMat);
   slug.quaternion.copy(camera.quaternion); slug.rotateX(Math.PI/2);
   g.add(slug);
 
   // Plasma glow trail — additive blending
-  const trailMat2 = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+  const trailMat2 = _nailTrailTpl.clone();
   const trail = new THREE.Mesh(_nailTrailGeo, trailMat2);
   trail.quaternion.copy(camera.quaternion); trail.rotateX(Math.PI/2);
   g.add(trail);
 
   // Outer heat glow
-  const heatMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+  const heatMat = _nailHeatTpl.clone();
   const heat = new THREE.Mesh(_nailHeatGeo, heatMat);
   heat.quaternion.copy(camera.quaternion); heat.rotateX(Math.PI/2);
   g.add(heat);
@@ -4178,7 +4185,7 @@ function spawnNail() {
   for (let i = 0; i < 6; i++) {
     const spark = new THREE.Mesh(
       _explFragGeos[0],
-      new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 })
+      _sparkMat
     );
     spark.scale.setScalar(0.6 + Math.random() * 0.8);
     const sparkG = new THREE.Group(); sparkG.add(spark); sparkG.position.copy(origin); scene.add(sparkG);
@@ -4258,12 +4265,18 @@ function createBossEnemy() {
 const _nailSlugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6);
 const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6);
 const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6);
+const _nailSlugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
+const _nailTrailTpl = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+const _nailHeatTpl = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+const _sparkMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 });
 const _sparkUnitGeo = new THREE.SphereGeometry(1, 4, 4);
 const _lootOctGeo = new THREE.OctahedronGeometry(1.2, 0);
 const _lootRingGeo = new THREE.RingGeometry(1.5, 2, 16);
 const _lootSphereGeo = new THREE.SphereGeometry(2.5, 8, 8);
 const _laserBeamGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4);
 const _laserGlowGeo = new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4);
+const _laserBeamTpl = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+const _laserGlowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
 const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8);
 const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => new THREE.SphereGeometry(r, 4, 4));
 const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16);
@@ -6955,9 +6968,9 @@ function gameLoop() {
     if (c.hitMarkerTimer > 0) c.hitMarkerTimer = Math.max(0, c.hitMarkerTimer - dtMs);
     if (c.killConfirmTimer > 0) c.killConfirmTimer = Math.max(0, c.killConfirmTimer - dtMs);
     if (c.shieldBreakTimer > 0) c.shieldBreakTimer = Math.max(0, c.shieldBreakTimer - dtMs);
-    // Fire recoil kick (recovers over time)
+    // Fire recoil kick (recovers over time — framerate-independent)
     if (c.fireRecoilKick > 0) {
-      c.fireRecoilKick *= 0.88;
+      c.fireRecoilKick *= Math.pow(0.88, dt * 60);
       if (c.fireRecoilKick < 0.001) c.fireRecoilKick = 0;
     }
 
@@ -7263,6 +7276,7 @@ function gameLoop() {
         } else if (ch.userData && ch.userData.isRing) {
           ch.scale.setScalar(1 + progress * 8);
           ch.material.opacity = Math.max(0, 0.6 * (1 - progress));
+          ch.lookAt(camera.position);
         } else if (ch.userData && ch.userData.dir) {
           const lv = ch.userData.lifeVariance || 1;
           ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
@@ -7296,8 +7310,10 @@ function gameLoop() {
     if (state.ship.fuel > 0 && state.ship.fuel <= 15) {
       AudioSFX.fuelWarningBeep();
     }
-    // Engine exhaust
-    if (state.gameTime % 200 < dtMs) spawnExhaust();
+    // Engine exhaust (accumulator for consistent spawn rate)
+    if (!c._exhaustAccum) c._exhaustAccum = 0;
+    c._exhaustAccum += dtMs;
+    if (c._exhaustAccum >= 200) { c._exhaustAccum -= 200; spawnExhaust(); }
     for (let i = exhaustParticles.length - 1; i >= 0; i--) {
       const ep = exhaustParticles[i];
       ep.age += dtMs;
