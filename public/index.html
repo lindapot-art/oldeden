@@ -1355,6 +1355,10 @@ function storePastLife(deathCause) {
     timestamp: Date.now(),
   };
   state.pastLives.push(life);
+  // Accrue soul memory — tradeInsight based on credits earned this life
+  if (state.player.credits >= 500) {
+    state.soulMemory.tradeInsight = Math.min(15, state.soulMemory.tradeInsight + Math.min(3, Math.floor(state.player.credits / 500)));
+  }
   // Cap at 200 to prevent localStorage bloat (~5MB limit)
   if (state.pastLives.length > 200) state.pastLives.splice(0, state.pastLives.length - 200);
 }
@@ -1379,7 +1383,12 @@ function updateAging(dtMs) {
   if (state.screen === 'eulogy' || state.screen === 'karma') return;
   // 1 game-year per 3 real minutes → death at ~80 years = ~4 hours max life
   // Median life ~20 years game-time = ~60 real minutes
+  const prevAge = state.player.age;
   state.player.age += (dtMs / 1000) / 180; // 180 seconds = 1 year
+  // Aging warnings — escalating urgency
+  if (prevAge < 60 && state.player.age >= 60) addComms('Medical AI', '\u26a0 Age 60 — cellular decay accelerating. Consider your legacy.');
+  if (prevAge < 70 && state.player.age >= 70) addComms('Medical AI', '\u26a0 Age 70 — critical deterioration. Your time grows short, pilot.');
+  if (prevAge < 75 && state.player.age >= 75) addComms('Medical AI', '\u2620 Age 75 — terminal decline. The wheel awaits.');
   if (state.player.age >= 80 && !state.combat.dead) {
     playerDeathSequence('Died of old age at ' + Math.floor(state.player.age) + ' years');
   }
@@ -1636,12 +1645,16 @@ function rollKarmaWheel() {
   aura.className = 'karma-aura';
   aura.style.background = '';
   AudioSFX.play('karma_spin');
-  // Phase 2: After spin, reveal the card
+  // Phase 2: After spin, reveal the card — rarity scales duration for drama
+  const spinDur = {common:2000, uncommon:2500, rare:3000, epic:3800, legendary:5000}[roll.rarity] || 2000;
+  const spinSubtitles = {common:'The soul settles...', uncommon:'Something stirs...', rare:'The cosmos aligns...', epic:'Destiny trembles...', legendary:'THE STARS QUAKE!'};
+  let _spinPhase = 0;
+  if (spinDur > 2500) { setTimeout(() => { subtitle.textContent = spinSubtitles[roll.rarity] || 'The soul seeks...'; }, spinDur * 0.5); }
   setTimeout(() => {
     spinner.classList.add('hidden');
     subtitle.textContent = 'Your fate has been decided.';
     presentKarmaCard(roll);
-  }, 2000);
+  }, spinDur);
 }
 
 function presentKarmaCard(roll) {
@@ -1787,7 +1800,8 @@ function presentKarmaCard(roll) {
     // Step 6: Show action buttons
     actionsEl.classList.add('visible');
     const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
-    document.getElementById('reroll-cost').textContent = cost;
+    const isFreeReroll = state.player.rebirths === 0 && state.karmaRerollCount === 0;
+    document.getElementById('reroll-cost').textContent = isFreeReroll ? 'FREE' : cost;
   }, t6);
 }
 
@@ -2249,7 +2263,24 @@ function createCharacter() {
   const factionObj = FACTIONS.find(f => f.id === state.player.faction);
   if (factionObj) {
     state.factionRep[factionObj.id] = 100;
-    addComms('AI Director', `Welcome to ${factionObj.home}, pilot ${name}.`);
+    // Faction starting bonuses — meaningful choice
+    const factionBonuses = {
+      hegemony_vanguard: { stat: 'maxHull', val: 25, label: '+25 Max Hull' },
+      free_traders: { stat: 'credits', val: 200, label: '+200 Starting Credits' },
+      void_cult: { stat: 'maxShield', val: 15, label: '+15 Max Shield' },
+      iron_syndicate: { stat: 'railgunDmg', val: 0.3, label: '+0.3 Railgun Damage' },
+      eden_remnants: { stat: 'shieldRegen', val: 1, label: '+1 Shield Regen' },
+      stellar_church: { stat: 'engineSpeed', val: 0.15, label: '+0.15 Engine Speed' },
+      autonomous_collective: { stat: 'maxAmmo', val: 8, label: '+8 Max Ammo' },
+      rogue_ai_network: { stat: 'maxShield', val: 10, label: '+10 Max Shield' },
+    };
+    const bonus = factionBonuses[factionObj.id];
+    if (bonus) {
+      if (bonus.stat === 'credits') state.player.credits += bonus.val;
+      else if (state.upgrades[bonus.stat] !== undefined) state.upgrades[bonus.stat] += bonus.val;
+      addComms(factionObj.name, 'Faction bonus: ' + bonus.label);
+    }
+    addComms('AI Director', `Welcome to ${factionObj.home || 'the frontier'}, pilot ${name}.`);
     addComms(factionObj.name, `The ${factionObj.name} acknowledges your service.`);
   }
 
@@ -2985,9 +3016,10 @@ function renderCharSheet() {
     skills.innerHTML = aptitudes.map(a => {
       const val = g[a.gene];
       const pct = (val / 255 * 100).toFixed(0);
+      const mult = (0.5 + val / 255).toFixed(2);
       return `<div class="stat-row" style="font-size:0.78rem;">
         ${a.name} <div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:var(--blue)"></div></div>
-        <span style="min-width:30px;text-align:right;color:var(--muted);font-size:0.7rem">${pct}%</span>
+        <span style="min-width:55px;text-align:right;color:var(--muted);font-size:0.7rem">${pct}% <span style="color:${val >= 180 ? 'var(--success)' : val >= 100 ? 'var(--blue)' : 'var(--danger)'}">x${mult}</span></span>
       </div>`;
     }).join('');
     // Active skill levels (change during gameplay)
@@ -3790,10 +3822,14 @@ function enterGunnerMode() {
       setTimeout(_dismiss, 15000);
     }
   }
-  // First-life tutorial hints
+  // First-life tutorial hints — progressive guidance
   if (state.player.rebirths === 0) {
     setTimeout(() => addComms('EDEN AI', '\u26a0 Warning: Hostile contacts approaching. Click to fire your railgun!'), 3000);
-    setTimeout(() => addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'), 8000);
+    setTimeout(() => addComms('EDEN AI', 'Hold Shift to boost. WASD or Arrow keys to fly.'), 7000);
+    setTimeout(() => addComms('EDEN AI', 'Press B near a station to dock — buy upgrades, trade cargo, and repair.'), 15000);
+    setTimeout(() => addComms('EDEN AI', 'Press F near a stargate to warp to new systems. Explore the frontier!'), 25000);
+    setTimeout(() => addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'), 40000);
+    setTimeout(() => addComms('EDEN AI', 'Your genome shapes your potential. Trade, fight, and explore to grow skills.'), 60000);
   }
 }
 
@@ -5007,11 +5043,13 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
 // Karma Wheel: Re-roll
 document.getElementById('btn-karma-reroll').addEventListener('click', () => {
   const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
-  if (state.player.stellarMarks < cost) {
+  // First death ever gets 1 free re-roll — new players have 0 SM
+  const isFreeReroll = state.player.rebirths === 0 && state.karmaRerollCount === 0;
+  if (!isFreeReroll && state.player.stellarMarks < cost) {
     showToast(`Need ${cost} SM to re-roll`);
     return;
   }
-  state.player.stellarMarks -= cost;
+  if (!isFreeReroll) state.player.stellarMarks -= cost;
   state.karmaRerollCount++;
   const roll = generateKarmaRoll();
   state.karmaRoll = roll;
@@ -5800,6 +5838,28 @@ function spawnSystemNPCs() {
   spawnNPCShip('patrol');
   spawnNPCShip('pirate');
   if (Math.random() > 0.5) spawnNPCShip('raider');
+  // Past life ghost NPC — haunt the player with their former selves
+  if (state.pastLives.length > 0 && Math.random() > 0.4) {
+    const ghost = state.pastLives[Math.floor(Math.random() * state.pastLives.length)];
+    spawnNPCShip('patrol'); // friendly ghost
+    const lastNpc = state.npcShips[state.npcShips.length - 1];
+    if (lastNpc) {
+      lastNpc.name = ghost.name;
+      lastNpc.isGhost = true;
+      lastNpc.friendly = true;
+      // Ghost tint — ethereal blue-white
+      lastNpc.group.traverse(child => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+          child.material.emissive = new THREE.Color(0x6688ff);
+          child.material.emissiveIntensity = 0.6;
+          child.material.transparent = true;
+          child.material.opacity = 0.7;
+        }
+      });
+      addComms('Soul Echo', 'A familiar presence... ' + ghost.name + ' (' + ghost.occupation + ') drifts nearby.');
+    }
+  }
 }
 
 function updateNPCShips(dt) {
@@ -6555,18 +6615,23 @@ function playerDeathSequence(cause) {
   spawnExplosion(ship.position.clone(), 4);
   const _deathStart = performance.now();
   state._deathPullback = { active: true, getValue: () => Math.min(20, (performance.now() - _deathStart) * 0.007) };
+  // Phase 1: 3 second slow-mo pullback (existing)
   setTimeout(() => {
-    state._deathTimeDilation = 1;
-    state._deathPullback = null;
-    _deathSequenceActive = false;
-    c.dead = false;
-    // Soul departure flash — bridges 3D→2D transition
-    const df = document.createElement('div');
-    df.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:9999;opacity:1;transition:opacity 0.5s ease;pointer-events:none;';
-    document.body.appendChild(df);
-    requestAnimationFrame(() => { df.style.opacity = '0'; setTimeout(() => df.remove(), 600); });
-    exitGunnerMode(true);
-    showEulogy(c.deathStats, cause);
+    // Phase 2: 1.5s full freeze — camera holds on wreckage
+    state._deathTimeDilation = 0;
+    setTimeout(() => {
+      state._deathTimeDilation = 1;
+      state._deathPullback = null;
+      _deathSequenceActive = false;
+      c.dead = false;
+      // Soul departure flash — bridges 3D→2D transition
+      const df = document.createElement('div');
+      df.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:9999;opacity:1;transition:opacity 0.5s ease;pointer-events:none;';
+      document.body.appendChild(df);
+      requestAnimationFrame(() => { df.style.opacity = '0'; setTimeout(() => df.remove(), 600); });
+      exitGunnerMode(true);
+      showEulogy(c.deathStats, cause);
+    }, 1500);
   }, 3000);
 }
 
