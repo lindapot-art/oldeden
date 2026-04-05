@@ -1688,6 +1688,7 @@ function presentKarmaCard(roll) {
     p.style.height = p.style.width;
     particleEl.appendChild(p);
   }
+  setTimeout(() => { particleEl.innerHTML = ''; }, 2000);
   
   // Rarity aura — size and blur scale with rarity
   const auraColors = {common:'transparent',uncommon:'rgba(34,204,102,0.12)',rare:'rgba(68,170,255,0.18)',epic:'rgba(168,85,247,0.22)',legendary:'rgba(255,215,0,0.25)'};
@@ -2228,7 +2229,7 @@ function renderGeneStats(genome, container) {
 
 function createCharacter() {
   const name = document.getElementById('pilot-name').value.trim();
-  if (!name) { document.getElementById('pilot-name').style.borderColor = 'var(--danger)'; return; }
+  if (!name || name.length < 2 || name.length > 24) { document.getElementById('pilot-name').style.borderColor = 'var(--danger)'; return; }
   if (!state.player.faction) return;
 
   state.player.name = name;
@@ -3813,10 +3814,11 @@ function spawnAsteroids() {
   }
 }
 
+const _dustGeo = new THREE.SphereGeometry(0.08, 4, 4);
+const _dustMat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.45 });
 function spawnSpaceDust() {
   for (let i = 0; i < 40; i++) {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.3 + Math.random() * 0.3 });
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 4, 4), mat);
+    const m = new THREE.Mesh(_dustGeo, _dustMat);
     m.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*200, (Math.random()-0.5)*500);
     m.userData.drift = new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*0.5, (Math.random()-0.5)*2);
     scene.add(m);
@@ -3870,8 +3872,8 @@ function exitGunnerMode(skipScreenChange) {
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
-  stationModels.forEach(m => scene.remove(m)); stationModels = [];
-  glbSceneObjects.forEach(o => scene.remove(o)); glbSceneObjects = []; libraryLabels = [];
+  stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
+  glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
   stopMining();
   state.mining.active = false;
@@ -4106,15 +4108,19 @@ function createBossEnemy() {
   addComms('THREAT', `⚠ ${bossTint.name} detected! Massive hostile signature incoming!`);
 }
 
+const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8);
+const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => new THREE.SphereGeometry(r, 4, 4));
+const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16);
 function spawnExplosion(pos, scale) {
   const g = new THREE.Group();
   const s = scale || 1;
   const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.5 * s, 8, 8), coreMat);
+  const core = new THREE.Mesh(_explCoreGeo, coreMat);
+  core.scale.setScalar(s);
   core.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isCore: true };
   g.add(core);
   const ringMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.6, 16), ringMat);
+  const ring = new THREE.Mesh(_explRingGeo, ringMat);
   ring.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isRing: true };
   ring.lookAt(camera.position);
   g.add(ring);
@@ -4123,7 +4129,9 @@ function spawnExplosion(pos, scale) {
     const color = t < 0.3 ? 0xffffff : t < 0.6 ? 0xff8800 : 0xff2200;
     const mat2 = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
     const sz = (0.1 + Math.random() * 0.4) * s;
-    const m = new THREE.Mesh(new THREE.SphereGeometry(sz, 4, 4), mat2);
+    const geoIdx = Math.min(3, Math.floor(Math.random() * 4));
+    const m = new THREE.Mesh(_explFragGeos[geoIdx], mat2);
+    m.scale.setScalar(sz / [0.15, 0.25, 0.35, 0.45][geoIdx]);
     m.userData = { dir: new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), speed: 12+Math.random()*30, lifeVariance: 0.7 + Math.random() * 0.6 };
     g.add(m);
   }
@@ -4575,7 +4583,7 @@ function renderHUD() {
       const mx2 = mapCx + dx * mapScale;
       const my2 = mapCy + dz * mapScale;
       if (Math.abs(mx2 - mapCx) < mapR && Math.abs(my2 - mapCy) < mapR) {
-        hudCtx.fillStyle = n.hostile ? '#ff6600' : '#00ccff';
+        hudCtx.fillStyle = n.friendly ? '#00ccff' : '#ff6600';
         hudCtx.beginPath(); hudCtx.arc(mx2, my2, 2.5, 0, Math.PI * 2); hudCtx.fill();
       }
     });
@@ -5995,7 +6003,10 @@ window._placeOrder = () => {
   if (type === 'sell') {
     const inv = state.inventory.find(i => i.name === item);
     if (!inv || (inv.quantity || 1) < qty) { addComms('Market', `Insufficient ${item} in cargo.`); return; }
+    inv.quantity = (inv.quantity || 1) - qty;
+    if (inv.quantity <= 0) state.inventory = state.inventory.filter(i => i !== inv);
   }
+  if (type === 'buy') { state.player.credits -= price * qty; }
   state.market.orders.push({ id: 'player-' + Date.now(), item, type, price, quantity: qty, trader: state.player.name || 'You', isNPC: false });
   addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
   renderMarketScreen();
@@ -6967,7 +6978,7 @@ function gameLoop() {
           const lv = ch.userData.lifeVariance || 1;
           ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
           ch.material.opacity = Math.max(0, 1 - (progress / lv));
-          ch.scale.multiplyScalar(0.98);
+          ch.scale.multiplyScalar(Math.pow(0.98, dt * 60));
         }
       });
       if (ex.age > ex.maxAge) { scene.remove(ex.group); disposeObject(ex.group); c.explosions.splice(i, 1); }
