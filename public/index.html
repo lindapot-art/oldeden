@@ -179,6 +179,20 @@ canvas{display:block;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 #screen-transition-overlay{position:fixed;inset:0;background:#0a0a0f;z-index:9990;pointer-events:none;opacity:0;transition:opacity 0.25s ease;}
 #screen-transition-overlay.active{opacity:1;}
+#controls-overlay{position:fixed;inset:0;z-index:9980;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;pointer-events:none;transition:opacity 1.5s ease;}
+#controls-overlay.active{display:flex;pointer-events:auto;}
+#controls-overlay.fading{opacity:0;}
+.controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 36px;max-width:540px;padding:24px 32px;background:rgba(13,17,23,0.92);border:1px solid rgba(68,170,255,0.2);border-radius:12px;backdrop-filter:blur(10px);}
+.controls-grid h3{grid-column:1/3;text-align:center;color:var(--gold);font-size:1.1rem;font-weight:300;letter-spacing:0.15em;margin-bottom:4px;}
+.ctrl-item{display:flex;align-items:center;gap:10px;}
+.ctrl-key{background:rgba(68,170,255,0.1);border:1px solid rgba(68,170,255,0.25);border-radius:4px;padding:3px 10px;color:var(--blue);font-family:"Consolas",monospace;font-size:0.82rem;min-width:62px;text-align:center;white-space:nowrap;}
+.ctrl-desc{color:var(--text);font-size:0.78rem;}
+.controls-dismiss{grid-column:1/3;text-align:center;color:var(--muted);font-size:0.72rem;margin-top:6px;animation:pulse 2s infinite;}
+#bridge-launch{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:5;pointer-events:auto;}
+#btn-launch{font-size:1.15rem;padding:18px 52px;border-color:var(--gold);color:var(--gold);background:rgba(212,168,86,0.06);letter-spacing:0.12em;animation:pulse 2.5s infinite;cursor:pointer;font-family:inherit;border-radius:6px;border-width:1px;border-style:solid;transition:all 0.3s;}
+#btn-launch:hover{background:rgba(212,168,86,0.15);box-shadow:0 0 40px rgba(212,168,86,0.2);transform:scale(1.05);}
+.launch-hint{color:var(--muted);font-size:0.72rem;margin-top:8px;letter-spacing:0.05em;}
+.launch-hint span{color:var(--blue);}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
@@ -365,7 +379,6 @@ canvas{display:block;}
 
 /* ── QA UNVERIFIED BANNER ─────────────────── */
 #qa-unverified-banner{position:fixed;top:0;left:0;right:0;z-index:99999;background:repeating-linear-gradient(45deg,#ff0000,#ff0000 10px,#cc0000 10px,#cc0000 20px);color:#fff;text-align:center;font-size:0.85rem;font-weight:700;letter-spacing:0.15em;padding:6px 0;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.6);font-family:monospace;}
-<div id="screen-transition-overlay"></div>
 #qa-unverified-banner.qa-passed{background:#00aa44;}
 </style>
 </head>
@@ -373,6 +386,27 @@ canvas{display:block;}
 
 <!-- QA VERIFICATION BANNER — removed only by qa_proxy_live.cjs passing -->
 <div id="qa-unverified-banner">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
+
+<!-- Screen transition fade overlay (moved from broken <style> location) -->
+<div id="screen-transition-overlay"></div>
+
+<!-- Controls overlay — shown on first gunner entry -->
+<div id="controls-overlay">
+  <div class="controls-grid">
+    <h3>FLIGHT CONTROLS</h3>
+    <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-desc">Fly / Strafe</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">MOUSE</span><span class="ctrl-desc">Aim</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">CLICK</span><span class="ctrl-desc">Fire weapon</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">SHIFT</span><span class="ctrl-desc">Afterburner boost</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">SPACE</span><span class="ctrl-desc">Fly up</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">CTRL</span><span class="ctrl-desc">Fly down</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-desc">Reload ammo</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">Q</span><span class="ctrl-desc">Switch weapon</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-desc">Exit to bridge</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-desc">Mine asteroid</span></div>
+    <p class="controls-dismiss">Click anywhere or press any key to dismiss</p>
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════════ -->
 <!--  TITLE SCREEN                               -->
@@ -449,6 +483,10 @@ canvas{display:block;}
     <div id="bridge-inventory"></div>
     <div class="panel-title" style="margin-top:16px;">Active Quests</div>
     <div id="quest-tracker"></div>
+  </div>
+  <div id="bridge-launch">
+    <button id="btn-launch">&#9876; ENTER SPACE</button>
+    <div class="launch-hint">or click <span>Gunner</span> in nav bar</div>
   </div>
 </div>
 
@@ -2004,6 +2042,7 @@ function createCharacter() {
 
   saveGame();
   showScreen('bridge');
+  addComms('EDEN AI', '\u2694 Click ENTER SPACE to launch into combat, pilot.');
 }
 
 // ================================================================
@@ -2649,7 +2688,7 @@ function renderCharSheet() {
   document.getElementById('char-info').innerHTML = `
     <div class="stat-row" style="font-size:0.8rem;">Name <span style="color:var(--gold)">${state.player.name}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Faction <span style="color:${faction?.color || '#888'}">${faction?.name || 'None'}</span></div>
-    <div class="stat-row" style="font-size:0.8rem;">Age <span style="color:var(--muted)">${state.player.age} years</span></div>
+    <div class="stat-row" style="font-size:0.8rem;">Age <span style="color:var(--muted)">${Math.floor(state.player.age)} years</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Rebirths <span style="color:var(--muted)">${state.player.rebirths}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">Soul Fragments <span style="color:#a855f7">${state.player.soulFragments.length}</span></div>
     <div class="stat-row" style="font-size:0.8rem;">EDEN Tokens <span style="color:#a855f7">${state.player.edenTokens}</span></div>
@@ -3029,7 +3068,7 @@ const canvas3d = document.getElementById('game-canvas');
 const hudCanvas = document.getElementById('hud-canvas');
 const hudCtx = hudCanvas.getContext('2d');
 const c = state.combat;
-let renderer, scene, camera, ship, turretMount, cockpit;
+let renderer, scene, camera, ship, turretMount, cockpit, composer;
 let railGlowMatL, railGlowMatR, muzzleMat, railL, railR;
 let threeReady = false;
 
@@ -3048,7 +3087,7 @@ renderer.toneMappingExposure = 1.8;
 renderer.shadowMap.enabled = false;
 
 // Bloom post-processing
-let composer;
+// composer declared at module scope above
 
 scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050510, 0.00012);
@@ -3079,7 +3118,7 @@ composer.addPass(bloomPass);
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h);
-  composer.setSize(w, h);
+  if (composer) composer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   hudCanvas.width = w;
@@ -3359,6 +3398,18 @@ function enterGunnerMode() {
   addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
   addComms('System', 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
+  // Controls overlay — show on first gunner entry this session
+  if (!state._controlsShown) {
+    state._controlsShown = true;
+    const _co = document.getElementById('controls-overlay');
+    if (_co) {
+      _co.classList.add('active');
+      let _dismissed = false;
+      const _dismiss = () => { if (_dismissed) return; _dismissed = true; _co.classList.add('fading'); setTimeout(() => _co.classList.remove('active', 'fading'), 1500); };
+      setTimeout(() => { document.addEventListener('mousedown', _dismiss, { once: true }); document.addEventListener('keydown', _dismiss, { once: true }); }, 500);
+      setTimeout(_dismiss, 10000);
+    }
+  }
   // First-life tutorial hints
   if (state.player.rebirths === 0) {
     setTimeout(() => addComms('EDEN AI', '\u26a0 Warning: Hostile contacts approaching. Click to fire your railgun!'), 3000);
@@ -3844,8 +3895,8 @@ function renderHUD() {
   hudCtx.fillStyle = state.ship.hull > 30 ? '#cc4444' : danger;
   hudCtx.fillRect(slx, sly+38, 180*(state.ship.hull/state.ship.maxHull), 8);
   hudCtx.fillStyle = '#778899';
-  hudCtx.fillText(Math.floor(state.ship.shield)+'%', slx+185, sly+14);
-  hudCtx.fillText(Math.floor(state.ship.hull)+'%', slx+185, sly+46);
+  hudCtx.fillText(Math.floor(state.ship.shield/state.ship.maxShield*100)+'%', slx+185, sly+14);
+  hudCtx.fillText(Math.floor(state.ship.hull/state.ship.maxHull*100)+'%', slx+185, sly+46);
   // Shield break warning
   if (c.shieldBreakTimer > 0) {
     hudCtx.save();
@@ -4345,6 +4396,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
 });
 
 // Title buttons
+document.getElementById('btn-launch').addEventListener('click', () => showScreen('gunner'));
 document.getElementById('btn-new').addEventListener('click', () => { initCreateScreen(); showScreen('create'); });
 document.getElementById('btn-continue').addEventListener('click', () => {
   if (loadGame()) {
@@ -4403,11 +4455,16 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
     state.inventory = [];
   }
   state.quests = state.quests.filter(q => !q.active);
-  // Apply resonance bonuses
+  // Reset upgrades to baseline (the flesh forgets)
+  state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
+  state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
+  state.upgrades.maxShield = 100; state.upgrades.engineSpeed = 1;
+  // Apply resonance bonuses (the soul remembers)
   const r = state.player.resonanceBonuses;
   if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
   if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
   if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+  applyUpgrades();
   // Reset ship
   state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield;
   state.ship.fuel = state.ship.maxFuel;
@@ -4416,6 +4473,7 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   state.combat.godMode = false; // No god mode in new life
   addDeathFeedEvent('rebirth', `A new soul enters the galaxy: ${roll.name}, ${roll.title}`);
   addComms('AI Director', `You have been reborn as ${roll.name}, ${roll.title}. ${roll.factionName} welcomes you.`);
+  AudioSFX.play('karma_reveal');
   checkAndClaimMilestones();
   saveGame();
   state.karmaRoll = null;
@@ -5628,7 +5686,7 @@ const clock = new THREE.Clock();
 
 function gameLoop() {
   requestAnimationFrame(gameLoop);
-  if (!scene || !camera || !ship || !turretMount) return;
+  if (!scene || !camera || !ship || !turretMount || !composer) return;
   if (!state._frameCount) state._frameCount = 0;
   state._frameCount++;
   const rawDt = Math.min(clock.getDelta(), 0.1);
@@ -6015,8 +6073,7 @@ function gameLoop() {
       if (b.age > b.life) { if (b._poolRef) returnBoltToPool(b._poolRef); else scene.remove(b.group); c.enemyBolts.splice(i, 1); }
     }
 
-    // Update explosr = Math.random();
-              const lootType = r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel
+    // Update explosions
     for (let i = c.explosions.length - 1; i >= 0; i--) {
       const ex = c.explosions[i];
       if (!ex || !ex.group) { c.explosions.splice(i, 1); continue; }
@@ -6092,7 +6149,7 @@ function gameLoop() {
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', pos: l.group.position.clone(), age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', pos: l.group.position.clone(), age: 0, color: '#44ff44' }); }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', pos: l.group.position.clone(), age: 0, color: '#ff8844' }); }
-        AudioSFX.play('quest_complete');
+        AudioSFX.play('loot_' + l.type);
         scene.remove(l.group); c.lootDrops.splice(i, 1); continue;
       }
       // Despawn after 15s
@@ -6164,7 +6221,7 @@ function gameLoop() {
     camera.quaternion.copy(_tmpQuat).multiply(_tmpQuatB.setFromEuler(_tmpEuler));
   }
 
-  composer.render();
+  if (composer) composer.render(); else if (renderer) renderer.render(scene, camera);
 }
 
 // ================================================================
@@ -6174,12 +6231,12 @@ async function init() {
   // Generate star systems
   // UI sounds — delegated
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.menu-btn,.btn,.nav-btn,.action-btn,.trade-buy,.trade-sell,.sf-tab,.chat-toggle')) {
+    if (e.target.closest && e.target.closest('.menu-btn,.btn,.nav-btn,.action-btn,.trade-buy,.trade-sell,.sf-tab,.chat-toggle')) {
       AudioSFX.uiClick();
     }
   });
   document.addEventListener('mouseenter', (e) => {
-    if (e.target.matches('.menu-btn,.btn,.nav-btn,.action-btn')) {
+    if (e.target.matches && e.target.matches('.menu-btn,.btn,.nav-btn,.action-btn')) {
       AudioSFX.uiHover();
     }
   }, true);
