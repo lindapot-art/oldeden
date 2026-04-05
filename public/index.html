@@ -3994,7 +3994,7 @@ function spawnAsteroids() {
 }
 
 const _dustGeo = new THREE.SphereGeometry(0.08, 4, 4); _dustGeo._pooled = true;
-const _dustMat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.45 });
+const _dustMat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.45 }); _dustMat._pooled = true;
 function spawnSpaceDust() {
   for (let i = 0; i < 40; i++) {
     const m = new THREE.Mesh(_dustGeo, _dustMat);
@@ -5733,6 +5733,7 @@ function createStargate() {
     createStargate._chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
     createStargate._chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
     createStargate._chevMat._pooled = true;
+    createStargate._chevGeo._pooled = true;
   }
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
@@ -6124,6 +6125,8 @@ async function spawnStationModel() {
     spawnStationModel._lightMat2 = new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8});
     spawnStationModel._hubMat._pooled = true; spawnStationModel._ringMat._pooled = true;
     spawnStationModel._panelMat2._pooled = true; spawnStationModel._lightMat2._pooled = true;
+    spawnStationModel._hubGeo._pooled = true; spawnStationModel._torusGeo._pooled = true;
+    spawnStationModel._panelGeo2._pooled = true; spawnStationModel._lightGeo2._pooled = true;
   }
   const hubMat = spawnStationModel._hubMat;
   g.add(new THREE.Mesh(spawnStationModel._hubGeo, hubMat));
