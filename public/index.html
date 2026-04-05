@@ -4297,7 +4297,7 @@ const _lootRingGeo = new THREE.RingGeometry(1.5, 2, 16); _lootRingGeo._pooled = 
 const _lootSphereGeo = new THREE.SphereGeometry(2.5, 8, 8); _lootSphereGeo._pooled = true;
 const _laserBeamGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4); _laserBeamGeo._pooled = true;
 const _laserGlowGeo = new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4); _laserGlowGeo._pooled = true;
-const _laserBeamTpl = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }); _laserGlowMat._pooled = true;
+const _laserBeamTpl = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }); _laserBeamTpl._pooled = true;
 const _laserGlowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }); _laserGlowMat._pooled = true;
 const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8); _explCoreGeo._pooled = true;
 const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => { const g = new THREE.SphereGeometry(r, 4, 4); g._pooled = true; return g; });
@@ -5932,9 +5932,7 @@ function updateMining(dt) {
       }
     });
     // Remove asteroid
-    disposeObject(asteroid);
     scene.remove(asteroid);
-    disposeObject(asteroid);
     disposeObject(asteroid);
     const _aidx = c.asteroids.indexOf(asteroid);
     if (_aidx >= 0) c.asteroids.splice(_aidx, 1);
@@ -6567,8 +6565,7 @@ window._applySkinPreset = (idx) => {
 let cockpitGLBModel = null;
 
 async function loadCockpitGLB() {
-  if (cockpitGLBModel) { camera.remove(cockpitGLBMod
-    if (!c.active) return; // Guard: exited gunner during loadel); cockpitGLBModel = null; }
+  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   try {
     const model = await loadGLBModel('cockpit_new');
     const cp = model.clone();
@@ -6591,6 +6588,8 @@ async function loadCockpitGLB() {
         });
       }
     });
+    // Guard: player may have exited gunner mode during async load
+    if (!c.active) { disposeObject(cp); return; }
     // Add directly to camera (not cockpit group) so it doesn't conflict with railgun
     camera.add(cp);
     cockpitGLBModel = cp;
@@ -6606,8 +6605,7 @@ async function loadCockpitGLB() {
 let dashboardGunModel = null;
 
 async function loadDashboardGun() {
-  if (dashboardGunModel) { camera.remove(dashboardGunMo
-    if (!c.active) return; // Guard: exited gunner during loaddel); dashboardGunModel = null; }
+  if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
   try {
     const model = await loadGLBModel('gun_futuristic');
     const gun = model.clone();
@@ -6632,6 +6630,8 @@ async function loadDashboardGun() {
         });
       }
     });
+    // Guard: player may have exited gunner mode during async load
+    if (!c.active) { disposeObject(gun); return; }
     camera.add(gun);
     dashboardGunModel = gun;
     addComms('System', 'Sidearm secured on dashboard.');
@@ -6647,8 +6647,7 @@ let railgunModel = null;
 
 // Load the railgun BARREL GLB model — mounted in front of player, aiming away
 async function loadRailgunTurretGLB() {
-  if (railgunModel) { cockpit.remove(railgunModel); ra
-    if (!c.active) return; // Guard: exited gunner during loadilgunModel = null; }
+  if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   try {
     const model = await loadGLBModel('railgun_large');
     const gun = model.clone();
@@ -6659,6 +6658,8 @@ async function loadRailgunTurretGLB() {
     // Rotate so the barrel's long axis aligns with camera forward
     gun.rotation.set(0, Math.PI / 2, 0);
     gun.name = 'railgun-barrel-glb';
+    // Guard: player may have exited gunner mode during async load
+    if (!c.active) { disposeObject(gun); return; }
     cockpit.add(gun);
     railgunModel = gun;
     addComms('System', 'Railgun barrel GLB loaded — 100,000 rounds, instant fire.');
