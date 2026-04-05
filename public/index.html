@@ -6301,13 +6301,11 @@ window._placeOrder = () => {
   addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
   // NPC auto-fill: match player orders against NPC counter-orders
   const _rebirthSnapshot = state.player.rebirths;
-  const _screenSnapshot = state.screen;
   const _altSnapshot = state.inAltUniverse;
   setTimeout(() => {
     if (state.player.rebirths !== _rebirthSnapshot) return; // Guard: abort if rebirth happened
     if (c.dead) return; // Guard: abort if player died
     if (state.inAltUniverse !== _altSnapshot) return; // Guard: abort if dimension changed
-    if (state.screen !== _screenSnapshot) return; // Guard: abort if navigated away
     const _ord = state.market.orders.find(o => o.id === _orderId);
     if (!_ord || _ord.quantity <= 0) return;
     const _matches = state.market.orders.filter(o =>
@@ -6350,7 +6348,7 @@ window._placeOrder = () => {
       state.market.orders = state.market.orders.filter(o => o.id !== _orderId);
       addComms('Market', 'Sell order expired. ' + _ord.quantity + 'x ' + _ord.item + ' returned to cargo.');
     }
-    renderMarketScreen();
+    if (state.screen === 'market') renderMarketScreen();
   }, 2000 + Math.random() * 3000);
   renderMarketScreen();
 };
