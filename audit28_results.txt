@@ -1,0 +1,827 @@
+================================================================================
+  AUDIT 28 — Old Eden public/index.html (~7404 lines)
+  Deep-Dive: Race Conditions, Boss Edge Cases, Skill Bugs,
+             Rebirth Milestones, Cosmetics/Skins, Death Feed XSS,
+             WebGL Context Loss, Pointer Lock, Chat Input, Performance
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #1 — Market XSS: Unescaped Player/NPC Names in innerHTML
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6071-6082 (renderMarketScreen)
+Category: Death Feed / XSS
+
+The market table injects `o.item`, `o.trader`, and `o.id` directly into
+innerHTML without using `_escHtml()`. Player orders use `state.player.name`
+as the trader. If a player name or item name contains HTML/JS, it executes.
+The `o.id` is also injected directly into an onclick attribute string — a
+player-crafted order ID like `'); alert('xss` would break out.
+
+Old code (lines 6071-6074):
+    sells.map(o => `<tr><td>${o.item}</td><td class="market-buy">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${o.trader}</td>
+        <td><button class="trade-buy" onclick="window._marketBuy('${o.id}')">Buy</button></td></tr>`).join('') +
+
+New code:
+    sells.map(o => `<tr><td>${_escHtml(o.item)}</td><td class="market-buy">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${_escHtml(o.trader)}</td>
+        <td><button class="trade-buy" onclick="window._marketBuy('${_escHtml(o.id)}')">Buy</button></td></tr>`).join('') +
+
+Same fix needed for sell tab (lines 6078-6081):
+Old:
+      buys.map(o => `<tr><td>${o.item}</td><td class="market-sell">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${o.trader}</td>
+        <td><button class="trade-sell" onclick="window._marketSell('${o.id}')">Sell</button></td></tr>`).join('') +
+
+New:
+      buys.map(o => `<tr><td>${_escHtml(o.item)}</td><td class="market-sell">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${_escHtml(o.trader)}</td>
+        <td><button class="trade-sell" onclick="window._marketSell('${_escHtml(o.id)}')">Sell</button></td></tr>`).join('') +
+
+Same for history tab (line 6085):
+Old:
+        state.market.history.slice(-20).reverse().map(h => `<tr><td style="color:var(--muted)">${formatTimeAgo(h.time)}</td><td>${h.item}</td><td style="color:${h.type==='buy'?'var(--green)':'var(--danger)'}">${h.type}</td><td>${h.price}</td><td>${h.quantity}</td></tr>`).join('') +
+
+New:
+        state.market.history.slice(-20).reverse().map(h => `<tr><td style="color:var(--muted)">${formatTimeAgo(h.time)}</td><td>${_escHtml(h.item)}</td><td style="color:${h.type==='buy'?'var(--green)':'var(--danger)'}">${_escHtml(h.type)}</td><td>${h.price}</td><td>${h.quantity}</td></tr>`).join('') +
+
+Why it matters: In multiplayer, a malicious player could set their name to
+contain `<script>` or `<img onerror=...>` and have it execute in all other
+players' market screens. This is a stored XSS vulnerability. The `_escHtml`
+function already exists and is used in death ticker / comms — market was
+simply missed.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #2 — Race Condition: Boss GLB Not Loaded → bossActive Stuck
+────────────────────────────────────────────────────────────────────────────────
+Lines: 4517-4543 (createBossEnemy)
+Category: Boss Edge Cases / Race Conditions
+
+When `createBossEnemy()` is called, it synchronously checks
+`state.loadedModels[bossKey]`. If the boss GLB hasn't finished loading yet
+(it loads async in batches via `preloadEnemyModel`), the procedural fallback
+box is used — that's fine. But the real issue is that `c.bossActive = true`
+is set on line ~7248 BEFORE calling `createBossEnemy()`. If the boss spawns
+at extreme range and is immediately cleaned up by a distance check or the
+player exits gunner mode, `c.bossActive` is set to false ONLY inside the
+kill handler (line 7167). There's no cleanup in `exitGunnerMode` that resets
+`c.bossActive`, so if the player presses Escape or dies during a boss fight,
+`c.bossActive` remains `true` forever, and no more bosses will ever spawn.
+
+Old code (lines 3957-3966, exitGunnerMode):
+function exitGunnerMode(skipScreenChange) {
+  c.active = false;
+  mouseHeld = false;
+  if (document.pointerLockElement) document.exitPointerLock();
+  // Clean up all 3D objects (guard each removal) + dispose GPU resources
+  c.enemyBolts.forEach(b => { if (b && b._poolRef) returnBoltToPool(b._poolRef); else if (b && b.group) { scene.remove(b.group); disposeObject(b.group); } }); c.enemyBolts = [];
+  c.enemies.forEach(e => { if (e && e.group) { scene.remove(e.group); disposeObject(e.group); } }); c.enemies = [];
+
+New code:
+function exitGunnerMode(skipScreenChange) {
+  c.active = false;
+  c.bossActive = false;
+  mouseHeld = false;
+  if (document.pointerLockElement) document.exitPointerLock();
+  // Clean up all 3D objects (guard each removal) + dispose GPU resources
+  c.enemyBolts.forEach(b => { if (b && b._poolRef) returnBoltToPool(b._poolRef); else if (b && b.group) { scene.remove(b.group); disposeObject(b.group); } }); c.enemyBolts = [];
+  c.enemies.forEach(e => { if (e && e.group) { scene.remove(e.group); disposeObject(e.group); } }); c.enemies = [];
+
+Why it matters: Without this, any death during a boss fight permanently
+prevents future boss spawns for the entire session, silently breaking 20-kill
+cycle progression.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #3 — Skill XP Overflow: gainSkillXP Has No Maximum Level Guard
+────────────────────────────────────────────────────────────────────────────────
+Lines: ~1357-1367 (gainSkillXP function)
+Category: Skill System Bugs
+
+The `gainSkillXP` function calls `getSkillCeiling` to determine the XP
+needed to level up, but there's no maximum level check. `getSkillCeiling`
+uses `Math.pow` which grows exponentially, but the `getSkillBonus` function
+on line ~1370 returns `1 + skill.level * 0.1`, meaning at extreme levels
+the bonus becomes absurdly high (e.g., level 100 = 11x multiplier). This
+lets hacking skill give 70% loot drop chance (the 0.7 cap saves us there),
+but gunnery/piloting/engineering bonuses are uncapped.
+
+Need to verify exact line numbers — let me check:
+
+Old code (gainSkillXP, approximately line 1360):
+function gainSkillXP(skillName, amount) {
+  const skill = state.skills[skillName];
+  if (!skill) return;
+  const rate = getSkillRate(skillName);
+  skill.xp += amount * rate;
+  const ceiling = getSkillCeiling(skill.level);
+  if (skill.xp >= ceiling) {
+    skill.xp -= ceiling;
+    skill.level++;
+    addComms('Skills', `${skillName} leveled up to ${skill.level}!`);
+  }
+}
+
+New code:
+function gainSkillXP(skillName, amount) {
+  const skill = state.skills[skillName];
+  if (!skill) return;
+  if (skill.level >= 50) return; // Max level cap
+  const rate = getSkillRate(skillName);
+  skill.xp += amount * rate;
+  const ceiling = getSkillCeiling(skill.level);
+  if (skill.xp >= ceiling) {
+    skill.xp -= ceiling;
+    skill.level = Math.min(50, skill.level + 1);
+    addComms('Skills', `${skillName} leveled up to ${skill.level}!`);
+  }
+}
+
+Why it matters: Without a level cap, long-running sessions accumulate
+ridiculously high skill bonuses. At level 50 the bonus is 6x which is
+already powerful. The XP ceiling growth slows progression but doesn't stop
+it, and players who exploit auto-mine/auto-target can AFK to absurd levels.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #4 — Rebirth Milestone Double-Claim via Server Rebirth Path
+────────────────────────────────────────────────────────────────────────────────
+Lines: 2013, 5070 (checkAndClaimMilestones called in two rebirth paths)
+Category: Rebirth Milestones
+
+Both the server rebirth handler (line 2013, `s.on('rebirth:result')`) and
+the client-side karma accept handler (line ~5070) call
+`checkAndClaimMilestones()`. This is correct individually. However, the
+server path on line 1990 says "Soul Fragment was already created in the click
+handler" — meaning the client already called `createSoulFragment()` which
+updates `lifetimeStats`. But the server path then overwrites
+`state.combat.score = 0`, `state.combat.kills = 0` BEFORE calling
+`checkAndClaimMilestones`. Since milestones check `lifetimeStats` (not
+current combat), this works for kills/score. BUT the server path does NOT
+call `storePastLife()` — so the past life NPC for that life is lost when
+rebirthing via server path.
+
+Old code (line ~1990-2015, server rebirth handler):
+        s.on('rebirth:result', (data) => {
+          // Soul Fragment was already created in the click handler
+          state.player.genome = data.genome;
+          state.player.rebirths++;
+          state.player.credits = data.wallet.ec;
+          ...
+          checkAndClaimMilestones();
+          saveGame();
+          showScreen('bridge');
+        });
+
+New code:
+        s.on('rebirth:result', (data) => {
+          // Soul Fragment was already created in the click handler
+          // Store past life before identity changes
+          storePastLife('Rebirth (server)');
+          state.player.genome = data.genome;
+          state.player.rebirths++;
+          state.player.credits = data.wallet.ec;
+          ...
+          checkAndClaimMilestones();
+          saveGame();
+          showScreen('bridge');
+        });
+
+Why it matters: Players who rebirth while connected to the server never
+generate a past-life ghost NPC for that life. In offline mode (karma wheel
+path), `showEulogy` → `storePastLife` handles this. The server path skips
+eulogy entirely, losing that life from the haunting system.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #5 — Skin applySkin Mutates Shared Materials
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6307-6316 (applySkin)
+Category: Cosmetics / Skins
+
+`applySkin` traverses the ship and directly modifies `child.material.color`,
+`roughness`, `metalness`, and `emissive` — but it never clones the material
+first. If the ship uses GLB models loaded via `reskinModel`, those materials
+come from a shared `_materialCache` (line ~4209). Mutating cached materials
+means ALL enemies/NPCs using the same base material from that GLB will also
+change appearance when the player applies a skin.
+
+Old code (lines 6307-6316):
+function applySkin(skin) {
+  state.currentSkin = skin;
+  ship.traverse(child => {
+    if (!child.isMesh || !child.material || child.material.isMeshBasicMaterial) return;
+    // Determine if this is hull or accent based on original color
+    const isAccent = child.material.emissiveIntensity > 0.2;
+    child.material.color.setHex(isAccent ? skin.accent : skin.primary);
+    child.material.roughness = skin.roughness;
+    child.material.metalness = skin.metalness;
+    if (child.material.emissive) child.material.emissive.setHex(skin.emissive);
+  });
+
+New code:
+function applySkin(skin) {
+  state.currentSkin = skin;
+  ship.traverse(child => {
+    if (!child.isMesh || !child.material || child.material.isMeshBasicMaterial) return;
+    // Clone material to avoid mutating shared/cached materials
+    if (child.material._pooled || child.material._shared) {
+      child.material = child.material.clone();
+    }
+    const isAccent = child.material.emissiveIntensity > 0.2;
+    child.material.color.setHex(isAccent ? skin.accent : skin.primary);
+    child.material.roughness = skin.roughness;
+    child.material.metalness = skin.metalness;
+    if (child.material.emissive) child.material.emissive.setHex(skin.emissive);
+  });
+
+Why it matters: Applying a skin can visually corrupt all enemies/NPCs using
+the same base GLB material. This is a subtle but noticeable visual glitch
+where applying "Blood Storm" skin could turn all fighters red too.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #6 — WebGL Context Restored: Composer/Bloom Not Rebuilt
+────────────────────────────────────────────────────────────────────────────────
+Lines: 4090-4098 (webglcontextrestored handler)
+Category: WebGL Context Loss Recovery
+
+The `webglcontextrestored` handler re-sets pixel ratio and tone mapping, but
+does NOT rebuild the `EffectComposer` or `UnrealBloomPass`. After context
+loss + restore, the WebGL framebuffers backing the bloom pass are destroyed.
+The game loop calls `composer.render()` on line 7298, which will either
+produce a black screen or throw errors because the render targets are gone.
+
+Old code (lines 4093-4098):
+canvas3d.addEventListener('webglcontextrestored', () => {
+  console.log('[Old Eden] WebGL context restored');
+  const lostDiv = document.getElementById('webgl-lost-overlay');
+  if (lostDiv) lostDiv.classList.remove('active');
+  // Re-init renderer settings
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.8;
+});
+
+New code:
+canvas3d.addEventListener('webglcontextrestored', () => {
+  console.log('[Old Eden] WebGL context restored');
+  const lostDiv = document.getElementById('webgl-lost-overlay');
+  if (lostDiv) lostDiv.classList.remove('active');
+  // Re-init renderer settings
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.8;
+  // Rebuild bloom post-processing (render targets destroyed by context loss)
+  if (composer) {
+    composer.passes = [];
+    composer.addPass(new RenderPass(scene, camera));
+    const newBloom = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85
+    );
+    composer.addPass(newBloom);
+    composer.setSize(window.innerWidth, window.innerHeight);
+  }
+});
+
+Why it matters: On mobile devices and laptops, WebGL context loss is common
+(GPU memory pressure, tab switching). Without rebuilding the composer, the
+game becomes a black screen after recovery — the overlay hides but rendering
+is broken.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #7 — Pointer Lock: requestPointerLock Inside Gesture May Reject
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6618 (T key chatbot toggle re-locks)
+Category: Pointer Lock Edge Cases
+
+When closing the chatbot panel with 'T' key (line 6618):
+```
+canvas3d.requestPointerLock();
+```
+This call is inside a `keydown` event handler, which counts as a user
+gesture. HOWEVER, the user just typed 'T' in the chatbot input. The browser
+may still have focus on the chatbot input element. Some browsers reject
+`requestPointerLock()` if the triggering element is not the lock target or
+if the document hasn't had a recent mouse click. The rejected promise is
+unhandled.
+
+Old code (lines 6614-6619):
+    if (state.chatbot.visible) {
+      if (document.pointerLockElement) document.exitPointerLock();
+      setTimeout(() => chatInput.focus(), 100);
+    } else {
+      canvas3d.requestPointerLock();
+    }
+
+New code:
+    if (state.chatbot.visible) {
+      if (document.pointerLockElement) document.exitPointerLock();
+      setTimeout(() => chatInput.focus(), 100);
+    } else {
+      try { canvas3d.requestPointerLock()?.catch(() => {}); } catch(_) {}
+    }
+
+Why it matters: Unhandled promise rejection on `requestPointerLock()` can
+log console errors and, on some browsers, trigger the "pointer lock was
+rejected" modal warning. Silencing the rejection is safe because the user
+will see the lock-prompt overlay and can click to re-lock.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #8 — Chat Input: Enter Key Propagates to Game Keybinds
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6254-6258 (Enter key listener for chatbot)
+Category: Chat Input Edge Cases
+
+The global keydown listener for chatbot Enter (line 6254) only checks if
+`document.activeElement === chatbot-input`. But the ADDITIONAL keybinds
+listener (line 6602) has the same check:
+```
+const chatInput = document.getElementById('chatbot-input');
+if (document.activeElement === chatInput) return;
+```
+HOWEVER, the 'T' key handler on line 6610 toggles the chatbot and calls
+`chatInput.focus()` inside a `setTimeout`. During that 100ms gap, the user
+can type keys that get processed as game commands. Also, the 'T' key itself
+will always trigger the toggle EVEN when the chat is open, because the guard
+on line 6603 is in a DIFFERENT keydown listener (the "additional keybinds"
+one on line 6600) — but there's ANOTHER keydown listener on line 4910 (the
+main WASD/R/Escape handler) that ALSO has a chat guard, and ANOTHER one on
+line 6254 that only handles Enter. The main issue: `e.key === 't'` check on
+line 6610 runs BEFORE the `setTimeout` focus happens from the previous T
+press, so pressing T while focused on chatbot input will type 't' AND toggle
+the panel closed.
+
+Wait — re-reading line 6603: the chat guard IS present in the additional
+keybinds listener. The bug is actually: the Enter key listener on line 6254
+does NOT call `e.stopPropagation()` or `e.preventDefault()`, so pressing
+Enter while in the chatbot will also trigger any other global Enter handlers.
+Currently there are no conflicting Enter handlers, but the more meaningful
+bug is:
+
+The `_chatSend` function (line 6248) doesn't `e.preventDefault()` on the
+Enter keydown, so if the chatbot input has a form parent, the form submits.
+More importantly, `_chatSend` clears the input value, but the Enter keydown
+has already been received — and since the chatbot panel remains open,
+pointer lock is NOT re-acquired. This is actually correct behavior. The real
+edge case is:
+
+Pressing Escape while chatbot is open and focused: The main keydown handler
+(line 4911) has `if (e.key === 'Escape' && c.active) { exitGunnerMode(); }`
+which fires BEFORE the additional keybinds handler checks for chat focus.
+This means pressing Escape while typing in chat exits gunner mode entirely.
+
+Old code (line 4911-4912):
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
+  // Don't process game keys while typing in chatbot
+  const _chInput = document.getElementById('chatbot-input');
+  if (document.activeElement === _chInput) return;
+
+New code:
+document.addEventListener('keydown', (e) => {
+  // Don't process game keys while typing in chatbot
+  const _chInput = document.getElementById('chatbot-input');
+  if (document.activeElement === _chInput) return;
+  if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
+
+Why it matters: Players typing in chat who press Escape (common reflex to
+close a text box) get yanked out of gunner mode entirely — losing combat
+state, enemy positions, and streak. The chatbot input check should come
+BEFORE the Escape handler so Escape while chatting just closes the panel
+instead.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #9 — Performance: renderLibraryLabels Called Every Frame Unconditionally
+────────────────────────────────────────────────────────────────────────────────
+Lines: 5411-5444, 7294 (renderLibraryLabels + call site in game loop)
+Category: Performance
+
+`renderLibraryLabels()` is called every frame in the game loop (line 7294).
+Inside it, it ALWAYS calls `renderPoliceLabels()` (line 5412) regardless of
+whether `showLibraryLabelsFlag` is true. The early-return on line 5413
+(`if (!c.active || paradeLabels.length === 0) return;`) only skips the
+parade labels — police labels have already been rendered.
+
+More importantly, both functions call `.project(camera)` for every label
+every frame, which involves matrix multiplication. With multiple parade ships
+and 3 police ships, that's vector projections every frame even when labels
+are toggled off.
+
+Old code (lines 5411-5413):
+function renderLibraryLabels() {
+    renderPoliceLabels();
+  if (!c.active || paradeLabels.length === 0) return;
+
+New code:
+function renderLibraryLabels() {
+  if (!showLibraryLabelsFlag) return;
+  renderPoliceLabels();
+  if (!c.active || paradeLabels.length === 0) return;
+
+Why it matters: Saves ~6-12 matrix projection operations per frame when
+labels are disabled. Small individually, but on low-end hardware at 60fps
+the savings are measurable. Also respects the user's explicit choice to
+disable labels.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #10 — Boss HP Scaling: Unbounded Exponential Growth
+────────────────────────────────────────────────────────────────────────────────
+Lines: 4539-4541 (createBossEnemy HP calculation)
+Category: Boss Edge Cases
+
+Boss HP is calculated as:
+```
+const bDiff = 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08;
+const bossHp = Math.ceil((bossKey.startsWith('titan') ? 40 : 30) * bDiff);
+```
+
+After 20 rebirths and cycle 30 (reachable in a long session), bDiff = 1 +
+3.0 + 2.32 = 6.32, and boss HP = 253. After 50+ rebirths, bDiff grows to
+~10+, making bosses have 400+ HP. The player's railgun does ~1.0 base damage
+per shot with 24 ammo (36 upgraded). Even with max resonance bonuses and
+gunnery skill, the player can never kill these bosses — they become
+literally invincible walls.
+
+Compare to regular enemies which have the same scaling but start at 3-10 HP.
+At bDiff=6, a scout has 18 HP — killable. A boss at 252+ HP with 36 ammo
+is not.
+
+Old code (lines 4539-4541):
+  const bDiff = 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08;
+  const bossHp = Math.ceil((bossKey.startsWith('titan') ? 40 : 30) * bDiff);
+
+New code:
+  const bDiff = Math.min(5, 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08);
+  const bossHp = Math.ceil((bossKey.startsWith('titan') ? 40 : 30) * bDiff);
+
+Why it matters: Without a cap, bosses in the endgame become unkillable
+sponges. Capping bDiff at 5 (max boss HP = 200 for titans, 150 for demons)
+keeps difficulty escalating but ensures bosses remain killable with skilled
+play and good weapon upgrades.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #11 — Race: NPC Auto-fill setTimeout Uses Stale `_orderId`
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6159-6184 (_placeOrder NPC auto-fill)
+Category: Race Conditions
+
+`_placeOrder` creates a player order, then sets a `setTimeout(2000-5000ms)`
+to auto-fill it against NPC orders. The timeout captures `_orderId` in
+closure. If the player clicks "Place Order" rapidly, multiple timeouts fire
+with different `_orderId` values that may reference orders already consumed
+by earlier timeouts. Specifically:
+
+1. Player places sell order at T=0 → orderId "player-1000"
+2. Player places another sell order at T=100 → orderId "player-1100"
+3. At T=3000, first timeout fires, fills "player-1000" against NPC buys
+4. The NPC buy orders are now depleted
+5. At T=3100, second timeout fires, finds no NPC matches → no fill
+
+This is actually benign (no corruption). BUT: The real bug is on line 6173:
+when `_ord.type === 'buy'` and NPC fills it, the code gives the player items
+but the player already paid `price * qty` upfront (line 6158). The NPC fill
+uses `_ord.price * fq` as the sell price — but the player already prepaid.
+This is correct for buy orders (prepaid). However for SELL orders: the player
+already removed items from inventory (line 6153-6155), and on fill they get
+`state.player.credits += _ord.price * fq`. This is also correct.
+
+Actually the race condition is: between the player placing a buy order
+(credits deducted) and the NPC auto-fill (items delivered), the player could
+rebirth or die, clearing their inventory. The items get added to
+`state.inventory` which was already cleared by rebirth. The credits were
+already deducted from the OLD credit balance. Net effect: player loses
+credits and gains phantom items in a new life.
+
+Old code (line 6157-6158):
+  if (type === 'buy') { state.player.credits -= price * qty; }
+  const _orderId = 'player-' + Date.now();
+
+New code:
+  if (type === 'buy') { state.player.credits -= price * qty; }
+  const _orderId = 'player-' + Date.now();
+  const _orderRebirthNum = state.player.rebirths; // snapshot rebirth count
+
+And in the setTimeout (around line 6163):
+Old:
+  setTimeout(() => {
+    const _ord = state.market.orders.find(o => o.id === _orderId);
+    if (!_ord || _ord.quantity <= 0) return;
+
+New:
+  setTimeout(() => {
+    // Abort if player rebirthed since order was placed
+    if (state.player.rebirths !== _orderRebirthNum) return;
+    const _ord = state.market.orders.find(o => o.id === _orderId);
+    if (!_ord || _ord.quantity <= 0) return;
+
+Why it matters: Without the rebirth guard, NPC auto-fill can deliver items
+to a new life that the OLD life paid for. This is a minor exploit but breaks
+the "death costs everything" design pillar.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #12 — Death Sequence: Double-Death Race from Simultaneous Damage
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6698-6700 (playerDeathSequence)
+Category: Race Conditions
+
+`playerDeathSequence` guards against re-entry with `_deathSequenceActive`.
+But there are 4 different places that check `state.ship.hull <= 0 && !c.dead`
+and call `playerDeathSequence`:
+  - Line 7195 (enemy ramming)
+  - Line 7223 (enemy bolt hit)
+  - Line 7279 (asteroid collision)
+  - Plus the aging system death at line ~1419
+
+The guard `if (_deathSequenceActive) return;` on line 6699 is correct, BUT:
+`c.dead` is set on line 6700, one line AFTER the guard check. In a single
+frame where hull drops to 0, both the enemy bolt check AND the enemy ram
+check could execute (they're in different loops). The first sets
+`_deathSequenceActive = true; c.dead = true;` — and the second checks
+`!c.dead` which is now true... wait, it IS true at that point. Actually,
+since JavaScript is single-threaded, within a single game loop iteration the
+checks happen sequentially. After the first `playerDeathSequence`:
+  - `_deathSequenceActive = true`
+  - `c.dead = true`
+So the second check `!c.dead` will be false. This is actually safe.
+
+HOWEVER: `createSoulFragment()` is called inside `playerDeathSequence` on
+line 6703. And `showEulogy` → `storePastLife` is called at line ~1453. These
+two both modify `state.player.lifetimeStats`. If the 3-second `setTimeout`
+in the death sequence overlaps with a rebirth (player clicks karma accept
+very fast), the `storePastLife` and the rebirth handler could interfere.
+
+Actually — the eulogy has a "skip" button. If a player clicks skip DURING
+the 3-second phase while `_deathSequenceActive` is still true, and
+`eulogyAdvanced` is set, the `setTimeout` callback at line 6718 still fires
+and calls `exitGunnerMode(true); showEulogy(...)` a SECOND time.
+
+Let me re-read the death sequence more carefully...
+
+The setTimeout chain is:
+  - T=0: `_deathSequenceActive = true`, `c.dead = true`, slow-mo
+  - T=3000: `state._deathTimeDilation = 0` (freeze)
+  - T=4500: reset everything, call `exitGunnerMode(true)`, `showEulogy()`
+
+The eulogy screen has its own skip mechanic. That's separate.
+
+The actual issue: `_deathSequenceActive` is set false at T=4500ms (line
+6716). During those 4.5 seconds, if the player takes MORE damage (they can
+— asteroids still move and enemy bolts still fly), hull goes further
+negative but `c.dead = true` blocks further death calls. This is fine.
+
+But: `c.dead` is set to `false` on line 6717 (`c.dead = false`) RIGHT
+BEFORE calling `exitGunnerMode(true)`. Between lines 6717 and 6718, if
+somehow a frame ticks (it shouldn't — synchronous code), the player could
+die again. Since it's synchronous, this is safe. No bug here.
+
+RETRACTION: Finding #12 is not a real bug — the single-threaded nature of
+JS protects against all these scenarios. Removing this finding.
+
+REPLACEMENT FINDING #12:
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #12 — Ghost NPC Material Clone Leak: Every Ghost Clones Per Mesh
+────────────────────────────────────────────────────────────────────────────────
+Lines: 5901-5911 (spawnSystemNPCs ghost material cloning)
+Category: Performance / Memory
+
+When spawning a ghost NPC from past lives, the code clones EVERY mesh's
+material individually:
+```
+lastNpc.group.traverse(child => {
+    if (child.isMesh && child.material) {
+      child.material = child.material.clone();
+      child.material.emissive = new THREE.Color(0x6688ff);
+      ...
+    }
+});
+```
+
+If the NPC uses a GLB model with 20+ meshes, this creates 20+ new material
+instances that are never added to `_materialCache` and are never explicitly
+disposed when the NPC is removed (they're removed via `disposeObject`).
+Meanwhile, the `disposeObject` function traverses and disposes geometries
+and materials — so disposal IS handled. But the real issue is: these cloned
+materials bypass the material cache, defeating the purpose of
+`_getCachedMaterial`. Each system jump creates new ghost NPCs with new
+material clones.
+
+This is a minor performance concern but not a critical bug. The memory leak
+is bounded by `spawnSystemNPCs` which disposes old NPCs before creating new
+ones. The per-clone overhead is small. Noting for completeness.
+
+More importantly: the ghost tint code uses `new THREE.Color(0x6688ff)` on
+line 5906, which allocates a new Color object per mesh. Should be cached.
+
+Old code (lines 5901-5911):
+      lastNpc.group.traverse(child => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+          child.material.emissive = new THREE.Color(0x6688ff);
+          child.material.emissiveIntensity = 0.6;
+          child.material.transparent = true;
+          child.material.opacity = 0.7;
+          child.material.depthWrite = false;
+        }
+      });
+
+New code:
+      const _ghostEmissive = new THREE.Color(0x6688ff);
+      lastNpc.group.traverse(child => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+          child.material.emissive = _ghostEmissive;
+          child.material.emissiveIntensity = 0.6;
+          child.material.transparent = true;
+          child.material.opacity = 0.7;
+          child.material.depthWrite = false;
+        }
+      });
+
+Why it matters: Minor—saves one Color allocation per mesh. The shared Color
+is safe because all ghost materials use the same emissive value.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #13 — Enemy shootRate Scaling Can Go Below Zero
+────────────────────────────────────────────────────────────────────────────────
+Lines: ~4300 (createEnemy push)
+Category: Boss Edge Cases / Enemy Difficulty Scaling
+
+In `createEnemy`:
+```
+shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04))
+```
+
+For a scout with `shootRate: 4000` at cycle 26: `4000 * (1 - 25*0.04)` =
+`4000 * 0` = 0. At cycle 27+: negative. The `Math.max(1000, ...)` catches
+this — so the shootRate floors at 1000ms.
+
+BUT: This same scaling is NOT applied to BOSS enemies. Bosses use a hardcoded
+`fireInterval = 1500` (line 7145). Bosses DON'T scale their fire rate with
+cycle at all. This means bosses are actually EASIER than regular enemies at
+high cycles, because regular enemies fire every 1000ms while bosses fire
+every 1500ms regardless.
+
+Old code (line 7145):
+      const fireInterval = e.isBoss ? 1500 : (e.shootRate || 3000);
+
+New code:
+      const fireInterval = e.isBoss ? Math.max(800, 1500 * (1 - (c.cycle - 1) * 0.03)) : (e.shootRate || 3000);
+
+Why it matters: Boss fights should get harder with cycle progression, not
+stay static while regular enemies ramp up. At cycle 20, regular enemies fire
+at 1000ms while bosses still fire at 1500ms — bosses feel like a downgrade.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #14 — autopilot speed accumulates without drag correction
+────────────────────────────────────────────────────────────────────────────────
+Lines: 6671-6688 (updateAutopilot)
+Category: Race Conditions / Game Physics
+
+`updateAutopilot` adds to `fl.velocity` directly:
+```
+fl.velocity.x += targetDir.x * fl.accel * speedFactor * dt;
+```
+But it doesn't account for the drag applied later in the game loop (line
+7115-7118). This means autopilot and manual thrust are additive — the manual
+drag calculation uses `fl.velocity` which includes autopilot additions. So
+far this is fine.
+
+However: `disengageAutopilot` on line 6662 sets `fl.thrust = 0` and
+`fl.velocity = {x:0, y:0, z:0}` — but ONLY when arriving within 15m of
+target. If the player disengages autopilot manually (pressing P or any WASD
+key triggers disengage on line 7106), `disengageAutopilot()` on line 6660
+does NOT zero velocity — it just sets flags:
+```
+function disengageAutopilot() {
+  autopilotActive = false;
+  autopilotTarget = null;
+  addComms('NAV', 'Autopilot disengaged.');
+}
+```
+This is actually correct — the ship maintains momentum. No bug here.
+
+RETRACTION: This is working as intended (momentum preservation). Removing.
+
+REPLACEMENT FINDING #14:
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #14 — Rebirth Resonance: Speed Bonus Applied to maxSpeed Not Clamped
+────────────────────────────────────────────────────────────────────────────────
+Lines: 5058 and 2008 (both rebirth paths)
+Category: Rebirth Milestones / Balancing
+
+Both rebirth handlers apply speed resonance bonus:
+```
+state.flight.maxSpeed = 120 * (1 + (r.speed || 0) / 100);
+```
+
+The resonance `speed` bonus is capped at 50 per the fuseFragments function
+(`Math.min(50, ...)`), so max speed can reach `120 * 1.5 = 180`. This is
+fine. But then `applyUpgrades()` is called, which applies `engineSpeed`
+multiplier. After reset, `engineSpeed = 1`, so `maxSpd = 180 * 1 = 180`.
+
+But later when the player buys Engine Overcharge (1.3x), `engineSpeed` goes
+to 1.3. In the game loop, maxSpeed is calculated as:
+```
+const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult() * fuelPenalty;
+```
+
+With afterburner (2.5x), Engine Overcharge (1.3x), speed resonance (1.5x on
+maxSpeed), and genome speed mult (up to ~1.3x at 255 genome), that's:
+`180 * 2.5 * 1.3 * 1.3 * 1 = 760.5` units/sec.
+
+This isn't necessarily a bug — high speed is fun. But there's NO physics
+collision at this speed (asteroid collision checks use distance which may
+skip over asteroids entirely between frames). At 760 u/s with dt=0.016,
+the ship moves 12.2 units per frame — asteroids with radius ~4 could be
+entirely skipped.
+
+Old code (game loop asteroid collision, around line 7269):
+      const dist = a.position.distanceTo(ship.position);
+      const mesh = a.children && a.children[0];
+      const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
+      if (dist < radius + 3) {
+
+New code:
+      // Use swept-sphere check to prevent tunneling at high speeds
+      const dist = a.position.distanceTo(ship.position);
+      const mesh = a.children && a.children[0];
+      const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
+      const effectiveRadius = radius + 3 + fl.speed * dt; // expand by movement distance
+      if (dist < effectiveRadius) {
+
+Why it matters: At high speed (afterburner + resonance + upgrades), the
+player can fly through asteroids without taking damage because the per-frame
+position delta exceeds asteroid collision radius. Adding `fl.speed * dt`
+to the collision check radius is a simple swept-sphere approximation.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FINDING #15 — stopMining Double-Resets State
+────────────────────────────────────────────────────────────────────────────────
+Lines: 5812-5817 (stopMining)
+Category: Performance / Code Quality
+
+`stopMining` resets the mining state twice — at the top and bottom:
+
+Old code (lines 5812-5817):
+function stopMining() {
+  state.mining.active = false;
+  state.mining.target = null;
+  state.mining.progress = 0;
+  if (miningLaserBeam) { scene.remove(miningLaserBeam); miningLaserBeam.geometry.dispose(); miningLaserBeam.material.dispose(); miningLaserBeam = null; }
+  // Ensure mining state is clean
+  state.mining.active = false; state.mining.targetRef = null; state.mining.progress = 0;
+}
+
+New code:
+function stopMining() {
+  state.mining.active = false;
+  state.mining.target = null;
+  state.mining.targetRef = null;
+  state.mining.progress = 0;
+  if (miningLaserBeam) { scene.remove(miningLaserBeam); miningLaserBeam.geometry.dispose(); miningLaserBeam.material.dispose(); miningLaserBeam = null; }
+}
+
+Why it matters: The duplicate reset was likely from a merge — harmless but
+wasteful. Consolidating also ensures `targetRef` is cleared alongside
+`target` (the first reset missed `targetRef`, the second missed `target`).
+
+
+================================================================================
+  SUMMARY — 15 FINDINGS
+================================================================================
+
+CRITICAL (Security):
+  #1  Market XSS — unescaped HTML in market rendering
+
+HIGH (Gameplay-breaking):
+  #2  bossActive stuck true after exitGunnerMode
+  #6  WebGL context restored doesn't rebuild bloom composer
+  #8  Escape while typing in chat exits gunner mode
+  #10 Boss HP scaling unbounded — bosses become unkillable
+
+MEDIUM (Balance/Logic):
+  #3  Skill XP has no maximum level cap
+  #4  Server rebirth path skips storePastLife
+  #5  applySkin mutates shared material cache
+  #11 Market NPC auto-fill ignores rebirth between place and fill
+  #13 Boss fire rate doesn't scale with cycle difficulty
+  #14 High-speed asteroid tunneling (no swept collision)
+
+LOW (Performance/Polish):
+  #7  requestPointerLock rejection unhandled
+  #9  renderLibraryLabels runs even when labels disabled
+  #12 Ghost NPC allocates Color per mesh (minor)
+  #15 stopMining double-resets state
+
+================================================================================
+  END OF AUDIT 28
+================================================================================

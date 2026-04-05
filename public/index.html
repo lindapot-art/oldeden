@@ -3521,6 +3521,14 @@ canvas3d.addEventListener('webglcontextrestored', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.8;
+  // Rebuild post-processing composer after context restore
+  try {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.35, 0.5, 0.6);
+    composer.addPass(bloom);
+    console.log('[Old Eden] Post-processing rebuilt after context restore');
+  } catch (e) { console.warn('[Old Eden] Composer rebuild failed:', e); }
 });
 
 // Bloom post-processing
@@ -3821,7 +3829,7 @@ function enterGunnerMode() {
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   AudioSFX.startEngineHum();
-  canvas3d.requestPointerLock();
+  canvas3d.requestPointerLock()?.catch?.(() => {});
   document.getElementById('action-bar').classList.add('active');
   document.getElementById('mobile-controls').classList.add('active');
   // Reset flight
@@ -4200,7 +4208,7 @@ function createBossEnemy() {
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-  const bDiff = 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08;
+  const bDiff = Math.min(5, 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08);
   const bossHp = Math.ceil((bossKey.startsWith('titan') ? 40 : 30) * bDiff);
   c.enemies.push({ group: g, hp: bossHp, maxHp: bossHp, speed: ENEMY_SPEED * 0.4, type: 'boss', points: 500, cfg: { scale: bossScale, color: bossTint.tint }, hitFlash: 0, isBoss: true, bossName: bossTint.name });
   addComms('THREAT', `⚠ ${bossTint.name} detected! Massive hostile signature incoming!`);
@@ -4784,7 +4792,7 @@ function renderHUD() {
 let mouseHeld = false;
 canvas3d.addEventListener('mousedown', (e) => {
   if (state.screen !== 'gunner' || c.dead) return;
-  if (!c.locked) { canvas3d.requestPointerLock(); return; }
+  if (!c.locked) { canvas3d.requestPointerLock()?.catch?.(() => {}); return; }
   if (e.button === 0) {
     mouseHeld = true;
     if (state.activeWeapon === 'laser') fireLaser();
@@ -4898,7 +4906,7 @@ document.addEventListener('pointerlockchange', () => {
   document.getElementById('lock-prompt').style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
 });
 
-document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.requestPointerLock());
+document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.requestPointerLock()?.catch?.(() => {}));
 
 document.addEventListener('mousemove', (e) => {
   if (!c.locked || !c.active) return;
@@ -4911,10 +4919,10 @@ document.addEventListener('mousemove', (e) => {
 
 // EVE Online flight: WASD + Space/Ctrl + Shift(boost)
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
   // Don't process game keys while typing in chatbot
   const _chInput = document.getElementById('chatbot-input');
-  if (document.activeElement === _chInput) return;
+  if (document.activeElement === _chInput) { if (e.key === 'Escape') { _chInput.blur(); } return; }
+  if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
   // R = reload ammo (1.5s reload animation)
   if ((e.key === 'r' || e.key === 'R') && c.active) {
     if (c.ammo < c.maxAmmo && !c._reloading) {
@@ -5409,7 +5417,7 @@ function updateShipParade(dt, dtMs) {
 
 // Render parade labels on HUD
 function renderLibraryLabels() {
-    renderPoliceLabels();
+  renderPoliceLabels();
   if (!c.active || paradeLabels.length === 0) return;
   const W = hudCanvas.width, H = hudCanvas.height;
   for (const lbl of paradeLabels) {
@@ -5811,10 +5819,9 @@ function updateMining(dt) {
 function stopMining() {
   state.mining.active = false;
   state.mining.target = null;
+  state.mining.targetRef = null;
   state.mining.progress = 0;
   if (miningLaserBeam) { scene.remove(miningLaserBeam); miningLaserBeam.geometry.dispose(); miningLaserBeam.material.dispose(); miningLaserBeam = null; }
-  // Ensure mining state is clean
-  state.mining.active = false; state.mining.targetRef = null; state.mining.progress = 0;
 }
 
 // ================================================================
@@ -5899,10 +5906,11 @@ function spawnSystemNPCs() {
       lastNpc.isGhost = true;
       lastNpc.friendly = true;
       // Ghost tint — ethereal blue-white
+      const _ghostColor = new THREE.Color(0x6688ff);
       lastNpc.group.traverse(child => {
         if (child.isMesh && child.material) {
           child.material = child.material.clone();
-          child.material.emissive = new THREE.Color(0x6688ff);
+          child.material.emissive = _ghostColor;
           child.material.emissiveIntensity = 0.6;
           child.material.transparent = true;
           child.material.opacity = 0.7;
@@ -6069,19 +6077,19 @@ function renderMarketScreen() {
   if (marketTab === 'buy') {
     const sells = state.market.orders.filter(o => o.type === 'sell');
     el.innerHTML = `<table class="market-table"><thead><tr><th>Item</th><th>Price (EC)</th><th>Qty</th><th>Seller</th><th></th></tr></thead><tbody>` +
-      sells.map(o => `<tr><td>${o.item}</td><td class="market-buy">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${o.trader}</td>
-        <td><button class="trade-buy" onclick="window._marketBuy('${o.id}')">Buy</button></td></tr>`).join('') +
+      sells.map(o => `<tr><td>${_escHtml(o.item)}</td><td class="market-buy">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${_escHtml(o.trader)}</td>
+        <td><button class="trade-buy" onclick="window._marketBuy('${_escHtml(o.id)}')">Buy</button></td></tr>`).join('') +
       `</tbody></table>`;
   } else if (marketTab === 'sell') {
     const buys = state.market.orders.filter(o => o.type === 'buy');
     el.innerHTML = `<table class="market-table"><thead><tr><th>Item</th><th>Price (EC)</th><th>Qty Wanted</th><th>Buyer</th><th></th></tr></thead><tbody>` +
-      buys.map(o => `<tr><td>${o.item}</td><td class="market-sell">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${o.trader}</td>
-        <td><button class="trade-sell" onclick="window._marketSell('${o.id}')">Sell</button></td></tr>`).join('') +
+      buys.map(o => `<tr><td>${_escHtml(o.item)}</td><td class="market-sell">${o.price.toLocaleString()}</td><td>${o.quantity}</td><td style="color:var(--muted)">${_escHtml(o.trader)}</td>
+        <td><button class="trade-sell" onclick="window._marketSell('${_escHtml(o.id)}')">Sell</button></td></tr>`).join('') +
       `</tbody></table>`;
   } else if (marketTab === 'history') {
     el.innerHTML = state.market.history.length
       ? `<table class="market-table"><thead><tr><th>Time</th><th>Item</th><th>Type</th><th>Price</th><th>Qty</th></tr></thead><tbody>` +
-        state.market.history.slice(-20).reverse().map(h => `<tr><td style="color:var(--muted)">${formatTimeAgo(h.time)}</td><td>${h.item}</td><td style="color:${h.type==='buy'?'var(--green)':'var(--danger)'}">${h.type}</td><td>${h.price}</td><td>${h.quantity}</td></tr>`).join('') +
+        state.market.history.slice(-20).reverse().map(h => `<tr><td style="color:var(--muted)">${formatTimeAgo(h.time)}</td><td>${_escHtml(h.item)}</td><td style="color:${h.type==='buy'?'var(--green)':'var(--danger)'}">${_escHtml(h.type)}</td><td>${h.price}</td><td>${h.quantity}</td></tr>`).join('') +
         `</tbody></table>`
       : '<p style="color:var(--muted)">No trade history yet.</p>';
   } else if (marketTab === 'place') {
@@ -6152,7 +6160,9 @@ window._placeOrder = () => {
   state.market.orders.push({ id: _orderId, item, type, price, quantity: qty, trader: state.player.name || 'You', isNPC: false });
   addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
   // NPC auto-fill: match player orders against NPC counter-orders
+  const _rebirthSnapshot = state.player.rebirths;
   setTimeout(() => {
+    if (state.player.rebirths !== _rebirthSnapshot) return; // Guard: abort if rebirth happened
     const _ord = state.market.orders.find(o => o.id === _orderId);
     if (!_ord || _ord.quantity <= 0) return;
     const _matches = state.market.orders.filter(o =>
@@ -6302,6 +6312,8 @@ function applySkin(skin) {
   state.currentSkin = skin;
   ship.traverse(child => {
     if (!child.isMesh || !child.material || child.material.isMeshBasicMaterial) return;
+    // Clone shared/cached material before mutating
+    if (child.material._shared || child.material._pooled) { child.material = child.material.clone(); }
     // Determine if this is hull or accent based on original color
     const isAccent = child.material.emissiveIntensity > 0.2;
     child.material.color.setHex(isAccent ? skin.accent : skin.primary);
@@ -6615,7 +6627,7 @@ document.addEventListener('keydown', (e) => {
       if (document.pointerLockElement) document.exitPointerLock();
       setTimeout(() => chatInput.focus(), 100);
     } else {
-      canvas3d.requestPointerLock();
+      canvas3d.requestPointerLock()?.catch?.(() => {});
     }
   }
   // K = skin panel toggle
@@ -7086,7 +7098,7 @@ function gameLoop() {
       }
       // Enemy firing — sentinels shoot back when provoked
       if (!e.lastShot) e.lastShot = state.gameTime;
-      const fireInterval = e.isBoss ? 1500 : (e.shootRate || 3000);
+      const fireInterval = e.isBoss ? Math.max(600, 1500 - (c.cycle - 1) * 100) : (e.shootRate || 3000);
       const MAX_BOLTS = 30;
       if ((c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
         e.lastShot = state.gameTime;
@@ -7243,7 +7255,10 @@ function gameLoop() {
           const dist = a.position.distanceTo(ship.position);
           const mesh = a.children && a.children[0];
           const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
-          if (dist < radius + 3) {
+          // Swept-sphere check: account for high-speed tunneling
+          const sweepDist = fl.speed * dt;
+          const effectiveRadius = radius + 3 + sweepDist * 0.5;
+          if (dist < effectiveRadius) {
             _astHit = true;
             const dmg = 15 + Math.random() * 10;
             const hadShield = state.ship.shield > 0;
