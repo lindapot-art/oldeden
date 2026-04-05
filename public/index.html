@@ -1132,7 +1132,7 @@ function updateAging(dtMs) {
     addComms('AI Director', 'Your body has given out. Age claims another soul.');
     setTimeout(() => {
       state.combat.dead = false;
-      if (state.combat.active) exitGunnerMode();
+      if (state.combat.active) exitGunnerMode(true);
       showEulogy(state.combat.deathStats, 'Died of old age at ' + Math.floor(state.player.age) + ' years');
     }, 2000);
   }
@@ -1590,6 +1590,12 @@ function loadFromServerData(data) {
   if (data.quests) state.quests = data.quests;
   if (data.upgrades) Object.assign(state.upgrades, data.upgrades);
   if (data.settings) Object.assign(state.settings, data.settings);
+  // Restore new systems
+  if (data.pastLives) state.pastLives = data.pastLives;
+  if (data.skills) Object.assign(state.skills, data.skills);
+  if (data.soulMemory) Object.assign(state.soulMemory, data.soulMemory);
+  if (data.economy) Object.assign(state.economy, data.economy);
+  if (data.activeWeapon) state.activeWeapon = data.activeWeapon;
   // Soul Fracture migration for old saves
   if (!state.player.soulFragments) state.player.soulFragments = [];
   if (!state.player.legacyChain) state.player.legacyChain = [];
@@ -2070,9 +2076,12 @@ function jumpToSystem(idx) {
   // Warp flash animation
   const warpOverlay = document.createElement('div');
   warpOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;background:radial-gradient(ellipse at center,rgba(68,170,255,0.8) 0%,rgba(0,0,0,0) 70%);animation:warpFlash 1.2s ease-out forwards;';
-  const style = document.createElement('style');
-  style.textContent = '@keyframes warpFlash{0%{opacity:0;transform:scale(0.3)}15%{opacity:1;transform:scale(1)}40%{opacity:1}100%{opacity:0;transform:scale(2)}}';
-  document.head.appendChild(style);
+  if (!document.getElementById('warp-flash-style')) {
+    const style = document.createElement('style');
+    style.id = 'warp-flash-style';
+    style.textContent = '@keyframes warpFlash{0%{opacity:0;transform:scale(0.3)}15%{opacity:1;transform:scale(1)}40%{opacity:1}100%{opacity:0;transform:scale(2)}}';
+    document.head.appendChild(style);
+  }
   document.body.appendChild(warpOverlay);
   // Star streaks
   const streakCanvas = document.createElement('canvas');
@@ -2281,11 +2290,14 @@ function renderStation() {
     pastPanel.style.display = 'none';
   }
 
-  // Docking fee
-  if (state.player.credits >= state.economy.dockingFee) {
-    state.player.credits -= state.economy.dockingFee;
+  // Docking fee — only charge on initial dock, not re-renders
+  if (!state.location.docked) {
+    if (state.player.credits >= state.economy.dockingFee) {
+      state.player.credits -= state.economy.dockingFee;
+      addComms('Station', `Docking fee: -${state.economy.dockingFee} EC`);
+    }
+    gainSkillXP('trading', 0.1);
   }
-  gainSkillXP('trading', 0.1);
 
   state.location.docked = true;
 }
@@ -2348,7 +2360,15 @@ window._acceptQuest = (id) => {
   if (state.socket) {
     state.socket.emit('quest:accept', { questId: id });
   } else {
-    const q = state.quests.find(q => q.id === id);
+    // Check both existing quests and starter quest templates
+    let q = state.quests.find(q => q.id === id);
+    if (!q) {
+      const template = STARTER_QUESTS_CLIENT.find(t => t.id === id);
+      if (template) {
+        q = { ...template, title: template.name, active: true, completed: false, objectives: template.objectives.map(o => ({ ...o, current: 0 })) };
+        state.quests.push(q);
+      }
+    }
     if (q) { q.active = true; addComms('Mission Board', `Accepted: ${q.title || q.name}`); renderStation(); }
   }
 };
@@ -2768,6 +2788,12 @@ function saveGame() {
     quests: state.quests,
     upgrades: state.upgrades,
     settings: state.settings,
+    // Persist new systems across sessions
+    pastLives: state.pastLives,
+    skills: state.skills,
+    soulMemory: state.soulMemory,
+    economy: state.economy,
+    activeWeapon: state.activeWeapon,
   };
   localStorage.setItem('oe-save', JSON.stringify(data));
   // Also save to server
@@ -3135,7 +3161,7 @@ function spawnLootDrop(pos, type) {
   c.lootDrops.push({ group: g, type, age: 0 });
 }
 
-function exitGunnerMode() {
+function exitGunnerMode(skipScreenChange) {
   c.active = false;
   if (document.pointerLockElement) document.exitPointerLock();
   // Clean up all 3D objects (guard each removal) + dispose GPU resources
@@ -3163,7 +3189,7 @@ function exitGunnerMode() {
   document.getElementById('action-bar').classList.remove('active');
   document.getElementById('mobile-controls').classList.remove('active');
   AudioSFX.stopBGM();
-  showScreen('bridge');
+  if (!skipScreenChange) showScreen('bridge');
 }
 
 // Enemy type configs — each type uses a distinct GLB model
@@ -3485,9 +3511,16 @@ function renderHUD() {
   hudCtx.fillRect(slx, sly+72, 180 * Math.min(1, spdPct), 8);
   hudCtx.fillStyle = '#778899';
   hudCtx.fillText(Math.floor(fl.speed) + ' m/s' + (fl.afterburner ? ' [AB]' : ''), slx+185, sly+80);
+  // Fuel bar
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('FUEL', slx, sly+98);
+  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+104, 180, 8);
+  hudCtx.fillStyle = state.ship.fuel > 25 ? '#ffaa00' : danger;
+  hudCtx.fillRect(slx, sly+104, 180 * (state.ship.fuel / state.ship.maxFuel), 8);
+  hudCtx.fillStyle = '#778899';
+  hudCtx.fillText(Math.floor(state.ship.fuel) + '%', slx+185, sly+112);
   // Controls reminder
   hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.6;
-  hudCtx.fillText('WASD/Arrows fly | Shift boost | RClick/DblClick nav', slx, sly+98);
+  hudCtx.fillText('WASD/Arrows fly | Shift boost | RClick/DblClick nav', slx, sly+130);
   hudCtx.globalAlpha = 1;
 
   // Minimap radar (bottom-center)
@@ -3820,9 +3853,10 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   state.player.genome = roll.genome;
   state.player.faction = roll.faction;
   state.player.credits = roll.wealth;
-  state.player.stellarMarks = 0;
-  state.player.age = 0;
+  // Stellar Marks persist across lives — they are soul currency
+  state.player.age = 18 + Math.floor(Math.random() * 7);
   state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+  state.combat.dead = false;
   // Reset character skills (the flesh forgets, the soul remembers)
   resetSkills();
   // Preserve insured item if any
@@ -3843,7 +3877,9 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
   // Reset ship
   state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield;
+  state.ship.fuel = state.ship.maxFuel;
   state.combat.ammo = state.combat.maxAmmo;
+  state.combat.heat = 0;
   state.combat.godMode = false; // No god mode in new life
   addDeathFeedEvent('rebirth', `A new soul enters the galaxy: ${roll.name}, ${roll.title}`);
   addComms('AI Director', `You have been reborn as ${roll.name}, ${roll.title}. ${roll.factionName} welcomes you.`);
@@ -5173,6 +5209,8 @@ function gameLoop() {
             const pts = Math.floor(e.points * c.streakMultiplier);
             c.score += pts; c.kills++;
             state.player.credits += pts;
+            // Earn Stellar Marks (1 per kill, +5 for bosses — offline & online)
+            state.player.stellarMarks += e.isBoss ? 6 : 1;
             // Skill XP: combat actions level gunnery + piloting
             gainSkillXP('gunnery', 0.15);
             gainSkillXP('piloting', 0.05);
@@ -5186,6 +5224,20 @@ function gameLoop() {
             }
             // Report kill to server for economy credit + quest progress
             if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
+            // Offline quest progress tracking
+            state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
+              q.objectives.forEach(o => {
+                if (o.type === 'kill' && (o.target === '*' || o.target === e.type)) {
+                  o.current = (o.current || 0) + 1;
+                }
+              });
+              if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+                q.completed = true; q.active = false;
+                state.player.credits += q.rewards?.credits || 0;
+                addComms('Mission', `COMPLETED: ${q.title || q.name} — +${q.rewards?.credits || 0} EC`);
+                AudioSFX.play('quest_complete');
+              }
+            });
             AudioSFX.play('explode');
             spawnExplosion(e.group.position.clone(), e.cfg.scale);
             // Loot drop chance
@@ -5247,7 +5299,7 @@ function gameLoop() {
           // Broadcast death to ticker
           addDeathFeedEvent('death', `${state.player.name} destroyed by ${e.type} in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
           if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause: 'Rammed by ' + e.type, kills: c.kills, score: c.score });
-          setTimeout(() => { c.dead = false; exitGunnerMode(); showEulogy(c.deathStats, 'Rammed by hostile ' + e.type); }, 2500);
+          setTimeout(() => { c.dead = false; exitGunnerMode(true); showEulogy(c.deathStats, 'Rammed by hostile ' + e.type); }, 2500);
         }
       }
     }
@@ -5278,7 +5330,7 @@ function gameLoop() {
           state.soulMemory.shieldMemory = Math.min(10, state.soulMemory.shieldMemory + 0.5);
           addDeathFeedEvent('death', `${state.player.name} destroyed by enemy fire in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
           if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause: 'Enemy bolt fire', kills: c.kills, score: c.score });
-          setTimeout(() => { c.dead = false; exitGunnerMode(); showEulogy(c.deathStats, 'Destroyed by enemy weapons fire'); }, 2500);
+          setTimeout(() => { c.dead = false; exitGunnerMode(true); showEulogy(c.deathStats, 'Destroyed by enemy weapons fire'); }, 2500);
         }
         continue;
       }
@@ -5354,6 +5406,12 @@ function gameLoop() {
     updateMining(dt);
     updateAutoSystems(dt);
     updateAging(dtMs);
+    // Fuel consumption while flying (afterburner uses 3× fuel)
+    if (fl.speed > 5) {
+      const fuelBurn = dt * 0.08 * (fl.afterburner ? 3 : 1);
+      state.ship.fuel = Math.max(0, state.ship.fuel - fuelBurn);
+      if (state.ship.fuel <= 0) { fl.afterburner = false; }
+    }
     // Passive skill gains: piloting XP from flying, engineering from shield regen
     if (fl.speed > 10) gainSkillXP('piloting', 0.002 * dt);
     if (state.ship.shield < state.ship.maxShield) gainSkillXP('engineering', 0.003 * dt);
