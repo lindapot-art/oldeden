@@ -196,6 +196,14 @@ app.post('/api/game/save', async (req, res) => {
     if (!playerId || typeof playerId !== 'string' || !data) {
       return res.status(400).json({ error: 'Missing playerId or data' });
     }
+    // Verify playerId belongs to an active socket session
+    let authorised = false;
+    for (const [, p] of players) {
+      if (p.playerId === playerId) { authorised = true; break; }
+    }
+    if (!authorised) {
+      return res.status(403).json({ error: 'No active session for this player' });
+    }
     await fileStore.save(playerId, data);
     res.json({ ok: true });
   } catch (e) {
@@ -204,9 +212,14 @@ app.post('/api/game/save', async (req, res) => {
 });
 
 app.get('/api/game/load/:id', async (req, res) => {
-  const data = await fileStore.load(req.params.id);
-  if (!data) return res.status(404).json({ error: 'Save not found' });
-  res.json(data);
+  try {
+    const data = await fileStore.load(req.params.id);
+    if (!data) return res.status(404).json({ error: 'Save not found' });
+    res.json(data);
+  } catch (e) {
+    console.error('[API] Load error:', e.message);
+    res.status(500).json({ error: 'Failed to load save' });
+  }
 });
 
 app.get('/api/game/quests/available', (_req, res) => {
@@ -273,6 +286,11 @@ const RATE_LIMITS = {
   'game:load':       { max: 1,  windowMs: 3000 },
   'quest:accept':    { max: 5,  windowMs: 1000 },
   'cargo:deposit':   { max: 3,  windowMs: 1000 },
+  'death:report':    { max: 2,  windowMs: 5000 },
+  'system:visit':    { max: 3,  windowMs: 1000 },
+  'starmap:request': { max: 2,  windowMs: 5000 },
+  'quests:request':  { max: 2,  windowMs: 5000 },
+  'player:sync':     { max: 3,  windowMs: 1000 },
 };
 
 function createRateLimiter() {
@@ -448,7 +466,8 @@ io.on('connection', (socket) => {
   socket.on('station:enter', (data) => {
     const player = players.get(socket.id);
     if (!player) return;
-    const systemIdx = typeof data?.systemIndex === 'number' ? data.systemIndex : 0;
+    const raw = typeof data?.systemIndex === 'number' ? data.systemIndex : 0;
+    const systemIdx = Math.max(0, Math.min(39, Math.floor(raw)));
     player.currentStation = systemIdx;
     const prices = getStationPrices(systemIdx);
     socket.emit('station:prices', { prices, systemIndex: systemIdx });
@@ -520,8 +539,14 @@ io.on('connection', (socket) => {
     if (!itemName) return;
     // Only allow known commodities
     if (!COMMODITIES.find(c => c.name === itemName)) return;
-    player.cargo.set(itemName, (player.cargo.get(itemName) || 0) + 1);
-    socket.emit('cargo:deposited', { name: itemName, quantity: player.cargo.get(itemName) });
+    // Cap per-item cargo to prevent free-mint abuse
+    const held = player.cargo.get(itemName) || 0;
+    if (held >= 50) {
+      socket.emit('cargo:error', { error: 'Cargo hold full for this item' });
+      return;
+    }
+    player.cargo.set(itemName, held + 1);
+    socket.emit('cargo:deposited', { name: itemName, quantity: held + 1 });
   });
 
   // ── Save / Load via Socket ────────────────────────────────────────────────
@@ -529,7 +554,25 @@ io.on('connection', (socket) => {
     const player = players.get(socket.id);
     if (!player) return;
     try {
-      await fileStore.save(player.playerId, data);
+      // Save server-authoritative state — ignore client wallet/currency data
+      const econ = engine.getSystem('economy');
+      const w = econ.getWallet(player.playerId);
+      const serverState = {
+        playerId: player.playerId,
+        name: player.name,
+        faction: player.faction,
+        genome: player.genome,
+        wallet: { ec: w.ec, sm: w.sm },
+        trades: player.trades,
+        savedAt: Date.now(),
+      };
+      // Allow non-authoritative display data (position, settings, etc.)
+      if (data && typeof data === 'object') {
+        for (const key of ['position', 'rotation', 'currentSystem', 'settings']) {
+          if (data[key] !== undefined) serverState[key] = data[key];
+        }
+      }
+      await fileStore.save(player.playerId, serverState);
       socket.emit('game:saved', { ok: true, playerId: player.playerId });
     } catch (e) {
       socket.emit('game:saved', { ok: false, error: e.message });
@@ -587,7 +630,11 @@ io.on('connection', (socket) => {
     const chosenNpc = result.chosenNpc;
     // EC resets (belonged to old character), SM persists (premium currency)
     const wallet = econ.getWallet(player.playerId);
-    wallet.ec = 500;
+    if (wallet.ec > 500) {
+      econ.debit(player.playerId, 'ec', wallet.ec - 500);
+    } else if (wallet.ec < 500) {
+      econ.credit(player.playerId, 'ec', 500 - wallet.ec);
+    }
     // Clear session progress
     player.activeQuests.clear();
     player.visitedSystems.clear();
@@ -643,6 +690,11 @@ io.on('connection', (socket) => {
       } catch (e) {
         console.error(`[Socket.IO] Auto-save failed for ${player.playerId}:`, e.message);
       }
+    }
+    // Clean up economy state to prevent memory leak
+    if (player) {
+      const econ = engine.getSystem('economy');
+      econ.removePlayer?.(player.playerId);
     }
     players.delete(socket.id);
     console.log(`[Socket.IO] Client disconnected: ${socket.id}`);

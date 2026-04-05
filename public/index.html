@@ -1654,12 +1654,12 @@ function rollKarmaWheel() {
   const spinDur = {common:2000, uncommon:2500, rare:3000, epic:3800, legendary:5000}[roll.rarity] || 2000;
   const spinSubtitles = {common:'The soul settles...', uncommon:'Something stirs...', rare:'The cosmos aligns...', epic:'Destiny trembles...', legendary:'THE STARS QUAKE!'};
   let _spinPhase = 0;
-  if (spinDur > 2500) { setTimeout(() => { subtitle.textContent = spinSubtitles[roll.rarity] || 'The soul seeks...'; }, spinDur * 0.5); }
-  setTimeout(() => {
+  if (spinDur > 2500) { _karmaTimeouts.push(setTimeout(() => { subtitle.textContent = spinSubtitles[roll.rarity] || 'The soul seeks...'; }, spinDur * 0.5)); }
+  _karmaTimeouts.push(setTimeout(() => {
     spinner.classList.add('hidden');
     subtitle.textContent = 'Your fate has been decided.';
     presentKarmaCard(roll);
-  }, spinDur);
+  }, spinDur));
 }
 
 let _karmaTimeouts = [];
@@ -1842,6 +1842,8 @@ const LASER_AMMO_COST = 0;    // lasers use heat, not ammo
 const LASER_HEAT_PER_SHOT = 0.03;
 let lastLaserShot = 0;
 
+const _laserDir = new THREE.Vector3();
+const _laserOrigin = new THREE.Vector3();
 function fireLaser() {
   if (c.dead || c.heat >= 0.95) return; // dead or overheated
   const now = performance.now();
@@ -1850,8 +1852,10 @@ function fireLaser() {
   c.heat = Math.min(1, c.heat + LASER_HEAT_PER_SHOT);
   c.playerHasAttacked = true;
   
-  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-  const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
+  _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  _laserOrigin.copy(camera.position).addScaledVector(_laserDir, 1);
+  const dir = _laserDir;
+  const origin = _laserOrigin;
   
   const g = new THREE.Group();
   const beamMat = _laserBeamTpl.clone();
@@ -1865,7 +1869,7 @@ function fireLaser() {
   
   g.position.copy(origin);
   scene.add(g);
-  c.projectiles.push({ group: g, dir: dir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: glowMat, slugLight: null, isLaser: true, damage: LASER_DAMAGE });
+  c.projectiles.push({ group: g, dir: _laserDir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: glowMat, slugLight: null, isLaser: true, damage: LASER_DAMAGE });
   
   // Small recoil
   c.recoilVel = -2;
@@ -3515,7 +3519,8 @@ function loadGame() {
     if (!state.market.orders) state.market.orders = [];
     if (!state.market.history) state.market.history = [];
     if (!state.pastLives) state.pastLives = [];
-    if (!state.soulMemory) state.soulMemory = { combatInstinct:0, shieldMemory:0, fuelConservation:0, lootSense:0, spatialAwareness:0 };
+    if (!state.soulMemory) state.soulMemory = { tradeInsight:0, combatInstinct:0, shieldMemory:0 };
+    if (state.soulMemory.fuelConservation !== undefined) { state.soulMemory.tradeInsight = state.soulMemory.tradeInsight || 0; delete state.soulMemory.fuelConservation; delete state.soulMemory.lootSense; delete state.soulMemory.spatialAwareness; }
     return true;
   } catch(e) { return false; }
 }
@@ -4031,7 +4036,10 @@ function exitGunnerMode(skipScreenChange) {
   if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
   if (c._tutorialTimeouts) { c._tutorialTimeouts.forEach(clearTimeout); c._tutorialTimeouts = []; }
   _deathTimeouts.forEach(clearTimeout); _deathTimeouts = [];
+  _deathSequenceActive = false;
   state._deathTimeDilation = 1; state._deathPullback = null;
+  if (window._clearMobileFireInterval) window._clearMobileFireInterval();
+  state._touchThrust = 0; state._touchStrafe = 0;
   _materialCache.forEach(m => m.dispose()); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
@@ -4665,10 +4673,13 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = isHullDmg ? '#ff2200' : '#ff0000';
     hudCtx.fillRect(0, 0, W, H);
     if (isHullDmg) {
-      const vigGrad2 = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.2, cx, cy, Math.max(W,H)*0.55);
-      vigGrad2.addColorStop(0, 'rgba(255,0,0,0)');
-      vigGrad2.addColorStop(1, 'rgba(255,0,0,' + (flashAlpha * 0.6) + ')');
-      hudCtx.fillStyle = vigGrad2;
+      if (!c._dmgVigGrad || c._dmgVigW !== W || c._dmgVigH !== H) {
+        c._dmgVigGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.2, cx, cy, Math.max(W,H)*0.55);
+        c._dmgVigGrad.addColorStop(0, 'rgba(255,0,0,0)');
+        c._dmgVigGrad.addColorStop(1, 'rgba(255,0,0,0.24)');
+        c._dmgVigW = W; c._dmgVigH = H;
+      }
+      hudCtx.fillStyle = c._dmgVigGrad;
       hudCtx.fillRect(0, 0, W, H);
     }
     hudCtx.globalAlpha = 1;
@@ -4934,21 +4945,22 @@ canvas3d.addEventListener('touchstart', (e) => {
       const angle = Math.atan2(dy, dx);
       const nx = Math.cos(angle) * dist;
       const ny = Math.sin(angle) * dist;
-      stick.style.transform = `translate(${nx}px, ${ny}px)`;
-      state.flight.thrust = -(ny / maxR);
-      state.flight.strafe = nx / maxR;
+      stick.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+      state._touchThrust = -(ny / maxR);
+      state._touchStrafe = nx / maxR;
     }
   }, { passive: false });
   const endTouch = () => {
     touchOrigin = null; touchId = null;
-    stick.style.transform = 'translate(0,0)';
+    stick.style.transform = 'translate(-50%, -50%)';
     stick.style.opacity = '0.5';
-    state.flight.thrust = 0;
-    state.flight.strafe = 0;
+    state._touchThrust = 0;
+    state._touchStrafe = 0;
   };
   moveZone.addEventListener('touchend', endTouch);
   moveZone.addEventListener('touchcancel', endTouch);
   let fireInterval = null;
+  window._clearMobileFireInterval = () => { clearInterval(fireInterval); fireInterval = null; };
   fireBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     if (c.active) { state.activeWeapon === 'laser' ? fireLaser() : fireRailgun(); }
@@ -6068,14 +6080,20 @@ async function spawnStationModel() {
     spawnStationModel._torusGeo = new THREE.TorusGeometry(12, 1.5, 8, 24);
     spawnStationModel._panelGeo2 = new THREE.BoxGeometry(2, 10, 0.1);
     spawnStationModel._lightGeo2 = new THREE.SphereGeometry(0.3, 8, 8);
+    spawnStationModel._hubMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.4, metalness: 0.7 });
+    spawnStationModel._ringMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.3, metalness: 0.8, emissive: 0x223344, emissiveIntensity: 0.1 });
+    spawnStationModel._panelMat2 = new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5});
+    spawnStationModel._lightMat2 = new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8});
+    spawnStationModel._hubMat._pooled = true; spawnStationModel._ringMat._pooled = true;
+    spawnStationModel._panelMat2._pooled = true; spawnStationModel._lightMat2._pooled = true;
   }
-  const hubMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.4, metalness: 0.7 });
+  const hubMat = spawnStationModel._hubMat;
   g.add(new THREE.Mesh(spawnStationModel._hubGeo, hubMat));
-  const ringMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.3, metalness: 0.8, emissive: 0x223344, emissiveIntensity: 0.1 });
+  const ringMat = spawnStationModel._ringMat;
   const torusM = new THREE.Mesh(spawnStationModel._torusGeo, ringMat);
   torusM.rotation.x = Math.PI/2;
   g.add(torusM);
-  const _panelMat = new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5});
+  const _panelMat = spawnStationModel._panelMat2;
   for (let i = 0; i < 4; i++) {
     const angle = (i/4)*Math.PI*2;
     const panel = new THREE.Mesh(spawnStationModel._panelGeo2, _panelMat);
@@ -6083,7 +6101,7 @@ async function spawnStationModel() {
     panel.lookAt(0,0,0);
     g.add(panel);
   }
-  const _lightMat = new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8});
+  const _lightMat = spawnStationModel._lightMat2;
   for (let i = 0; i < 8; i++) {
     const angle = (i/8)*Math.PI*2;
     const light = new THREE.Mesh(spawnStationModel._lightGeo2, _lightMat);
@@ -6882,6 +6900,9 @@ function gameLoop() {
     if (keysDown.has('s') || keysDown.has('arrowdown')) fl.thrust = -0.5;
     if (keysDown.has('a') || keysDown.has('arrowleft')) fl.strafe = -1;
     if (keysDown.has('d') || keysDown.has('arrowright')) fl.strafe = 1;
+    // Mobile touch joystick overrides keyboard if active
+    if (state._touchThrust) fl.thrust = state._touchThrust;
+    if (state._touchStrafe) fl.strafe = state._touchStrafe;
     if (keysDown.has(' ')) fl.vertical = 1;    // Space = up
     if (keysDown.has('control')) fl.vertical = -1; // Ctrl = down
     fl.afterburner = keysDown.has('shift');
@@ -7428,8 +7449,8 @@ function gameLoop() {
     updateShipParade(dt, dtMs); updatePolicePatrol(dt, dtMs);
     updateAutopilot(dt);
 
-    // Auto-save every 60s
-    if (state.gameTime - c.lastAutoSave > 60000) {
+    // Auto-save every 60s (skip during death to avoid saving hull=0)
+    if (!c.dead && state.gameTime - c.lastAutoSave > 60000) {
       c.lastAutoSave = state.gameTime;
       saveGame();
       const _si = document.getElementById('save-indicator');

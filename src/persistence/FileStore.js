@@ -33,7 +33,10 @@ export class FileStore {
     const json = JSON.stringify(data);
     if (json.length > MAX_SAVE_SIZE) throw new Error('Save data too large');
     const filePath = path.join(this._saveDir, `${playerId}.json`);
-    await fs.writeFile(filePath, json, 'utf-8');
+    // Atomic write: temp file + rename prevents corruption from concurrent writes
+    const tmpPath = filePath + '.tmp';
+    await fs.writeFile(tmpPath, json, 'utf-8');
+    await fs.rename(tmpPath, filePath);
   }
 
   /**

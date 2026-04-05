@@ -83,6 +83,39 @@ export class EconomySystem {
 
   async destroy() {}
 
+  /**
+   * Remove all state for a disconnected player to prevent memory leaks.
+   * @param {string} playerId
+   */
+  removePlayer(playerId) {
+    this._wallets.delete(playerId);
+    this._subscriptions.delete(playerId);
+    this._shardInventories.delete(playerId);
+    this._activeItems.delete(playerId);
+  }
+
+  /**
+   * Remove all state for a disconnected player to prevent memory leaks.
+   * @param {string} playerId
+   */
+  removePlayer(playerId) {
+    this._wallets.delete(playerId);
+    this._subscriptions.delete(playerId);
+    this._shardInventories.delete(playerId);
+    this._activeItems.delete(playerId);
+  }
+
+  /**
+   * Remove all state for a disconnected player to prevent memory leaks.
+   * @param {string} playerId
+   */
+  removePlayer(playerId) {
+    this._wallets.delete(playerId);
+    this._subscriptions.delete(playerId);
+    this._shardInventories.delete(playerId);
+    this._activeItems.delete(playerId);
+  }
+
   // ── Wallets ──────────────────────────────────────────────────────────────────
 
   /**
@@ -255,7 +288,8 @@ export class EconomySystem {
    */
   sellEcForSm(playerId, ecAmount) {
     const rate = BASE_EC_PER_SM_SELL * this._exchangeRateFactor;
-    const smReceived = ecAmount / rate;
+    const smReceived = Math.floor((ecAmount / rate) * 100) / 100;
+    if (smReceived <= 0) return { success: false, smReceived: 0 };
     const success = this.debit(playerId, CURRENCY.EC, ecAmount);
     if (success) this.credit(playerId, CURRENCY.SM, smReceived);
     return { success, smReceived: success ? smReceived : 0 };
@@ -269,7 +303,8 @@ export class EconomySystem {
    */
   sellSmForEc(playerId, smAmount) {
     const rate = BASE_EC_PER_SM_BUY * this._exchangeRateFactor;
-    const ecReceived = smAmount * rate;
+    const ecReceived = Math.floor(smAmount * rate);
+    if (ecReceived <= 0) return { success: false, ecReceived: 0 };
     const success = this.debit(playerId, CURRENCY.SM, smAmount);
     if (success) this.credit(playerId, CURRENCY.EC, ecReceived);
     return { success, ecReceived: success ? ecReceived : 0 };

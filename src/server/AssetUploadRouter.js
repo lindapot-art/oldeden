@@ -122,8 +122,13 @@ export function createAssetUploadRouter({ uploadDir = 'uploads', maxFileSize = 1
       // Run glTF-Transform inspection on GLB/glTF files
       const ext = path.extname(f.originalname).toLowerCase();
       if (GLB_EXTENSIONS.has(ext)) {
-        const report = await glbProcessor.inspect(f.path);
-        entry.glbReport = report;
+        try {
+          const report = await glbProcessor.inspect(f.path);
+          entry.glbReport = report;
+        } catch (inspectErr) {
+          console.error('[AssetUpload] GLB inspection failed:', inspectErr.message);
+          entry.glbReport = { error: 'Inspection failed', detail: inspectErr.message };
+        }
       }
 
       uploaded.push(entry);
