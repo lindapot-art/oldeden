@@ -94,28 +94,6 @@ export class EconomySystem {
     this._activeItems.delete(playerId);
   }
 
-  /**
-   * Remove all state for a disconnected player to prevent memory leaks.
-   * @param {string} playerId
-   */
-  removePlayer(playerId) {
-    this._wallets.delete(playerId);
-    this._subscriptions.delete(playerId);
-    this._shardInventories.delete(playerId);
-    this._activeItems.delete(playerId);
-  }
-
-  /**
-   * Remove all state for a disconnected player to prevent memory leaks.
-   * @param {string} playerId
-   */
-  removePlayer(playerId) {
-    this._wallets.delete(playerId);
-    this._subscriptions.delete(playerId);
-    this._shardInventories.delete(playerId);
-    this._activeItems.delete(playerId);
-  }
-
   // ── Wallets ──────────────────────────────────────────────────────────────────
 
   /**
