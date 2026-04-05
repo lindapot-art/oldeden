@@ -1662,7 +1662,10 @@ function rollKarmaWheel() {
   }, spinDur);
 }
 
+let _karmaTimeouts = [];
 function presentKarmaCard(roll) {
+  // Cancel any in-progress reveal chain
+  _karmaTimeouts.forEach(clearTimeout); _karmaTimeouts = [];
   const card = document.getElementById('karma-card');
   const nameEl = document.getElementById('karma-name');
   const titleEl = document.getElementById('karma-title');
@@ -1738,7 +1741,7 @@ function presentKarmaCard(roll) {
   else if (roll.rarity === 'epic' || roll.rarity === 'rare') AudioSFX.play('karma_rare');
   
   // ── Staged reveal with distinct SFX per stage ──
-  setTimeout(() => {
+  _karmaTimeouts.push(setTimeout(() => {
     // Step 1: Name + title + rarity badge
     nameEl.textContent = roll.name;
     titleEl.textContent = roll.title;
@@ -1748,9 +1751,9 @@ function presentKarmaCard(roll) {
     rarityEl.style.border = '1px solid ' + roll.rarityColor;
     if (['epic','legendary'].includes(roll.rarity)) nameEl.classList.add('shimmer');
     AudioSFX.play('karma_step');
-  }, t1);
+  }, t1));
   
-  setTimeout(() => {
+  _karmaTimeouts.push(setTimeout(() => {
     // Step 2: Genome bars + pixel art
     const geneNames = ['CMB','PLT','ENG','TRD','SCI'];
     const geneColors = ['#ff4444','#44aaff','#22cc66','#ffd700','#a855f7'];
@@ -1766,15 +1769,15 @@ function presentKarmaCard(roll) {
     });
     drawGenome(new Uint8Array(roll.genome), document.getElementById('karma-genome-canvas'), 96);
     AudioSFX.play('karma_reveal');
-  }, t2);
+  }, t2));
   
-  setTimeout(() => {
+  _karmaTimeouts.push(setTimeout(() => {
     // Step 3: Faction
     factionEl.innerHTML = 'Faction: <span style="color:' + roll.factionColor + '">' + roll.factionName + '</span>';
     AudioSFX.play('karma_step');
-  }, t3);
+  }, t3));
   
-  setTimeout(() => {
+  _karmaTimeouts.push(setTimeout(() => {
     // Step 4: Wealth — counting animation for drama
     const wealthTarget = roll.wealth;
     const wealthTier = wealthTarget >= 3000 ? 'rich' : wealthTarget >= 1000 ? 'comfortable' : wealthTarget >= 300 ? 'modest' : 'destitute';
@@ -1792,22 +1795,22 @@ function presentKarmaCard(roll) {
     }
     animateWealth();
     AudioSFX.play('karma_reveal');
-  }, t4);
+  }, t4));
   
-  setTimeout(() => {
+  _karmaTimeouts.push(setTimeout(() => {
     // Step 5: Card reveal + backstory + aura glow
     card.classList.add('revealed', 'rarity-' + roll.rarity);
     backstoryEl.textContent = roll.backstory;
     aura.classList.add('active');
-  }, t5);
+  }, t5));
   
-  setTimeout(() => {
+  _karmaTimeouts.push(setTimeout(() => {
     // Step 6: Show action buttons
     actionsEl.classList.add('visible');
     const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
     const isFreeReroll = state.player.rebirths === 0 && state.karmaRerollCount === 0;
     document.getElementById('reroll-cost').textContent = isFreeReroll ? 'FREE' : cost;
-  }, t6);
+  }, t6));
 }
 
 // ================================================================
@@ -1852,12 +1855,12 @@ function fireLaser() {
   
   const g = new THREE.Group();
   const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4), beamMat);
+  const beam = new THREE.Mesh(_laserBeamGeo, beamMat);
   beam.quaternion.copy(camera.quaternion); beam.rotateX(Math.PI / 2);
   g.add(beam);
   
   const glowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
-  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4), glowMat);
+  const glow = new THREE.Mesh(_laserGlowGeo, glowMat);
   glow.quaternion.copy(camera.quaternion); glow.rotateX(Math.PI / 2);
   g.add(glow);
   
@@ -2644,6 +2647,15 @@ function jumpToSystem(idx) {
     AudioSFX.play('shield_hit');
     return;
   }
+  // Enforce jump route connectivity BEFORE animation
+  if (!state.inAltUniverse) {
+    const _curSys = state.starSystems[state.location.systemIndex];
+    if (_curSys && _curSys.connections && !_curSys.connections.includes(idx)) {
+      addComms('Navigation', 'No jump route to that system. Select a connected system.');
+      AudioSFX.play('shield_hit');
+      return;
+    }
+  }
   _isJumping = true;
   AudioSFX.play('jump');
   // Warp flash animation
@@ -2691,15 +2703,6 @@ function jumpToSystem(idx) {
   }
   drawStreaks();
 
-  // Enforce jump route connectivity
-  if (!state.inAltUniverse) {
-    const _curSys = state.starSystems[state.location.systemIndex];
-    if (_curSys && _curSys.connections && !_curSys.connections.includes(idx)) {
-      addComms('Navigation', 'No jump route to that system. Select a connected system.');
-      AudioSFX.play('shield_hit');
-      return;
-    }
-  }
   state.location.systemIndex = idx;
   state.location.docked = false;
   state.ship.fuel = Math.max(0, state.ship.fuel - 5);
@@ -3964,17 +3967,15 @@ function spawnSpaceDust() {
 function spawnLootDrop(pos, type, creditValue) {
   const g = new THREE.Group();
   const colors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
-  const geo = new THREE.OctahedronGeometry(1.2, 0);
   const mat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.8 });
-  const mesh = new THREE.Mesh(geo, mat);
+  const mesh = new THREE.Mesh(_lootOctGeo, mat);
   g.add(mesh);
   // Glow ring
-  const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 2, 16), new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
+  const ring = new THREE.Mesh(_lootRingGeo, new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
   g.add(ring);
   // Emissive glow sphere — cheaper than PointLight
-  const _lootGlowGeo = new THREE.SphereGeometry(2.5, 8, 8);
   const _lootGlowMat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false });
-  const lootGlow = new THREE.Mesh(_lootGlowGeo, _lootGlowMat);
+  const lootGlow = new THREE.Mesh(_lootSphereGeo, _lootGlowMat);
   g.add(lootGlow);
   g.userData.lootLight = lootGlow;
   g.userData.lootMesh = mesh;
@@ -4011,6 +4012,8 @@ function exitGunnerMode(skipScreenChange) {
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
   if (c._tutorialTimeouts) { c._tutorialTimeouts.forEach(clearTimeout); c._tutorialTimeouts = []; }
+  _deathTimeouts.forEach(clearTimeout); _deathTimeouts = [];
+  state._deathTimeDilation = 1; state._deathPullback = null;
   _materialCache.forEach(m => m.dispose()); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
@@ -4248,6 +4251,11 @@ const _nailSlugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6);
 const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6);
 const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6);
 const _sparkUnitGeo = new THREE.SphereGeometry(1, 4, 4);
+const _lootOctGeo = new THREE.OctahedronGeometry(1.2, 0);
+const _lootRingGeo = new THREE.RingGeometry(1.5, 2, 16);
+const _lootSphereGeo = new THREE.SphereGeometry(2.5, 8, 8);
+const _laserBeamGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4);
+const _laserGlowGeo = new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4);
 const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8);
 const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => new THREE.SphereGeometry(r, 4, 4));
 const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16);
@@ -4284,7 +4292,7 @@ function spawnExplosion(pos, scale) {
 // ================================================================
 //  HUD RENDERER (Gunner Mode)
 // ================================================================
-function renderHUD() {
+function renderHUD(dtMs) {
   if (!hudCanvas || !hudCtx) return;
   const W = hudCanvas.width, H = hudCanvas.height;
   const cx = W/2, cy = H/2;
@@ -4680,7 +4688,7 @@ function renderHUD() {
   // Floating damage numbers
   for (let i = c.dmgNumbers.length - 1; i >= 0; i--) {
     const dn = c.dmgNumbers[i];
-    dn.age += 16;
+    dn.age += dtMs || 16;
     _tmpV3b.copy(dn.pos).project(camera);
     const sx = (_tmpV3b.x * 0.5 + 0.5) * W;
     const sy = (-_tmpV3b.y * 0.5 + 0.5) * H - dn.age * 0.08;
@@ -4943,6 +4951,7 @@ canvas3d.addEventListener('touchstart', (e) => {
 
 document.addEventListener('pointerlockchange', () => {
   c.locked = document.pointerLockElement === canvas3d;
+  if (!c.locked) mouseHeld = false;
   document.getElementById('lock-prompt').style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
 });
 
@@ -4970,9 +4979,9 @@ document.addEventListener('keydown', (e) => {
       c.weaponReady = false;
       addComms('System', 'Reloading...');
       setTimeout(() => {
-        if (!c.active || c.dead) { c._reloading = false; return; }
-        c.ammo = c.maxAmmo;
         c._reloading = false;
+        if (!c.active || c.dead) return;
+        c.ammo = c.maxAmmo;
         c.weaponReady = true;
         AudioSFX.play('quest_complete');
         addComms('System', 'Ammo replenished.');
@@ -4998,6 +5007,8 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => {
   keysDown.delete(e.key.toLowerCase());
 });
+window.addEventListener('blur', () => { keysDown.clear(); mouseHeld = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { keysDown.clear(); mouseHeld = false; } });
 
 // Nav bar
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -6018,26 +6029,30 @@ async function spawnStationModel() {
     return;
   } catch(e) { /* fallback to procedural */ }
   const g = new THREE.Group();
+  if (!spawnStationModel._hubGeo) {
+    spawnStationModel._hubGeo = new THREE.CylinderGeometry(6, 6, 4, 12);
+    spawnStationModel._torusGeo = new THREE.TorusGeometry(12, 1.5, 8, 24);
+    spawnStationModel._panelGeo2 = new THREE.BoxGeometry(2, 10, 0.1);
+    spawnStationModel._lightGeo2 = new THREE.SphereGeometry(0.3, 8, 8);
+  }
   const hubMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.4, metalness: 0.7 });
-  g.add(new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 4, 12), hubMat));
+  g.add(new THREE.Mesh(spawnStationModel._hubGeo, hubMat));
   const ringMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.3, metalness: 0.8, emissive: 0x223344, emissiveIntensity: 0.1 });
-  const torusM = new THREE.Mesh(new THREE.TorusGeometry(12, 1.5, 8, 24), ringMat);
+  const torusM = new THREE.Mesh(spawnStationModel._torusGeo, ringMat);
   torusM.rotation.x = Math.PI/2;
   g.add(torusM);
-  const _panelGeo = new THREE.BoxGeometry(2, 10, 0.1);
   const _panelMat = new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5});
   for (let i = 0; i < 4; i++) {
     const angle = (i/4)*Math.PI*2;
-    const panel = new THREE.Mesh(_panelGeo, _panelMat);
+    const panel = new THREE.Mesh(spawnStationModel._panelGeo2, _panelMat);
     panel.position.set(Math.cos(angle)*18, Math.sin(angle)*3, Math.sin(angle)*18);
     panel.lookAt(0,0,0);
     g.add(panel);
   }
-  const _lightGeo = new THREE.SphereGeometry(0.3,8,8);
   const _lightMat = new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8});
   for (let i = 0; i < 8; i++) {
     const angle = (i/8)*Math.PI*2;
-    const light = new THREE.Mesh(_lightGeo, _lightMat);
+    const light = new THREE.Mesh(spawnStationModel._lightGeo2, _lightMat);
     light.position.set(Math.cos(angle)*12, 0, Math.sin(angle)*12);
     g.add(light);
   }
@@ -6230,6 +6245,13 @@ window._placeOrder = () => {
       _ord.quantity -= _filled;
       if (_ord.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== _orderId);
       addComms('Market', 'Order filled: ' + _filled + 'x ' + _ord.item + ' by NPC traders.');
+    }
+    // Refund unfilled buy order portion
+    if (_ord && _ord.quantity > 0 && _ord.type === 'buy') {
+      const refund = _ord.price * _ord.quantity;
+      state.player.credits += refund;
+      state.market.orders = state.market.orders.filter(o => o.id !== _orderId);
+      if (refund > 0) addComms('Market', 'Order expired. Refunded ' + refund + ' EC for unfilled ' + _ord.item + '.');
     }
     renderMarketScreen();
   }, 2000 + Math.random() * 3000);
@@ -6502,6 +6524,8 @@ async function loadDashboardGun() {
     // Darken materials for black gun look
     gun.traverse(child => {
       if (child.isMesh && child.material) {
+        // Clone materials to avoid mutating cached model
+        child.material = Array.isArray(child.material) ? child.material.map(m => m.clone()) : child.material.clone();
         const mats = Array.isArray(child.material) ? child.material : [child.material];
         mats.forEach(m => {
           m.color.setHex(0x1a1a1a);
@@ -6625,19 +6649,16 @@ function updateAutopilot(dt) {
     return;
   }
 
-  // Rotate ship towards target
+  // Steer camera yaw/pitch toward target (ship follows camera via quaternion slerp)
   const targetDir = toTarget.normalize();
-  _tmpV3a.set(0, 0, -1).applyQuaternion(ship.quaternion);
-  _tmpV3b.set(0,0,0).crossVectors(_tmpV3a, targetDir);
-  const currentFwd = _tmpV3a;
-  const cross = _tmpV3b;
-  const dot = currentFwd.dot(targetDir);
-
-  // Yaw towards target
-  ship.rotation.y += cross.y * 2.0 * dt;
-  // Pitch towards target
-  const pitchAngle = Math.asin(Math.max(-1, Math.min(1, targetDir.y)));
-  ship.rotation.x += (pitchAngle - ship.rotation.x) * dt * 1.5;
+  _tmpV3a.copy(targetDir);
+  _tmpQuat.copy(camera.quaternion).invert();
+  _tmpV3a.applyQuaternion(_tmpQuat);
+  const steerYaw = -Math.atan2(_tmpV3a.x, -_tmpV3a.z);
+  const steerPitch = Math.atan2(_tmpV3a.y, Math.sqrt(_tmpV3a.x * _tmpV3a.x + _tmpV3a.z * _tmpV3a.z));
+  c.yaw += steerYaw * Math.min(1, dt * 2);
+  c.pitch += steerPitch * Math.min(1, dt * 2);
+  c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
 
   // Thrust
   const speedFactor = dist > 100 ? 1.0 : dist / 100;
@@ -6743,6 +6764,7 @@ document.addEventListener('keydown', (e) => {
 //  CINEMATIC DEATH SEQUENCE
 // ================================================================
 let _deathSequenceActive = false;
+let _deathTimeouts = [];
 function playerDeathSequence(cause) {
   if (_deathSequenceActive) return;
   _deathSequenceActive = true;
@@ -6758,24 +6780,24 @@ function playerDeathSequence(cause) {
   spawnExplosion(ship.position.clone(), 4);
   const _deathStart = performance.now();
   state._deathPullback = { active: true, getValue: () => Math.min(20, (performance.now() - _deathStart) * 0.007) };
-  // Phase 1: 3 second slow-mo pullback (existing)
-  setTimeout(() => {
+  // Phase 1: 3 second slow-mo pullback
+  _deathTimeouts.push(setTimeout(() => {
     // Phase 2: 1.5s full freeze — camera holds on wreckage
     state._deathTimeDilation = 0;
-    setTimeout(() => {
+    _deathTimeouts.push(setTimeout(() => {
       state._deathTimeDilation = 1;
       state._deathPullback = null;
-      _deathSequenceActive = false;
-      c.dead = false;
-      // Soul departure flash — bridges 3D→2D transition
+      // Exit gunner FIRST (sets c.active = false), then clear death flags
       const df = document.createElement('div');
       df.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:9999;opacity:1;transition:opacity 0.5s ease;pointer-events:none;';
       document.body.appendChild(df);
       requestAnimationFrame(() => { df.style.opacity = '0'; setTimeout(() => df.remove(), 600); });
       exitGunnerMode(true);
+      _deathSequenceActive = false;
+      c.dead = false;
       showEulogy(c.deathStats, cause);
-    }, 1500);
-  }, 3000);
+    }, 1500));
+  }, 3000));
 }
 
 // ================================================================
@@ -7064,7 +7086,7 @@ function gameLoop() {
           hit = true; break;
         }
       }
-      if (hit || p.age > p.life) { scene.remove(p.group); c.projectiles.splice(i, 1); }
+      if (hit || p.age > p.life) { scene.remove(p.group); disposeObject(p.group); c.projectiles.splice(i, 1); }
     }
 
     // Update enemies
@@ -7346,7 +7368,7 @@ function gameLoop() {
       if (_si) { _si.classList.add('show'); setTimeout(() => _si.classList.remove('show'), 1500); }
     }
 
-    renderHUD();
+    renderHUD(dtMs);
     if (showLibraryLabelsFlag) renderLibraryLabels();
   } else {
     // Bridge — gentle idle camera
