@@ -2064,7 +2064,7 @@ function loadFromServerData(data) {
   state.ship.shield = Number.isFinite(state.ship.shield) ? Math.max(0, state.ship.shield) : state.ship.maxShield;
   state.ship.fuel = Number.isFinite(state.ship.fuel) ? Math.max(0, state.ship.fuel) : state.ship.maxFuel;
   if (data.factionRep) Object.assign(state.factionRep, data.factionRep);
-  if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; state.combat.bestStreak = data.combat.bestStreak || 0; }
+  if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; state.combat.bestStreak = data.combat.bestStreak || 0; state.combat.bossKills = data.combat.bossKills || 0; state.combat._nextBossAt = data.combat._nextBossAt || 20; state.combat._nextCycleAt = data.combat._nextCycleAt || 15; state.combat._nextBreatherAt = data.combat._nextBreatherAt || 10; }
   if (data.chatbot) { state.chatbot.autoTarget = !!data.chatbot.autoTarget; state.chatbot.autoMine = !!data.chatbot.autoMine; }
   if (data.inventory) state.inventory = data.inventory;
   if (data.quests) state.quests = data.quests;
@@ -2100,6 +2100,7 @@ function loadFromServerData(data) {
   if (!state.player.milestonesClaimed) state.player.milestonesClaimed = [];
   if (state.player.edenTokens === undefined) state.player.edenTokens = 0;
   applyUpgrades();
+  state.combat.ammo = state.combat.maxAmmo;
 }
 
 function updateServerStatus(online) {
@@ -3488,7 +3489,7 @@ function saveGame() {
     ship: state.ship,
     location: state.location,
     factionRep: state.factionRep,
-    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle, bestStreak: state.combat.bestStreak || 0 },
+    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle, bestStreak: state.combat.bestStreak || 0, bossKills: state.combat.bossKills || 0, _nextBossAt: state.combat._nextBossAt || 20, _nextCycleAt: state.combat._nextCycleAt || 15, _nextBreatherAt: state.combat._nextBreatherAt || 10 },
     inventory: state.inventory,
     quests: state.quests,
     upgrades: state.upgrades,
@@ -5102,7 +5103,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -6856,7 +6857,7 @@ document.addEventListener('keydown', (e) => {
     if (sys && sys.hasStation) {
       const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80);
       if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; }
-      state.location.docked = true; AudioSFX.play('dock'); showScreen('station');
+      showScreen('station');
     }
     else addComms('System', 'No station in this system.');
   }
