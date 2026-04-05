@@ -1354,6 +1354,7 @@ function storePastLife(deathCause) {
     kills: state.combat.kills,
     score: state.combat.score,
     bestStreak: state.combat.bestStreak,
+    bossKills: state.combat.bossKills || 0,
     deathCause: deathCause || 'Unknown',
     station: state.starSystems[state.location.systemIndex]?.name || 'Deep Space',
     occupation: occupation,
@@ -2007,7 +2008,7 @@ async function connectSocket() {
           state.player.credits = data.wallet.ec;
           state.player.stellarMarks = data.wallet.sm;
           state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
-          state.combat.bossActive = false;
+          state.combat.bossActive = false; state.combat.bossKills = 0;
           state.inventory = [];
           state.quests = state.quests.filter(q => !q.active);
           // Reset upgrades to baseline before applying resonance
@@ -3882,6 +3883,7 @@ function enterGunnerMode() {
   _deathSequenceActive = false;
   c.streak = 0; c.streakTimer = 0; c.streakMultiplier = 1;
   c.playerHasAttacked = false;
+  c.weaponReady = true; c.charging = false; c.cooling = false; c.chargeLevel = 0; c._reloading = false;
   c.sessionStartTime = state.gameTime; // Track when this combat session began
   // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
   c.deathImmunityUntil = performance.now() + 5000;
@@ -5116,7 +5118,9 @@ document.getElementById('btn-continue').addEventListener('click', () => {
 
 // Settings button (title screen)
 document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
-document.getElementById('btn-settings-back').addEventListener('click', () => showScreen('title'));
+document.getElementById('btn-settings-back').addEventListener('click', () => {
+  showScreen(state.player.name && state.player.faction ? 'bridge' : 'title');
+});
 
 // Create screen
 document.getElementById('btn-reroll').addEventListener('click', randomizeGenome);
@@ -5150,7 +5154,7 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   // Stellar Marks persist across lives — they are soul currency
   state.player.age = 18 + Math.floor(Math.random() * 7);
   state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
-  state.combat.dead = false;
+  state.combat.dead = false; state.combat.bossActive = false; state.combat.bossKills = 0;
   state.chatbot.messages = [];
   state.combat._nextCycleAt = 15; state.combat._nextBossAt = 20; state.combat._nextBreatherAt = 10; state.combat._breatherStart = 0;
   // Reset character skills (the flesh forgets, the soul remembers)
@@ -5237,7 +5241,7 @@ document.getElementById('btn-karma-reroll').addEventListener('click', () => {
     subtitle.textContent = 'Your new fate awaits.';
     presentKarmaCard(roll);
   }, rerollDur);
-  showToast(`Re-rolled! (-${cost} SM)`);
+  showToast(isFreeReroll ? 'Re-rolled! (FREE)' : `Re-rolled! (-${cost} SM)`);
 });
 
 // Karma Wheel: Life Insurance
