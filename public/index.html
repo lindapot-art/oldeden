@@ -943,7 +943,7 @@ const state = {
   location: { systemIndex: 0, docked: false },
   combat: {
     active: false, enemies: [], projectiles: [], explosions: [],
-    ammo: 100000, maxAmmo: 100000, heat: 0, score: 0, kills: 0, cycle: 1,
+    ammo: 24, maxAmmo: 24, heat: 0, score: 0, kills: 0, cycle: 1,
     weaponReady: true, charging: false, chargeStart: 0, chargeLevel: 0,
     cooling: false, coolEnd: 0, recoilOffset: 0, recoilVel: 0,
     yaw: 0, pitch: 0, locked: false, damageFlash: 0, dead: false, bossActive: false,
@@ -980,7 +980,7 @@ const state = {
   upgrades: {
     railgunDmg: 1,     // multiplier
     shieldRegen: 3,    // per sec
-    maxAmmo: 100000,
+    maxAmmo: 24,
     maxHull: 100,
     maxShield: 100,
     engineSpeed: 1,
@@ -1152,7 +1152,10 @@ function getPastLivesAtStation(systemIndex) {
 //  AGING — Natural session timer
 // ================================================================
 function updateAging(dtMs) {
+  // Only age while player is actively playing (combat or bridge)
   if (!state.combat.active && state.screen !== 'bridge') return;
+  // Don't age during eulogy, karma wheel, or other transitional screens
+  if (state.screen === 'eulogy' || state.screen === 'karma') return;
   // 1 game-year per 3 real minutes → death at ~80 years = ~4 hours max life
   // Median life ~20 years game-time = ~60 real minutes
   state.player.age += (dtMs / 1000) / 180; // 180 seconds = 1 year
@@ -2868,7 +2871,7 @@ const SHIP_UPGRADES = [
   { id: 'railgun_mk3',  name: 'Railgun Mk-III',      cost: 800,  stat: 'railgunDmg',  value: 1.5, desc: '+50% railgun damage' },
   { id: 'shield_boost',  name: 'Shield Capacitor',    cost: 600,  stat: 'maxShield',   value: 150, desc: '+50 max shield' },
   { id: 'hull_plating',  name: 'Reinforced Hull',     cost: 500,  stat: 'maxHull',     value: 150, desc: '+50 max hull' },
-  { id: 'ammo_expand',   name: 'Expanded Magazine',   cost: 400,  stat: 'maxAmmo',     value: 36,  desc: '+12 max ammo' },
+  { id: 'ammo_expand',   name: 'Expanded Magazine',   cost: 400,  stat: 'maxAmmo',     value: 36,  desc: '+12 max ammo (24→36)' },
   { id: 'shield_gen',    name: 'Shield Generator II',  cost: 1000, stat: 'shieldRegen', value: 5,   desc: '+2/sec shield regen' },
   { id: 'engine_boost',  name: 'Engine Overcharge',   cost: 700,  stat: 'engineSpeed', value: 1.3, desc: '+30% engine speed' },
 ];
@@ -3120,7 +3123,7 @@ function spawnExhaust() {
 //  GUNNER MODE — COMBAT
 // ================================================================
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
-const CHARGE_TIME = 0, COOLDOWN_TIME = 0, MOUSE_SENS = 0.002;
+const CHARGE_TIME = 350, COOLDOWN_TIME = 200, MOUSE_SENS = 0.002;
 
 // ---- SHARED GEOMETRIES & MATERIALS (reused, never re-created) ----
 const _boltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4);
@@ -3640,9 +3643,9 @@ function renderHUD() {
   hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
   // Kill streak
   if (c.streak >= 3) {
-    const streakColor = c.streak >= 10 ? '#ff2200' : c.streak >= 5 ? '#ffcc00' : '#ff8800';78
+    const streakColor = c.streak >= 10 ? '#ff2200' : c.streak >= 5 ? '#ffcc00' : '#ff8800';
     hudCtx.font = 'bold 14px "Segoe UI"'; hudCtx.fillStyle = streakColor;
-    hudCtx.fillText('\u2605 STREAK x' + c.streak + ' (' + c.streakMultiplier + 'x)', srx, sry+62);
+    hudCtx.fillText('\u2605 STREAK x' + c.streak + ' (' + c.streakMultiplier + 'x)', srx, sry+78);
   }
 
   // Credits (bottom-left)
@@ -3667,6 +3670,17 @@ function renderHUD() {
   hudCtx.fillRect(slx, sly+104, 180 * (state.ship.fuel / state.ship.maxFuel), 8);
   hudCtx.fillStyle = '#778899';
   hudCtx.fillText(Math.floor(state.ship.fuel) + '%', slx+185, sly+112);
+  // Fuel critical warning
+  if (state.ship.fuel <= 0) {
+    hudCtx.save();
+    hudCtx.globalAlpha = 0.6 + 0.4 * Math.sin(state.gameTime * 0.01);
+    hudCtx.font = 'bold 12px "Segoe UI"'; hudCtx.fillStyle = '#ff4444';
+    hudCtx.fillText('\u26a0 FUEL EMPTY — 30% SPEED', slx, sly+126);
+    hudCtx.restore();
+  } else if (state.ship.fuel <= 15) {
+    hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ff8800';
+    hudCtx.fillText('\u26a0 LOW FUEL', slx+100, sly+112);
+  }
   // Controls reminder
   hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.6;
   hudCtx.fillText('WASD/Arrows fly | Shift boost | RClick/DblClick nav', slx, sly+130);
@@ -3942,7 +3956,21 @@ document.addEventListener('mousemove', (e) => {
 // EVE Online flight: WASD + Space/Ctrl + Shift(boost)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
-  if ((e.key === 'r' || e.key === 'R') && c.active && window._devCheatsEnabled) { c.ammo = 100000; c.maxAmmo = 100000; }
+  // R = reload ammo (1.5s reload animation)
+  if ((e.key === 'r' || e.key === 'R') && c.active) {
+    if (c.ammo < c.maxAmmo && !c._reloading) {
+      c._reloading = true;
+      c.weaponReady = false;
+      addComms('System', 'Reloading...');
+      setTimeout(() => {
+        c.ammo = c.maxAmmo;
+        c._reloading = false;
+        c.weaponReady = true;
+        AudioSFX.play('quest_complete');
+        addComms('System', 'Ammo replenished.');
+      }, 1500);
+    }
+  }
   if ((e.key === 'i' || e.key === 'I') && c.active) {
     /* God mode gated behind console — type window.enableDevCheats() to unlock */
     if (!window._devCheatsEnabled) return;
@@ -5246,7 +5274,9 @@ function gameLoop() {
     if (keysDown.has('control')) fl.vertical = -1; // Ctrl = down
     fl.afterburner = keysDown.has('shift');
     const speedMult = fl.afterburner ? fl.afterburnerMult : 1;
-    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult();
+    // Fuel penalty: when empty, max speed reduced by 70% (emergency power only)
+    const fuelPenalty = state.ship.fuel <= 0 ? 0.3 : 1;
+    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult() * fuelPenalty;
     // Thrust direction = camera look direction (fly where you're looking)
     _tmpV3b.set(0, 0, -1).applyQuaternion(camera.quaternion); // thrustFwd
     _tmpV3c.set(1, 0, 0).applyQuaternion(camera.quaternion);  // thrustRight
@@ -5458,7 +5488,55 @@ function gameLoop() {
       // On first life, auto-aggro after 60s to push players into the combat loop
       const autoAggro = isFirstLife && state.gameTime > 60000;
       if (c.playerHasAttacked || autoAggro) {
-        e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+        const distToPlayer = e.group.position.distanceTo(ship.position);
+        // Type-specific AI movement patterns
+        if (!e._aiTimer) e._aiTimer = Math.random() * 6;
+        e._aiTimer += dt;
+        switch (e.type) {
+          case 'scout':
+            // Scouts: fast strafing runs — approach, then strafe perpendicular
+            if (distToPlayer > 60) {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            } else {
+              // Strafe perpendicular to player
+              const strafeDir = new THREE.Vector3(-_tmpV3a.z, 0, _tmpV3a.x);
+              const sway = Math.sin(e._aiTimer * 3) * 0.7;
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 0.3);
+              e.group.position.addScaledVector(strafeDir, e.speed * dt * sway);
+            }
+            break;
+          case 'bomber':
+            // Bombers: slow approach, pause at range, then charge in for bombing run
+            if (distToPlayer > 100) {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            } else if (distToPlayer > 40) {
+              // Hold position, drift slowly (attack range)
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 0.15);
+              e.group.position.y += Math.sin(e._aiTimer * 1.5) * dt * 3;
+            } else {
+              // Charge through (bombing run)
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 1.8);
+            }
+            break;
+          case 'interceptor':
+            // Interceptors: circle the player at mid-range
+            if (distToPlayer > 80) {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            } else {
+              // Orbit player
+              const orbitDir = new THREE.Vector3(-_tmpV3a.z, 0, _tmpV3a.x);
+              e.group.position.addScaledVector(orbitDir, e.speed * dt * 0.8);
+              // Drift inward/outward to maintain orbit
+              const orbitPull = (distToPlayer - 50) * 0.02;
+              e.group.position.addScaledVector(_tmpV3a, orbitPull * dt * e.speed);
+              e.group.position.y += Math.sin(e._aiTimer * 2) * dt * 5;
+            }
+            break;
+          default: // fighter — classic beeline but with slight weave
+            e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            e.group.position.y += Math.sin(e._aiTimer * 2) * dt * 2;
+            break;
+        }
       }
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
@@ -5582,21 +5660,28 @@ function gameLoop() {
     // Space dust drift
     c.spaceDust.forEach(d => { if (d && d.position && d.userData) d.position.addScaledVector(d.userData.drift, dt); });
 
-    // Asteroid collision
+    // Asteroid collision (with cooldown to prevent per-frame damage spam)
     if (!c.godMode && performance.now() > c.deathImmunityUntil) {
-      c.asteroids.forEach(a => {
-        if (!a || !a.position) return;
-        const dist = a.position.distanceTo(ship.position);
-        const mesh = a.children && a.children[0];
-        const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
-        if (dist < radius + 3) {
-          const dmg = 5 + Math.random() * 10;
-          if (state.ship.shield > 0) state.ship.shield = Math.max(0, state.ship.shield - dmg);
-          else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
-          c.damageFlash = 250;
-          AudioSFX.play('shield_hit');
-        }
-      });
+      if (!c._asteroidHitCooldown) c._asteroidHitCooldown = 0;
+      if (performance.now() > c._asteroidHitCooldown) {
+        c.asteroids.forEach(a => {
+          if (!a || !a.position) return;
+          const dist = a.position.distanceTo(ship.position);
+          const mesh = a.children && a.children[0];
+          const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
+          if (dist < radius + 3) {
+            const dmg = 15 + Math.random() * 10;
+            const hadShield = state.ship.shield > 0;
+            if (state.ship.shield > 0) state.ship.shield = Math.max(0, state.ship.shield - dmg);
+            else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+            if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
+            c.damageFlash = 350;
+            AudioSFX.play('shield_hit');
+            c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
+            addComms('EDEN AI', '\u26a0 Asteroid collision! Watch your heading.');
+          }
+        });
+      }
     }
 
     // Weapon heat glow on barrels
