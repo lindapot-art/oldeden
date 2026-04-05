@@ -3234,14 +3234,14 @@ const seatMat = new THREE.MeshBasicMaterial({ color: 0x2a3540, transparent: true
 const railMat = new THREE.MeshBasicMaterial({ color: 0x556677, transparent: true, opacity: 0.8 });
 railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
 railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
-railL = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
+railL = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5,8), railMat);
 railL.rotation.x=Math.PI/2; railL.position.set(-0.18,-0.3,-2.0); cockpit.add(railL);
-railR = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6), railMat);
+railR = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5,8), railMat);
 railR.rotation.x=Math.PI/2; railR.position.set(0.18,-0.3,-2.0); cockpit.add(railR);
-{ const rgL = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatL); rgL.rotation.set(Math.PI/2,0,0); rgL.position.set(-0.18,-0.3,-2.0); cockpit.add(rgL); }
-{ const rgR = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,4,6), railGlowMatR); rgR.rotation.set(Math.PI/2,0,0); rgR.position.set(0.18,-0.3,-2.0); cockpit.add(rgR); }
+{ const rgL = new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.10,5,8), railGlowMatL); rgL.rotation.set(Math.PI/2,0,0); rgL.position.set(-0.18,-0.3,-2.0); cockpit.add(rgL); }
+{ const rgR = new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.10,5,8), railGlowMatR); rgR.rotation.set(Math.PI/2,0,0); rgR.position.set(0.18,-0.3,-2.0); cockpit.add(rgR); }
 muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
-const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), muzzleMat);
+const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.3,12,12), muzzleMat);
 muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
 
 // Side panels
@@ -3488,6 +3488,12 @@ function exitGunnerMode(skipScreenChange) {
   c.lootDrops.forEach(l => { if (l && l.group) { scene.remove(l.group); disposeObject(l.group); } }); c.lootDrops = [];
   c.spaceDust.forEach(d => { if (d) { scene.remove(d); disposeObject(d); } }); c.spaceDust = [];
   c.dmgNumbers = [];
+  // Clean up police patrols
+  policeShips.forEach(p => { scene.remove(p); disposeObject(p); }); policeShips.length = 0;
+  _policeSpawnTimer = 0;
+  // Clean up parade ship
+  if (paradeShip) { scene.remove(paradeShip); disposeObject(paradeShip); paradeShip = null; }
+  paradePhase = "idle"; paradeLabels = []; paradeTimer = 0;
   // Clean up new systems
   if (state.npcShips) { state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); state.npcShips = []; }
   if (stargateGroup) { scene.remove(stargateGroup); stargateGroup = null; }
@@ -4530,26 +4536,85 @@ document.getElementById('btn-market-back').addEventListener('click', () => showS
 //  GLB MODEL LOADER — Asset Registry
 // ================================================================
 const GLB_ASSETS = {
-  cyborg_ship:    { path: '/3d/glb/optimized/cyborg_ship.glb',    role: 'npc',     scale: 0.5 },
-  station_a:      { path: '/3d/glb/optimized/station_a.glb',      role: 'station', scale: 1.0 },
-  station_b:      { path: '/3d/glb/optimized/station_b.glb',      role: 'station', scale: 1.0 },
-  freighter:      { path: '/3d/glb/optimized/freighter.glb',      role: 'npc',     scale: 0.8 },
-  iron_sentinel:  { path: '/3d/glb/optimized/iron_sentinel.glb',  role: 'npc',     scale: 0.8 },
-  evac_pod_a:     { path: '/3d/glb/optimized/evac_pod_a.glb',     role: 'npc',     scale: 0.6 },
-  evac_pod_b:     { path: '/3d/glb/optimized/evac_pod_b.glb',     role: 'npc',     scale: 0.6 },
-  railgun_turret: { path: '/3d/glb/optimized/railgun_turret.glb', role: 'weapon',  scale: 0.3 },
-  railgun_ship:   { path: '/3d/glb/optimized/railgun_ship.glb',   role: 'weapon',  scale: 0.6 },
-  titan_a:          { path: '/3d/glb/optimized/titan_a.glb',          role: 'boss',    scale: 1.2 },
-  titan_b:          { path: '/3d/glb/optimized/titan_b.glb',          role: 'boss',    scale: 1.2 },
-  demon_battleship: { path: '/3d/glb/optimized/demon_battleship.glb', role: 'boss',    scale: 1.0 },
-  alien_battleship: { path: '/3d/glb/optimized/alien_battleship.glb', role: 'enemy',   scale: 0.9 },
-  cargo_shuttle:    { path: '/3d/glb/optimized/cargo_shuttle.glb',    role: 'npc',     scale: 0.7 },
-  shuttle:          { path: '/3d/glb/optimized/shuttle.glb',          role: 'npc',     scale: 0.6 },
-  fighter_alpha:    { path: '/3d/glb/optimized/fighter_alpha.glb',    role: 'enemy',   scale: 0.5 },
-  fighter_beta:     { path: '/3d/glb/optimized/fighter_beta.glb',     role: 'enemy',   scale: 0.5 },
-  blaster_turret:   { path: '/3d/glb/optimized/blaster_turret.glb',   role: 'weapon',  scale: 0.3 },
-  railgun_barrel:   { path: '/3d/glb/optimized/railgun_barrel.glb',   role: 'weapon',  scale: 0.8 },
-  cockpit_shuttle:  { path: '/3d/glb/optimized/cockpit_shuttle.glb',  role: 'cockpit', scale: 1.0 },
+  // ── Original models ──
+  cyborg_ship:       { path: '/3d/glb/optimized/cyborg_ship.glb',       role: 'npc',     scale: 0.5 },
+  station_a:         { path: '/3d/glb/optimized/station_a.glb',         role: 'station', scale: 1.0 },
+  station_b:         { path: '/3d/glb/optimized/station_b.glb',         role: 'station', scale: 1.0 },
+  freighter:         { path: '/3d/glb/optimized/freighter.glb',         role: 'npc',     scale: 0.8 },
+  iron_sentinel:     { path: '/3d/glb/optimized/iron_sentinel.glb',     role: 'enemy',   scale: 0.8 },
+  evac_pod_a:        { path: '/3d/glb/optimized/evac_pod_a.glb',        role: 'npc',     scale: 0.6 },
+  evac_pod_b:        { path: '/3d/glb/optimized/evac_pod_b.glb',        role: 'npc',     scale: 0.6 },
+  railgun_turret:    { path: '/3d/glb/optimized/railgun_turret.glb',    role: 'weapon',  scale: 0.3 },
+  railgun_ship:      { path: '/3d/glb/optimized/railgun_ship.glb',      role: 'weapon',  scale: 0.6 },
+  titan_a:           { path: '/3d/glb/optimized/titan_a.glb',           role: 'boss',    scale: 1.2 },
+  titan_b:           { path: '/3d/glb/optimized/titan_b.glb',           role: 'boss',    scale: 1.2 },
+  demon_battleship:  { path: '/3d/glb/optimized/demon_battleship.glb',  role: 'boss',    scale: 1.0 },
+  alien_battleship:  { path: '/3d/glb/optimized/alien_battleship.glb',  role: 'enemy',   scale: 0.9 },
+  cargo_shuttle:     { path: '/3d/glb/optimized/cargo_shuttle.glb',     role: 'npc',     scale: 0.7 },
+  shuttle:           { path: '/3d/glb/optimized/shuttle.glb',           role: 'npc',     scale: 0.6 },
+  fighter_alpha:     { path: '/3d/glb/optimized/fighter_alpha.glb',     role: 'enemy',   scale: 0.5 },
+  fighter_beta:      { path: '/3d/glb/optimized/fighter_beta.glb',      role: 'enemy',   scale: 0.5 },
+  blaster_turret:    { path: '/3d/glb/optimized/blaster_turret.glb',    role: 'weapon',  scale: 0.3 },
+  railgun_barrel:    { path: '/3d/glb/optimized/railgun_barrel.glb',    role: 'weapon',  scale: 0.8 },
+  cockpit_shuttle:   { path: '/3d/glb/optimized/cockpit_shuttle.glb',   role: 'cockpit', scale: 1.0 },
+  // ── Patrol / Police ships ──
+  patrol_alpha:      { path: '/3d/glb/optimized/patrol_alpha.glb',      role: 'police',  scale: 0.6 },
+  patrol_beta:       { path: '/3d/glb/optimized/patrol_beta.glb',       role: 'police',  scale: 0.6 },
+  patrol_gamma:      { path: '/3d/glb/optimized/patrol_gamma.glb',      role: 'police',  scale: 0.6 },
+  // ── New ships (parade + police + enemies) ──
+  cruiser_alpha:     { path: '/3d/glb/optimized/cruiser_alpha.glb',     role: 'enemy',   scale: 0.7 },
+  cargo_cruiser:     { path: '/3d/glb/optimized/cargo_cruiser.glb',     role: 'npc',     scale: 0.7 },
+  escort_ship:       { path: '/3d/glb/optimized/escort_ship.glb',       role: 'npc',     scale: 0.6 },
+  interceptor:       { path: '/3d/glb/optimized/interceptor.glb',       role: 'enemy',   scale: 0.5 },
+  scout_ship:        { path: '/3d/glb/optimized/scout_ship.glb',        role: 'enemy',   scale: 0.5 },
+  cargo_small:       { path: '/3d/glb/optimized/cargo_small.glb',       role: 'npc',     scale: 0.5 },
+  shuttle_b:         { path: '/3d/glb/optimized/shuttle_b.glb',         role: 'npc',     scale: 0.6 },
+  home_module:       { path: '/3d/glb/optimized/home_module.glb',       role: 'npc',     scale: 0.8 },
+  frigate_alpha:     { path: '/3d/glb/optimized/frigate_alpha.glb',     role: 'enemy',   scale: 0.7 },
+  corvette_alpha:    { path: '/3d/glb/optimized/corvette_alpha.glb',    role: 'enemy',   scale: 0.7 },
+  destroyer_alpha:   { path: '/3d/glb/optimized/destroyer_alpha.glb',   role: 'enemy',   scale: 0.8 },
+  cruiser_beta:      { path: '/3d/glb/optimized/cruiser_beta.glb',      role: 'enemy',   scale: 0.7 },
+  gunship_alpha:     { path: '/3d/glb/optimized/gunship_alpha.glb',     role: 'enemy',   scale: 0.7 },
+  red_fighter:       { path: '/3d/glb/optimized/red_fighter.glb',       role: 'enemy',   scale: 0.6 },
+  red_cruiser:       { path: '/3d/glb/optimized/red_cruiser.glb',       role: 'enemy',   scale: 0.7 },
+  container_shuttle: { path: '/3d/glb/optimized/container_shuttle.glb', role: 'npc',     scale: 0.7 },
+  red_battleship:    { path: '/3d/glb/optimized/red_battleship.glb',    role: 'boss',    scale: 1.0 },
+  demon_cruiser:     { path: '/3d/glb/optimized/demon_cruiser.glb',     role: 'boss',    scale: 1.0 },
+  // ── Cockpit (new) ──
+  cockpit_new:       { path: '/3d/glb/optimized/cockpit_new.glb',       role: 'cockpit', scale: 1.0 },
+  dashboard_red:     { path: '/3d/glb/optimized/dashboard_red.glb',     role: 'cockpit', scale: 0.8 },
+  dashboard_basic:   { path: '/3d/glb/optimized/dashboard_basic.glb',   role: 'cockpit', scale: 0.6 },
+  // ── Railguns (bigger) ──
+  railgun_large:     { path: '/3d/glb/optimized/railgun_large.glb',     role: 'weapon',  scale: 1.5 },
+  railgun_med:       { path: '/3d/glb/optimized/railgun_med.glb',       role: 'weapon',  scale: 1.0 },
+  railgun_ship_b:    { path: '/3d/glb/optimized/railgun_ship_b.glb',    role: 'weapon',  scale: 0.8 },
+  railgun_barrel_b:  { path: '/3d/glb/optimized/railgun_barrel_b.glb',  role: 'weapon',  scale: 1.0 },
+  railgun_massive:   { path: '/3d/glb/optimized/railgun_massive.glb',   role: 'weapon',  scale: 1.5 },
+  // ── Stations ──
+  station_massive:   { path: '/3d/glb/optimized/station_massive.glb',   role: 'station', scale: 2.0 },
+  station_sphere:    { path: '/3d/glb/optimized/station_sphere.glb',    role: 'station', scale: 1.5 },
+  station_light:     { path: '/3d/glb/optimized/station_light.glb',     role: 'station', scale: 1.5 },
+  station_facility:  { path: '/3d/glb/optimized/station_facility.glb',  role: 'station', scale: 1.5 },
+  station_zorgus:    { path: '/3d/glb/optimized/station_zorgus.glb',    role: 'station', scale: 1.5 },
+  // ── Planets ──
+  planet_earth:      { path: '/3d/glb/optimized/planet_earth.glb',      role: 'planet',  scale: 50.0 },
+  planet_earthlike:  { path: '/3d/glb/optimized/planet_earthlike.glb',  role: 'planet',  scale: 50.0 },
+  planet_purple:     { path: '/3d/glb/optimized/planet_purple.glb',     role: 'planet',  scale: 40.0 },
+  planet_green:      { path: '/3d/glb/optimized/planet_green.glb',      role: 'planet',  scale: 40.0 },
+  planet_yellow:     { path: '/3d/glb/optimized/planet_yellow.glb',     role: 'planet',  scale: 30.0 },
+  planet_moon:       { path: '/3d/glb/optimized/planet_moon.glb',       role: 'planet',  scale: 20.0 },
+  // ── Characters / misc ──
+  space_body:        { path: '/3d/glb/optimized/space_body.glb',        role: 'prop',    scale: 0.5 },
+  space_suit:        { path: '/3d/glb/optimized/space_suit.glb',        role: 'prop',    scale: 0.5 },
+  stargate:          { path: '/3d/glb/optimized/stargate.glb',          role: 'prop',    scale: 2.0 },
+  dyson_sphere:      { path: '/3d/glb/optimized/dyson_sphere.glb',      role: 'prop',    scale: 5.0 },
+  // ── Weapons ──
+  gun_futuristic:    { path: '/3d/glb/optimized/gun_futuristic.glb',    role: 'weapon',  scale: 0.5 },
+  blaster_white:     { path: '/3d/glb/optimized/blaster_white.glb',     role: 'weapon',  scale: 0.5 },
+  pistol_chrome:     { path: '/3d/glb/optimized/pistol_chrome.glb',     role: 'weapon',  scale: 0.5 },
+  // ── Creatures ──
+  alien_insect:      { path: '/3d/glb/optimized/alien_insect.glb',      role: 'creature', scale: 0.8 },
+  space_insect:      { path: '/3d/glb/optimized/space_insect.glb',      role: 'creature', scale: 0.6 },
 };
 
 // Set up DRACO decoder for compressed GLBs
@@ -4590,92 +4655,314 @@ function loadGLBModel(key) {
 }
 
 // ================================================================
-//  SHIP LIBRARY — Lineup display with labels + rotation
+//  SHIP PARADE — Sequential showcase (load → circle → fly away → unload)
 // ================================================================
-let glbSceneObjects = [];  // track placed GLB objects for cleanup
-let libraryLabels = [];    // CSS2D-style label data for HUD rendering
-const LIBRARY_SPACING = 30; // spacing between ships in lineup
+let paradeShip = null;       // currently displayed ship
+let paradeIndex = 0;         // current index in parade queue
+let paradePhase = "idle";    // idle | loading | circling | flyaway | cooldown
+let paradeTimer = 0;         // phase timer in ms
+let paradeAngle = 0;         // current orbit angle
+let paradeLabels = [];       // HUD label data
+const PARADE_ORBIT_DIST = 35;  // distance from player ship
+const PARADE_ORBIT_SPEED = 0.6; // radians per second
+const PARADE_CIRCLE_TIME = 8000; // ms to orbit
+const PARADE_FLYAWAY_SPEED = 80; // units/sec
+const PARADE_COOLDOWN = 1500;    // ms between ships
 
-// All displayable ship keys — varied fleet showcase
-const LIBRARY_SHIPS = [
-  'iron_sentinel', 'fighter_alpha', 'fighter_beta',
-  'alien_battleship', 'cargo_shuttle', 'shuttle',
+// All ships to parade — load one at a time to keep scene light
+const PARADE_SHIPS = [
+  'iron_sentinel', 'fighter_alpha', 'fighter_beta', 'alien_battleship',
+  'patrol_alpha', 'patrol_beta', 'patrol_gamma',
+  'cruiser_alpha', 'cargo_cruiser', 'escort_ship',
+  'frigate_alpha', 'corvette_alpha', 'destroyer_alpha',
+  'cruiser_beta', 'gunship_alpha', 'red_fighter', 'red_cruiser',
+  'container_shuttle', 'shuttle_b', 'home_module',
+  'titan_a', 'titan_b', 'demon_battleship', 'red_battleship', 'demon_cruiser',
+  'cargo_shuttle', 'shuttle', 'freighter',
+  'interceptor', 'scout_ship', 'cargo_small',
 ];
 
 async function spawnShipLibrary() {
-  // Clean old
-  glbSceneObjects.forEach(o => scene.remove(o));
-  glbSceneObjects = [];
-  libraryLabels = [];
-
-  const startX = ship.position.x + 40;
-  const baseZ = ship.position.z - 20;
-  const baseY = ship.position.y;
-
-  for (let i = 0; i < LIBRARY_SHIPS.length; i++) {
-    const key = LIBRARY_SHIPS[i];
-    try {
-      const model = await loadGLBModel(key);
-      const instance = model.clone();
-      const xPos = startX + (i % 6) * LIBRARY_SPACING;
-      const zPos = baseZ - Math.floor(i / 6) * LIBRARY_SPACING * 1.2;
-      const yPos = baseY;
-      instance.position.set(xPos, yPos, zPos);
-      instance.userData.libraryIndex = i;
-      instance.userData.libraryKey = key;
-      instance.userData.rotSpeed = 0.3 + Math.random() * 0.2; // slow Y rotation
-      scene.add(instance);
-      glbSceneObjects.push(instance);
-      libraryLabels.push({
-        obj: instance,
-        index: i + 1,
-        name: key.replace(/_/g, ' ').toUpperCase(),
-        role: GLB_ASSETS[key].role,
-      });
-    } catch(e) { /* skip failed model */ }
-  }
-  addComms('System', `Ship Library: ${glbSceneObjects.length} models loaded in lineup.`);
+  // Start the parade from beginning
+  paradeIndex = 0;
+  paradePhase = "loading";
+  paradeTimer = 0;
+  paradeAngle = 0;
+  addComms("System", `Ship parade starting: ${PARADE_SHIPS.length} ships in queue.`);
+  await _loadNextParadeShip();
 }
 
-// Render library labels above each ship on HUD
+async function _loadNextParadeShip() {
+  // Unload previous ship and free GPU memory
+  if (paradeShip) {
+    scene.remove(paradeShip);
+    disposeObject(paradeShip);
+    paradeShip = null;
+  }
+  paradeLabels = [];
+
+  if (paradeIndex >= PARADE_SHIPS.length) {
+    paradePhase = "idle";
+    paradeIndex = 0; // loop back for next time
+    addComms("System", "Ship parade complete — all models showcased.");
+    return;
+  }
+
+  const key = PARADE_SHIPS[paradeIndex];
+  try {
+    const model = await loadGLBModel(key);
+    paradeShip = model.clone();
+    const asset = GLB_ASSETS[key];
+    const displayScale = (asset ? asset.scale : 0.6) * 2.5; // bigger for showcase
+    paradeShip.scale.setScalar(displayScale);
+    // Position at orbit distance, same Y as player
+    paradeAngle = 0;
+    const px = ship.position.x + Math.cos(paradeAngle) * PARADE_ORBIT_DIST;
+    const pz = ship.position.z + Math.sin(paradeAngle) * PARADE_ORBIT_DIST;
+    paradeShip.position.set(px, ship.position.y, pz);
+    paradeShip.lookAt(ship.position);
+    scene.add(paradeShip);
+    paradePhase = "circling";
+    paradeTimer = 0;
+    paradeLabels = [{
+      obj: paradeShip,
+      name: key.replace(/_/g, " ").toUpperCase(),
+      role: asset ? asset.role : "ship",
+      index: paradeIndex + 1,
+      total: PARADE_SHIPS.length,
+    }];
+    addComms("Fleet Review", `[${paradeIndex+1}/${PARADE_SHIPS.length}] ${key.replace(/_/g," ").toUpperCase()} — ${asset ? asset.role : "ship"}`);
+  } catch(e) {
+    console.warn("[Parade] Failed to load", key, e);
+    paradeIndex++;
+    await _loadNextParadeShip();
+  }
+}
+
+function updateShipParade(dt, dtMs) {
+  if (paradePhase === "idle" || !paradeShip) return;
+
+  if (paradePhase === "circling") {
+    paradeTimer += dtMs;
+    paradeAngle += PARADE_ORBIT_SPEED * dt;
+    // Orbit around player ship
+    const px = ship.position.x + Math.cos(paradeAngle) * PARADE_ORBIT_DIST;
+    const pz = ship.position.z + Math.sin(paradeAngle) * PARADE_ORBIT_DIST;
+    paradeShip.position.set(px, ship.position.y + Math.sin(paradeAngle * 2) * 3, pz);
+    // Face direction of travel (tangent to orbit)
+    const nextAngle = paradeAngle + 0.1;
+    const nx = ship.position.x + Math.cos(nextAngle) * PARADE_ORBIT_DIST;
+    const nz = ship.position.z + Math.sin(nextAngle) * PARADE_ORBIT_DIST;
+    paradeShip.lookAt(nx, paradeShip.position.y, nz);
+    // Slow rotation for showcase effect
+    paradeShip.rotateY(0.3 * dt);
+
+    if (paradeTimer >= PARADE_CIRCLE_TIME) {
+      paradePhase = "flyaway";
+      paradeTimer = 0;
+      // Set flyaway direction — away from player
+      const dir = paradeShip.position.clone().sub(ship.position).normalize();
+      paradeShip.userData.flyDir = dir;
+    }
+  }
+
+  if (paradePhase === "flyaway") {
+    paradeTimer += dtMs;
+    const dir = paradeShip.userData.flyDir;
+    paradeShip.position.addScaledVector(dir, PARADE_FLYAWAY_SPEED * dt);
+    // Scale down as it flies away for effect
+    const fade = Math.max(0.1, 1 - paradeTimer / 3000);
+    paradeShip.scale.multiplyScalar(0.997);
+
+    if (paradeTimer >= 3000) {
+      // Unload this ship
+      scene.remove(paradeShip);
+      disposeObject(paradeShip);
+      paradeShip = null;
+      paradeLabels = [];
+      paradePhase = "cooldown";
+      paradeTimer = 0;
+    }
+  }
+
+  if (paradePhase === "cooldown") {
+    paradeTimer += dtMs;
+    if (paradeTimer >= PARADE_COOLDOWN) {
+      paradeIndex++;
+      _loadNextParadeShip();
+    }
+  }
+}
+
+// Render parade labels on HUD
 function renderLibraryLabels() {
-  if (!c.active || libraryLabels.length === 0) return;
+    renderPoliceLabels();
+  if (!c.active || paradeLabels.length === 0) return;
   const W = hudCanvas.width, H = hudCanvas.height;
-  for (const lbl of libraryLabels) {
+  for (const lbl of paradeLabels) {
     if (!lbl.obj || !lbl.obj.parent) continue;
-    // Project 3D position to 2D screen
     const pos = lbl.obj.position.clone();
-    pos.y += 8; // above model
+    pos.y += 10;
     pos.project(camera);
-    if (pos.z > 1) continue; // behind camera
+    if (pos.z > 1) continue;
     const sx = (pos.x * 0.5 + 0.5) * W;
     const sy = (-pos.y * 0.5 + 0.5) * H;
     if (sx < 0 || sx > W || sy < 0 || sy > H) continue;
-    // Number badge
-    hudCtx.fillStyle = '#0d1117cc';
-    hudCtx.fillRect(sx - 40, sy - 18, 80, 36);
-    hudCtx.strokeStyle = '#44aaff66';
-    hudCtx.strokeRect(sx - 40, sy - 18, 80, 36);
-    hudCtx.font = 'bold 11px "Segoe UI"';
-    hudCtx.fillStyle = '#ffcc00';
-    hudCtx.textAlign = 'center';
-    hudCtx.fillText(`#${lbl.index}`, sx, sy - 4);
-    hudCtx.font = '9px "Segoe UI"';
-    hudCtx.fillStyle = '#44aaff';
+    // Label background
+    hudCtx.fillStyle = "#0d1117dd";
+    hudCtx.fillRect(sx - 70, sy - 22, 140, 48);
+    hudCtx.strokeStyle = "#d4a85666";
+    hudCtx.strokeRect(sx - 70, sy - 22, 140, 48);
+    // Ship number
+    hudCtx.font = "bold 12px \"Segoe UI\"";
+    hudCtx.fillStyle = "#ffcc00";
+    hudCtx.textAlign = "center";
+    hudCtx.fillText(`[${lbl.index}/${lbl.total}]`, sx, sy - 6);
+    // Ship name
+    hudCtx.font = "bold 10px \"Segoe UI\"";
+    hudCtx.fillStyle = "#44aaff";
     hudCtx.fillText(lbl.name, sx, sy + 8);
-    hudCtx.fillStyle = '#667788';
-    hudCtx.fillText(lbl.role, sx, sy + 17);
+    // Role tag
+    hudCtx.font = "9px \"Segoe UI\"";
+    hudCtx.fillStyle = "#88aa66";
+    hudCtx.fillText(lbl.role.toUpperCase(), sx, sy + 20);
   }
-  hudCtx.textAlign = 'left'; // reset
+  hudCtx.textAlign = "left";
 }
 
-// Rotate library ships slowly on Y axis (called from game loop)
+// Compatibility stub
 function updateLibraryRotation(dt) {
-  for (const obj of glbSceneObjects) {
-    if (obj.userData.rotSpeed) {
-      obj.rotation.y += obj.userData.rotSpeed * dt;
+  // Now handled by updateShipParade
+}
+
+// ================================================================
+//  SPACE POLICE PATROL — AI-controlled patrol ships
+// ================================================================
+const policeShips = [];        // active police ship objects
+const MAX_POLICE = 3;          // max simultaneous patrol ships
+const POLICE_MODELS = ["patrol_alpha", "patrol_beta", "patrol_gamma"];
+let _policeSpawnTimer = 0;
+const POLICE_SPAWN_INTERVAL = 15000; // ms between spawns
+const POLICE_PATROL_RADIUS = 200;    // patrol orbit radius
+const POLICE_SPEED = 25;             // units/sec
+const POLICE_LIFETIME = 45000;       // ms before despawn
+
+async function spawnPolicePatrol() {
+  if (policeShips.length >= MAX_POLICE) return;
+  const modelKey = POLICE_MODELS[Math.floor(Math.random() * POLICE_MODELS.length)];
+  try {
+    const model = await loadGLBModel(modelKey);
+    const patrol = model.clone();
+    const asset = GLB_ASSETS[modelKey];
+    patrol.scale.setScalar((asset ? asset.scale : 0.6) * 2.0);
+    // Spawn at random angle around player, far out
+    const spawnAngle = Math.random() * Math.PI * 2;
+    const spawnDist = POLICE_PATROL_RADIUS + Math.random() * 50;
+    patrol.position.set(
+      ship.position.x + Math.cos(spawnAngle) * spawnDist,
+      ship.position.y + (Math.random() - 0.5) * 30,
+      ship.position.z + Math.sin(spawnAngle) * spawnDist
+    );
+    // Police identity
+    patrol.userData.isPolice = true;
+    patrol.userData.orbitAngle = spawnAngle;
+    patrol.userData.orbitSpeed = 0.15 + Math.random() * 0.1;
+    patrol.userData.orbitRadius = POLICE_PATROL_RADIUS + (Math.random() - 0.5) * 40;
+    patrol.userData.orbitY = ship.position.y + (Math.random() - 0.5) * 20;
+    patrol.userData.age = 0;
+    patrol.userData.patrolId = "EDEN-" + Math.floor(Math.random() * 999).toString().padStart(3, "0");
+    // Blue police lights (point light)
+    const policeLight = new THREE.PointLight(0x4488ff, 3, 30);
+    policeLight.position.set(0, 1, 0);
+    patrol.add(policeLight);
+    patrol.userData.policeLight = policeLight;
+    patrol.userData.lightTimer = 0;
+    // Engine glow (blue for police)
+    const engGlow = new THREE.PointLight(0x44aaff, 1.5, 15);
+    engGlow.position.set(0, 0, 2);
+    patrol.add(engGlow);
+    scene.add(patrol);
+    policeShips.push(patrol);
+    addComms("EDEN Police", `Patrol ${patrol.userData.patrolId} — sector sweep in progress.`);
+  } catch(e) {
+    console.warn("[Police] Failed to spawn patrol:", e);
+  }
+}
+
+function updatePolicePatrol(dt, dtMs) {
+  _policeSpawnTimer += dtMs;
+  if (_policeSpawnTimer >= POLICE_SPAWN_INTERVAL && policeShips.length < MAX_POLICE) {
+    _policeSpawnTimer = 0;
+    spawnPolicePatrol();
+  }
+
+  for (let i = policeShips.length - 1; i >= 0; i--) {
+    const p = policeShips[i];
+    p.userData.age += dtMs;
+
+    // Orbit around the system center (near player)
+    p.userData.orbitAngle += p.userData.orbitSpeed * dt;
+    const a = p.userData.orbitAngle;
+    const r = p.userData.orbitRadius;
+    const targetX = ship.position.x + Math.cos(a) * r;
+    const targetZ = ship.position.z + Math.sin(a) * r;
+    const targetY = p.userData.orbitY + Math.sin(a * 1.5) * 8;
+
+    // Smooth movement towards orbit position
+    p.position.x += (targetX - p.position.x) * Math.min(1, 2 * dt);
+    p.position.y += (targetY - p.position.y) * Math.min(1, 2 * dt);
+    p.position.z += (targetZ - p.position.z) * Math.min(1, 2 * dt);
+
+    // Face direction of travel
+    const nextA = a + 0.1;
+    const nx = ship.position.x + Math.cos(nextA) * r;
+    const nz = ship.position.z + Math.sin(nextA) * r;
+    p.lookAt(nx, p.position.y, nz);
+
+    // Flashing police lights (blue/red alternation)
+    p.userData.lightTimer += dtMs;
+    if (p.userData.policeLight) {
+      const flash = Math.sin(p.userData.lightTimer * 0.008) > 0;
+      p.userData.policeLight.color.setHex(flash ? 0x4488ff : 0xff2244);
+      p.userData.policeLight.intensity = 2 + Math.sin(p.userData.lightTimer * 0.012) * 2;
+    }
+
+    // Despawn after lifetime
+    if (p.userData.age >= POLICE_LIFETIME) {
+      scene.remove(p);
+      disposeObject(p);
+      policeShips.splice(i, 1);
     }
   }
+}
+
+// Render police labels on HUD
+function renderPoliceLabels() {
+  if (!c.active || policeShips.length === 0) return;
+  const W = hudCanvas.width, H = hudCanvas.height;
+  for (const p of policeShips) {
+    const pos = p.position.clone();
+    pos.y += 6;
+    pos.project(camera);
+    if (pos.z > 1) continue;
+    const sx = (pos.x * 0.5 + 0.5) * W;
+    const sy = (-pos.y * 0.5 + 0.5) * H;
+    if (sx < 0 || sx > W || sy < 0 || sy > H) continue;
+    const dist = Math.floor(ship.position.distanceTo(p.position));
+    // Police tag
+    hudCtx.fillStyle = "#0d1117cc";
+    hudCtx.fillRect(sx - 50, sy - 12, 100, 28);
+    hudCtx.strokeStyle = "#4488ff66";
+    hudCtx.strokeRect(sx - 50, sy - 12, 100, 28);
+    hudCtx.font = "bold 10px \"Segoe UI\"";
+    hudCtx.fillStyle = "#4488ff";
+    hudCtx.textAlign = "center";
+    hudCtx.fillText("\u2605 " + p.userData.patrolId, sx, sy + 2);
+    hudCtx.font = "8px \"Segoe UI\"";
+    hudCtx.fillStyle = "#667788";
+    hudCtx.fillText(dist + "m — EDEN POLICE", sx, sy + 12);
+  }
+  hudCtx.textAlign = "left";
 }
 
 // ================================================================
@@ -5414,7 +5701,7 @@ let cockpitGLBModel = null;
 async function loadCockpitGLB() {
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   try {
-    const model = await loadGLBModel('cockpit_shuttle');
+    const model = await loadGLBModel('cockpit_new');
     const cp = model.clone();
     // Position cockpit AROUND the camera — the player sits INSIDE this
     // This is separate from the railgun and procedural cockpit elements
@@ -5453,11 +5740,11 @@ let railgunModel = null;
 async function loadRailgunTurretGLB() {
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   try {
-    const model = await loadGLBModel('railgun_barrel');
+    const model = await loadGLBModel('railgun_large');
     const gun = model.clone();
     // Position barrel in front of player, pointing away (-Z)
-    gun.position.set(0, -0.35, -3.0);
-    gun.scale.setScalar(1.4);
+    gun.position.set(0, -0.5, -4.0);
+    gun.scale.setScalar(3.5);
     // Ensure barrel points forward (away from player along -Z)
     // Rotate so the barrel's long axis aligns with camera forward
     gun.rotation.set(0, Math.PI / 2, 0);
@@ -6195,7 +6482,7 @@ function gameLoop() {
     if (fl.speed > 10) gainSkillXP('piloting', 0.002 * dt);
     if (state.ship.shield < state.ship.maxShield) gainSkillXP('engineering', 0.003 * dt);
     if (stargateGroup) animateStargate(state.gameTime);
-    updateLibraryRotation(dt);
+    updateShipParade(dt, dtMs); updatePolicePatrol(dt, dtMs);
     updateAutopilot(dt);
 
     // Auto-save every 60s

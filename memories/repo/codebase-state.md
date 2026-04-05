@@ -17,9 +17,13 @@
 - Always run brace/paren balance check after every edit
 
 ## public/index.html Stats
-- ~6269 lines, CRLF
-- Brace balance: 0, Paren balance: 0
+- ~6314 lines, CRLF
 - Contains full game client (HTML/CSS/JS) in one file
+
+## Critical Architecture Note
+- `let composer;` MUST be at module scope (alongside renderer, scene, camera)
+  NOT inside try{} block — block scoping makes it invisible to gameLoop()
+- The balance check regex reports -1 braces (CSS artifact) — use delta comparison
 
 ## QA
 - QA Board (qa_board.cjs): 5 specialists, all APPROVED on every commit
