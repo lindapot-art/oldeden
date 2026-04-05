@@ -50,26 +50,26 @@ describe('FactionSystem', () => {
 
     it('contains the expected faction ids', () => {
       const ids = FACTIONS.map(f => f.id);
-      expect(ids).toContain('terran_dominion');
-      expect(ids).toContain('free_colonies');
-      expect(ids).toContain('syndicate');
-      expect(ids).toContain('covenant_of_stars');
-      expect(ids).toContain('void_collective');
-      expect(ids).toContain('iron_pact');
-      expect(ids).toContain('ascendant_order');
-      expect(ids).toContain('remnant_clans');
+      expect(ids).toContain('hegemony_vanguard');
+      expect(ids).toContain('free_traders');
+      expect(ids).toContain('iron_syndicate');
+      expect(ids).toContain('void_cult');
+      expect(ids).toContain('stellar_church');
+      expect(ids).toContain('eden_remnants');
+      expect(ids).toContain('autonomous_collective');
+      expect(ids).toContain('rogue_ai_network');
     });
 
     it('maps ideologies correctly', () => {
       const byId = Object.fromEntries(FACTIONS.map(f => [f.id, f.ideology]));
-      expect(byId.terran_dominion).toBe('order');
-      expect(byId.free_colonies).toBe('liberty');
-      expect(byId.syndicate).toBe('profit');
-      expect(byId.covenant_of_stars).toBe('faith');
-      expect(byId.void_collective).toBe('knowledge');
-      expect(byId.iron_pact).toBe('survival');
-      expect(byId.ascendant_order).toBe('transcendence');
-      expect(byId.remnant_clans).toBe('tradition');
+      expect(byId.hegemony_vanguard).toBe('order');
+      expect(byId.free_traders).toBe('liberty');
+      expect(byId.iron_syndicate).toBe('profit');
+      expect(byId.void_cult).toBe('mysticism');
+      expect(byId.stellar_church).toBe('faith');
+      expect(byId.eden_remnants).toBe('archaeology');
+      expect(byId.autonomous_collective).toBe('transcendence');
+      expect(byId.rogue_ai_network).toBe('survival');
     });
 
     it('FACTION_IDS mirrors FACTIONS', () => {
@@ -94,34 +94,34 @@ describe('FactionSystem', () => {
     });
 
     it('getReputation returns 0 for uninitialised player', () => {
-      expect(faction.getReputation('new', 'syndicate')).toBe(0);
+      expect(faction.getReputation('new', 'iron_syndicate')).toBe(0);
     });
 
     it('modifyReputation increases reputation', () => {
-      faction.modifyReputation('p1', 'iron_pact', 100);
-      expect(faction.getReputation('p1', 'iron_pact')).toBe(100);
+      faction.modifyReputation('p1', 'eden_remnants', 100);
+      expect(faction.getReputation('p1', 'eden_remnants')).toBe(100);
     });
 
     it('modifyReputation decreases reputation', () => {
-      faction.modifyReputation('p1', 'iron_pact', -250);
-      expect(faction.getReputation('p1', 'iron_pact')).toBe(-250);
+      faction.modifyReputation('p1', 'eden_remnants', -250);
+      expect(faction.getReputation('p1', 'eden_remnants')).toBe(-250);
     });
 
     it('clamps reputation to +1000', () => {
-      faction.modifyReputation('p1', 'syndicate', 2000);
-      expect(faction.getReputation('p1', 'syndicate')).toBe(1000);
+      faction.modifyReputation('p1', 'iron_syndicate', 2000);
+      expect(faction.getReputation('p1', 'iron_syndicate')).toBe(1000);
     });
 
     it('clamps reputation to -1000', () => {
-      faction.modifyReputation('p1', 'syndicate', -2000);
-      expect(faction.getReputation('p1', 'syndicate')).toBe(-1000);
+      faction.modifyReputation('p1', 'iron_syndicate', -2000);
+      expect(faction.getReputation('p1', 'iron_syndicate')).toBe(-1000);
     });
 
     it('emits faction:reputation_changed on modification', () => {
-      faction.modifyReputation('p1', 'syndicate', 50);
+      faction.modifyReputation('p1', 'iron_syndicate', 50);
       expect(stubEngine.events.emit).toHaveBeenCalledWith(
         'faction:reputation_changed',
-        expect.objectContaining({ playerId: 'p1', factionId: 'syndicate', delta: 50 }),
+        expect.objectContaining({ playerId: 'p1', factionId: 'iron_syndicate', delta: 50 }),
       );
     });
   });
@@ -134,36 +134,36 @@ describe('FactionSystem', () => {
     });
 
     it('starts at Neutral (level 4) for a new player', () => {
-      const rank = faction.getRank('p1', 'terran_dominion');
+      const rank = faction.getRank('p1', 'hegemony_vanguard');
       expect(rank.name).toBe('Neutral');
       expect(rank.level).toBe(4);
     });
 
     it('returns Hostile at -1000', () => {
-      faction.modifyReputation('p1', 'terran_dominion', -1000);
-      expect(faction.getRank('p1', 'terran_dominion').name).toBe('Hostile');
+      faction.modifyReputation('p1', 'hegemony_vanguard', -1000);
+      expect(faction.getRank('p1', 'hegemony_vanguard').name).toBe('Hostile');
     });
 
     it('returns Exalted at +900', () => {
-      faction.modifyReputation('p1', 'terran_dominion', 900);
-      expect(faction.getRank('p1', 'terran_dominion').name).toBe('Exalted');
+      faction.modifyReputation('p1', 'hegemony_vanguard', 900);
+      expect(faction.getRank('p1', 'hegemony_vanguard').name).toBe('Exalted');
     });
 
     it('returns correct intermediate ranks', () => {
-      faction.modifyReputation('p1', 'void_collective', 300);
-      expect(faction.getRank('p1', 'void_collective').name).toBe('Friendly');
+      faction.modifyReputation('p1', 'void_cult', 300);
+      expect(faction.getRank('p1', 'void_cult').name).toBe('Friendly');
 
-      faction.modifyReputation('p1', 'iron_pact', -500);
-      expect(faction.getRank('p1', 'iron_pact').name).toBe('Unfriendly');
+      faction.modifyReputation('p1', 'eden_remnants', -500);
+      expect(faction.getRank('p1', 'eden_remnants').name).toBe('Unfriendly');
     });
 
     it('emits faction:rank_changed when crossing a rank boundary', () => {
-      faction.modifyReputation('p1', 'syndicate', 100);
+      faction.modifyReputation('p1', 'iron_syndicate', 100);
       expect(stubEngine.events.emit).toHaveBeenCalledWith(
         'faction:rank_changed',
         expect.objectContaining({
           playerId: 'p1',
-          factionId: 'syndicate',
+          factionId: 'iron_syndicate',
           oldRank: 'Neutral',
           newRank: 'Accepted',
         }),
@@ -171,7 +171,7 @@ describe('FactionSystem', () => {
     });
 
     it('does not emit rank_changed when staying within the same rank', () => {
-      faction.modifyReputation('p1', 'syndicate', 10);
+      faction.modifyReputation('p1', 'iron_syndicate', 10);
       const rankEvents = stubEngine.events.emit.mock.calls.filter(
         c => c[0] === 'faction:rank_changed',
       );
@@ -183,12 +183,12 @@ describe('FactionSystem', () => {
 
   describe('generateMissions()', () => {
     it('returns the requested number of missions', () => {
-      const missions = faction.generateMissions('p1', 'terran_dominion', 5);
+      const missions = faction.generateMissions('p1', 'hegemony_vanguard', 5);
       expect(missions).toHaveLength(5);
     });
 
     it('defaults to 3 missions', () => {
-      const missions = faction.generateMissions('p1', 'free_colonies');
+      const missions = faction.generateMissions('p1', 'free_traders');
       expect(missions).toHaveLength(3);
     });
 
@@ -198,11 +198,11 @@ describe('FactionSystem', () => {
     });
 
     it('each mission has expected fields', () => {
-      const missions = faction.generateMissions('p1', 'syndicate', 1);
+      const missions = faction.generateMissions('p1', 'iron_syndicate', 1);
       const m = missions[0];
       expect(m).toHaveProperty('id');
-      expect(m).toHaveProperty('factionId', 'syndicate');
-      expect(m).toHaveProperty('factionName', 'Syndicate');
+      expect(m).toHaveProperty('factionId', 'iron_syndicate');
+      expect(m).toHaveProperty('factionName', 'Iron Syndicate');
       expect(m).toHaveProperty('type');
       expect(m).toHaveProperty('title');
       expect(m).toHaveProperty('reputationReward');
@@ -212,47 +212,47 @@ describe('FactionSystem', () => {
     });
 
     it('scales reputation reward with player rank', () => {
-      const lowMissions = faction.generateMissions('p1', 'iron_pact', 1);
+      const lowMissions = faction.generateMissions('p1', 'eden_remnants', 1);
 
-      faction.modifyReputation('p1', 'iron_pact', 900);
+      faction.modifyReputation('p1', 'eden_remnants', 900);
       stubEngine.events.emit.mockClear();
-      const highMissions = faction.generateMissions('p1', 'iron_pact', 1);
+      const highMissions = faction.generateMissions('p1', 'eden_remnants', 1);
 
       expect(highMissions[0].reputationReward).toBeGreaterThan(lowMissions[0].reputationReward);
     });
 
     it('affected faction is different from issuing faction', () => {
-      const missions = faction.generateMissions('p1', 'covenant_of_stars', 6);
+      const missions = faction.generateMissions('p1', 'stellar_church', 6);
       for (const m of missions) {
-        expect(m.affectedFaction).not.toBe('covenant_of_stars');
+        expect(m.affectedFaction).not.toBe('stellar_church');
       }
     });
 
     it('emits faction:missions_generated event', () => {
-      faction.generateMissions('p1', 'terran_dominion', 2);
+      faction.generateMissions('p1', 'hegemony_vanguard', 2);
       expect(stubEngine.events.emit).toHaveBeenCalledWith(
         'faction:missions_generated',
-        expect.objectContaining({ playerId: 'p1', factionId: 'terran_dominion', missionCount: 2 }),
+        expect.objectContaining({ playerId: 'p1', factionId: 'hegemony_vanguard', missionCount: 2 }),
       );
     });
   });
 
   describe('completeMission()', () => {
     it('grants reputation to issuing faction', () => {
-      const missions = faction.generateMissions('p1', 'syndicate', 1);
+      const missions = faction.generateMissions('p1', 'iron_syndicate', 1);
       faction.completeMission('p1', missions[0]);
-      expect(faction.getReputation('p1', 'syndicate')).toBeGreaterThan(0);
+      expect(faction.getReputation('p1', 'iron_syndicate')).toBeGreaterThan(0);
     });
 
     it('applies penalty to affected faction', () => {
-      const missions = faction.generateMissions('p1', 'syndicate', 1);
+      const missions = faction.generateMissions('p1', 'iron_syndicate', 1);
       const affected = missions[0].affectedFaction;
       faction.completeMission('p1', missions[0]);
       expect(faction.getReputation('p1', affected)).toBeLessThan(0);
     });
 
     it('emits faction:mission_completed event', () => {
-      const missions = faction.generateMissions('p1', 'iron_pact', 1);
+      const missions = faction.generateMissions('p1', 'eden_remnants', 1);
       stubEngine.events.emit.mockClear();
       faction.completeMission('p1', missions[0]);
       expect(stubEngine.events.emit).toHaveBeenCalledWith(
@@ -266,66 +266,66 @@ describe('FactionSystem', () => {
 
   describe('diplomacy / warfare state', () => {
     it('defaults to peace between any two factions', () => {
-      expect(faction.getDiplomacy('terran_dominion', 'syndicate')).toBe(DIPLOMACY.PEACE);
+      expect(faction.getDiplomacy('hegemony_vanguard', 'iron_syndicate')).toBe(DIPLOMACY.PEACE);
     });
 
     it('setDiplomacy stores war state', () => {
-      faction.setDiplomacy('terran_dominion', 'syndicate', DIPLOMACY.WAR);
-      expect(faction.getDiplomacy('terran_dominion', 'syndicate')).toBe(DIPLOMACY.WAR);
+      faction.setDiplomacy('hegemony_vanguard', 'iron_syndicate', DIPLOMACY.WAR);
+      expect(faction.getDiplomacy('hegemony_vanguard', 'iron_syndicate')).toBe(DIPLOMACY.WAR);
     });
 
     it('setDiplomacy stores alliance state', () => {
-      faction.setDiplomacy('free_colonies', 'iron_pact', DIPLOMACY.ALLIANCE);
-      expect(faction.getDiplomacy('free_colonies', 'iron_pact')).toBe(DIPLOMACY.ALLIANCE);
+      faction.setDiplomacy('free_traders', 'eden_remnants', DIPLOMACY.ALLIANCE);
+      expect(faction.getDiplomacy('free_traders', 'eden_remnants')).toBe(DIPLOMACY.ALLIANCE);
     });
 
     it('diplomacy is order-independent', () => {
-      faction.setDiplomacy('syndicate', 'terran_dominion', DIPLOMACY.WAR);
-      expect(faction.getDiplomacy('terran_dominion', 'syndicate')).toBe(DIPLOMACY.WAR);
+      faction.setDiplomacy('iron_syndicate', 'hegemony_vanguard', DIPLOMACY.WAR);
+      expect(faction.getDiplomacy('hegemony_vanguard', 'iron_syndicate')).toBe(DIPLOMACY.WAR);
     });
 
     it('throws for invalid diplomacy state', () => {
       expect(() =>
-        faction.setDiplomacy('terran_dominion', 'syndicate', 'truce'),
+        faction.setDiplomacy('hegemony_vanguard', 'iron_syndicate', 'truce'),
       ).toThrow();
     });
 
     it('throws when setting diplomacy with self', () => {
       expect(() =>
-        faction.setDiplomacy('syndicate', 'syndicate', DIPLOMACY.PEACE),
+        faction.setDiplomacy('iron_syndicate', 'iron_syndicate', DIPLOMACY.PEACE),
       ).toThrow();
     });
 
     it('emits faction:diplomacy_changed event', () => {
-      faction.setDiplomacy('terran_dominion', 'free_colonies', DIPLOMACY.ALLIANCE);
+      faction.setDiplomacy('hegemony_vanguard', 'free_traders', DIPLOMACY.ALLIANCE);
       expect(stubEngine.events.emit).toHaveBeenCalledWith(
         'faction:diplomacy_changed',
         expect.objectContaining({
-          factionA: 'terran_dominion',
-          factionB: 'free_colonies',
+          factionA: 'hegemony_vanguard',
+          factionB: 'free_traders',
           state: DIPLOMACY.ALLIANCE,
         }),
       );
     });
 
     it('war causes negative cross-faction rep when gaining rep', () => {
-      faction.setDiplomacy('terran_dominion', 'syndicate', DIPLOMACY.WAR);
-      faction.modifyReputation('p1', 'terran_dominion', 100);
-      // Syndicate should lose rep due to war penalty
-      expect(faction.getReputation('p1', 'syndicate')).toBeLessThan(0);
+      faction.setDiplomacy('hegemony_vanguard', 'iron_syndicate', DIPLOMACY.WAR);
+      faction.modifyReputation('p1', 'hegemony_vanguard', 100);
+      // Iron Syndicate should lose rep due to war penalty
+      expect(faction.getReputation('p1', 'iron_syndicate')).toBeLessThan(0);
     });
 
     it('alliance causes positive cross-faction rep when gaining rep', () => {
-      faction.setDiplomacy('terran_dominion', 'free_colonies', DIPLOMACY.ALLIANCE);
-      faction.modifyReputation('p1', 'terran_dominion', 100);
-      // Free Colonies should gain rep due to alliance bonus
-      expect(faction.getReputation('p1', 'free_colonies')).toBeGreaterThan(0);
+      faction.setDiplomacy('hegemony_vanguard', 'free_traders', DIPLOMACY.ALLIANCE);
+      faction.modifyReputation('p1', 'hegemony_vanguard', 100);
+      // Free Traders should gain rep due to alliance bonus
+      expect(faction.getReputation('p1', 'free_traders')).toBeGreaterThan(0);
     });
 
     it('peace causes no cross-faction rep change', () => {
       // Default is peace
-      faction.modifyReputation('p1', 'terran_dominion', 100);
-      expect(faction.getReputation('p1', 'syndicate')).toBe(0);
+      faction.modifyReputation('p1', 'hegemony_vanguard', 100);
+      expect(faction.getReputation('p1', 'iron_syndicate')).toBe(0);
     });
   });
 
@@ -338,15 +338,15 @@ describe('FactionSystem', () => {
     });
 
     it('denies access when player rank is too low', () => {
-      const result = faction.canAccessEquipment('p1', 'dominion_shield');
+      const result = faction.canAccessEquipment('p1', 'vanguard_shield');
       expect(result.allowed).toBe(false);
       expect(result.reason).toBeDefined();
     });
 
     it('grants access when player meets rank requirement', () => {
-      // Dominion shield requires rank 5 (Accepted, minRep 100)
-      faction.modifyReputation('p1', 'terran_dominion', 200);
-      const result = faction.canAccessEquipment('p1', 'dominion_shield');
+      // Vanguard shield requires rank 5 (Accepted, minRep 100)
+      faction.modifyReputation('p1', 'hegemony_vanguard', 200);
+      const result = faction.canAccessEquipment('p1', 'vanguard_shield');
       expect(result.allowed).toBe(true);
     });
 
@@ -362,19 +362,19 @@ describe('FactionSystem', () => {
     });
 
     it('getAccessibleEquipment returns items as rank increases', () => {
-      // Reach Accepted (rank 5) with terran_dominion — unlocks dominion_shield
-      faction.modifyReputation('p1', 'terran_dominion', 200);
+      // Reach Accepted (rank 5) with hegemony_vanguard — unlocks vanguard_shield
+      faction.modifyReputation('p1', 'hegemony_vanguard', 200);
       const items = faction.getAccessibleEquipment('p1');
       const ids = items.map(i => i.id);
-      expect(ids).toContain('dominion_shield');
+      expect(ids).toContain('vanguard_shield');
     });
 
-    it('requires high rank for ascendant_core (rank 9 = Exalted)', () => {
-      faction.modifyReputation('p1', 'ascendant_order', 899);
-      expect(faction.canAccessEquipment('p1', 'ascendant_core').allowed).toBe(false);
+    it('requires high rank for collective_core (rank 9 = Exalted)', () => {
+      faction.modifyReputation('p1', 'autonomous_collective', 899);
+      expect(faction.canAccessEquipment('p1', 'collective_core').allowed).toBe(false);
 
-      faction.modifyReputation('p1', 'ascendant_order', 2);
-      expect(faction.canAccessEquipment('p1', 'ascendant_core').allowed).toBe(true);
+      faction.modifyReputation('p1', 'autonomous_collective', 2);
+      expect(faction.canAccessEquipment('p1', 'collective_core').allowed).toBe(true);
     });
   });
 
@@ -394,8 +394,8 @@ describe('FactionSystem', () => {
     });
 
     it('destroy clears state', async () => {
-      faction.modifyReputation('p1', 'syndicate', 100);
-      faction.setDiplomacy('terran_dominion', 'syndicate', DIPLOMACY.WAR);
+      faction.modifyReputation('p1', 'iron_syndicate', 100);
+      faction.setDiplomacy('hegemony_vanguard', 'iron_syndicate', DIPLOMACY.WAR);
       await faction.destroy();
       expect(faction._reputation.size).toBe(0);
       expect(faction._diplomacy.size).toBe(0);

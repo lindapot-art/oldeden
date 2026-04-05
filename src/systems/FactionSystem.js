@@ -17,14 +17,14 @@
 
 /** @type {ReadonlyArray<Faction>} */
 export const FACTIONS = Object.freeze([
-  { id: 'terran_dominion',   name: 'Terran Dominion',    ideology: 'order',         homeRegion: 'Sol Sector',         color: '#3B82F6' },
-  { id: 'free_colonies',     name: 'Free Colonies',      ideology: 'liberty',        homeRegion: 'Frontier Expanse',   color: '#22C55E' },
-  { id: 'syndicate',         name: 'Syndicate',          ideology: 'profit',         homeRegion: 'Nexus Ring',         color: '#EAB308' },
-  { id: 'covenant_of_stars', name: 'Covenant of Stars',  ideology: 'faith',          homeRegion: 'Hallowed Nebula',    color: '#A855F7' },
-  { id: 'void_collective',   name: 'Void Collective',    ideology: 'knowledge',      homeRegion: 'Deep Void',          color: '#06B6D4' },
-  { id: 'iron_pact',         name: 'Iron Pact',          ideology: 'survival',       homeRegion: 'Ashfields',          color: '#F97316' },
-  { id: 'ascendant_order',   name: 'Ascendant Order',    ideology: 'transcendence',  homeRegion: 'Luminous Reach',     color: '#EC4899' },
-  { id: 'remnant_clans',     name: 'Remnant Clans',      ideology: 'tradition',      homeRegion: 'Old Territories',    color: '#78716C' },
+  { id: 'hegemony_vanguard',     name: 'Hegemony Vanguard',      ideology: 'order',         homeRegion: 'Core Systems',       color: '#3B82F6' },
+  { id: 'free_traders',          name: 'Free Traders Consortium', ideology: 'liberty',        homeRegion: 'Trade Lanes',        color: '#22C55E' },
+  { id: 'void_cult',             name: 'Void Cult',               ideology: 'mysticism',      homeRegion: 'Outer Fringe',       color: '#A855F7' },
+  { id: 'iron_syndicate',        name: 'Iron Syndicate',          ideology: 'profit',         homeRegion: 'Mining Belts',       color: '#EAB308' },
+  { id: 'eden_remnants',         name: 'Eden Remnants',           ideology: 'archaeology',    homeRegion: 'Old Eden System',    color: '#78716C' },
+  { id: 'stellar_church',        name: 'Stellar Church',          ideology: 'faith',          homeRegion: 'Central Worlds',     color: '#EC4899' },
+  { id: 'autonomous_collective', name: 'Autonomous Collective',   ideology: 'transcendence',  homeRegion: 'Robotic Hubs',       color: '#06B6D4' },
+  { id: 'rogue_ai_network',      name: 'Rogue AI Network',        ideology: 'survival',       homeRegion: 'Deep Space',         color: '#F97316' },
 ]);
 
 export const FACTION_IDS = Object.freeze(FACTIONS.map(f => f.id));
@@ -83,14 +83,14 @@ const MISSION_TEMPLATES = [
  * @type {ReadonlyArray<FactionEquipment>}
  */
 export const FACTION_EQUIPMENT = Object.freeze([
-  { id: 'dominion_shield',      name: 'Dominion Bulwark Shield',  factionId: 'terran_dominion',   minRank: 5 },
-  { id: 'colony_drive',         name: 'Liberty Warp Drive',       factionId: 'free_colonies',     minRank: 6 },
-  { id: 'syndicate_cloak',      name: 'Shadow Cloak Module',      factionId: 'syndicate',         minRank: 7 },
-  { id: 'covenant_relic',       name: 'Starbound Relic',          factionId: 'covenant_of_stars', minRank: 8 },
-  { id: 'void_scanner',         name: 'Omniscient Scanner',       factionId: 'void_collective',   minRank: 5 },
-  { id: 'iron_plating',         name: 'Hardened Iron Plating',    factionId: 'iron_pact',         minRank: 6 },
-  { id: 'ascendant_core',       name: 'Transcendence Core',       factionId: 'ascendant_order',   minRank: 9 },
-  { id: 'remnant_cannon',       name: 'Ancestral Plasma Cannon',  factionId: 'remnant_clans',     minRank: 7 },
+  { id: 'vanguard_shield',      name: 'Vanguard Bulwark Shield',  factionId: 'hegemony_vanguard',     minRank: 5 },
+  { id: 'trader_drive',         name: 'Liberty Warp Drive',       factionId: 'free_traders',          minRank: 6 },
+  { id: 'syndicate_cloak',      name: 'Shadow Cloak Module',      factionId: 'iron_syndicate',        minRank: 7 },
+  { id: 'church_relic',         name: 'Starbound Relic',          factionId: 'stellar_church',        minRank: 8 },
+  { id: 'void_scanner',         name: 'Omniscient Scanner',       factionId: 'void_cult',             minRank: 5 },
+  { id: 'remnant_plating',      name: 'Hardened Eden Plating',    factionId: 'eden_remnants',         minRank: 6 },
+  { id: 'collective_core',      name: 'Transcendence Core',       factionId: 'autonomous_collective', minRank: 9 },
+  { id: 'rogue_cannon',         name: 'Rogue AI Plasma Cannon',   factionId: 'rogue_ai_network',      minRank: 7 },
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────

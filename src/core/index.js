@@ -113,14 +113,34 @@ const players = new Map();
 // Bounty table for combat kills
 const KILL_BOUNTIES = { scout: 15, fighter: 30, bomber: 60, interceptor: 20 };
 
+// Station commodities (server-authoritative prices)
+const COMMODITIES = [
+  { name: 'Titanite Ore',         base: 120 },
+  { name: 'Hydrogen Fuel',        base: 45 },
+  { name: 'Dark Matter Crystals', base: 850 },
+  { name: 'Bio-organic Materials', base: 200 },
+  { name: 'Quantum Processors',   base: 1200 },
+  { name: 'Anti-matter Reserves', base: 2000 },
+];
+
+function getStationPrices(systemIdx) {
+  const seed = systemIdx * 7 + 13;
+  return COMMODITIES.map((c, i) => {
+    const variance = 0.8 + ((Math.sin(seed + i * 3.7) + 1) / 2) * 0.4;
+    const buy = Math.round(c.base * variance);
+    const sell = Math.round(buy * 0.78);
+    return { name: c.name, buy, sell };
+  });
+}
+
 // Register starter quests in QuestSystem
 const STARTER_QUESTS = [
   { id: 'q-kill-scouts',  name: 'Thin the Ranks',   objectives: [{ type: 'kill', target: 'scout', required: 5 }],  rewards: { credits: 250 } },
   { id: 'q-kill-fighters', name: 'Dogfight Ace',     objectives: [{ type: 'kill', target: 'fighter', required: 3 }], rewards: { credits: 400 } },
   { id: 'q-kill-bombers', name: 'Bomber Buster',     objectives: [{ type: 'kill', target: 'bomber', required: 2 }],  rewards: { credits: 500 } },
-  { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 600, reputation: { terran_dominion: 50 } } },
-  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 300, reputation: { void_collective: 50 } } },
-  { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 350, reputation: { syndicate: 50 } } },
+  { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 600, reputation: { hegemony_vanguard: 50 } } },
+  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 300, reputation: { void_cult: 50 } } },
+  { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 350, reputation: { iron_syndicate: 50 } } },
 ];
 STARTER_QUESTS.forEach(q => quests.registerQuest(q));
 
@@ -211,6 +231,24 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 }
 
 await engine.start();
+
+// Seed initial NPC population for the Rebirth Lottery
+{
+  const npcSys = engine.getSystem('npc');
+  const genSys = engine.getSystem('genetics');
+  if (npcSys.getLivingNPCPool().length < 50) {
+    for (let i = 0; i < 100; i++) {
+      npcSys.spawnNPC({
+        genome: genSys.generateRandom(),
+        sectorId: `sector-${Math.floor(Math.random() * 40)}`,
+        credits: Math.floor(Math.random() * 100000),
+        ageYears: 18 + Math.floor(Math.random() * 62),
+      });
+    }
+    console.log('[Main] Seeded 100 NPCs for Rebirth Lottery.');
+  }
+}
+
 httpServer = await startHttp(httpPort);
 
 // Resolve actual port (may differ from httpPort if auto-rotated)
@@ -225,8 +263,46 @@ io = new SocketServer(httpServer, {
   cors: { origin: allowedOrigins },
 });
 
+// ── Rate Limiter ─────────────────────────────────────────────────────────────
+const RATE_LIMITS = {
+  'combat:kill':     { max: 10, windowMs: 1000 },
+  'station:buy':     { max: 5,  windowMs: 1000 },
+  'station:sell':    { max: 5,  windowMs: 1000 },
+  'rebirth:perform': { max: 1,  windowMs: 5000 },
+  'game:save':       { max: 1,  windowMs: 3000 },
+  'game:load':       { max: 1,  windowMs: 3000 },
+  'quest:accept':    { max: 5,  windowMs: 1000 },
+  'cargo:deposit':   { max: 3,  windowMs: 1000 },
+};
+
+function createRateLimiter() {
+  const counters = new Map();
+  return function checkRate(eventName) {
+    const limit = RATE_LIMITS[eventName];
+    if (!limit) return true;
+    const now = Date.now();
+    let entry = counters.get(eventName);
+    if (!entry || now > entry.resetAt) {
+      entry = { count: 0, resetAt: now + limit.windowMs };
+      counters.set(eventName, entry);
+    }
+    entry.count++;
+    return entry.count <= limit.max;
+  };
+}
+
 io.on('connection', (socket) => {
   console.log(`[Socket.IO] Client connected: ${socket.id}`);
+
+  // Per-socket rate limiter — drops packets exceeding thresholds
+  const rateLimiter = createRateLimiter();
+  socket.use(([eventName], next) => {
+    if (!rateLimiter(eventName)) {
+      console.warn(`[RateLimit] ${socket.id} exceeded limit for ${eventName}`);
+      return;
+    }
+    next();
+  });
 
   socket.emit('game:init', {
     systems: [...engine._systems.keys()],
@@ -238,7 +314,7 @@ io.on('connection', (socket) => {
     // Input validation
     const name = typeof data?.name === 'string' ? data.name.slice(0, 32).replace(/[<>"'&]/g, '') : 'Unknown Pilot';
     const faction = typeof data?.faction === 'string' && FACTIONS.some(f => f.id === data.faction)
-      ? data.faction : 'free_colonies';
+      ? data.faction : 'free_traders';
 
     const gen = engine.getSystem('genetics');
     const genome = Array.from(gen.generateRandom());
@@ -249,9 +325,11 @@ io.on('connection', (socket) => {
     // Track player on this socket
     players.set(socket.id, {
       playerId, name, faction, genome,
-      activeQuests: new Map(), // questId → { ...questDef, progress }
+      activeQuests: new Map(),
       visitedSystems: new Set(),
       trades: 0,
+      cargo: new Map(),          // itemName → quantity (server-verified)
+      currentStation: -1,        // systemIdx of docked station (-1 = undocked)
     });
 
     socket.emit('character:created', {
@@ -298,6 +376,14 @@ io.on('connection', (socket) => {
       enemyType, reward, wallet: { ec: wallet.ec, sm: wallet.sm },
       questUpdates,
     });
+  });
+
+  // ── Death Report → Broadcast to all players ──────────────────────────────
+  socket.on('death:report', (data) => {
+    const name = typeof data?.name === 'string' ? data.name.slice(0, 30) : 'Unknown';
+    const cause = typeof data?.cause === 'string' ? data.cause.slice(0, 50) : 'the void';
+    const text = `${name} was destroyed — ${cause}`;
+    io.emit('death:feed', { type: 'death', text });
   });
 
   // ── Quest Accept ──────────────────────────────────────────────────────────
@@ -360,36 +446,28 @@ io.on('connection', (socket) => {
 
   // ── Station: Get Prices ───────────────────────────────────────────────────
   socket.on('station:enter', (data) => {
+    const player = players.get(socket.id);
+    if (!player) return;
     const systemIdx = typeof data?.systemIndex === 'number' ? data.systemIndex : 0;
-    // Dynamic prices with ±20% variance per system
-    const seed = systemIdx * 7 + 13;
-    const COMMODITIES = [
-      { name: 'Titanite Ore',        base: 120 },
-      { name: 'Hydrogen Fuel',       base: 45 },
-      { name: 'Dark Matter Crystals', base: 850 },
-      { name: 'Bio-organic Materials', base: 200 },
-      { name: 'Quantum Processors',  base: 1200 },
-      { name: 'Anti-matter Reserves', base: 2000 },
-    ];
-    const prices = COMMODITIES.map((c, i) => {
-      const variance = 0.8 + ((Math.sin(seed + i * 3.7) + 1) / 2) * 0.4; // 0.8 - 1.2
-      const buy = Math.round(c.base * variance);
-      const sell = Math.round(buy * 0.78);
-      return { name: c.name, buy, sell };
-    });
+    player.currentStation = systemIdx;
+    const prices = getStationPrices(systemIdx);
     socket.emit('station:prices', { prices, systemIndex: systemIdx });
   });
 
-  // ── Station: Buy/Sell ─────────────────────────────────────────────────────
   socket.on('station:buy', (data) => {
     const player = players.get(socket.id);
-    if (!player) return;
+    if (!player || player.currentStation < 0) return;
     const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
-    const price = typeof data?.price === 'number' && data.price > 0 ? data.price : 0;
-    if (!itemName || !price) return;
+    if (!itemName) return;
+    // Server-authoritative price lookup
+    const stationPrices = getStationPrices(player.currentStation);
+    const commodity = stationPrices.find(p => p.name === itemName);
+    if (!commodity) return;
+    const price = commodity.buy;
     const econ = engine.getSystem('economy');
     if (econ.debit(player.playerId, 'ec', price)) {
       player.trades++;
+      player.cargo.set(itemName, (player.cargo.get(itemName) || 0) + 1);
       // Progress trade quests
       for (const [qid, aq] of player.activeQuests) {
         for (const obj of aq.objectives) {
@@ -412,14 +490,38 @@ io.on('connection', (socket) => {
 
   socket.on('station:sell', (data) => {
     const player = players.get(socket.id);
-    if (!player) return;
+    if (!player || player.currentStation < 0) return;
     const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
-    const price = typeof data?.price === 'number' && data.price > 0 ? data.price : 0;
-    if (!itemName || !price) return;
+    if (!itemName) return;
+    // Verify player has this item in cargo
+    const held = player.cargo.get(itemName) || 0;
+    if (held <= 0) {
+      socket.emit('station:error', { error: 'You do not have that item' });
+      return;
+    }
+    // Server-authoritative price lookup
+    const stationPrices = getStationPrices(player.currentStation);
+    const commodity = stationPrices.find(p => p.name === itemName);
+    if (!commodity) return;
+    const price = commodity.sell;
+    player.cargo.set(itemName, held - 1);
+    if (player.cargo.get(itemName) <= 0) player.cargo.delete(itemName);
     const econ = engine.getSystem('economy');
     econ.credit(player.playerId, 'ec', price);
     const wallet = econ.getWallet(player.playerId);
     socket.emit('station:sold', { name: itemName, price, wallet: { ec: wallet.ec, sm: wallet.sm } });
+  });
+
+  // ── Cargo deposit (for client-registered items like mined ore) ──────────
+  socket.on('cargo:deposit', (data) => {
+    const player = players.get(socket.id);
+    if (!player) return;
+    const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
+    if (!itemName) return;
+    // Only allow known commodities
+    if (!COMMODITIES.find(c => c.name === itemName)) return;
+    player.cargo.set(itemName, (player.cargo.get(itemName) || 0) + 1);
+    socket.emit('cargo:deposited', { name: itemName, quantity: player.cargo.get(itemName) });
   });
 
   // ── Save / Load via Socket ────────────────────────────────────────────────
@@ -434,9 +536,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('game:load', async (data) => {
-    const playerId = typeof data?.playerId === 'string' ? data.playerId : '';
-    const saved = await fileStore.load(playerId);
+  socket.on('game:load', async () => {
+    const player = players.get(socket.id);
+    if (!player) return;
+    // Players can only load their own saves (session-scoped auth)
+    const saved = await fileStore.load(player.playerId);
     socket.emit('game:loaded', saved ? { ok: true, data: saved } : { ok: false });
   });
 
@@ -461,21 +565,44 @@ io.on('connection', (socket) => {
   socket.on('rebirth:perform', (data) => {
     const player = players.get(socket.id);
     if (!player) return;
+    const rebirthSys = engine.getSystem('rebirth');
+    const npcSys = engine.getSystem('npc');
     const gen = engine.getSystem('genetics');
-    const newGenome = Array.from(gen.generateRandom());
-    // Reset wallet to starter
     const econ = engine.getSystem('economy');
+    // Ensure NPC pool has candidates (seed if empty)
+    let pool = npcSys.getLivingNPCPool();
+    if (pool.length < 10) {
+      for (let i = pool.length; i < 50; i++) {
+        npcSys.spawnNPC({
+          genome: gen.generateRandom(),
+          sectorId: `sector-${Math.floor(Math.random() * 40)}`,
+          credits: Math.floor(Math.random() * 50000),
+          ageYears: 18 + Math.floor(Math.random() * 60),
+        });
+      }
+      pool = npcSys.getLivingNPCPool();
+    }
+    // Perform proper lottery draw via RebirthSystem
+    const result = rebirthSys.performLottery(player.playerId, pool);
+    const chosenNpc = result.chosenNpc;
+    // EC resets (belonged to old character), SM persists (premium currency)
     const wallet = econ.getWallet(player.playerId);
-    wallet.ec = 500; wallet.sm = 0;
-    // Clear quests
+    wallet.ec = 500;
+    // Clear session progress
     player.activeQuests.clear();
     player.visitedSystems.clear();
     player.trades = 0;
+    player.cargo.clear();
+    player.genome = Array.from(chosenNpc.genome);
+    // Mark chosen NPC as player avatar
+    chosenNpc.isPlayerAvatar = true;
     socket.emit('rebirth:result', {
-      genome: newGenome,
+      genome: player.genome,
       wallet: { ec: wallet.ec, sm: wallet.sm },
       name: player.name,
       faction: player.faction,
+      npcId: chosenNpc.id,
+      statusScore: rebirthSys.computeStatusScore(chosenNpc),
     });
   });
 
@@ -497,7 +624,26 @@ io.on('connection', (socket) => {
     socket.emit('quests:data', { quests: questHooks });
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
+    const player = players.get(socket.id);
+    if (player) {
+      // Auto-save player state on disconnect
+      try {
+        const econ = engine.getSystem('economy');
+        const wallet = econ.getWallet(player.playerId);
+        await fileStore.save(player.playerId, {
+          playerId: player.playerId,
+          name: player.name,
+          faction: player.faction,
+          genome: player.genome,
+          wallet: { ec: wallet.ec, sm: wallet.sm },
+          trades: player.trades,
+          savedAt: Date.now(),
+        });
+      } catch (e) {
+        console.error(`[Socket.IO] Auto-save failed for ${player.playerId}:`, e.message);
+      }
+    }
     players.delete(socket.id);
     console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
   });

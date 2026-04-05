@@ -290,9 +290,70 @@ canvas{display:block;}
   .action-btn{width:50px;height:50px;}
   #lock-prompt span{font-size:1rem;}
 }
+
+/* ── Eulogy Screen ───────────────────────── */
+#screen-eulogy{background:radial-gradient(ellipse at center,#0d0520 0%,#030308 70%);z-index:85;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+#screen-eulogy h2{color:var(--gold);font-size:2.2rem;font-weight:200;letter-spacing:0.25em;margin-bottom:1rem;opacity:0;animation:eulogyFadeIn 2s ease forwards 0.5s;}
+.eulogy-name{font-size:1.6rem;color:#ddd;letter-spacing:0.15em;font-weight:300;opacity:0;animation:eulogyFadeIn 1.5s ease forwards 1s;}
+.eulogy-cause{color:var(--danger);font-size:0.9rem;margin:0.5rem 0;opacity:0;animation:eulogyFadeIn 1.5s ease forwards 1.5s;}
+.eulogy-stats{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:1.5rem 0;max-width:600px;}
+.eulogy-stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:10px 18px;opacity:0;animation:eulogyFadeIn 1s ease forwards;}
+.eulogy-stat .es-val{font-size:1.3rem;color:var(--gold);display:block;}
+.eulogy-stat .es-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.eulogy-epitaph{color:var(--muted);font-style:italic;font-size:0.9rem;max-width:500px;margin:1.5rem auto;opacity:0;animation:eulogyFadeIn 2s ease forwards 4s;line-height:1.6;}
+.eulogy-transition{color:var(--gold);font-size:1.1rem;letter-spacing:0.2em;margin-top:2rem;opacity:0;animation:eulogyFadeIn 2s ease forwards 5s;}
+@keyframes eulogyFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.eulogy-dust{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.eulogy-particle{position:absolute;width:2px;height:2px;background:rgba(168,85,247,0.6);border-radius:50%;animation:eulogyFloat 6s linear infinite;}
+@keyframes eulogyFloat{0%{opacity:0;transform:translateY(0) scale(1);}20%{opacity:1;}100%{opacity:0;transform:translateY(-100vh) scale(0.3);}}
+
+/* ── Karma Wheel Screen ──────────────────── */
+#screen-karma{background:radial-gradient(ellipse at center,#1a0a2e 0%,#080416 60%,#030308 90%);z-index:86;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+#screen-karma h2{color:var(--gold);font-size:1.8rem;font-weight:200;letter-spacing:0.3em;margin-bottom:0.5rem;}
+.karma-subtitle{color:var(--muted);font-size:0.85rem;letter-spacing:0.1em;margin-bottom:2rem;}
+.karma-card{width:340px;background:rgba(13,17,23,0.95);border:2px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;transform:scale(0.8);opacity:0;transition:all 0.8s cubic-bezier(0.16,1,0.3,1);}
+.karma-card.revealed{transform:scale(1);opacity:1;border-color:var(--gold);box-shadow:0 0 40px rgba(212,168,86,0.2),0 0 80px rgba(168,85,247,0.1);}
+.karma-card.rarity-common{border-color:#aaa;}
+.karma-card.rarity-uncommon{border-color:#22cc66;}
+.karma-card.rarity-rare{border-color:#44aaff;box-shadow:0 0 30px rgba(68,170,255,0.3);}
+.karma-card.rarity-epic{border-color:#a855f7;box-shadow:0 0 40px rgba(168,85,247,0.4);}
+.karma-card.rarity-legendary{border-color:#ffd700;box-shadow:0 0 60px rgba(255,215,0,0.5);animation:legendaryPulse 2s ease infinite;}
+@keyframes legendaryPulse{0%,100%{box-shadow:0 0 60px rgba(255,215,0,0.5);}50%{box-shadow:0 0 80px rgba(255,215,0,0.8);}}
+.karma-npc-name{font-size:1.4rem;color:#eee;letter-spacing:0.1em;margin-bottom:4px;}
+.karma-npc-title{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:16px;}
+.karma-genome-mini{display:flex;gap:6px;justify-content:center;margin:12px 0;}
+.karma-gene-bar{width:40px;height:6px;background:#111;border-radius:3px;overflow:hidden;position:relative;}
+.karma-gene-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);}
+.karma-wealth{font-size:1.1rem;margin-top:12px;}
+.karma-wealth .kw-val{color:var(--gold);font-weight:bold;}
+.karma-faction{font-size:0.8rem;margin-top:8px;}
+.karma-backstory{font-size:0.75rem;color:var(--muted);margin-top:12px;line-height:1.5;font-style:italic;max-height:0;overflow:hidden;transition:max-height 1s ease 0.5s;}
+.karma-card.revealed .karma-backstory{max-height:100px;}
+.karma-rarity-badge{position:absolute;top:10px;right:10px;font-size:0.65rem;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;}
+.karma-actions{display:flex;gap:12px;margin-top:2rem;justify-content:center;}
+.karma-spin-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.karma-spin-particle{position:absolute;width:3px;height:3px;border-radius:50%;animation:karmaSpin 1.5s ease-out forwards;}
+@keyframes karmaSpin{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0);}}
+
+/* ── Death Ticker ────────────────────────── */
+#death-ticker{position:fixed;top:0;left:0;right:0;height:28px;background:rgba(10,10,15,0.85);border-bottom:1px solid rgba(255,68,68,0.15);z-index:200;overflow:hidden;display:none;}
+#death-ticker.active{display:block;}
+#death-ticker-content{white-space:nowrap;animation:tickerScroll 30s linear infinite;font-size:0.72rem;line-height:28px;color:var(--muted);letter-spacing:0.03em;}
+#death-ticker-content span{margin-right:40px;}
+#death-ticker-content .ticker-death{color:var(--danger);}
+#death-ticker-content .ticker-rebirth{color:#a855f7;}
+#death-ticker-content .ticker-boss{color:var(--gold);}
+@keyframes tickerScroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+
+/* ── QA UNVERIFIED BANNER ─────────────────── */
+#qa-unverified-banner{position:fixed;top:0;left:0;right:0;z-index:99999;background:repeating-linear-gradient(45deg,#ff0000,#ff0000 10px,#cc0000 10px,#cc0000 20px);color:#fff;text-align:center;font-size:0.85rem;font-weight:700;letter-spacing:0.15em;padding:6px 0;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.6);font-family:monospace;}
+#qa-unverified-banner.qa-passed{background:#00aa44;}
 </style>
 </head>
 <body>
+
+<!-- QA VERIFICATION BANNER — removed only by qa_proxy_live.cjs passing -->
+<div id="qa-unverified-banner">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
 
 <!-- ════════════════════════════════════════════ -->
 <!--  TITLE SCREEN                               -->
@@ -563,6 +624,48 @@ canvas{display:block;}
 </div>
 
 <!-- ════════════════════════════════════════════ -->
+<!--  EULOGY SCREEN — Between Death & Karma     -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-eulogy">
+  <div class="eulogy-dust" id="eulogy-dust"></div>
+  <h2>&#10013; In Memoriam</h2>
+  <div class="eulogy-name" id="eulogy-name">Unknown Soul</div>
+  <div class="eulogy-cause" id="eulogy-cause">Lost to the void</div>
+  <div class="eulogy-stats" id="eulogy-stats"></div>
+  <div class="eulogy-epitaph" id="eulogy-epitaph">"The void remembers what the flesh forgets."</div>
+  <div class="eulogy-transition">But in Old Eden, death is a door...</div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  KARMA WHEEL — Reincarnation Lottery        -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-karma">
+  <div class="karma-spin-fx" id="karma-particles"></div>
+  <h2>&#9752; Karma Wheel</h2>
+  <p class="karma-subtitle">The soul seeks its next vessel...</p>
+  <div class="karma-card" id="karma-card">
+    <div class="karma-rarity-badge" id="karma-rarity">COMMON</div>
+    <div class="karma-npc-name" id="karma-name">???</div>
+    <div class="karma-npc-title" id="karma-title">Unknown</div>
+    <canvas id="karma-genome-canvas" width="96" height="96" style="image-rendering:pixelated;border:1px solid var(--border);border-radius:4px;margin:8px auto;display:block;"></canvas>
+    <div class="karma-genome-mini" id="karma-genes"></div>
+    <div class="karma-wealth" id="karma-wealth">Wealth: <span class="kw-val">???</span></div>
+    <div class="karma-faction" id="karma-faction">Faction: Unknown</div>
+    <div class="karma-backstory" id="karma-backstory">A soul drifting between worlds...</div>
+  </div>
+  <div class="karma-actions" id="karma-actions" style="display:none;">
+    <button class="btn" id="btn-karma-accept" style="border-color:var(--green);color:var(--green);">&#10003; Accept This Life</button>
+    <button class="btn" id="btn-karma-reroll" style="border-color:#a855f7;color:#a855f7;">&#9733; Re-roll (<span id="reroll-cost">30</span> SM)</button>
+    <button class="btn btn-sm" id="btn-karma-insure" style="border-color:var(--warn);color:var(--warn);">&#9879; Life Insurance (100 SM)</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  DEATH TICKER — Real-time Death Feed        -->
+<!-- ════════════════════════════════════════════ -->
+<div id="death-ticker"><div id="death-ticker-content"></div></div>
+
+<!-- ════════════════════════════════════════════ -->
 <!--  GAME CANVASES                               -->
 <!-- ════════════════════════════════════════════ -->
 <canvas id="game-canvas"></canvas>
@@ -665,6 +768,18 @@ window.addEventListener('unhandledrejection', function(e) {
   d.textContent = 'UNHANDLED PROMISE: ' + (e.reason && e.reason.message || e.reason || 'unknown');
   document.body.appendChild(d);
 });
+// Detect module load failure (CDN down, network error, etc.)
+setTimeout(function() {
+  if (!window.__oldEdenLoaded) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:30px 40px;background:#1a0000;border:2px solid #cc0000;color:#ff6666;font-size:16px;z-index:100001;font-family:monospace;text-align:center;border-radius:8px;max-width:500px;';
+    d.innerHTML = '<div style="font-size:24px;color:#ff4444;margin-bottom:12px;">\u26A0 Game Failed to Load</div>'
+      + '<div style="margin-bottom:12px;">The game engine could not initialize. This usually means:</div>'
+      + '<div style="text-align:left;font-size:13px;color:#cc8888;">\u2022 Three.js CDN (jsdelivr.net) is unreachable<br>\u2022 Your browser blocked the script<br>\u2022 Check browser console (F12) for details</div>'
+      + '<div style="margin-top:16px;"><button onclick="location.reload()" style="padding:8px 20px;background:#cc0000;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">\u21BB Retry</button></div>';
+    document.body.appendChild(d);
+  }
+}, 8000);
 </script>
 <script type="importmap">
 {"imports":{
@@ -674,9 +789,11 @@ window.addEventListener('unhandledrejection', function(e) {
 </script>
 
 <script type="module">
+window.__oldEdenLoaded = true;
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 // ================================================================
 //  AUDIO SFX SYSTEM
@@ -763,14 +880,14 @@ const AudioSFX = {
 //  FACTION DATA (mirrors FactionSystem.js)
 // ================================================================
 const FACTIONS = [
-  { id:'terran_dominion',   name:'Terran Dominion',    ideology:'Order',         home:'Sol Sector',       color:'#3B82F6', desc:'Military empire maintaining galactic order from the Core systems.' },
-  { id:'free_colonies',     name:'Free Colonies',      ideology:'Liberty',       home:'Frontier Expanse', color:'#22C55E', desc:'Independent settlements valuing freedom above all else.' },
-  { id:'syndicate',         name:'Syndicate',          ideology:'Profit',        home:'Nexus Ring',       color:'#EAB308', desc:'Merchant megacorp controlling trade lanes and black markets.' },
-  { id:'covenant_of_stars', name:'Covenant of Stars',  ideology:'Faith',         home:'Hallowed Nebula',  color:'#A855F7', desc:'Theocratic order seeking divine truth among the stars.' },
-  { id:'void_collective',   name:'Void Collective',    ideology:'Knowledge',     home:'Deep Void',        color:'#06B6D4', desc:'Scientific alliance pushing the boundaries of understanding.' },
-  { id:'iron_pact',         name:'Iron Pact',          ideology:'Survival',      home:'Ashfields',        color:'#F97316', desc:'Hardy survivalists thriving where others cannot endure.' },
-  { id:'ascendant_order',   name:'Ascendant Order',    ideology:'Transcendence', home:'Luminous Reach',   color:'#EC4899', desc:'Mystics pursuing transhumanist evolution and ascension.' },
-  { id:'remnant_clans',     name:'Remnant Clans',      ideology:'Tradition',     home:'Old Territories',  color:'#78716C', desc:'Ancient clans preserving the old ways of pre-diaspora humanity.' },
+  { id:'hegemony_vanguard',     name:'Hegemony Vanguard',      ideology:'Order',         home:'Core Systems',       color:'#3B82F6', desc:'Military empire maintaining galactic order from the Core systems.' },
+  { id:'free_traders',          name:'Free Traders Consortium', ideology:'Liberty',       home:'Trade Lanes',        color:'#22C55E', desc:'Merchant republic controlling trade lanes across the frontier.' },
+  { id:'void_cult',             name:'Void Cult',               ideology:'Mysticism',     home:'Outer Fringe',       color:'#A855F7', desc:'Mystic extremists seeking forbidden truths in the outer fringe.' },
+  { id:'iron_syndicate',        name:'Iron Syndicate',          ideology:'Profit',        home:'Mining Belts',       color:'#EAB308', desc:'Industrial megacorp controlling mining belts and black markets.' },
+  { id:'eden_remnants',         name:'Eden Remnants',           ideology:'Archaeology',   home:'Old Eden System',    color:'#78716C', desc:'Archaeologists and cultists preserving relics of Old Eden.' },
+  { id:'stellar_church',        name:'Stellar Church',          ideology:'Faith',         home:'Central Worlds',     color:'#EC4899', desc:'Theocratic order seeking divine truth among the stars.' },
+  { id:'autonomous_collective', name:'Autonomous Collective',   ideology:'Transcendence', home:'Robotic Hubs',       color:'#06B6D4', desc:'AI-rights movement pushing the boundaries of machine sentience.' },
+  { id:'rogue_ai_network',      name:'Rogue AI Network',        ideology:'Survival',      home:'Deep Space',         color:'#F97316', desc:'Antagonist faction of rogue AIs operating from deep space.' },
 ];
 
 // ================================================================
@@ -800,7 +917,7 @@ const state = {
   location: { systemIndex: 0, docked: false },
   combat: {
     active: false, enemies: [], projectiles: [], explosions: [],
-    ammo: 24, maxAmmo: 24, heat: 0, score: 0, kills: 0, cycle: 1,
+    ammo: 100000, maxAmmo: 100000, heat: 0, score: 0, kills: 0, cycle: 1,
     weaponReady: true, charging: false, chargeStart: 0, chargeLevel: 0,
     cooling: false, coolEnd: 0, recoilOffset: 0, recoilVel: 0,
     yaw: 0, pitch: 0, locked: false, damageFlash: 0, dead: false, bossActive: false,
@@ -813,12 +930,15 @@ const state = {
     spaceDust: [],
     lastAutoSave: 0,
     deathStats: null,
+    godMode: false,
+    playerHasAttacked: false,
+    deathImmunityUntil: 0,
   },
   // EVE Online-style ship flight
   flight: {
     thrust: 0, strafe: 0, vertical: 0,
     velocity: { x: 0, y: 0, z: 0 },
-    speed: 0, maxSpeed: 60, accel: 40, drag: 0.92,
+    speed: 0, maxSpeed: 120, accel: 80, drag: 0.95,
     warpSpeed: 300, warping: false, warpTarget: null,
     afterburner: false, afterburnerMult: 2.5,
   },
@@ -829,7 +949,7 @@ const state = {
   upgrades: {
     railgunDmg: 1,     // multiplier
     shieldRegen: 3,    // per sec
-    maxAmmo: 24,
+    maxAmmo: 100000,
     maxHull: 100,
     maxShield: 100,
     engineSpeed: 1,
@@ -851,6 +971,24 @@ const state = {
   inAltUniverse: false,
   // ── Mining ──
   mining: { active: false, target: null, progress: 0, laserBeam: null },
+  // ── Soul Memory (persists across deaths — subtle passive bonuses) ──
+  soulMemory: {
+    pirateDodge: 0,     // +0.5% per pirate death, caps at 15%
+    bossResist: 0,      // +0.3% damage resist per boss kill, caps at 10%
+    tradeInsight: 0,    // +1% better prices per life with trading, caps at 15%
+    combatInstinct: 0,  // +0.2% damage per total kill milestone, caps at 10%
+    shieldMemory: 0,    // +0.5% shield regen per death to bolts, caps at 10%
+  },
+  // ── Life Insurance ──
+  insuredItemId: null,
+  persistentItems: [],
+  // ── Karma Wheel ──
+  karmaRoll: null,          // Current NPC being offered { name, title, genome, wealth, faction, rarity, backstory }
+  karmaRerollCount: 0,
+  // ── Death Ticker ──
+  deathFeed: [],            // Last 20 server death events
+  // ── Weapon System ──
+  activeWeapon: 'railgun',  // 'railgun' or 'laser'
   // ── NPC ships ──
   npcShips: [],
   // ── Market ──
@@ -865,6 +1003,333 @@ const state = {
 
 // Initialise faction rep at neutral
 FACTIONS.forEach(f => { state.factionRep[f.id] = 0; });
+
+// ================================================================
+//  GENOME → GAMEPLAY STATS
+// ================================================================
+// Genome bytes 32-39 are aptitude genes. Maps gene value (0-255)
+// to a multiplier range [0.5 … 1.5]. Soul memory adds up to +15%.
+function getGenomeMult(geneIndex, soulBonus = 0) {
+  if (!state.player.genome) return 1.0;
+  const raw = state.player.genome[geneIndex] || 128;
+  const base = 0.5 + (raw / 255); // 0.5 to 1.5
+  return base * (1 + Math.min(soulBonus, 0.15));
+}
+function getPlayerDamageMult() {
+  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * state.upgrades.railgunDmg;
+}
+function getPlayerSpeedMult() {
+  return getGenomeMult(33); // Piloting gene
+}
+function getPlayerShieldRegenMult() {
+  return getGenomeMult(34, state.soulMemory.shieldMemory / 100); // Engineering gene
+}
+function getPlayerTradeMult() {
+  return getGenomeMult(35, state.soulMemory.tradeInsight / 100); // Trade gene
+}
+
+// ================================================================
+//  EULOGY SYSTEM — Cinematic death screen
+// ================================================================
+const EPITAPHS = [
+  '"The void remembers what the flesh forgets."',
+  '"Every star is a soul that once burned."',
+  '"In Old Eden, even the dead have stories to tell."',
+  '"The galaxy grows heavier with each life lived."',
+  '"Not all who wander are lost — some are reborn."',
+  '"The Karma Wheel turns. The soul endures."',
+  '"What the body loses, the soul keeps."',
+  '"A thousand lives, and each one mattered."',
+  '"The stars do not mourn. They witness."',
+  '"From dust to dust, but the soul is stardust."',
+];
+
+function showEulogy(deathStats, deathCause) {
+  const name = state.player.name || 'Unknown Soul';
+  const faction = FACTIONS.find(f => f.id === state.player.faction);
+  document.getElementById('eulogy-name').textContent = name;
+  document.getElementById('eulogy-cause').textContent = deathCause || 'Destroyed in combat';
+  
+  const stats = document.getElementById('eulogy-stats');
+  const statItems = [
+    { val: deathStats.kills || 0, lbl: 'Enemies Slain' },
+    { val: deathStats.score || 0, lbl: 'Score' },
+    { val: deathStats.streak || 0, lbl: 'Best Streak' },
+    { val: (deathStats.credits || 0).toLocaleString(), lbl: 'Credits Lost' },
+    { val: faction?.name || 'None', lbl: 'Faction' },
+    { val: state.player.rebirths, lbl: 'Lives Lived' },
+  ];
+  stats.innerHTML = statItems.map((s, i) => 
+    `<div class="eulogy-stat" style="animation-delay:${2 + i * 0.3}s">
+      <span class="es-val">${s.val}</span><span class="es-lbl">${s.lbl}</span>
+    </div>`
+  ).join('');
+  
+  document.getElementById('eulogy-epitaph').textContent = EPITAPHS[Math.floor(Math.random() * EPITAPHS.length)];
+  
+  // Spawn floating dust particles
+  const dustEl = document.getElementById('eulogy-dust');
+  dustEl.innerHTML = '';
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'eulogy-particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.bottom = '-10px';
+    p.style.animationDelay = Math.random() * 6 + 's';
+    p.style.animationDuration = (4 + Math.random() * 4) + 's';
+    dustEl.appendChild(p);
+  }
+  
+  showScreen('eulogy');
+  
+  // Auto-advance to Karma Wheel after 8 seconds
+  setTimeout(() => {
+    if (state.screen === 'eulogy') {
+      rollKarmaWheel();
+    }
+  }, 8000);
+}
+
+// ================================================================
+//  KARMA WHEEL — Reincarnation Lottery
+// ================================================================
+const NPC_NAMES = ['Kira','Ash','Vex','Nova','Orion','Ember','Jett','Lyra','Zara','Kai','Riven','Thane','Sable','Drake','Astra','Zenith','Echo','Cipher','Nyx','Vector'];
+const NPC_TITLES = ['Scavenger','Trader','Pirate Captain','Mining Foreman','Patrol Officer','Smuggler','Mechanic','Diplomat','Bounty Hunter','Scientist','Drifter','Station Hand','Cargo Pilot','Arms Dealer','Navigator','Medic','Warden','Outcast'];
+const NPC_BACKSTORIES = [
+  'Born in the mining belts, they learned to survive before they learned to speak.',
+  'A former military officer who deserted after witnessing the Void Cult massacre.',
+  'Heir to a trade fortune, squandered on gambling and bad deals. Starting over.',
+  'They say this one once killed a Dreadnought solo. Nobody believes them.',
+  'An orphan raised by station AIs. More comfortable with machines than people.',
+  'Excommunicated from the Stellar Church for asking too many questions.',
+  'Three past lives as a pirate. The karma debt is... significant.',
+  'A genetic anomaly — radiation-resistant but socially cursed.',
+  'Last seen fleeing Iron Syndicate enforcers. The bounty is still active.',
+  'Quiet. Efficient. The kind of person who survives where others don\'t.',
+];
+
+const KARMA_REROLL_COSTS = [30, 60, 120, 250, 500];
+
+function generateKarmaRoll() {
+  const genome = new Uint8Array(256);
+  crypto.getRandomValues(genome);
+  
+  // Determine rarity by total genome quality
+  const aptSum = genome[32] + genome[33] + genome[34] + genome[35] + genome[36] + genome[37] + genome[38] + genome[39];
+  const aptAvg = aptSum / 8;
+  let rarity, rarityColor;
+  if (aptAvg >= 220) { rarity = 'legendary'; rarityColor = '#ffd700'; }
+  else if (aptAvg >= 190) { rarity = 'epic'; rarityColor = '#a855f7'; }
+  else if (aptAvg >= 155) { rarity = 'rare'; rarityColor = '#44aaff'; }
+  else if (aptAvg >= 120) { rarity = 'uncommon'; rarityColor = '#22cc66'; }
+  else { rarity = 'common'; rarityColor = '#aaaaaa'; }
+  
+  const faction = FACTIONS[Math.floor(Math.random() * FACTIONS.length)];
+  const wealthRoll = Math.floor(Math.random() * 5000);
+  const name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + '-' + Math.floor(Math.random() * 999);
+  
+  return {
+    name,
+    title: NPC_TITLES[Math.floor(Math.random() * NPC_TITLES.length)],
+    genome: Array.from(genome),
+    wealth: wealthRoll,
+    faction: faction.id,
+    factionName: faction.name,
+    factionColor: faction.color,
+    rarity,
+    rarityColor,
+    backstory: NPC_BACKSTORIES[Math.floor(Math.random() * NPC_BACKSTORIES.length)],
+    aptAvg: Math.round(aptAvg),
+  };
+}
+
+function rollKarmaWheel() {
+  state.karmaRerollCount = 0;
+  const roll = generateKarmaRoll();
+  state.karmaRoll = roll;
+  showScreen('karma');
+  presentKarmaCard(roll);
+}
+
+function presentKarmaCard(roll) {
+  const card = document.getElementById('karma-card');
+  const nameEl = document.getElementById('karma-name');
+  const titleEl = document.getElementById('karma-title');
+  const rarityEl = document.getElementById('karma-rarity');
+  const genesEl = document.getElementById('karma-genes');
+  const wealthEl = document.getElementById('karma-wealth');
+  const factionEl = document.getElementById('karma-faction');
+  const backstoryEl = document.getElementById('karma-backstory');
+  const actionsEl = document.getElementById('karma-actions');
+  
+  // Reset card state
+  card.className = 'karma-card';
+  actionsEl.style.display = 'none';
+  nameEl.textContent = '???';
+  titleEl.textContent = '???';
+  rarityEl.textContent = '';
+  genesEl.innerHTML = '';
+  wealthEl.innerHTML = 'Wealth: <span class="kw-val">???</span>';
+  factionEl.textContent = '';
+  backstoryEl.textContent = '';
+  
+  // Particle burst
+  const particleEl = document.getElementById('karma-particles');
+  particleEl.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'karma-spin-particle';
+    p.style.left = '50%';
+    p.style.top = '50%';
+    p.style.background = roll.rarityColor;
+    p.style.setProperty('--dx', (Math.random() - 0.5) * 400 + 'px');
+    p.style.setProperty('--dy', (Math.random() - 0.5) * 400 + 'px');
+    p.style.animationDelay = Math.random() * 0.5 + 's';
+    particleEl.appendChild(p);
+  }
+  
+  // Staged reveal
+  setTimeout(() => {
+    // Step 1: Name + title
+    nameEl.textContent = roll.name;
+    titleEl.textContent = roll.title;
+    rarityEl.textContent = roll.rarity.toUpperCase();
+    rarityEl.style.background = roll.rarityColor + '22';
+    rarityEl.style.color = roll.rarityColor;
+    rarityEl.style.border = '1px solid ' + roll.rarityColor;
+  }, 600);
+  
+  setTimeout(() => {
+    // Step 2: Genome bars (Combat, Piloting, Engineering, Trade, Science)
+    const geneNames = ['CMB','PLT','ENG','TRD','SCI'];
+    const geneColors = ['#ff4444','#44aaff','#22cc66','#ffd700','#a855f7'];
+    genesEl.innerHTML = geneNames.map((n, i) => {
+      const val = roll.genome[32 + i];
+      return `<div style="text-align:center;font-size:0.6rem;color:var(--muted);">${n}
+        <div class="karma-gene-bar"><div class="karma-gene-fill" id="kg-${i}" style="width:0%;background:${geneColors[i]}"></div></div>
+      </div>`;
+    }).join('');
+    // Animate gene bars
+    requestAnimationFrame(() => {
+      geneNames.forEach((_, i) => {
+        const bar = document.getElementById('kg-' + i);
+        if (bar) bar.style.width = (roll.genome[32 + i] / 255 * 100) + '%';
+      });
+    });
+    // Draw genome canvas
+    drawGenome(new Uint8Array(roll.genome), document.getElementById('karma-genome-canvas'), 96);
+  }, 1200);
+  
+  setTimeout(() => {
+    // Step 3: Faction
+    factionEl.innerHTML = `Faction: <span style="color:${roll.factionColor}">${roll.factionName}</span>`;
+  }, 1800);
+  
+  setTimeout(() => {
+    // Step 4: Wealth (last — most dramatic)
+    const wealthTier = roll.wealth >= 3000 ? 'rich' : roll.wealth >= 1000 ? 'comfortable' : roll.wealth >= 300 ? 'modest' : 'destitute';
+    const wealthColor = roll.wealth >= 3000 ? '#ffd700' : roll.wealth >= 1000 ? '#22cc66' : roll.wealth >= 300 ? '#aaa' : '#ff4444';
+    wealthEl.innerHTML = `Wealth: <span class="kw-val" style="color:${wealthColor}">${roll.wealth.toLocaleString()} EC</span> <span style="font-size:0.7rem;color:var(--muted)">(${wealthTier})</span>`;
+  }, 2400);
+  
+  setTimeout(() => {
+    // Step 5: Card reveal + backstory
+    card.classList.add('revealed', 'rarity-' + roll.rarity);
+    backstoryEl.textContent = roll.backstory;
+  }, 3000);
+  
+  setTimeout(() => {
+    // Step 6: Show action buttons
+    actionsEl.style.display = 'flex';
+    const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
+    document.getElementById('reroll-cost').textContent = cost;
+  }, 3500);
+}
+
+// ================================================================
+//  DEATH TICKER — Real-time Feed
+// ================================================================
+function addDeathFeedEvent(type, text) {
+  state.deathFeed.push({ type, text, time: Date.now() });
+  if (state.deathFeed.length > 20) state.deathFeed.shift();
+  updateDeathTicker();
+}
+
+function updateDeathTicker() {
+  const el = document.getElementById('death-ticker-content');
+  if (!el) return;
+  el.innerHTML = state.deathFeed.map(e => 
+    `<span class="ticker-${e.type}">${e.text}</span>`
+  ).join('');
+  document.getElementById('death-ticker').classList.add('active');
+}
+
+// ================================================================
+//  LASER WEAPON — Secondary weapon system
+// ================================================================
+const LASER_FIRE_RATE = 100;   // ms between shots
+const LASER_DAMAGE = 0.5;     // per hit (railgun is 1.0) — genome-multiplied
+const LASER_SPEED = 600;      // faster than railgun
+const LASER_AMMO_COST = 0;    // lasers use heat, not ammo
+const LASER_HEAT_PER_SHOT = 0.03;
+let lastLaserShot = 0;
+
+function fireLaser() {
+  if (c.heat >= 0.95) return; // overheated
+  const now = performance.now();
+  if (now - lastLaserShot < LASER_FIRE_RATE) return;
+  lastLaserShot = now;
+  c.heat = Math.min(1, c.heat + LASER_HEAT_PER_SHOT);
+  c.playerHasAttacked = true;
+  
+  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
+  
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4), beamMat);
+  beam.quaternion.copy(camera.quaternion); beam.rotateX(Math.PI / 2);
+  g.add(beam);
+  
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4), glowMat);
+  glow.quaternion.copy(camera.quaternion); glow.rotateX(Math.PI / 2);
+  g.add(glow);
+  
+  const laserLight = new THREE.PointLight(0x00ff88, 1, 8);
+  g.add(laserLight);
+  
+  g.position.copy(origin);
+  scene.add(g);
+  c.projectiles.push({ group: g, dir: dir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: glowMat, slugLight: laserLight, isLaser: true, damage: LASER_DAMAGE });
+  
+  // Small recoil
+  c.recoilVel = -2;
+  AudioSFX.play('hit'); // use hit sound as placeholder for laser
+}
+
+// ================================================================
+//  LIFE INSURANCE — Soul-bind one item across death
+// ================================================================
+function purchaseLifeInsurance() {
+  if (state.player.stellarMarks < 100) {
+    showToast('Need 100 SM for Life Insurance');
+    return;
+  }
+  if (state.inventory.length === 0) {
+    showToast('No items to insure');
+    return;
+  }
+  // Insure the most valuable item
+  let best = state.inventory[0];
+  state.inventory.forEach(item => {
+    if ((item.value || 0) > (best.value || 0)) best = item;
+  });
+  state.insuredItemId = best.name;
+  state.player.stellarMarks -= 100;
+  showToast(`☊ Insured: ${best.name} (survives next death)`);
+  addComms('Insurance', `Soul-bound item: ${best.name}. This item will persist through your next death.`);
+}
 
 // ================================================================
 //  SOCKET.IO CONNECTION
@@ -982,6 +1447,10 @@ async function connectSocket() {
           saveGame();
           showScreen('bridge');
         });
+        // Death feed — real-time ticker from all players
+        s.on('death:feed', (data) => {
+          if (data && data.text) addDeathFeedEvent(data.type || 'death', data.text);
+        });
         resolve(s);
       } catch(e) { resolve(null); }
     };
@@ -1034,14 +1503,28 @@ function updateServerStatus(online) {
 //  SCREEN MANAGEMENT
 // ================================================================
 function showScreen(name) {
+  // Guard: don't enter gunner if 3D engine isn't ready — prevents dead-state trap
+  if (name === 'gunner' && !threeReady) {
+    addComms('System', '3D engine not available. Cannot enter gunner mode.');
+    return;
+  }
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
   if (el) { el.classList.add('active'); el.classList.add('fade-in'); }
+
+  // Hide lock-prompt on non-gunner screens to prevent click blocking
+  const lp = document.getElementById('lock-prompt');
+  if (lp && name !== 'gunner') lp.style.display = 'none';
 
   state.screen = name;
   const navBar = document.getElementById('nav-bar');
   const showNav = ['bridge','starmap','station','character','rebirth','settings','market'].includes(name);
   navBar.classList.toggle('visible', showNav);
+
+  // Show death ticker on bridge and title
+  const ticker = document.getElementById('death-ticker');
+  if (ticker) ticker.classList.toggle('active', ['bridge','title','eulogy','karma'].includes(name) && state.deathFeed.length > 0);
 
   // Update nav active state
   document.querySelectorAll('.nav-btn').forEach(b => {
@@ -1061,7 +1544,7 @@ function showScreen(name) {
   if (name === 'rebirth') updateRebirthScreen();
   if (name === 'settings') initSettingsScreen();
   if (name === 'market') { if (state.market.orders.length === 0) generateNPCMarketOrders(); renderMarketScreen(); }
-  if (name === 'gunner') { if (threeReady) enterGunnerMode(); else addComms('System', '3D engine not available.'); }
+  if (name === 'gunner') enterGunnerMode();
 }
 
 // ================================================================
@@ -2108,26 +2591,38 @@ let threeReady = false;
 
 try {
 
-renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// Try optimized renderer first, fall back to safe settings
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: false, alpha: false, powerPreference: 'high-performance' });
+} catch(_e) {
+  console.warn('[Old Eden] high-performance WebGL failed, falling back to default');
+  renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMappingExposure = 1.8;
+renderer.shadowMap.enabled = false;
 
 scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000010, 0.00025);
+scene.fog = new THREE.FogExp2(0x050510, 0.00012);
 
 camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
 
-// Lighting
-scene.add(new THREE.AmbientLight(0x112244, 0.7));
-const starLight = new THREE.DirectionalLight(0xfff5e0, 2.0);
-starLight.position.set(500, 200, 300);
+// Lighting — bright space sunlight for visibility
+scene.add(new THREE.AmbientLight(0x667799, 2.0));
+const starLight = new THREE.DirectionalLight(0xfff8e8, 4.0);
+starLight.position.set(500, 400, 300);
+starLight.castShadow = false;
 scene.add(starLight);
-const fillLight = new THREE.DirectionalLight(0x4466aa, 0.4);
-fillLight.position.set(-300, -100, -200);
+const fillLight = new THREE.DirectionalLight(0x88aadd, 1.5);
+fillLight.position.set(-400, 200, -300);
 scene.add(fillLight);
+const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+rimLight.position.set(0, -200, 500);
+scene.add(rimLight);
+// Hemisphere light for natural sky/ground ambient
+const hemiLight = new THREE.HemisphereLight(0x88bbff, 0x224466, 1.2);
+scene.add(hemiLight);
 
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
@@ -2280,32 +2775,63 @@ function spawnExhaust() {
 //  GUNNER MODE — COMBAT
 // ================================================================
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
-const CHARGE_TIME = 600, COOLDOWN_TIME = 400, MOUSE_SENS = 0.002;
+const CHARGE_TIME = 0, COOLDOWN_TIME = 0, MOUSE_SENS = 0.002;
+
+// ---- SHARED GEOMETRIES & MATERIALS (reused, never re-created) ----
+const _boltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4);
+const _boltMat = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.9 });
+const _boltTrailGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4);
+const _boltTrailMat = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.5 });
+const _upVec = new THREE.Vector3(0, 1, 0);
+// Disposal helper — recursively dispose geometry & materials
+function disposeObject(obj) {
+  if (!obj) return;
+  obj.traverse(child => {
+    if (child.isMesh) {
+      if (child.geometry && child.geometry !== _boltGeo && child.geometry !== _boltTrailGeo) {
+        child.geometry.dispose();
+      }
+      if (child.material && !child.material._pooled) {
+        if (Array.isArray(child.material)) child.material.forEach(m => { if (!m._pooled) m.dispose(); });
+        else child.material.dispose();
+      }
+    }
+  });
+}
+
 // Full 360° turret — no clamp
 const keysDown = new Set();
 
 function enterGunnerMode() {
   c.active = true;
   c.streak = 0; c.streakTimer = 0; c.streakMultiplier = 1;
+  c.playerHasAttacked = false;
+  // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
+  c.deathImmunityUntil = performance.now() + 5000;
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   canvas3d.requestPointerLock();
+  document.getElementById('action-bar').classList.add('active');
+  document.getElementById('mobile-controls').classList.add('active');
   // Reset flight
   state.flight.velocity = { x: 0, y: 0, z: 0 };
   state.flight.speed = 0;
   state.flight.thrust = 0; state.flight.strafe = 0; state.flight.vertical = 0;
+  c.yaw = 0; c.pitch = 0;
   spawnAsteroids();
   if (c.spaceDust.length === 0) spawnSpaceDust();
   // Initialize new systems
   createStargate();
   spawnSystemNPCs();
   spawnStationModel();
+  preloadEnemyModel();
   loadRailgunTurretGLB();
+  loadCockpitGLB();
   spawnShipLibrary();
   replaceShipWithGLB();
-  addComms('EDEN AI', 'All systems online. WASD fly, Shift boost, Space up, Ctrl down.');
-  addComms('System', 'Gunner mode — Mouse aim (360°), Click fire, R reload, ESC exit');
-  addComms('System', 'P = autopilot | T = chatbot | L = toggle library labels');
+  addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
+  addComms('System', 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
+  addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
 }
 
 function spawnAsteroids() {
@@ -2334,7 +2860,7 @@ function spawnAsteroids() {
 }
 
 function spawnSpaceDust() {
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 40; i++) {
     const mat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.3 + Math.random() * 0.3 });
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 4, 4), mat);
     m.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*200, (Math.random()-0.5)*500);
@@ -2364,19 +2890,20 @@ function spawnLootDrop(pos, type) {
 function exitGunnerMode() {
   c.active = false;
   if (document.pointerLockElement) document.exitPointerLock();
-  // Clean up all 3D objects
-  c.enemyBolts.forEach(b => scene.remove(b.group)); c.enemyBolts = [];
-  c.enemies.forEach(e => scene.remove(e.group)); c.enemies = [];
-  c.projectiles.forEach(p => scene.remove(p.group)); c.projectiles = [];
-  c.explosions.forEach(ex => scene.remove(ex.group)); c.explosions = [];
-  c.asteroids.forEach(a => scene.remove(a)); c.asteroids = [];
-  c.lootDrops.forEach(l => scene.remove(l.group)); c.lootDrops = [];
-  c.spaceDust.forEach(d => scene.remove(d)); c.spaceDust = [];
+  // Clean up all 3D objects (guard each removal) + dispose GPU resources
+  c.enemyBolts.forEach(b => { if (b && b.group) scene.remove(b.group); }); c.enemyBolts = [];
+  c.enemies.forEach(e => { if (e && e.group) { scene.remove(e.group); disposeObject(e.group); } }); c.enemies = [];
+  c.projectiles.forEach(p => { if (p && p.group) scene.remove(p.group); }); c.projectiles = [];
+  c.explosions.forEach(ex => { if (ex && ex.group) { scene.remove(ex.group); disposeObject(ex.group); } }); c.explosions = [];
+  c.asteroids.forEach(a => { if (a) { scene.remove(a); disposeObject(a); } }); c.asteroids = [];
+  c.lootDrops.forEach(l => { if (l && l.group) { scene.remove(l.group); disposeObject(l.group); } }); c.lootDrops = [];
+  c.spaceDust.forEach(d => { if (d) { scene.remove(d); disposeObject(d); } }); c.spaceDust = [];
   c.dmgNumbers = [];
   // Clean up new systems
-  if (state.npcShips) { state.npcShips.forEach(n => scene.remove(n.group)); state.npcShips = []; }
+  if (state.npcShips) { state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); state.npcShips = []; }
   if (stargateGroup) { scene.remove(stargateGroup); stargateGroup = null; }
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
+  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   stationModels.forEach(m => scene.remove(m)); stationModels = [];
   glbSceneObjects.forEach(o => scene.remove(o)); glbSceneObjects = []; libraryLabels = [];
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
@@ -2385,38 +2912,101 @@ function exitGunnerMode() {
   state.chatbot.visible = false;
   const chatEl = document.getElementById('chatbot-panel'); if (chatEl) chatEl.style.display = 'none';
   const skinEl = document.getElementById('skin-panel'); if (skinEl) skinEl.style.display = 'none';
+  document.getElementById('action-bar').classList.remove('active');
+  document.getElementById('mobile-controls').classList.remove('active');
   AudioSFX.stopBGM();
   showScreen('bridge');
 }
 
+// Enemy type configs — each type uses a distinct GLB model
+const ENEMY_CONFIGS = {
+  scout:       { scale: 0.4, hp: 2, points: 10, speed: 1.3, shootRate: 5000, model: 'fighter_alpha',    tint: 0xff2200 },
+  fighter:     { scale: 0.6, hp: 4, points: 25, speed: 1.0, shootRate: 3000, model: 'iron_sentinel',    tint: 0xff2200 },
+  bomber:      { scale: 0.9, hp: 8, points: 50, speed: 0.7, shootRate: 2500, model: 'alien_battleship', tint: 0xff4400 },
+  interceptor: { scale: 0.5, hp: 3, points: 15, speed: 1.6, shootRate: 4000, model: 'fighter_beta',     tint: 0xff2200 },
+};
+
+// ---- MATERIAL POOL: reuse materials by (modelKey + tint) to reduce draw calls ----
+const _materialCache = new Map();
+function _getCachedMaterial(baseMat, tintColor, emissiveIntensity) {
+  const key = (baseMat.uuid || '') + '_' + tintColor + '_' + emissiveIntensity;
+  if (_materialCache.has(key)) return _materialCache.get(key);
+  const m = baseMat.clone();
+  m.emissive = new THREE.Color(tintColor);
+  m.emissiveIntensity = emissiveIntensity;
+  m._pooled = true; // mark as pooled — never dispose
+  _materialCache.set(key, m);
+  return m;
+}
+
+// Utility: clone a GLB model and apply faction/tint color (pooled materials)
+function reskinModel(sourceModel, scale, tintColor, emissiveIntensity = 0.3) {
+  const clone = sourceModel.clone();
+  clone.scale.setScalar(scale);
+  clone.traverse(child => {
+    if (child.isMesh && child.material) {
+      child.material = _getCachedMaterial(child.material, tintColor, emissiveIntensity);
+    }
+  });
+  return clone;
+}
+
 function createEnemy(type) {
-  const types = {
-    scout:       { color: 0xaa4444, scale: 0.6, hp: 2, points: 10, speed: 1.3 },
-    fighter:     { color: 0xcc6644, scale: 1.0, hp: 4, points: 25, speed: 1.0 },
-    bomber:      { color: 0x886644, scale: 1.5, hp: 8, points: 50, speed: 0.7 },
-    interceptor: { color: 0xcc44aa, scale: 0.8, hp: 3, points: 15, speed: 1.6 },
-  };
-  const cfg = types[type] || types.fighter;
+  const cfg = ENEMY_CONFIGS[type] || ENEMY_CONFIGS.fighter;
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.5, metalness: 0.7, emissive: cfg.color, emissiveIntensity: 0.25 });
-  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5*cfg.scale,0.5*cfg.scale,3*cfg.scale), mat));
-  const wg = new THREE.BoxGeometry(4*cfg.scale,0.1*cfg.scale,1.5*cfg.scale);
-  { const wL = new THREE.Mesh(wg, mat); wL.position.set(-2*cfg.scale,0,0); g.add(wL); }
-  { const wR = new THREE.Mesh(wg, mat); wR.position.set(2*cfg.scale,0,0); g.add(wR); }
-  const eg = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.6 });
-  { const eM = new THREE.Mesh(new THREE.CircleGeometry(0.3*cfg.scale,8), eg); eM.position.set(0,0,1.6*cfg.scale); g.add(eM); }
+
+  // Use type-specific GLB model with fallback chain
+  const modelKey = cfg.model || 'iron_sentinel';
+  const srcModel = state.loadedModels[modelKey] || state.loadedModels['iron_sentinel'];
+  if (srcModel) {
+    g.add(reskinModel(srcModel, cfg.scale, cfg.tint || 0xff2200));
+  } else {
+    // Minimal fallback — single red box if no model loaded yet
+    const mat = new THREE.MeshStandardMaterial({ color: 0xff4422, roughness: 0.4, metalness: 0.7, emissive: 0xff2200, emissiveIntensity: 0.3 });
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(2*cfg.scale, 0.6*cfg.scale, 3*cfg.scale), mat));
+  }
+
+  // Engine glow
+  const engineGlow = new THREE.PointLight(0xff4422, 1.5, 15);
+  engineGlow.position.set(0, 0, 2 * cfg.scale);
+  g.add(engineGlow);
 
   const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
   const r = SPAWN_RADIUS + Math.random()*100;
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-  c.enemies.push({ group: g, hp: cfg.hp, maxHp: cfg.hp, speed: ENEMY_SPEED * cfg.speed, type, points: cfg.points, cfg, hitFlash: 0 });
+  c.enemies.push({ group: g, hp: cfg.hp, maxHp: cfg.hp, speed: ENEMY_SPEED * cfg.speed, type, points: cfg.points, cfg, hitFlash: 0, lastShot: 0, shootRate: cfg.shootRate });
+}
+
+// Preload all combat-relevant models (enemies, bosses, NPCs)
+const COMBAT_MODELS = ['iron_sentinel', 'fighter_alpha', 'fighter_beta', 'alien_battleship',
+  'cargo_shuttle', 'shuttle', 'evac_pod_b', 'freighter',
+  'titan_a', 'titan_b', 'demon_battleship'];
+let _combatModelIdx = 0;
+async function preloadEnemyModel() {
+  // Load iron_sentinel first (most common) — blocks
+  try { await loadGLBModel('iron_sentinel'); } catch(e) { /* fallback to box */ }
+  // Stagger remaining models: load 2 at a time with delay to avoid frame spikes
+  _combatModelIdx = 0;
+  _loadNextCombatBatch();
+}
+function _loadNextCombatBatch() {
+  const BATCH = 2;
+  const promises = [];
+  while (_combatModelIdx < COMBAT_MODELS.length && promises.length < BATCH) {
+    const key = COMBAT_MODELS[_combatModelIdx++];
+    if (!state.loadedModels[key]) promises.push(loadGLBModel(key).catch(() => {}));
+  }
+  if (promises.length > 0) {
+    Promise.all(promises).then(() => { if (_combatModelIdx < COMBAT_MODELS.length) setTimeout(_loadNextCombatBatch, 300); });
+  }
 }
 
 function fireRailgun() {
   if (!c.weaponReady || c.ammo <= 0) return;
   c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
+  c.playerHasAttacked = true;
   AudioSFX.play('charge');
 }
 
@@ -2473,29 +3063,45 @@ function spawnNail() {
   }
 }
 
+const BOSS_MODELS = ['titan_a', 'titan_b', 'demon_battleship'];
+const BOSS_TINTS = [
+  { tint: 0xff2200, emissive: 0.6, name: 'Titan Warlord' },
+  { tint: 0x8800ff, emissive: 0.5, name: 'Void Titan' },
+  { tint: 0xff4400, emissive: 0.7, name: 'Demon Dreadnought' },
+];
+
 function createBossEnemy() {
   const g = new THREE.Group();
-  const bossMat = new THREE.MeshStandardMaterial({ color: 0xff2200, roughness: 0.3, metalness: 0.9, emissive: 0xff4400, emissiveIntensity: 0.5 });
-  // Main body
-  g.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2, 10), bossMat));
-  // Wings
-  const wingMat = new THREE.MeshStandardMaterial({ color: 0xcc1100, roughness: 0.4, metalness: 0.8, emissive: 0xcc2200, emissiveIntensity: 0.3 });
-  { const w1 = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 5), wingMat); w1.position.set(-8, 0, 0); g.add(w1); }
-  { const w2 = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 5), wingMat); w2.position.set(8, 0, 0); g.add(w2); }
-  // Engine glow
-  const glowMat2 = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 });
-  { const eg1 = new THREE.Mesh(new THREE.CircleGeometry(1.2, 12), glowMat2); eg1.position.set(-3, 0, 5.5); g.add(eg1); }
-  { const eg2 = new THREE.Mesh(new THREE.CircleGeometry(1.2, 12), glowMat2); eg2.position.set(3, 0, 5.5); g.add(eg2); }
-  // Turrets
-  const turretMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
-  { const t1 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 6), turretMat); t1.rotation.x = Math.PI/2; t1.position.set(-5, 1, -2); g.add(t1); }
-  { const t2 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 6), turretMat); t2.rotation.x = Math.PI/2; t2.position.set(5, 1, -2); g.add(t2); }
+  const bossIdx = Math.floor(Math.random() * BOSS_MODELS.length);
+  const bossKey = BOSS_MODELS[bossIdx];
+  const bossTint = BOSS_TINTS[bossIdx];
+  const bossScale = bossKey.startsWith('titan') ? 1.8 : 1.5;
+
+  const bossSrc = state.loadedModels[bossKey];
+  if (bossSrc) {
+    g.add(reskinModel(bossSrc, bossScale, bossTint.tint, bossTint.emissive));
+  } else {
+    // Procedural fallback if GLB not loaded yet
+    const bossMat = new THREE.MeshStandardMaterial({ color: 0xff2200, roughness: 0.3, metalness: 0.9, emissive: 0xff4400, emissiveIntensity: 0.5 });
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2, 10), bossMat));
+    const wingMat = new THREE.MeshStandardMaterial({ color: 0xcc1100, roughness: 0.4, metalness: 0.8, emissive: 0xcc2200, emissiveIntensity: 0.3 });
+    { const w1 = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 5), wingMat); w1.position.set(-8, 0, 0); g.add(w1); }
+    { const w2 = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 5), wingMat); w2.position.set(8, 0, 0); g.add(w2); }
+  }
+
+  // Boss warning lights — pulsing point lights
+  const warnLight = new THREE.PointLight(bossTint.tint, 3, 50);
+  warnLight.position.set(0, 2, 0);
+  g.add(warnLight);
+
   const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
   const r = SPAWN_RADIUS + 200;
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-  c.enemies.push({ group: g, hp: 30, maxHp: 30, speed: ENEMY_SPEED * 0.4, type: 'boss', points: 500, cfg: { scale: 3, color: 0xff2200 }, hitFlash: 0, isBoss: true });
+  const bossHp = bossKey.startsWith('titan') ? 40 : 30;
+  c.enemies.push({ group: g, hp: bossHp, maxHp: bossHp, speed: ENEMY_SPEED * 0.4, type: 'boss', points: 500, cfg: { scale: bossScale, color: bossTint.tint }, hitFlash: 0, isBoss: true, bossName: bossTint.name });
+  addComms('THREAT', `⚠ ${bossTint.name} detected! Massive hostile signature incoming!`);
 }
 
 function spawnExplosion(pos, scale) {
@@ -2514,6 +3120,7 @@ function spawnExplosion(pos, scale) {
 //  HUD RENDERER (Gunner Mode)
 // ================================================================
 function renderHUD() {
+  if (!hudCanvas || !hudCtx) return;
   const W = hudCanvas.width, H = hudCanvas.height;
   const cx = W/2, cy = H/2;
   hudCtx.clearRect(0, 0, W, H);
@@ -2538,22 +3145,58 @@ function renderHUD() {
   }
   hudCtx.globalAlpha = 1;
 
-  // Weapon (bottom-right)
+  // God Mode indicator
+  if (c.godMode) {
+    hudCtx.save();
+    hudCtx.font = 'bold 18px "Segoe UI"';
+    hudCtx.fillStyle = '#ffcc00';
+    hudCtx.globalAlpha = 0.6 + 0.4 * Math.sin(state.gameTime * 0.005);
+    hudCtx.textAlign = 'center';
+    hudCtx.fillText('\u26A1 GOD MODE \u26A1', cx, 30);
+    hudCtx.restore();
+  }
+
+  // Death Immunity Shield indicator (Soul Stabilizing)
+  if (performance.now() < c.deathImmunityUntil) {
+    const remaining = Math.ceil((c.deathImmunityUntil - performance.now()) / 1000);
+    hudCtx.save();
+    hudCtx.font = 'bold 16px "Segoe UI"';
+    hudCtx.fillStyle = '#44ddff';
+    hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.008);
+    hudCtx.textAlign = 'center';
+    hudCtx.fillText('\u{1F6E1}\uFE0F SOUL STABILIZING — ' + remaining + 's', cx, 52);
+    hudCtx.restore();
+  }
+
+  // Weapon (bottom-right) — shows active weapon
   const wrx = W-220, wry = H-140;
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('WEAPON', wrx, wry);
-  hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = primary; hudCtx.fillText('RAILGUN MK-II', wrx, wry+20);
+  const isRailgun = state.activeWeapon === 'railgun';
+  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('WEAPON [Q]', wrx, wry);
+  hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = isRailgun ? primary : '#00ff88';
+  hudCtx.fillText(isRailgun ? 'RAILGUN MK-II' : 'LASER TURRET', wrx, wry+20);
   hudCtx.font = '11px "Segoe UI"';
-  hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
-  hudCtx.fillText('AMMO  ' + c.ammo + ' / ' + c.maxAmmo, wrx, wry+42);
-  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
-  hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
-  hudCtx.fillRect(wrx, wry+48, 180*(c.ammo/c.maxAmmo), 6);
+  if (isRailgun) {
+    hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
+    hudCtx.fillText('AMMO  ' + c.ammo + ' / ' + c.maxAmmo, wrx, wry+42);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
+    hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
+    hudCtx.fillRect(wrx, wry+48, 180*(c.ammo/c.maxAmmo), 6);
+  } else {
+    hudCtx.fillStyle = '#00ff88'; hudCtx.fillText('∞ ENERGY', wrx, wry+42);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
+    hudCtx.fillStyle = '#00ff88'; hudCtx.fillRect(wrx, wry+48, 180*(1-c.heat), 6);
+  }
   hudCtx.fillStyle = '#445566'; hudCtx.fillText('HEAT', wrx, wry+72);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx+40, wry+64, 140, 6);
   hudCtx.fillStyle = c.heat > 0.7 ? danger : c.heat > 0.4 ? warning : primary;
   hudCtx.fillRect(wrx+40, wry+64, 140*c.heat, 6);
-  hudCtx.fillStyle = c.weaponReady ? accent : warning;
-  hudCtx.fillText(c.weaponReady ? '\u25CF READY' : c.charging ? '\u25D0 CHARGING' : '\u25CB COOLING', wrx, wry+92);
+  if (isRailgun) {
+    hudCtx.fillStyle = c.weaponReady ? accent : warning;
+    hudCtx.fillText(c.weaponReady ? '\u25CF READY' : c.charging ? '\u25D0 CHARGING' : '\u25CB COOLING', wrx, wry+92);
+  } else {
+    hudCtx.fillStyle = c.heat < 0.95 ? '#00ff88' : danger;
+    hudCtx.fillText(c.heat < 0.95 ? '\u25CF FIRING' : '\u25CB OVERHEAT', wrx, wry+92);
+  }
 
   // Shield/Hull (top-left)
   const slx = 24, sly = 30;
@@ -2596,7 +3239,7 @@ function renderHUD() {
   hudCtx.fillText(Math.floor(fl.speed) + ' m/s' + (fl.afterburner ? ' [AB]' : ''), slx+185, sly+80);
   // Controls reminder
   hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.6;
-  hudCtx.fillText('WASD fly | Shift boost | Space/Ctrl vert', slx, sly+98);
+  hudCtx.fillText('WASD/Arrows fly | Shift boost | RClick/DblClick nav', slx, sly+98);
   hudCtx.globalAlpha = 1;
 
   // Minimap radar (bottom-center)
@@ -2748,8 +3391,8 @@ function renderHUD() {
   hudCtx.fillText('M:Mine  T:Chat  K:Skins  G:Gate  C:Collect', kx - 40, ky);
   hudCtx.globalAlpha = 1;
 
-  // Scanlines
-  if (state.settings.scanlines) {
+  // Scanlines (throttled — every 4th frame)
+  if (state.settings.scanlines && (state._frameCount & 3) === 0) {
     hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
     for (let sy = 0; sy < H; sy += 4) hudCtx.fillRect(0, sy, W, 1);
     hudCtx.globalAlpha = 1;
@@ -2767,10 +3410,51 @@ function renderHUD() {
 // ================================================================
 //  INPUT
 // ================================================================
+let mouseHeld = false;
 canvas3d.addEventListener('mousedown', (e) => {
   if (state.screen !== 'gunner') return;
   if (!c.locked) { canvas3d.requestPointerLock(); return; }
-  if (e.button === 0) fireRailgun();
+  if (e.button === 0) {
+    mouseHeld = true;
+    if (state.activeWeapon === 'laser') fireLaser();
+    else fireRailgun();
+  }
+  // Right-click = EVE-style click-to-navigate (set autopilot waypoint in 3D)
+  if (e.button === 2) {
+    const navDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const navDist = 500; // navigate 500m in look direction
+    const navTarget = ship.position.clone().add(navDir.multiplyScalar(navDist));
+    setAutopilot(navTarget);
+  }
+});
+canvas3d.addEventListener('mouseup', (e) => { if (e.button === 0) mouseHeld = false; });
+
+// EVE-style double-click to navigate (also works for touch)
+canvas3d.addEventListener('dblclick', (e) => {
+  if (state.screen !== 'gunner' || !c.active) return;
+  // Double-click sets autopilot destination 500m in camera look direction
+  const navDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  const navTarget = ship.position.clone().add(navDir.multiplyScalar(500));
+  setAutopilot(navTarget);
+});
+
+// Prevent right-click context menu on game canvas
+canvas3d.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+
+// Touch controls: double-tap to navigate, single tap to fire
+let lastTapTime = 0;
+canvas3d.addEventListener('touchstart', (e) => {
+  if (state.screen !== 'gunner' || !c.active) return;
+  const now = performance.now();
+  if (now - lastTapTime < 300) {
+    // Double-tap = navigate forward
+    const navDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const navTarget = ship.position.clone().add(navDir.multiplyScalar(500));
+    setAutopilot(navTarget);
+    lastTapTime = 0;
+  } else {
+    lastTapTime = now;
+  }
 });
 
 document.addEventListener('pointerlockchange', () => {
@@ -2782,8 +3466,8 @@ document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.
 
 document.addEventListener('mousemove', (e) => {
   if (!c.locked || !c.active) return;
-  // Full 360° turret — no clamping, free rotation
-  c.yaw -= e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5);
+  // Full 360° turret — no clamping, free rotation (inverted Y — flight sim style)
+  c.yaw += e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5);
   c.pitch += e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5);
   // Clamp pitch to prevent flipping (±85°)
   c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
@@ -2792,7 +3476,21 @@ document.addEventListener('mousemove', (e) => {
 // EVE Online flight: WASD + Space/Ctrl + Shift(boost)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
-  if ((e.key === 'r' || e.key === 'R') && c.active) { c.ammo = c.maxAmmo; }
+  if ((e.key === 'r' || e.key === 'R') && c.active && window._devCheatsEnabled) { c.ammo = 100000; c.maxAmmo = 100000; }
+  if ((e.key === 'i' || e.key === 'I') && c.active) {
+    /* God mode gated behind console — type window.enableDevCheats() to unlock */
+    if (!window._devCheatsEnabled) return;
+    c.godMode = !c.godMode;
+    if (c.godMode) { state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield; }
+    addComms('System', c.godMode ? '\u26A1 GOD MODE ENABLED — Invincible' : 'God mode disabled');
+    showToast(c.godMode ? '\u26A1 GOD MODE ON' : 'God mode OFF');
+  }
+  // Weapon swap: Q key
+  if ((e.key === 'q' || e.key === 'Q') && c.active) {
+    state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
+    showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '⚡ Railgun' : '◈ Laser'));
+    addComms('System', `Switched to ${state.activeWeapon === 'railgun' ? 'Railgun — High damage, uses ammo' : 'Laser Turret — Fast fire, uses heat'}`);
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -2838,31 +3536,73 @@ document.getElementById('btn-char-back').addEventListener('click', () => showScr
 document.getElementById('btn-rebirth-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-embrace-rebirth').addEventListener('click', () => {
   if (!confirm('Shatter your soul and rebirth? A Soul Fragment will be created from this life. Credits, inventory, and quests will be lost.')) return;
-  // Create soul fragment from current life
   const fragment = createSoulFragment();
   addComms('Soul Fracture', `Soul Fragment ${fragment.id} created! Power: ${fragment.powerLevel}, Affinity: ${fragment.resonanceAffinity}`);
-  if (state.socket) {
-    state.socket.emit('rebirth:perform', { genome: state.player.genome, fragment: fragment });
-  } else {
-    // Offline rebirth
-    state.player.rebirths++;
-    state.player.credits = 500;
-    state.player.stellarMarks = 0;
-    state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
-    state.inventory = [];
-    state.quests = state.quests.filter(q => !q.active);
-    crypto.getRandomValues(new Uint8Array(256)).forEach((v, i) => { if (state.player.genome) state.player.genome[i] = v; });
-    // Apply resonance bonuses to new life
-    const r = state.player.resonanceBonuses;
-    if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
-    if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
-    if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
-    addComms('AI Director', `You have been reborn. Soul Fragment ${fragment.id} echoes in the void.`);
-    checkAndClaimMilestones();
-    saveGame();
-    showScreen('bridge');
-  }
+  // Go through Eulogy → Karma Wheel flow
+  const deathStats = { kills: c.kills || 0, score: c.score || 0, streak: c.bestStreak || 0, credits: state.player.credits };
+  addDeathFeedEvent('rebirth', `${state.player.name} shattered their soul and seeks rebirth`);
+  showEulogy(deathStats, 'Voluntary soul fracture');
 });
+
+// Karma Wheel: Accept new life
+document.getElementById('btn-karma-accept').addEventListener('click', () => {
+  if (!state.karmaRoll) return;
+  const roll = state.karmaRoll;
+  // Apply the rolled NPC as new identity
+  state.player.rebirths++;
+  state.player.name = roll.name;
+  state.player.genome = roll.genome;
+  state.player.faction = roll.faction;
+  state.player.credits = roll.wealth;
+  state.player.stellarMarks = 0;
+  state.player.age = 0;
+  state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+  // Preserve insured item if any
+  if (state.insuredItemId) {
+    const insured = state.inventory.find(i => i.name === state.insuredItemId);
+    state.inventory = insured ? [insured] : [];
+    state.persistentItems.push(state.insuredItemId);
+    state.insuredItemId = null;
+    addComms('Insurance', 'Soul-bound item preserved through death.');
+  } else {
+    state.inventory = [];
+  }
+  state.quests = state.quests.filter(q => !q.active);
+  // Apply resonance bonuses
+  const r = state.player.resonanceBonuses;
+  if (r.dmg > 0) state.upgrades.railgunDmg = 1 + (r.dmg / 100);
+  if (r.shield > 0) state.upgrades.maxShield = 100 + r.shield;
+  if (r.speed > 0) state.flight.maxSpeed = 60 * (1 + r.speed / 100);
+  // Reset ship
+  state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield;
+  state.combat.ammo = state.combat.maxAmmo;
+  state.combat.godMode = false; // No god mode in new life
+  addDeathFeedEvent('rebirth', `A new soul enters the galaxy: ${roll.name}, ${roll.title}`);
+  addComms('AI Director', `You have been reborn as ${roll.name}, ${roll.title}. ${roll.factionName} welcomes you.`);
+  checkAndClaimMilestones();
+  saveGame();
+  state.karmaRoll = null;
+  updateRebirthScreen();
+  showScreen('bridge');
+});
+
+// Karma Wheel: Re-roll
+document.getElementById('btn-karma-reroll').addEventListener('click', () => {
+  const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
+  if (state.player.stellarMarks < cost) {
+    showToast(`Need ${cost} SM to re-roll`);
+    return;
+  }
+  state.player.stellarMarks -= cost;
+  state.karmaRerollCount++;
+  const roll = generateKarmaRoll();
+  state.karmaRoll = roll;
+  presentKarmaCard(roll);
+  showToast(`Re-rolled! (-${cost} SM)`);
+});
+
+// Karma Wheel: Life Insurance
+document.getElementById('btn-karma-insure').addEventListener('click', purchaseLifeInsurance);
 
 // Mint fragment as NFT (placeholder — requires wallet connection)
 document.getElementById('btn-mint-fragment').addEventListener('click', () => {
@@ -2910,6 +3650,8 @@ const GLB_ASSETS = {
   fighter_alpha:    { path: '/3d/glb/optimized/fighter_alpha.glb',    role: 'enemy',   scale: 0.5 },
   fighter_beta:     { path: '/3d/glb/optimized/fighter_beta.glb',     role: 'enemy',   scale: 0.5 },
   blaster_turret:   { path: '/3d/glb/optimized/blaster_turret.glb',   role: 'weapon',  scale: 0.3 },
+  railgun_barrel:   { path: '/3d/glb/optimized/railgun_barrel.glb',   role: 'weapon',  scale: 0.8 },
+  cockpit_shuttle:  { path: '/3d/glb/optimized/cockpit_shuttle.glb',  role: 'cockpit', scale: 1.0 },
 };
 
 // Set up DRACO decoder for compressed GLBs
@@ -2917,6 +3659,7 @@ const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 const modelLoadQueue = [];
 let modelsLoading = 0;
 const MAX_CONCURRENT_LOADS = 3;
@@ -2955,12 +3698,10 @@ let glbSceneObjects = [];  // track placed GLB objects for cleanup
 let libraryLabels = [];    // CSS2D-style label data for HUD rendering
 const LIBRARY_SPACING = 30; // spacing between ships in lineup
 
-// All displayable ship keys (excludes weapons/stations)
+// All displayable ship keys — varied fleet showcase
 const LIBRARY_SHIPS = [
-  'cyborg_ship', 'freighter', 'iron_sentinel', 'evac_pod_a', 'evac_pod_b',
-  'railgun_ship', 'titan_a', 'titan_b', 'demon_battleship', 'alien_battleship',
-  'cargo_shuttle', 'shuttle', 'fighter_alpha', 'fighter_beta',
-  'station_a', 'station_b', 'blaster_turret', 'railgun_turret',
+  'iron_sentinel', 'fighter_alpha', 'fighter_beta',
+  'alien_battleship', 'cargo_shuttle', 'shuttle',
 ];
 
 async function spawnShipLibrary() {
@@ -3125,7 +3866,7 @@ function generateAltUniverse() {
       x: Math.cos(angle) * radius + (Math.random()-0.5)*30,
       y: Math.sin(angle) * radius + (Math.random()-0.5)*30,
       starType: ['Red Giant', 'Pulsar', 'White Dwarf', 'Black Hole Remnant', 'Magnetar'][i % 5],
-      controllingFaction: 'void_collective',
+      controllingFaction: 'void_cult',
       factionColor: '#aa22ff',
       resources: [altArtifacts[i % altArtifacts.length]],
       hazards: Math.random() > 0.5 ? ['Dimensional Instability'] : [],
@@ -3264,28 +4005,32 @@ function stopMining() {
 //  NPC SHIPS — Friendly & Enemy with behaviours
 // ================================================================
 const NPC_TYPES = [
-  { type: 'trader',    color: 0x22cc66, speed: 8,  hp: 5,  friendly: true,  name: 'Trader' },
-  { type: 'patrol',    color: 0x4488ff, speed: 12, hp: 8,  friendly: true,  name: 'Patrol' },
-  { type: 'freighter', color: 0x88aa44, speed: 5,  hp: 15, friendly: true,  name: 'Freighter' },
-  { type: 'pirate',    color: 0xff4444, speed: 15, hp: 6,  friendly: false, name: 'Pirate' },
-  { type: 'raider',    color: 0xff8800, speed: 18, hp: 4,  friendly: false, name: 'Raider' },
-  { type: 'smuggler',  color: 0xcc44cc, speed: 20, hp: 3,  friendly: false, name: 'Smuggler' },
+  { type: 'trader',    color: 0x22cc66, speed: 8,  hp: 5,  friendly: true,  name: 'Trader',    model: 'cargo_shuttle' },
+  { type: 'patrol',    color: 0x4488ff, speed: 12, hp: 8,  friendly: true,  name: 'Patrol',    model: 'fighter_beta' },
+  { type: 'freighter', color: 0x88aa44, speed: 5,  hp: 15, friendly: true,  name: 'Freighter', model: 'freighter' },
+  { type: 'pirate',    color: 0xff4444, speed: 15, hp: 6,  friendly: false, name: 'Pirate',    model: 'fighter_alpha' },
+  { type: 'raider',    color: 0xff8800, speed: 18, hp: 4,  friendly: false, name: 'Raider',    model: 'shuttle' },
+  { type: 'smuggler',  color: 0xcc44cc, speed: 20, hp: 3,  friendly: false, name: 'Smuggler',  model: 'evac_pod_b' },
 ];
 
 function spawnNPCShip(type) {
   const npcDef = NPC_TYPES.find(n => n.type === type) || NPC_TYPES[0];
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: npcDef.color, roughness: 0.5, metalness: 0.6, emissive: npcDef.color, emissiveIntensity: 0.15 });
-  // Simple ship body
-  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 3), mat));
-  const wGeo = new THREE.BoxGeometry(4, 0.1, 1.2);
-  { const wL = new THREE.Mesh(wGeo, mat); wL.position.set(-2.2, 0, 0); g.add(wL); }
-  { const wR = new THREE.Mesh(wGeo, mat); wR.position.set(2.2, 0, 0); g.add(wR); }
+
+  // Use type-specific GLB model with faction tinting
+  const npcModelKey = npcDef.model || 'iron_sentinel';
+  const npcSrc = state.loadedModels[npcModelKey] || state.loadedModels['iron_sentinel'];
+  if (npcSrc) {
+    g.add(reskinModel(npcSrc, 0.5, npcDef.color, 0.25));
+  } else {
+    const mat = new THREE.MeshStandardMaterial({ color: npcDef.color, roughness: 0.5, metalness: 0.6, emissive: npcDef.color, emissiveIntensity: 0.15 });
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 3), mat));
+  }
   // Engine glow
   const eMat = new THREE.MeshBasicMaterial({ color: npcDef.friendly ? 0x44aaff : 0xff4422, transparent: true, opacity: 0.7 });
   { const eM = new THREE.Mesh(new THREE.CircleGeometry(0.25, 8), eMat); eM.position.set(0, 0, 1.6); g.add(eM); }
   // Name label (stored in userData)
-  const factionNames = ['Dominion', 'Colonies', 'Syndicate', 'Covenant', 'Collective', 'Iron Pact'];
+  const factionNames = ['Vanguard', 'Traders', 'Void Cult', 'Syndicate', 'Remnants', 'Church'];
   const names = ['Artemis', 'Vanguard', 'Horizon', 'Eclipse', 'Stellaris', 'Nomad', 'Wraith', 'Tempest', 'Aurora', 'Zenith'];
   const npcName = names[Math.floor(Math.random() * names.length)] + '-' + Math.floor(Math.random() * 999);
 
@@ -3318,16 +4063,12 @@ function spawnNPCShip(type) {
 
 function spawnSystemNPCs() {
   // Clear existing
-  state.npcShips.forEach(n => scene.remove(n.group));
+  state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); });
   state.npcShips = [];
-  // Spawn 4-8 NPCs per system
-  const count = 4 + Math.floor(Math.random() * 5);
-  for (let i = 0; i < count; i++) {
-    const types = Math.random() > 0.4
-      ? ['trader', 'patrol', 'freighter'][Math.floor(Math.random()*3)]
-      : ['pirate', 'raider', 'smuggler'][Math.floor(Math.random()*3)];
-    spawnNPCShip(types);
-  }
+  // Spawn only 2-3 NPCs to prevent crashes (1 friendly, 1-2 hostile)
+  spawnNPCShip('patrol');
+  spawnNPCShip('pirate');
+  if (Math.random() > 0.5) spawnNPCShip('raider');
 }
 
 function updateNPCShips(dt) {
@@ -3344,20 +4085,19 @@ function updateNPCShips(dt) {
       npc.group.position.addScaledVector(dir, npc.speed * dt);
       npc.group.lookAt(target);
     }
-    // Hostile NPCs shoot at player if close
-    if (!npc.friendly && npc.group.position.distanceTo(ship.position) < 120) {
+    // Hostile NPCs shoot at player if close (only if player has attacked)
+    if (c.playerHasAttacked && !npc.friendly && c.enemyBolts.length < 30 && npc.group.position.distanceTo(ship.position) < 120) {
       if (state.gameTime - npc.lastShot > 4000) {
         npc.lastShot = state.gameTime;
         const boltDir = ship.position.clone().sub(npc.group.position).normalize();
         boltDir.x += (Math.random()-0.5)*0.2; boltDir.y += (Math.random()-0.5)*0.2; boltDir.normalize();
-        const boltMat = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.8 });
-        const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4), boltMat);
+        const bolt = new THREE.Mesh(_boltGeo, _boltMat);
         bolt.position.copy(npc.group.position);
-        bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), boltDir);
-        const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,1.5,4), new THREE.MeshBasicMaterial({color:0xff6644,transparent:true,opacity:0.5}));
+        bolt.quaternion.setFromUnitVectors(_upVec, boltDir);
+        const trail = new THREE.Mesh(_boltTrailGeo, _boltTrailMat);
         trail.position.copy(bolt.position); trail.quaternion.copy(bolt.quaternion);
         const bGroup = new THREE.Group(); bGroup.add(bolt); bGroup.add(trail); scene.add(bGroup);
-        c.enemyBolts.push({ group: bGroup, dir: boltDir, speed: 100, age: 0, life: 5000, mat: boltMat, trailMat: trail.material });
+        c.enemyBolts.push({ group: bGroup, dir: boltDir, speed: 100, age: 0, life: 5000 });
       }
     }
   });
@@ -3431,7 +4171,7 @@ const MARKET_ITEMS = [
 
 function generateNPCMarketOrders() {
   state.market.orders = [];
-  const npcTraders = ['Stellaris Corp', 'Free Colonies Trading', 'Iron Pact Smelters', 'Syndicate Brokers', 'Void Collective Labs', 'NPC-' + Math.floor(Math.random()*999)];
+  const npcTraders = ['Stellaris Corp', 'Free Traders Consortium', 'Eden Remnants Salvage', 'Iron Syndicate Brokers', 'Void Cult Labs', 'NPC-' + Math.floor(Math.random()*999)];
   MARKET_ITEMS.forEach(item => {
     // NPC sell orders (player can buy from these)
     const sellCount = 1 + Math.floor(Math.random() * 3);
@@ -3768,24 +4508,66 @@ window._applySkinPreset = (idx) => {
 };
 
 // ================================================================
+//  COCKPIT 3D MODEL — GLB spacecraft cockpit environment
+// ================================================================
+let cockpitGLBModel = null;
+
+async function loadCockpitGLB() {
+  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
+  try {
+    const model = await loadGLBModel('cockpit_shuttle');
+    const cp = model.clone();
+    // Position cockpit AROUND the camera — the player sits INSIDE this
+    // This is separate from the railgun and procedural cockpit elements
+    cp.position.set(0, -1.2, 0.5);
+    cp.scale.setScalar(0.6);
+    // Orient so dashboard/windshield faces forward (-Z)
+    cp.rotation.set(0, Math.PI, 0);
+    cp.name = 'cockpit-shuttle-glb';
+    // Keep cockpit mostly opaque but windows transparent
+    cp.traverse(child => {
+      if (child.isMesh && child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(m => {
+          m.transparent = true;
+          m.opacity = 0.92;
+          m.depthWrite = true;
+          m.side = THREE.DoubleSide;
+        });
+      }
+    });
+    // Add directly to camera (not cockpit group) so it doesn't conflict with railgun
+    camera.add(cp);
+    cockpitGLBModel = cp;
+    addComms('System', 'Spacecraft cockpit interior loaded.');
+  } catch(e) {
+    console.warn('[GLB] Cockpit model failed, using procedural:', e);
+  }
+}
+
+// ================================================================
 //  RAILGUN 3D MODEL — Enhanced procedural + GLB fallback
 // ================================================================
 let railgunModel = null;
 
-// Load the actual railgun_turret GLB model from optimized assets
+// Load the railgun BARREL GLB model — mounted in front of player, aiming away
 async function loadRailgunTurretGLB() {
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   try {
-    const model = await loadGLBModel('railgun_turret');
+    const model = await loadGLBModel('railgun_barrel');
     const gun = model.clone();
-    // Position in front of gunner view
-    gun.position.set(0, -0.4, -2.5);
-    gun.scale.setScalar(GLB_ASSETS.railgun_turret.scale);
+    // Position barrel in front of player, pointing away (-Z)
+    gun.position.set(0, -0.35, -3.0);
+    gun.scale.setScalar(1.4);
+    // Ensure barrel points forward (away from player along -Z)
+    // Rotate so the barrel's long axis aligns with camera forward
+    gun.rotation.set(0, Math.PI / 2, 0);
+    gun.name = 'railgun-barrel-glb';
     cockpit.add(gun);
     railgunModel = gun;
-    addComms('System', 'Railgun turret model loaded.');
+    addComms('System', 'Railgun barrel GLB loaded — 100,000 rounds, instant fire.');
   } catch(e) {
-    // Fallback: procedural railgun if GLB fails
+    console.warn('[GLB] Barrel load failed, using procedural:', e);
     createProceduralRailgun();
   }
 }
@@ -3805,7 +4587,7 @@ function createProceduralRailgun() {
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.12, 0.5, 8), bodyMat).translateY(-2.8));
   g.rotation.x = Math.PI / 2;
   g.position.set(0, -0.3, -2);
-  g.scale.setScalar(0.4);
+  g.scale.setScalar(1.0); // Bigger procedural turret fallback
   railgunModel = g;
   cockpit.add(g);
 }
@@ -3957,7 +4739,10 @@ const clock = new THREE.Clock();
 
 function gameLoop() {
   requestAnimationFrame(gameLoop);
-  const dt = clock.getDelta();
+  if (!scene || !camera || !ship || !turretMount) return;
+  if (!state._frameCount) state._frameCount = 0;
+  state._frameCount++;
+  const dt = Math.min(clock.getDelta(), 0.1);
   const dtMs = dt * 1000;
   state.gameTime += dtMs;
 
@@ -3970,29 +4755,28 @@ function gameLoop() {
     // ── EVE Online-style ship flight ──
     const fl = state.flight;
     fl.thrust = 0; fl.strafe = 0; fl.vertical = 0;
-    if (keysDown.has('w')) fl.thrust = 1;
-    if (keysDown.has('s')) fl.thrust = -0.5;
-    if (keysDown.has('a')) fl.strafe = -1;
-    if (keysDown.has('d')) fl.strafe = 1;
+    if (keysDown.has('w') || keysDown.has('arrowup')) fl.thrust = 1;
+    if (keysDown.has('s') || keysDown.has('arrowdown')) fl.thrust = -0.5;
+    if (keysDown.has('a') || keysDown.has('arrowleft')) fl.strafe = -1;
+    if (keysDown.has('d') || keysDown.has('arrowright')) fl.strafe = 1;
     if (keysDown.has(' ')) fl.vertical = 1;    // Space = up
     if (keysDown.has('control')) fl.vertical = -1; // Ctrl = down
     fl.afterburner = keysDown.has('shift');
     const speedMult = fl.afterburner ? fl.afterburnerMult : 1;
-    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed;
-    // Ship forward direction from its current rotation
-    const shipFwd = new THREE.Vector3(0, 0, -1).applyQuaternion(ship.quaternion);
-    const shipRight = new THREE.Vector3(1, 0, 0).applyQuaternion(ship.quaternion);
-    const shipUp = new THREE.Vector3(0, 1, 0);
-    // Apply thrust
+    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult();
+    // Thrust direction = camera look direction (fly where you're looking)
+    const thrustFwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const thrustRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+    // Apply thrust in camera direction
     if (fl.thrust !== 0) {
-      fl.velocity.x += shipFwd.x * fl.thrust * fl.accel * dt;
-      fl.velocity.y += shipFwd.y * fl.thrust * fl.accel * dt;
-      fl.velocity.z += shipFwd.z * fl.thrust * fl.accel * dt;
+      fl.velocity.x += thrustFwd.x * fl.thrust * fl.accel * dt;
+      fl.velocity.y += thrustFwd.y * fl.thrust * fl.accel * dt;
+      fl.velocity.z += thrustFwd.z * fl.thrust * fl.accel * dt;
     }
     if (fl.strafe !== 0) {
-      fl.velocity.x += shipRight.x * fl.strafe * fl.accel * 0.6 * dt;
-      fl.velocity.y += shipRight.y * fl.strafe * fl.accel * 0.6 * dt;
-      fl.velocity.z += shipRight.z * fl.strafe * fl.accel * 0.6 * dt;
+      fl.velocity.x += thrustRight.x * fl.strafe * fl.accel * 0.6 * dt;
+      fl.velocity.y += thrustRight.y * fl.strafe * fl.accel * 0.6 * dt;
+      fl.velocity.z += thrustRight.z * fl.strafe * fl.accel * 0.6 * dt;
     }
     if (fl.vertical !== 0) {
       fl.velocity.y += fl.vertical * fl.accel * 0.5 * dt;
@@ -4012,17 +4796,17 @@ function gameLoop() {
     ship.position.x += fl.velocity.x * dt;
     ship.position.y += fl.velocity.y * dt;
     ship.position.z += fl.velocity.z * dt;
-    // Ship rotation: yaw with A/D, pitch with W/S (gentle tilt)
-    if (keysDown.has('a')) ship.rotation.y += 0.8 * dt;
-    if (keysDown.has('d')) ship.rotation.y -= 0.8 * dt;
-    // Bank on strafe
-    const targetBank = -fl.strafe * 0.3;
-    ship.rotation.z += (targetBank - ship.rotation.z) * 3 * dt;
+    // Ship model tracks camera direction smoothly (fly where you look)
+    const camLookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const lookTarget = ship.position.clone().add(camLookDir.multiplyScalar(50));
+    const lookMat = new THREE.Matrix4().lookAt(ship.position, lookTarget, new THREE.Vector3(0, 1, 0));
+    const targetQuat = new THREE.Quaternion().setFromRotationMatrix(lookMat);
+    ship.quaternion.slerp(targetQuat, Math.min(1, 4 * dt));
+    // Visual bank on strafe
+    ship.rotateZ(-fl.strafe * 0.15 * dt);
 
-    // ── Full 360° turret look + screen shake ──
-    const shipQuat = new THREE.Quaternion(); ship.getWorldQuaternion(shipQuat);
-    const lookEuler = new THREE.Euler(-c.pitch + c.shakeY * 0.02, -c.yaw + c.shakeX * 0.02, 0, 'YXZ');
-    camera.quaternion.copy(shipQuat).multiply(new THREE.Quaternion().setFromEuler(lookEuler));
+    // ── Camera: world-space orientation from accumulated yaw/pitch + shake ──
+    camera.quaternion.setFromEuler(new THREE.Euler(-c.pitch + c.shakeY * 0.02, -c.yaw + c.shakeX * 0.02, 0, 'YXZ'));
 
     // Weapon charge
     if (c.charging) {
@@ -4036,6 +4820,8 @@ function gameLoop() {
       }
     }
     if (c.cooling && performance.now() >= c.coolEnd) { c.cooling = false; c.weaponReady = true; }
+    // Continuous laser fire while mouse held
+    if (mouseHeld && state.activeWeapon === 'laser' && c.locked) fireLaser();
     if (muzzleMat.opacity > 0) muzzleMat.opacity = Math.max(0, muzzleMat.opacity - dt * 8);
 
     // Recoil
@@ -4046,11 +4832,13 @@ function gameLoop() {
     }
     railL.position.z = -2.0 + c.recoilOffset;
     railR.position.z = -2.0 + c.recoilOffset;
+    // Apply recoil to GLB barrel model too
+    if (railgunModel) { railgunModel.position.z = -3.0 + c.recoilOffset * 2.5; }
     c.heat = Math.max(0, c.heat - dt * 0.15);
 
-    // Shield regen (uses upgrade value)
+    // Shield regen (uses upgrade value × genome engineering gene)
     if (state.ship.shield < state.ship.maxShield) {
-      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen);
+      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult());
     }
     // Damage flash
     if (c.damageFlash > 0) c.damageFlash = Math.max(0, c.damageFlash - dtMs);
@@ -4075,11 +4863,12 @@ function gameLoop() {
       a.rotation.z += a.userData.rotSpeed.z * dt;
     });
 
-    // Spawn enemies
-    if (state.gameTime - state.lastEnemySpawn > SPAWN_INTERVAL) {
+    // Spawn enemies (capped at MAX_ENEMIES for performance)
+    const MAX_ENEMIES = 15;
+    if (c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > SPAWN_INTERVAL) {
       state.lastEnemySpawn = state.gameTime;
       const types = ['scout','fighter','bomber','interceptor'];
-      const spawnCount = 1 + Math.floor(c.cycle / 3);
+      const spawnCount = Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
       for (let si = 0; si < spawnCount; si++) createEnemy(types[Math.floor(Math.random()*4)]);
       if (c.kills > 0 && c.kills % 15 === 0) { c.cycle++; addComms('AI Director', `Cycle ${c.cycle} — hostiles intensifying`); }
       // Boss spawn every 20 kills
@@ -4101,7 +4890,10 @@ function gameLoop() {
       for (let j = c.enemies.length - 1; j >= 0; j--) {
         const e = c.enemies[j];
         if (p.group.position.distanceTo(e.group.position) < 3 * (e.cfg.scale || 1)) {
-          e.hp--;
+          // Apply genome damage multiplier + weapon-specific damage
+          const baseDmg = p.isLaser ? (p.damage || 0.5) : 1.0;
+          const genomeDmg = baseDmg * getPlayerDamageMult();
+          e.hp -= genomeDmg;
           e.hitFlash = 150;
           AudioSFX.play('hit');
           if (e.hp <= 0) {
@@ -4129,7 +4921,7 @@ function gameLoop() {
               const lootType = Math.random() < 0.5 ? 'credits' : Math.random() < 0.5 ? 'ammo' : 'health';
               spawnLootDrop(e.group.position.clone(), lootType);
             }
-            scene.remove(e.group); c.enemies.splice(j, 1);
+            scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
           }
           hit = true; break;
         }
@@ -4138,32 +4930,36 @@ function gameLoop() {
     }
 
     // Update enemies
-    c.enemies.forEach(e => {
+    for (let ei = c.enemies.length - 1; ei >= 0; ei--) {
+      const e = c.enemies[ei];
+      if (!e || !e.group || !e.group.parent) { c.enemies.splice(ei, 1); continue; }
       const dir = ship.position.clone().sub(e.group.position).normalize();
-      e.group.position.addScaledVector(dir, e.speed * dt);
+      // Enemies only chase if player has attacked (passive until provoked)
+      if (c.playerHasAttacked) {
+        e.group.position.addScaledVector(dir, e.speed * dt);
+      }
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
-      // Enemy firing — shoot red bolt at player every 3-6 seconds
+      // Enemy firing — sentinels shoot back when provoked
       if (!e.lastShot) e.lastShot = state.gameTime;
-      const fireInterval = e.isBoss ? 1500 : (3000 + Math.random() * 3000);
-      if (state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
+      const fireInterval = e.isBoss ? 1500 : (e.shootRate || 3000);
+      const MAX_BOLTS = 30;
+      if (c.playerHasAttacked && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
         e.lastShot = state.gameTime;
         const boltDir = ship.position.clone().sub(e.group.position).normalize();
         // Add slight inaccuracy
         boltDir.x += (Math.random() - 0.5) * 0.15;
         boltDir.y += (Math.random() - 0.5) * 0.15;
         boltDir.normalize();
-        const boltMat = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.9 });
-        const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4), boltMat);
+        const bolt = new THREE.Mesh(_boltGeo, _boltMat);
         bolt.position.copy(e.group.position);
-        bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), boltDir);
-        const boltTrailMat = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.5 });
-        const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4), boltTrailMat);
+        bolt.quaternion.setFromUnitVectors(_upVec, boltDir);
+        const trail = new THREE.Mesh(_boltTrailGeo, _boltTrailMat);
         trail.position.copy(bolt.position); trail.quaternion.copy(bolt.quaternion);
         const boltGroup = new THREE.Group(); boltGroup.add(bolt); boltGroup.add(trail); scene.add(boltGroup);
-        c.enemyBolts.push({ group: boltGroup, dir: boltDir, speed: 120, age: 0, life: 4000, mat: boltMat, trailMat: boltTrailMat });
+        c.enemyBolts.push({ group: boltGroup, dir: boltDir, speed: 120, age: 0, life: 4000 });
       }
-      if (e.group.position.distanceTo(ship.position) < 5) {
+      if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && performance.now() > c.deathImmunityUntil) {
         if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); }
         else state.ship.hull = Math.max(0, state.ship.hull - 0.3);
         c.damageFlash = 200;
@@ -4174,31 +4970,42 @@ function gameLoop() {
           addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
           AudioSFX.play('explode');
           spawnExplosion(ship.position.clone(), 3);
-          setTimeout(() => { c.dead = false; updateRebirthScreen(); showScreen('rebirth'); exitGunnerMode(); }, 2500);
+          // Update soul memory based on death cause
+          state.soulMemory.combatInstinct = Math.min(10, state.soulMemory.combatInstinct + (c.kills * 0.02));
+          // Broadcast death to ticker
+          addDeathFeedEvent('death', `${state.player.name} destroyed by ${e.type} in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
+          if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause: 'Rammed by ' + e.type, kills: c.kills, score: c.score });
+          setTimeout(() => { c.dead = false; exitGunnerMode(); showEulogy(c.deathStats, 'Rammed by hostile ' + e.type); }, 2500);
         }
       }
-    });
+    }
 
     // Update enemy bolts
     for (let i = c.enemyBolts.length - 1; i >= 0; i--) {
       const b = c.enemyBolts[i];
+      if (!b || !b.group || !b.group.parent) { c.enemyBolts.splice(i, 1); continue; }
       b.age += dtMs;
       b.group.position.addScaledVector(b.dir, b.speed * dt);
-      b.trailMat.opacity = Math.max(0, 0.5 - b.age / b.life);
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
-        const dmg = 3 + Math.random() * 4;
-        if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); }
-        else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
-        c.damageFlash = 300;
+        if (!c.godMode && performance.now() > c.deathImmunityUntil) {
+          const dmg = 3 + Math.random() * 4;
+          if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); }
+          else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+          c.damageFlash = 300;
+        }
         scene.remove(b.group); c.enemyBolts.splice(i, 1);
-        if (state.ship.hull <= 0 && !c.dead) {
+        if (!c.godMode && state.ship.hull <= 0 && !c.dead) {
           c.dead = true;
           c.deathStats = { kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
           const frag = createSoulFragment();
           addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
           AudioSFX.play('explode'); spawnExplosion(ship.position.clone(), 3);
-          setTimeout(() => { c.dead = false; updateRebirthScreen(); showScreen('rebirth'); exitGunnerMode(); }, 2500);
+          // Update soul memory
+          state.soulMemory.shieldMemory = Math.min(10, state.soulMemory.shieldMemory + 0.5);
+          addDeathFeedEvent('death', `${state.player.name} destroyed by enemy fire in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
+          if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause: 'Enemy bolt fire', kills: c.kills, score: c.score });
+          setTimeout(() => { c.dead = false; exitGunnerMode(); showEulogy(c.deathStats, 'Destroyed by enemy weapons fire'); }, 2500);
         }
         continue;
       }
@@ -4208,12 +5015,13 @@ function gameLoop() {
     // Update explosions
     for (let i = c.explosions.length - 1; i >= 0; i--) {
       const ex = c.explosions[i];
+      if (!ex || !ex.group) { c.explosions.splice(i, 1); continue; }
       ex.age += dtMs;
       ex.group.children.forEach(ch => {
-        ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
+        if (ch.userData && ch.userData.dir) ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
         if (ch.material) ch.material.opacity = Math.max(0, 1 - ex.age / ex.maxAge);
       });
-      if (ex.age > ex.maxAge) { scene.remove(ex.group); c.explosions.splice(i, 1); }
+      if (ex.age > ex.maxAge) { scene.remove(ex.group); disposeObject(ex.group); c.explosions.splice(i, 1); }
     }
 
     // Engine exhaust
@@ -4228,6 +5036,7 @@ function gameLoop() {
     // Loot drops — bob, spin, collect on proximity
     for (let i = c.lootDrops.length - 1; i >= 0; i--) {
       const l = c.lootDrops[i];
+      if (!l || !l.group) { c.lootDrops.splice(i, 1); continue; }
       l.age += dtMs;
       l.group.rotation.y += dt * 2;
       l.group.position.y += Math.sin(l.age * 0.003) * 0.02;
@@ -4244,20 +5053,24 @@ function gameLoop() {
     }
 
     // Space dust drift
-    c.spaceDust.forEach(d => d.position.addScaledVector(d.userData.drift, dt));
+    c.spaceDust.forEach(d => { if (d && d.position && d.userData) d.position.addScaledVector(d.userData.drift, dt); });
 
     // Asteroid collision
-    c.asteroids.forEach(a => {
-      const dist = a.position.distanceTo(ship.position);
-      const radius = a.children[0]?.geometry?.boundingSphere?.radius || 4;
-      if (dist < radius + 3) {
-        const dmg = 5 + Math.random() * 10;
-        if (state.ship.shield > 0) state.ship.shield = Math.max(0, state.ship.shield - dmg);
-        else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
-        c.damageFlash = 250;
-        AudioSFX.play('shield_hit');
-      }
-    });
+    if (!c.godMode && performance.now() > c.deathImmunityUntil) {
+      c.asteroids.forEach(a => {
+        if (!a || !a.position) return;
+        const dist = a.position.distanceTo(ship.position);
+        const mesh = a.children && a.children[0];
+        const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
+        if (dist < radius + 3) {
+          const dmg = 5 + Math.random() * 10;
+          if (state.ship.shield > 0) state.ship.shield = Math.max(0, state.ship.shield - dmg);
+          else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+          c.damageFlash = 250;
+          AudioSFX.play('shield_hit');
+        }
+      });
+    }
 
     // Weapon heat glow on barrels
     if (railGlowMatL) { railGlowMatL.opacity = c.heat * 0.6; railGlowMatL.color.setHex(c.heat > 0.5 ? 0xff2200 : 0xff8800); }
@@ -4351,10 +5164,23 @@ async function init() {
   document.addEventListener('click', () => AudioSFX.init(), { once: true });
   document.addEventListener('keydown', () => AudioSFX.init(), { once: true });
 
+  initSkinSwatches();
   addComms('AI Director', 'Old Eden systems initialising...');
   addComms('AI Director', 'The universe awaits, pilot.');
+  // Seed death ticker with some atmosphere
+  addDeathFeedEvent('death', 'Pilot-Nexus destroyed by Iron Sentinel in Alpha Reach');
+  addDeathFeedEvent('rebirth', 'A new soul enters the galaxy: Echo-441, Smuggler');
+  addDeathFeedEvent('boss', 'DREADNOUGHT defeated by Pilot-Ash — 5,000 EC bounty claimed');
+  addDeathFeedEvent('death', 'Pilot-Astra lost to solar flare in Sigma Gate');
   if (threeReady) gameLoop();
 }
+
+// Dev cheats — must be unlocked via console: window.enableDevCheats()
+window._devCheatsEnabled = false;
+window.enableDevCheats = () => {
+  window._devCheatsEnabled = true;
+  console.log('%c[DEV] Cheats enabled — I: god mode, R: reload ammo', 'color: #ff4444; font-weight: bold');
+};
 
 init();
 </script>

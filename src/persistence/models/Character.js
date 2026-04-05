@@ -4,7 +4,7 @@ const characterSchema = new mongoose.Schema({
   _id: { type: String },                      // characterId (UUID)
   playerId: { type: String, required: true, index: true },
   name: { type: String, maxlength: 32, default: 'Unnamed' },
-  faction: { type: String, default: 'free_colonies' },
+  faction: { type: String, default: 'free_traders' },
   genome: { type: [Number], default: [] },     // genetic data array
   stats: {
     hull: { type: Number, default: 100 },

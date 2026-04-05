@@ -50,3 +50,64 @@ See `AI_AGENT_SYSTEM.md` for the complete multi-agent orchestration spec. Key ru
 4. Guardian runs on EVERY edit
 5. Mandatory 4-phase QA before marking tasks complete
 6. Never claim "nothing is broken" without proof
+
+## KING — Supreme Agent Authority
+**The KING agent (`@king`) has ABSOLUTE authority over ALL agents. No exceptions.**
+- KING's standing orders apply to EVERY agent at ALL times, whether KING is invoked or not
+- No agent may override KING. Priority order: KING (P-∞) > Ms. BS Cutter (P-2) > Guardian/QA (P-1) > Master Mamba (P0) > all others
+- See `.github/agents/king.agent.md` for full standing orders
+
+## QA BOARD — 5 SPECIALIST TEAM (MANDATORY)
+**Every code edit must be approved by ALL 5 QA specialists before task_complete.**
+
+| # | Specialist | Domain | Checks |
+|---|-----------|--------|--------|
+| 1 | QA-Visual | Screenshots & visual | CSS vars, screenshots, QA banner, layout |
+| 2 | QA-Code | Source integrity | Brace balance, markers, line count, hash |
+| 3 | QA-Runtime | WebGL & JS errors | WebGL context, fatal errors, stability |
+| 4 | QA-API | Server & endpoints | HTTP 200, Socket.IO, static assets |
+| 5 | QA-UX | DOM & interactions | 13 critical elements, button clicks, navigation |
+
+Run `node qa_board.cjs` — it executes ALL 5 specialists and generates:
+- **Report file**: `qa_reports/report_<timestamp>.txt`
+- **Screenshots**: `qa_reports/screenshots/*.png`
+- **QA log entry**: appended to `qa_proxy_log.txt`
+- **Hash file**: `qa_proxy_hash.txt` (only on PASS)
+
+**ALL 5 must show APPROVED. If ANY rejects → task is NOT complete.**
+
+## QA PROXY — MANDATORY ENFORCEMENT (4 measures)
+**EVERY code edit MUST pass live QA before task_complete. No exceptions. No excuses.**
+
+### Measure 1: Live Headless Browser Gate
+Run `node qa_proxy_live.cjs` (quick) or `node qa_board.cjs` (full 5-specialist) after every batch of code changes. It:
+- Launches real Puppeteer browser, loads `http://localhost:3000`
+- Catches WebGL crashes, JS errors, missing DOM elements
+- Writes pass/fail to `qa_proxy_log.txt` with timestamp
+- Writes SHA-256 hash to `qa_proxy_hash.txt`
+- Exit code 0 = PASS, 1 = FAIL. FAIL = do not mark complete.
+
+### Measure 2: Timestamped QA Log
+Every QA run appends to `qa_proxy_log.txt`. The user can verify ANY claim by checking timestamps. Lying is detectable.
+
+### Measure 3: Build Hash Verification
+`qa_proxy_hash.txt` contains SHA-256 of index.html at QA time. If code changes after QA:
+- Run `node qa_verify_hash.cjs` — it will FAIL with mismatch.
+- You MUST re-run QA after any edit.
+
+### Measure 4: Visual UNVERIFIED Banner
+`public/index.html` has a red `#qa-unverified-banner` div at the top of `<body>`. It reads:
+"⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠"
+The user sees this in-game every time. It's a permanent visual reminder.
+
+### Required Workflow (ALL AGENTS — NO EXCEPTIONS)
+```
+1. Make code edits
+2. Start server: node src/core/index.js
+3. Run: node qa_board.cjs        (full 5-specialist check + screenshots)
+   OR:  node qa_proxy_live.cjs   (quick check without screenshots)
+4. If FAIL → fix and re-run
+5. If ALL 5 APPROVED → may call task_complete
+6. Stamp: "✅ QA BOARD: 5/5 APPROVED — hash:<hash>"
+7. Include: report path + screenshot count as proof
+```
