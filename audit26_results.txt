@@ -1,0 +1,660 @@
+================================================================================
+  AUDIT 26 — OLD EDEN (public/index.html) — FULL CODE REVIEW
+  Generated from ~7311-line single-file Three.js space MMO
+  Categories: Memory Leaks, Combat Edge Cases, Starmap Bugs, HUD Issues,
+              Economy Exploits, Sound Issues, Mobile/Touch Gaps,
+              Multiplayer Sync, Performance Hotspots, Visual Polish
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 1 — Station model GPU leak on system re-enter
+  Category: Memory Leak
+  Severity: HIGH
+  Lines: 5904
+────────────────────────────────────────────────────────────────────────────────
+
+When spawnStationModel() is called (every gunner mode entry), the old station
+models are removed from the scene but NOT disposed. Geometries and materials
+leak to GPU. Compare with exitGunnerMode (line 3928) which correctly disposes.
+
+OLD (line 5904):
+  stationModels.forEach(m => scene.remove(m));
+  stationModels = [];
+
+NEW:
+  stationModels.forEach(m => { scene.remove(m); disposeObject(m); });
+  stationModels = [];
+
+REASONING: Every re-entry to gunner mode creates new station geometry+materials
+while orphaning the old ones. Over many jumps, this grows unbounded GPU memory.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 2 — Mining target stored as array index (invalidated by mutations)
+  Category: Edge Case in Combat / Mining
+  Severity: HIGH
+  Lines: 5694, 5710, 5724-5727
+────────────────────────────────────────────────────────────────────────────────
+
+startMining() saves the asteroid index, but if any asteroid is removed from
+c.asteroids (by combat explosion, another asteroid break, etc.) before mining
+completes, the index becomes stale. The mining laser then targets the wrong
+asteroid or undefined (which triggers stopMining but wastes player time).
+
+OLD (line 5694):
+function startMining(asteroidIndex) {
+  if (state.mining.active || c.dead || state.location.docked) return;
+  const asteroid = c.asteroids[asteroidIndex];
+  if (!asteroid) return;
+  state.mining.active = true;
+  state.mining.target = asteroidIndex;
+  state.mining.progress = 0;
+
+OLD (line 5710):
+function updateMining(dt) {
+  if (!state.mining.active) return;
+  const asteroid = c.asteroids[state.mining.target];
+  if (!asteroid) { stopMining(); return; }
+
+NEW (line 5694):
+function startMining(asteroidIndex) {
+  if (state.mining.active || c.dead || state.location.docked) return;
+  const asteroid = c.asteroids[asteroidIndex];
+  if (!asteroid) return;
+  state.mining.active = true;
+  state.mining.targetRef = asteroid;  // store object reference, not index
+  state.mining.progress = 0;
+
+NEW (line 5710):
+function updateMining(dt) {
+  if (!state.mining.active) return;
+  const asteroid = state.mining.targetRef;
+  if (!asteroid || !asteroid.parent) { stopMining(); return; }
+
+Also update line 5753 (asteroid removal after mining complete):
+OLD:
+    scene.remove(asteroid);
+    c.asteroids.splice(state.mining.target, 1);
+    stopMining();
+
+NEW:
+    scene.remove(asteroid);
+    const aidx = c.asteroids.indexOf(asteroid);
+    if (aidx >= 0) c.asteroids.splice(aidx, 1);
+    stopMining();
+
+Also update stopMining() (line 5759):
+OLD:
+  state.mining.active = false;
+  state.mining.target = null;
+  state.mining.progress = 0;
+
+NEW:
+  state.mining.active = false;
+  state.mining.targetRef = null;
+  state.mining.progress = 0;
+
+REASONING: Array indices are fragile when the backing array is mutated by other
+systems (combat explosions, loot drops removing asteroids, etc.). Object
+references survive array mutations and can be validated via .parent check.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 3 — Player-placed market orders never get filled
+  Category: Economy Exploit / Bug
+  Severity: HIGH
+  Lines: 6262-6280
+────────────────────────────────────────────────────────────────────────────────
+
+When a player places a sell order, items are removed from inventory. When a
+player places a buy order, credits are deducted. But there is NO fill logic —
+NPC traders never fill player orders. Items/credits are permanently lost.
+
+OLD (line 6262):
+window._placeOrder = () => {
+  const item = document.getElementById('order-item')?.value;
+  const type = document.getElementById('order-type')?.value;
+  const price = parseInt(document.getElementById('order-price')?.value);
+  const qty = parseInt(document.getElementById('order-qty')?.value);
+  if (!item || !type || !price || !qty || price < 1 || qty < 1) return;
+  if (type === 'buy' && state.player.credits < price * qty) { addComms('Market', 'Insufficient credits for buy order.'); return; }
+  if (type === 'sell') {
+    const inv = state.inventory.find(i => i.name === item);
+    if (!inv || (inv.quantity || 1) < qty) { addComms('Market', `Insufficient ${item} in cargo.`); return; }
+    inv.quantity = (inv.quantity || 1) - qty;
+    if (inv.quantity <= 0) state.inventory = state.inventory.filter(i => i !== inv);
+  }
+  if (type === 'buy') { state.player.credits -= price * qty; }
+  state.market.orders.push({ id: 'player-' + Date.now(), item, type, price, quantity: qty, trader: state.player.name || 'You', isNPC: false });
+  addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
+  renderMarketScreen();
+};
+
+NEW — add NPC auto-fill after placing order:
+window._placeOrder = () => {
+  const item = document.getElementById('order-item')?.value;
+  const type = document.getElementById('order-type')?.value;
+  const price = parseInt(document.getElementById('order-price')?.value);
+  const qty = parseInt(document.getElementById('order-qty')?.value);
+  if (!item || !type || !price || !qty || price < 1 || qty < 1) return;
+  if (type === 'buy' && state.player.credits < price * qty) { addComms('Market', 'Insufficient credits for buy order.'); return; }
+  if (type === 'sell') {
+    const inv = state.inventory.find(i => i.name === item);
+    if (!inv || (inv.quantity || 1) < qty) { addComms('Market', `Insufficient ${item} in cargo.`); return; }
+    inv.quantity = (inv.quantity || 1) - qty;
+    if (inv.quantity <= 0) state.inventory = state.inventory.filter(i => i !== inv);
+  }
+  if (type === 'buy') { state.player.credits -= price * qty; }
+  const orderId = 'player-' + Date.now();
+  state.market.orders.push({ id: orderId, item, type, price, quantity: qty, trader: state.player.name || 'You', isNPC: false });
+  addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
+  // NPC auto-fill: match player orders against NPC orders after a short delay
+  setTimeout(() => {
+    const order = state.market.orders.find(o => o.id === orderId);
+    if (!order || order.quantity <= 0) return;
+    // Find matching NPC counter-orders
+    const matches = state.market.orders.filter(o =>
+      o.isNPC && o.item === order.item &&
+      ((order.type === 'sell' && o.type === 'buy' && o.price >= order.price) ||
+       (order.type === 'buy' && o.type === 'sell' && o.price <= order.price))
+    );
+    let filled = 0;
+    for (const match of matches) {
+      const fillQty = Math.min(order.quantity - filled, match.quantity);
+      if (fillQty <= 0) break;
+      filled += fillQty;
+      match.quantity -= fillQty;
+      if (order.type === 'sell') {
+        state.player.credits += order.price * fillQty;
+      } else {
+        const existing = state.inventory.find(i => i.name === order.item);
+        if (existing) existing.quantity += fillQty;
+        else state.inventory.push({ name: order.item, quantity: fillQty });
+      }
+      state.market.history.push({ item: order.item, type: order.type, price: order.price, quantity: fillQty, time: Date.now() });
+      if (match.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== match.id);
+    }
+    if (filled > 0) {
+      order.quantity -= filled;
+      if (order.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== orderId);
+      addComms('Market', `Order filled: ${filled}x ${order.item} by NPC traders.`);
+    }
+    renderMarketScreen();
+  }, 2000 + Math.random() * 3000);
+  renderMarketScreen();
+};
+
+REASONING: Without fill logic, placing any order is a guaranteed loss. Players
+will discover this quickly and stop using the market system entirely.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 4 — Mining quest rewards double-counted when online
+  Category: Economy Exploit
+  Severity: MEDIUM
+  Lines: 5746-5756
+────────────────────────────────────────────────────────────────────────────────
+
+Mining completion always awards quest credits client-side, but the server also
+awards them via socket. Kill quest completion (line ~6905) correctly guards with
+`if (!state.socket || !state.connected)`. Mining and visit quests lack this guard.
+
+OLD (line 5746, inside updateMining quest completion):
+      if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+        q.completed = true; q.active = false;
+        state.player.credits += q.rewards?.credits || 0;
+        addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+        AudioSFX.play('quest_complete');
+      }
+
+NEW:
+      if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+        q.completed = true; q.active = false;
+        if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
+        addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+        AudioSFX.play('quest_complete');
+      }
+
+REASONING: Online players get mining quest rewards from BOTH client and server,
+doubling the payout. The kill quest path already has the correct guard.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 5 — Visit quest rewards also double-counted when online
+  Category: Economy Exploit
+  Severity: MEDIUM
+  Lines: 2674-2682 (inside jumpToSystem)
+────────────────────────────────────────────────────────────────────────────────
+
+Same issue as Finding 4 but for system visit quests in jumpToSystem().
+
+OLD (line ~2678):
+    if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+      q.completed = true; q.active = false;
+      state.player.credits += q.rewards?.credits || 0;
+      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+      AudioSFX.play('quest_complete');
+    }
+
+NEW:
+    if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+      q.completed = true; q.active = false;
+      if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
+      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+      AudioSFX.play('quest_complete');
+    }
+
+REASONING: Same double-counting pattern. All quest completion paths should
+use the same guard for consistency.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 6 — Alt universe starSystems not restored on save/load
+  Category: Starmap Navigation Bug
+  Severity: HIGH
+  Lines: 2047-2051 (loadFromServerData)
+────────────────────────────────────────────────────────────────────────────────
+
+When loading a save made during alt universe, loadFromServerData restores
+state.altUniverse and state._origSystems, but does NOT set state.starSystems
+to the alt universe systems. The star systems remain as freshly-generated
+normal universe systems (from init()), causing broken starmap/station/jump.
+
+OLD (line 2047):
+  // Restore alt universe state
+  if (data.inAltUniverse) {
+    state.inAltUniverse = true;
+    state.altUniverse = data.altUniverse;
+    state._origSystems = data._origSystems;
+    state._origSystemIndex = data._origSystemIndex || 0;
+  }
+
+NEW:
+  // Restore alt universe state
+  if (data.inAltUniverse) {
+    state.inAltUniverse = true;
+    state.altUniverse = data.altUniverse;
+    state._origSystems = data._origSystems;
+    state._origSystemIndex = data._origSystemIndex || 0;
+    // Swap to alt universe systems — init() generated normal systems, override them
+    if (state.altUniverse && state.altUniverse.systems) {
+      state.starSystems = state.altUniverse.systems;
+    }
+  }
+
+REASONING: Without this, loading a save in alt universe shows normal universe
+star systems while inAltUniverse=true. The player can't navigate, jump, or exit
+the alt universe properly. exitAltUniverse() would restore _origSystems but the
+entire session between load and exit would be broken.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 7 — Ghost NPC transparent materials missing depthWrite:false
+  Category: Visual Polish
+  Severity: LOW
+  Lines: 5855-5860
+────────────────────────────────────────────────────────────────────────────────
+
+Ghost NPCs (past life echoes) set material.transparent = true with opacity 0.7
+but leave depthWrite = true (default). This causes objects behind the ghost to
+not render through the transparent parts, creating visual "holes" in space.
+
+OLD (line ~5855):
+      lastNpc.group.traverse(child => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+          child.material.emissive = new THREE.Color(0x6688ff);
+          child.material.emissiveIntensity = 0.6;
+          child.material.transparent = true;
+          child.material.opacity = 0.7;
+        }
+      });
+
+NEW:
+      lastNpc.group.traverse(child => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+          child.material.emissive = new THREE.Color(0x6688ff);
+          child.material.emissiveIntensity = 0.6;
+          child.material.transparent = true;
+          child.material.opacity = 0.7;
+          child.material.depthWrite = false;
+        }
+      });
+
+REASONING: Standard Three.js practice for transparent objects. Without
+depthWrite:false, the transparent ghost writes to the depth buffer and blocks
+rendering of objects behind it.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 8 — Station position depends on player ship position at spawn time
+  Category: Visual Polish / Starmap Bug
+  Severity: MEDIUM
+  Lines: 5916, 5932
+────────────────────────────────────────────────────────────────────────────────
+
+Station models are positioned relative to where the player's ship happens to be
+when entering the system. This means the station "follows" the player between
+sessions and appears at different locations each time.
+
+OLD (line 5932 — procedural station):
+  g.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+
+OLD (line 5916 — GLB station):
+    inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+
+NEW (both lines):
+  // Fixed station position per system — seeded from system index
+  const _sysIdx = state.location.systemIndex;
+  const _stX = Math.sin(_sysIdx * 7.3) * 80;
+  const _stZ = Math.cos(_sysIdx * 4.7) * -100;
+  g.position.set(_stX, 15, _stZ);
+
+  (Similarly for GLB station at line 5916)
+  inst.position.set(_stX, 15, _stZ);
+
+REASONING: Station should be at a fixed location per system, not relative to
+the player. The current behavior makes docking range checks inconsistent and
+breaks spatial awareness.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 9 — Loot drops create PointLight per drop (performance cost)
+  Category: Performance Hotspot
+  Severity: MEDIUM
+  Lines: 3893-3895
+────────────────────────────────────────────────────────────────────────────────
+
+Each loot drop creates a PointLight (costly for WebGL — requires shadow/light
+calculations). In boss fights with high loot rates, 10+ concurrent PointLights
+from loot alone compound with police lights, engine glows, etc.
+
+OLD (line 3893):
+  // Pulsing point light for distance visibility
+  const lootLight = new THREE.PointLight(colors[type] || 0xffffff, 2, 25);
+  g.add(lootLight);
+  g.userData.lootLight = lootLight;
+
+NEW — replace PointLight with emissive mesh glow:
+  // Emissive sphere glow — cheaper than PointLight
+  const glowGeo = new THREE.SphereGeometry(2.5, 8, 8);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: colors[type] || 0xffffff, transparent: true, opacity: 0.25,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const lootGlow = new THREE.Mesh(glowGeo, glowMat);
+  g.add(lootGlow);
+  g.userData.lootLight = lootGlow;  // reuse field name for pulse logic
+
+Also update the pulse logic in the game loop (line ~7078):
+OLD:
+      if (l.group.userData.lootLight) l.group.userData.lootLight.intensity = 1 + _lootPulse * 3;
+
+NEW:
+      if (l.group.userData.lootLight) {
+        if (l.group.userData.lootLight.isLight) l.group.userData.lootLight.intensity = 1 + _lootPulse * 3;
+        else l.group.userData.lootLight.material.opacity = 0.15 + _lootPulse * 0.2;
+      }
+
+REASONING: PointLights are among the most expensive objects in Three.js. An
+additive-blending emissive sphere provides the same visual glow effect at a
+fraction of the GPU cost. The pulsing animation still works via opacity.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 10 — Auto-target tracking: dead code (- 0) and missing convergence
+  Category: HUD / Combat Edge Case
+  Severity: LOW
+  Lines: 6189-6190
+────────────────────────────────────────────────────────────────────────────────
+
+The auto-target system subtracts 0 from the target angles (dead code), and uses
+additive rotation that can overshoot at high frame rates because dt*2 may not
+converge properly for targets at large angles.
+
+OLD (line 6189-6190):
+    // Smooth tracking
+    c.yaw += (targetYaw - 0) * dt * 2;
+    c.pitch += (targetPitch - 0) * dt * 2;
+
+NEW:
+    // Smooth tracking — lerp factor clamped to prevent overshoot
+    const trackSpeed = Math.min(1, dt * 2);
+    c.yaw += targetYaw * trackSpeed;
+    c.pitch += targetPitch * trackSpeed;
+
+REASONING: The `- 0` is dead code. The Math.min(1, ...) clamp prevents the
+tracking from overshooting when dt is large (lag spikes). targetYaw/targetPitch
+are already in camera-local space so no offset subtraction is needed.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 11 — Stargate chevron geometry/material not shared
+  Category: Memory Leak (minor)
+  Severity: LOW
+  Lines: 5549-5557
+────────────────────────────────────────────────────────────────────────────────
+
+createStargate() creates 8 chevrons, each with its own BoxGeometry and
+MeshBasicMaterial. Since chevrons are identical, geometry and material should
+be shared.
+
+OLD (line 5549-5557):
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
+    const chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
+    const chev = new THREE.Mesh(chevGeo, chevMat);
+    chev.position.set(Math.cos(angle) * 18, Math.sin(angle) * 18, 0);
+    chev.lookAt(0, 0, 0);
+    stargateGroup.add(chev);
+  }
+
+NEW:
+  const chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
+  const chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const chev = new THREE.Mesh(chevGeo, chevMat);
+    chev.position.set(Math.cos(angle) * 18, Math.sin(angle) * 18, 0);
+    chev.lookAt(0, 0, 0);
+    stargateGroup.add(chev);
+  }
+
+REASONING: 8 identical geometries and 8 identical materials wasted. Shared
+instances reduce GPU memory and allocation overhead. Standard Three.js pattern.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 12 — Procedural station creates non-shared panel materials
+  Category: Memory Leak (minor)
+  Severity: LOW
+  Lines: 5921-5928
+────────────────────────────────────────────────────────────────────────────────
+
+spawnStationModel() procedural fallback creates 4 solar panels, each with its
+own BoxGeometry and MeshStandardMaterial, plus 8 light spheres each with their
+own SphereGeometry and MeshBasicMaterial.
+
+OLD (line 5921-5928):
+  for (let i = 0; i < 4; i++) {
+    const angle = (i/4)*Math.PI*2;
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(2, 10, 0.1), new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5}));
+    panel.position.set(Math.cos(angle)*18, Math.sin(angle)*3, Math.sin(angle)*18);
+    panel.lookAt(0,0,0);
+    g.add(panel);
+  }
+  for (let i = 0; i < 8; i++) {
+    const angle = (i/8)*Math.PI*2;
+    const light = new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8), new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8}));
+    light.position.set(Math.cos(angle)*12, 0, Math.sin(angle)*12);
+    g.add(light);
+  }
+
+NEW:
+  const panelGeo = new THREE.BoxGeometry(2, 10, 0.1);
+  const panelMat = new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5});
+  for (let i = 0; i < 4; i++) {
+    const angle = (i/4)*Math.PI*2;
+    const panel = new THREE.Mesh(panelGeo, panelMat);
+    panel.position.set(Math.cos(angle)*18, Math.sin(angle)*3, Math.sin(angle)*18);
+    panel.lookAt(0,0,0);
+    g.add(panel);
+  }
+  const lightGeo = new THREE.SphereGeometry(0.3,8,8);
+  const lightMat = new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8});
+  for (let i = 0; i < 8; i++) {
+    const angle = (i/8)*Math.PI*2;
+    const light = new THREE.Mesh(lightGeo, lightMat);
+    light.position.set(Math.cos(angle)*12, 0, Math.sin(angle)*12);
+    g.add(light);
+  }
+
+REASONING: 4+8 = 12 redundant geometry and material instances. Shared instances
+reduce GPU memory overhead. This station is recreated every system change.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 13 — Police ship PointLights never detached on disposal
+  Category: Memory Leak
+  Severity: LOW
+  Lines: 5443-5450, 5497
+────────────────────────────────────────────────────────────────────────────────
+
+Each police patrol spawns with TWO PointLights (policeLight + engine glow).
+disposeObject() traverses children and disposes meshes, but PointLights are not
+meshes — they have no geometry or material to dispose. However, Three.js
+PointLights do need to be removed from parent and their shadow maps (if any)
+cleaned. The current disposeObject only handles .isMesh children.
+
+OLD (disposeObject, line 3750):
+function disposeObject(obj) {
+  if (!obj) return;
+  obj.traverse(child => {
+    if (child.isMesh) {
+      if (child.geometry && child.geometry !== _boltGeo && child.geometry !== _boltTrailGeo) {
+        child.geometry.dispose();
+      }
+      if (child.material && !child.material._pooled) {
+        if (Array.isArray(child.material)) child.material.forEach(m => { if (!m._pooled) m.dispose(); });
+        else child.material.dispose();
+      }
+    }
+  });
+}
+
+NEW:
+function disposeObject(obj) {
+  if (!obj) return;
+  obj.traverse(child => {
+    if (child.isMesh) {
+      if (child.geometry && child.geometry !== _boltGeo && child.geometry !== _boltTrailGeo) {
+        child.geometry.dispose();
+      }
+      if (child.material && !child.material._pooled) {
+        if (Array.isArray(child.material)) child.material.forEach(m => { if (!m._pooled) m.dispose(); });
+        else child.material.dispose();
+      }
+    }
+    // Dispose light shadow maps if present
+    if (child.isLight && child.shadow && child.shadow.map) {
+      child.shadow.map.dispose();
+    }
+  });
+}
+
+REASONING: PointLights with shadow maps would leak the shadow texture. While
+current lights don't cast shadows, this is defensive and future-proof.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 14 — No mobile touch controls for combat keybinds
+  Category: Mobile/Touch Support Gap
+  Severity: MEDIUM
+  Lines: N/A (missing feature)
+────────────────────────────────────────────────────────────────────────────────
+
+The following keybinds have NO touch equivalents:
+  M — mining toggle
+  T — chatbot toggle
+  K — skin panel toggle
+  P — autopilot to nearest station/stargate
+  G — enter/exit stargate
+  C — collect artifact
+  F — open star map (warp)
+  B — dock at station
+
+Mobile players cannot: mine asteroids, use the chatbot, toggle skins, use
+autopilot, enter stargates, collect alt universe artifacts, warp, or dock.
+
+SUGGESTED FIX: Add action buttons to the existing mobile action bar
+(#action-bar or #mobile-controls) for the most critical functions:
+
+  <button class="action-btn" onclick="/* mine toggle */">⛏ Mine</button>
+  <button class="action-btn" onclick="/* dock */">🔧 Dock</button>
+  <button class="action-btn" onclick="/* warp */">⚡ Warp</button>
+  <button class="action-btn" onclick="/* stargate */">🌀 Gate</button>
+
+REASONING: These are core gameplay functions completely inaccessible on mobile
+and tablet devices. Most players may be on mobile browsers.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FINDING 15 — Alt universe / mining / NPC state not synced to server
+  Category: Multiplayer Sync
+  Severity: MEDIUM
+  Lines: 5635-5640 (enterAltUniverse), 5693 (startMining), 5795 (spawnNPCShip)
+────────────────────────────────────────────────────────────────────────────────
+
+The following game events have NO socket.emit() calls:
+  - enterAltUniverse() / exitAltUniverse() — other players can't see you leave
+  - startMining() / stopMining() — mining state invisible to other players
+  - spawnNPCShip() / spawnSystemNPCs() — each client has different NPCs
+  - collectArtifact() — artifact progress invisible to server
+
+Compare with combat which correctly emits 'combat:kill', 'death:report', etc.
+
+SUGGESTED FIX (minimal, for enterAltUniverse):
+
+  function enterAltUniverse() {
+    state.altUniverse = generateAltUniverse();
+    state.inAltUniverse = true;
+    state._origSystems = state.starSystems;
+    state._origSystemIndex = state.location.systemIndex;
+    state.starSystems = state.altUniverse.systems;
+    state.location.systemIndex = 0;
+    if (state.socket) state.socket.emit('universe:enter_alt');
+    addComms('Stargate', '⚠ DIMENSIONAL BREACH...');
+    ...
+  }
+
+REASONING: In a multiplayer game, other players in the same system should see
+you enter the stargate. The server should track which universe each player is
+in for proper routing of events.
+
+
+================================================================================
+  SUMMARY
+================================================================================
+
+  Total Findings: 15
+  
+  HIGH severity:   4  (Findings 1, 2, 3, 6)
+  MEDIUM severity: 5  (Findings 4, 5, 8, 9, 14, 15)
+  LOW severity:    5  (Findings 7, 10, 11, 12, 13)
+
+  By Category:
+    Memory Leaks:          4  (Findings 1, 11, 12, 13)
+    Edge Cases in Combat:  1  (Finding 2)
+    Starmap Navigation:    2  (Findings 6, 8)
+    HUD Rendering:         1  (Finding 10)
+    Economy Exploits:      3  (Findings 3, 4, 5)
+    Sound System:          0  (fuelWarningBeep has correct 2s debounce)
+    Mobile/Touch Gaps:     1  (Finding 14)
+    Multiplayer Sync:      1  (Finding 15)
+    Performance Hotspots:  1  (Finding 9)
+    Visual Polish:         1  (Finding 7)
+
+================================================================================

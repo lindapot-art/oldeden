@@ -2047,6 +2047,9 @@ function loadFromServerData(data) {
     state.altUniverse = data.altUniverse;
     state._origSystems = data._origSystems;
     state._origSystemIndex = data._origSystemIndex || 0;
+    if (state.altUniverse && state.altUniverse.systems) {
+      state.starSystems = state.altUniverse.systems;
+    }
   }
   if (data.persistentItems) state.persistentItems = data.persistentItems;
   if (data.currentSkin) { state.currentSkin = data.currentSkin; }
@@ -2671,7 +2674,7 @@ function jumpToSystem(idx) {
     });
     if (q.objectives.every(o => (o.current || 0) >= o.required)) {
       q.completed = true; q.active = false;
-      state.player.credits += q.rewards?.credits || 0;
+      if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
       addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
       AudioSFX.play('quest_complete');
     }
@@ -3759,6 +3762,9 @@ function disposeObject(obj) {
         else child.material.dispose();
       }
     }
+    if (child.isLight && child.shadow && child.shadow.map) {
+      child.shadow.map.dispose();
+    }
   });
 }
 
@@ -3889,10 +3895,12 @@ function spawnLootDrop(pos, type, creditValue) {
   // Glow ring
   const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 2, 16), new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
   g.add(ring);
-  // Pulsing point light for distance visibility
-  const lootLight = new THREE.PointLight(colors[type] || 0xffffff, 2, 25);
-  g.add(lootLight);
-  g.userData.lootLight = lootLight;
+  // Emissive glow sphere — cheaper than PointLight
+  const _lootGlowGeo = new THREE.SphereGeometry(2.5, 8, 8);
+  const _lootGlowMat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false });
+  const lootGlow = new THREE.Mesh(_lootGlowGeo, _lootGlowMat);
+  g.add(lootGlow);
+  g.userData.lootLight = lootGlow;
   g.userData.lootMesh = mesh;
   g.position.copy(pos);
   g.userData.type = type;
@@ -5546,11 +5554,11 @@ function createStargate() {
   stargateGroup.add(ring);
 
   // Inner chevrons — 8 glowing markers around the ring
+  const _chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
+  const _chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
-    const chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
-    const chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
-    const chev = new THREE.Mesh(chevGeo, chevMat);
+    const chev = new THREE.Mesh(_chevGeo, _chevMat);
     chev.position.set(Math.cos(angle) * 18, Math.sin(angle) * 18, 0);
     chev.lookAt(0, 0, 0);
     stargateGroup.add(chev);
@@ -5690,7 +5698,7 @@ function startMining(asteroidIndex) {
   const asteroid = c.asteroids[asteroidIndex];
   if (!asteroid) return;
   state.mining.active = true;
-  state.mining.target = asteroidIndex;
+  state.mining.targetRef = asteroid;
   state.mining.progress = 0;
 
   // Create laser beam
@@ -5703,8 +5711,8 @@ function startMining(asteroidIndex) {
 
 function updateMining(dt) {
   if (!state.mining.active) return;
-  const asteroid = c.asteroids[state.mining.target];
-  if (!asteroid) { stopMining(); return; }
+  const asteroid = state.mining.targetRef;
+  if (!asteroid || !asteroid.parent) { stopMining(); return; }
 
   state.mining.progress += dt * 20; // 5 seconds to mine
 
@@ -5745,14 +5753,15 @@ function updateMining(dt) {
       });
       if (q.objectives.every(o => (o.current || 0) >= o.required)) {
         q.completed = true; q.active = false;
-        state.player.credits += q.rewards?.credits || 0;
+        if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
         addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
         AudioSFX.play('quest_complete');
       }
     });
     // Remove asteroid
     scene.remove(asteroid);
-    c.asteroids.splice(state.mining.target, 1);
+    const _aidx = c.asteroids.indexOf(asteroid);
+    if (_aidx >= 0) c.asteroids.splice(_aidx, 1);
     stopMining();
   }
 }
@@ -5763,7 +5772,7 @@ function stopMining() {
   state.mining.progress = 0;
   if (miningLaserBeam) { scene.remove(miningLaserBeam); miningLaserBeam.geometry.dispose(); miningLaserBeam.material.dispose(); miningLaserBeam = null; }
   // Ensure mining state is clean
-  state.mining.active = false; state.mining.target = null; state.mining.progress = 0;
+  state.mining.active = false; state.mining.targetRef = null; state.mining.progress = 0;
 }
 
 // ================================================================
@@ -5855,6 +5864,7 @@ function spawnSystemNPCs() {
           child.material.emissiveIntensity = 0.6;
           child.material.transparent = true;
           child.material.opacity = 0.7;
+          child.material.depthWrite = false;
         }
       });
       addComms('Soul Echo', 'A familiar presence... ' + ghost.name + ' (' + ghost.occupation + ') drifts nearby.');
@@ -5901,7 +5911,7 @@ let stationModels = [];
 
 async function spawnStationModel() {
   // Remove old station models
-  stationModels.forEach(m => scene.remove(m));
+  stationModels.forEach(m => { scene.remove(m); disposeObject(m); });
   stationModels = [];
   const sys = state.starSystems[state.location.systemIndex];
   if (!sys || !sys.hasStation) return;
@@ -5923,16 +5933,20 @@ async function spawnStationModel() {
   const torusM = new THREE.Mesh(new THREE.TorusGeometry(12, 1.5, 8, 24), ringMat);
   torusM.rotation.x = Math.PI/2;
   g.add(torusM);
+  const _panelGeo = new THREE.BoxGeometry(2, 10, 0.1);
+  const _panelMat = new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5});
   for (let i = 0; i < 4; i++) {
     const angle = (i/4)*Math.PI*2;
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(2, 10, 0.1), new THREE.MeshStandardMaterial({color:0x2244aa,roughness:0.2,metalness:0.5}));
+    const panel = new THREE.Mesh(_panelGeo, _panelMat);
     panel.position.set(Math.cos(angle)*18, Math.sin(angle)*3, Math.sin(angle)*18);
     panel.lookAt(0,0,0);
     g.add(panel);
   }
+  const _lightGeo = new THREE.SphereGeometry(0.3,8,8);
+  const _lightMat = new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8});
   for (let i = 0; i < 8; i++) {
     const angle = (i/8)*Math.PI*2;
-    const light = new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8), new THREE.MeshBasicMaterial({color:0x44ff44,transparent:true,opacity:0.8}));
+    const light = new THREE.Mesh(_lightGeo, _lightMat);
     light.position.set(Math.cos(angle)*12, 0, Math.sin(angle)*12);
     g.add(light);
   }
@@ -6092,8 +6106,40 @@ window._placeOrder = () => {
     if (inv.quantity <= 0) state.inventory = state.inventory.filter(i => i !== inv);
   }
   if (type === 'buy') { state.player.credits -= price * qty; }
-  state.market.orders.push({ id: 'player-' + Date.now(), item, type, price, quantity: qty, trader: state.player.name || 'You', isNPC: false });
+  const _orderId = 'player-' + Date.now();
+  state.market.orders.push({ id: _orderId, item, type, price, quantity: qty, trader: state.player.name || 'You', isNPC: false });
   addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
+  // NPC auto-fill: match player orders against NPC counter-orders
+  setTimeout(() => {
+    const _ord = state.market.orders.find(o => o.id === _orderId);
+    if (!_ord || _ord.quantity <= 0) return;
+    const _matches = state.market.orders.filter(o =>
+      o.isNPC && o.item === _ord.item &&
+      ((_ord.type === 'sell' && o.type === 'buy' && o.price >= _ord.price) ||
+       (_ord.type === 'buy' && o.type === 'sell' && o.price <= _ord.price))
+    );
+    let _filled = 0;
+    for (const m of _matches) {
+      const fq = Math.min(_ord.quantity - _filled, m.quantity);
+      if (fq <= 0) break;
+      _filled += fq;
+      m.quantity -= fq;
+      if (_ord.type === 'sell') { state.player.credits += _ord.price * fq; }
+      else {
+        const _ei = state.inventory.find(i => i.name === _ord.item);
+        if (_ei) _ei.quantity += fq;
+        else state.inventory.push({ name: _ord.item, quantity: fq });
+      }
+      state.market.history.push({ item: _ord.item, type: _ord.type, price: _ord.price, quantity: fq, time: Date.now() });
+      if (m.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== m.id);
+    }
+    if (_filled > 0) {
+      _ord.quantity -= _filled;
+      if (_ord.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== _orderId);
+      addComms('Market', 'Order filled: ' + _filled + 'x ' + _ord.item + ' by NPC traders.');
+    }
+    renderMarketScreen();
+  }, 2000 + Math.random() * 3000);
   renderMarketScreen();
 };
 
@@ -6182,8 +6228,9 @@ function updateAutoSystems(dt) {
     const targetYaw = -Math.atan2(_tmpV3a.x, -_tmpV3a.z);
     const targetPitch = Math.atan2(_tmpV3a.y, Math.sqrt(_tmpV3a.x**2 + _tmpV3a.z**2));
     // Smooth tracking
-    c.yaw += (targetYaw - 0) * dt * 2;
-    c.pitch += (targetPitch - 0) * dt * 2;
+    const _trackSpeed = Math.min(1, dt * 2);
+    c.yaw += targetYaw * _trackSpeed;
+    c.pitch += targetPitch * _trackSpeed;
     // Clamp pitch only to prevent flipping
     c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
   }
@@ -7121,7 +7168,10 @@ function gameLoop() {
       l.group.position.y += Math.sin(l.age * 0.003) * 0.02;
       // Pulse loot glow
       const _lootPulse = 0.5 + 0.5 * Math.sin(l.age * 0.006);
-      if (l.group.userData.lootLight) l.group.userData.lootLight.intensity = 1 + _lootPulse * 3;
+      if (l.group.userData.lootLight) {
+        if (l.group.userData.lootLight.isLight) l.group.userData.lootLight.intensity = 1 + _lootPulse * 3;
+        else if (l.group.userData.lootLight.material) l.group.userData.lootLight.material.opacity = 0.15 + _lootPulse * 0.2;
+      }
       if (l.group.userData.lootMesh) l.group.userData.lootMesh.scale.setScalar(0.9 + _lootPulse * 0.3);
       // Player collect
       if (l.group.position.distanceTo(ship.position) < 12) {
