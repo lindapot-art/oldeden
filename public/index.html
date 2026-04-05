@@ -233,7 +233,7 @@ canvas{display:block;}
 @keyframes miningPulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
 
 /* ── Action Buttons (Gunner Mode) ────────── */
-#action-bar{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:50;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:90vw;}
+#action-bar{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:56;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:90vw;}
 #action-bar.active{display:flex;}
 .action-btn{
   width:52px;height:52px;border-radius:10px;border:1px solid var(--border);
@@ -3389,7 +3389,8 @@ function saveGame() {
     market: state.market,
     insuredItemId: state.insuredItemId,
   };
-  localStorage.setItem('oe-save', JSON.stringify(data));
+  try { localStorage.setItem('oe-save', JSON.stringify(data)); }
+  catch (e) { addComms('System', 'Save failed — storage full.'); }
   // Also save to server
   if (state.socket) state.socket.emit('game:save', data);
 }
@@ -3893,6 +3894,7 @@ function exitGunnerMode(skipScreenChange) {
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
   stopMining();
   state.mining.active = false;
+  c.bossActive = false;
   state.chatbot.visible = false;
   const chatEl = document.getElementById('chatbot-panel'); if (chatEl) chatEl.classList.remove('open');
   const skinEl = document.getElementById('skin-panel'); if (skinEl) skinEl.classList.remove('open');
@@ -4824,6 +4826,9 @@ document.addEventListener('mousemove', (e) => {
 // EVE Online flight: WASD + Space/Ctrl + Shift(boost)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
+  // Don't process game keys while typing in chatbot
+  const _chInput = document.getElementById('chatbot-input');
+  if (document.activeElement === _chInput) return;
   // R = reload ammo (1.5s reload animation)
   if ((e.key === 'r' || e.key === 'R') && c.active) {
     if (c.ammo < c.maxAmmo && !c._reloading) {
@@ -4938,6 +4943,7 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   state.player.age = 18 + Math.floor(Math.random() * 7);
   state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
   state.combat.dead = false;
+  state.chatbot.messages = [];
   state.combat._nextCycleAt = 15; state.combat._nextBossAt = 20; state.combat._nextBreatherAt = 10; state.combat._breatherStart = 0;
   // Reset character skills (the flesh forgets, the soul remembers)
   resetSkills();
@@ -5642,7 +5648,7 @@ function collectArtifact() {
 let miningLaserBeam = null;
 
 function startMining(asteroidIndex) {
-  if (state.mining.active) return;
+  if (state.mining.active || c.dead || state.location.docked) return;
   const asteroid = c.asteroids[asteroidIndex];
   if (!asteroid) return;
   state.mining.active = true;
@@ -5747,9 +5753,13 @@ function spawnNPCShip(type) {
     const mat = new THREE.MeshStandardMaterial({ color: npcDef.color, roughness: 0.5, metalness: 0.6, emissive: npcDef.color, emissiveIntensity: 0.15 });
     g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 3), mat));
   }
-  // Engine glow
-  const eMat = new THREE.MeshBasicMaterial({ color: npcDef.friendly ? 0x44aaff : 0xff4422, transparent: true, opacity: 0.7 });
-  { const eM = new THREE.Mesh(new THREE.CircleGeometry(0.25, 8), eMat); eM.position.set(0, 0, 1.6); g.add(eM); }
+  // Engine glow (shared geometry + materials)
+  if (!window._npcEngineGeo) {
+    window._npcEngineGeo = new THREE.CircleGeometry(0.25, 8);
+    window._npcEngineMatF = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7 });
+    window._npcEngineMatH = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.7 });
+  }
+  { const eM = new THREE.Mesh(window._npcEngineGeo, npcDef.friendly ? window._npcEngineMatF : window._npcEngineMatH); eM.position.set(0, 0, 1.6); g.add(eM); }
   // Name label (stored in userData)
   const factionNames = ['Vanguard', 'Traders', 'Void Cult', 'Syndicate', 'Remnants', 'Church'];
   const names = ['Artemis', 'Vanguard', 'Horizon', 'Eclipse', 'Stellaris', 'Nomad', 'Wraith', 'Tempest', 'Aurora', 'Zenith'];
@@ -6510,12 +6520,18 @@ document.addEventListener('keydown', (e) => {
   }
   // F = warp (open star map)
   if (e.key === 'f' || e.key === 'F') {
+    if (c.dead) return;
     showScreen('starmap');
   }
   // B = dock at station
   if (e.key === 'b' || e.key === 'B') {
+    if (c.dead) return;
     const sys = state.starSystems[state.location.systemIndex];
-    if (sys && sys.hasStation) { state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); }
+    if (sys && sys.hasStation) {
+      const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80);
+      if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; }
+      state.location.docked = true; AudioSFX.play('dock'); showScreen('station');
+    }
     else addComms('System', 'No station in this system.');
   }
 });
