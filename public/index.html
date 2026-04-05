@@ -2563,6 +2563,7 @@ function renderStarMap() {
     const sx = cx + s.x * scale, sy = cy + s.y * scale;
     (s.connections || []).forEach(ci => {
       const t = state.starSystems[ci];
+      if (!t) return;
       const tx = cx + t.x * scale, ty = cy + t.y * scale;
       smCtx.strokeStyle = 'rgba(68,170,255,0.12)';
       smCtx.beginPath(); smCtx.moveTo(sx, sy); smCtx.lineTo(tx, ty); smCtx.stroke();
@@ -2820,14 +2821,18 @@ function renderStation() {
 
   const prices = state.stationPrices || COMMODITIES;
   const market = document.getElementById('trade-market');
-  market.innerHTML = prices.map(c => `
+  market.innerHTML = prices.map(c => {
+    const safeName = _escHtml(c.name);
+    const jsName = c.name.replace(/'/g, "\\'");
+    return `
     <div class="trade-row">
-      <span>${c.name}</span>
+      <span>${safeName}</span>
       <span>
-        <button class="trade-buy" onclick="window._buy('${c.name}',${c.buy})">Buy ${c.buy} EC</button>
-        <button class="trade-sell" onclick="window._sell('${c.name}',${c.sell})">Sell ${c.sell} EC</button>
+        <button class="trade-buy" onclick="window._buy('${jsName}',${c.buy})">Buy ${c.buy} EC</button>
+        <button class="trade-sell" onclick="window._sell('${jsName}',${c.sell})">Sell ${c.sell} EC</button>
       </span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   // Inventory display
   const invHtml = state.inventory.length
@@ -5549,6 +5554,7 @@ function updateShipParade(dt, dtMs) {
     paradeTimer += dtMs;
     if (paradeTimer >= PARADE_COOLDOWN) {
       paradeIndex++;
+      paradePhase = "loading";  // prevent per-frame re-entry during async load
       _loadNextParadeShip();
     }
   }
@@ -6109,6 +6115,8 @@ function updateNPCShips(dt) {
 //  NPC STATIONS — Procedural 3D
 // ================================================================
 let stationModels = [];
+let glbSceneObjects = [];   // GLB models added to scene (cleaned up on exit gunner)
+let libraryLabels = [];     // Ship library HUD labels (cleaned up on exit gunner)
 
 async function spawnStationModel() {
   // Remove old station models
