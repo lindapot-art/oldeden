@@ -902,6 +902,8 @@ const AudioSFX = {
       case 'loot_fuel': { osc.disconnect(); const dur2=0.15; const buf2=ctx.createBuffer(1,ctx.sampleRate*dur2,ctx.sampleRate); const d2=buf2.getChannelData(0); for(let i=0;i<d2.length;i++) d2[i]=(Math.random()*2-1)*(1-i/d2.length)*0.3; const src2=ctx.createBufferSource(); src2.buffer=buf2; const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2000; src2.connect(hp); hp.connect(gain); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur2); src2.start(now); return; }
       case 'dock': osc.type='sine'; osc.frequency.setValueAtTime(300,now); osc.frequency.setValueAtTime(400,now+0.1); osc.frequency.setValueAtTime(500,now+0.2); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.4); osc.start(now); osc.stop(now+0.4); break;
       case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc.frequency.exponentialRampToValueAtTime(200,now+0.6); gain.gain.setValueAtTime(0.1*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
+      case 'laser_fire': osc.type='sawtooth'; osc.frequency.setValueAtTime(1200,now); osc.frequency.exponentialRampToValueAtTime(3000,now+0.06); gain.gain.setValueAtTime(0.07*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.08); osc.start(now); osc.stop(now+0.08); break;
+      case 'reload': { osc.disconnect(); const dur3=0.15; const buf3=ctx.createBuffer(1,ctx.sampleRate*dur3,ctx.sampleRate); const d3=buf3.getChannelData(0); for(let i=0;i<d3.length;i++) d3[i]=(Math.random()*2-1)*(1-i/d3.length)*0.5; const src3=ctx.createBufferSource(); src3.buffer=buf3; const lp3=ctx.createBiquadFilter(); lp3.type='lowpass'; lp3.frequency.value=400; src3.connect(lp3); lp3.connect(gain); gain.gain.setValueAtTime(0.12*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur3); src3.start(now); return; }
     }
   },
   ambience: null,
@@ -1126,8 +1128,6 @@ const state = {
   mining: { active: false, target: null, progress: 0, laserBeam: null },
   // ── Soul Memory (persists across deaths — subtle passive bonuses) ──
   soulMemory: {
-    pirateDodge: 0,     // +0.5% per pirate death, caps at 15%
-    bossResist: 0,      // +0.3% damage resist per boss kill, caps at 10%
     tradeInsight: 0,    // +1% better prices per life with trading, caps at 15%
     combatInstinct: 0,  // +0.2% damage per total kill milestone, caps at 10%
     shieldMemory: 0,    // +0.5% shield regen per death to bolts, caps at 10%
@@ -1282,15 +1282,7 @@ function updateAging(dtMs) {
   // Median life ~20 years game-time = ~60 real minutes
   state.player.age += (dtMs / 1000) / 180; // 180 seconds = 1 year
   if (state.player.age >= 80 && !state.combat.dead) {
-    // Natural death — old age
-    state.combat.dead = true;
-    state.combat.deathStats = { kills: state.combat.kills, score: state.combat.score, streak: state.combat.bestStreak, credits: state.player.credits };
-    addComms('AI Director', 'Your body has given out. Age claims another soul.');
-    setTimeout(() => {
-      state.combat.dead = false;
-      if (state.combat.active) exitGunnerMode(true);
-      showEulogy(state.combat.deathStats, 'Died of old age at ' + Math.floor(state.player.age) + ' years');
-    }, 2000);
+    playerDeathSequence('Died of old age at ' + Math.floor(state.player.age) + ' years');
   }
 }
 
@@ -1647,7 +1639,7 @@ function fireLaser() {
   
   // Small recoil
   c.recoilVel = -2;
-  AudioSFX.play('hit'); // use hit sound as placeholder for laser
+  AudioSFX.play('laser_fire');
 }
 
 // ================================================================
@@ -2735,7 +2727,7 @@ function createSoulFragment() {
     credits: p.credits,
     faction: p.faction,
     genome: p.genome ? Array.from(p.genome.slice(0, 8)) : [],
-    bossKills: c.enemies.filter(e => e.boss && e.hp <= 0).length,
+    bossKills: c.enemies.filter(e => e.isBoss && e.hp <= 0).length,
     deathCause: c.dead ? 'combat' : 'rebirth',
     lifespan: Math.floor(state.gameTime),
     resonanceAffinity: affinity,
@@ -3575,7 +3567,8 @@ function createEnemy(type) {
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-  c.enemies.push({ group: g, hp: cfg.hp, maxHp: cfg.hp, speed: ENEMY_SPEED * cfg.speed, type, points: cfg.points, cfg, hitFlash: 0, lastShot: 0, shootRate: cfg.shootRate });
+    const diffScale = 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08;
+  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05), type, points: cfg.points, cfg, hitFlash: 0, lastShot: 0, shootRate: cfg.shootRate });
 }
 
 // Preload all combat-relevant models (enemies, bosses, NPCs)
@@ -4304,7 +4297,7 @@ canvas3d.addEventListener('touchstart', (e) => {
     if (c.active && c.ammo < c.maxAmmo && !c._reloading) {
       c._reloading = true; c.weaponReady = false;
       addComms('System', 'Reloading...');
-      setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('quest_complete'); addComms('System', 'Ammo replenished.'); }, 1500);
+      setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500);
     }
   }, { passive: false });
 })();
@@ -4389,7 +4382,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'skins') { document.getElementById('skin-panel').classList.toggle('open'); }
     else if (action === 'gate') { if (stargateGroup && ship.position.distanceTo(stargateGroup.position) < 40) { if (state.inAltUniverse) exitAltUniverse(); else enterAltUniverse(); } else addComms('System', 'No stargate in range.'); }
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
-    else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('quest_complete'); addComms('System', 'Ammo replenished.'); }, 1500); } }
+    else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
     else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
@@ -5847,7 +5840,7 @@ function gameLoop() {
       const types = ['scout','fighter','bomber','interceptor'];
       const spawnCount = Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
       for (let si = 0; si < spawnCount; si++) createEnemy(types[Math.floor(Math.random()*4)]);
-      if (c.kills > 0 && c.kills % 15 === 0) { c.cycle++; addComms('AI Director', `Cycle ${c.cycle} — hostiles intensifying`); }
+      if (c.kills > 0 && c.kills % 15 === 0 && c.kills !== c._lastCycleKills) { c._lastCycleKills = c.kills; c.cycle++; addComms('AI Director', `Cycle ${c.cycle} — hostiles intensifying`); }
       // Boss spawn every 20 kills
       if (c.kills > 0 && c.kills % 20 === 0 && !c.bossActive) {
         c.bossActive = true;
@@ -5907,7 +5900,7 @@ function gameLoop() {
             gainSkillXP('piloting', 0.05);
             // Floating damage number
             c.dmgNumbers.push({ text: '+' + pts, pos: e.group.position.clone(), age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
-            if (e.isBoss) { c.bossActive = false; addComms('AI Director', 'Boss destroyed! +500 points'); }
+            if (e.isBoss) { c.bossActive = false; state.player.lifetimeStats.bossKills++; addComms('AI Director', 'Boss destroyed! +500 points'); }
             // Faction rep: killing enemy gains rep with controlling faction, loses with hostile faction
             const sys = state.starSystems[state.location.systemIndex];
             if (sys && sys.controllingFaction) {
