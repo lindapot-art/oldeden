@@ -177,6 +177,8 @@ canvas{display:block;}
 .version-label{position:fixed;bottom:8px;right:12px;color:#222;font-size:0.7rem;z-index:200;}
 .fade-in{animation:fadeIn 0.4s ease;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+#screen-transition-overlay{position:fixed;inset:0;background:#0a0a0f;z-index:9990;pointer-events:none;opacity:0;transition:opacity 0.25s ease;}
+#screen-transition-overlay.active{opacity:1;}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
@@ -363,6 +365,7 @@ canvas{display:block;}
 
 /* ── QA UNVERIFIED BANNER ─────────────────── */
 #qa-unverified-banner{position:fixed;top:0;left:0;right:0;z-index:99999;background:repeating-linear-gradient(45deg,#ff0000,#ff0000 10px,#cc0000 10px,#cc0000 20px);color:#fff;text-align:center;font-size:0.85rem;font-weight:700;letter-spacing:0.15em;padding:6px 0;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.6);font-family:monospace;}
+<div id="screen-transition-overlay"></div>
 #qa-unverified-banner.qa-passed{background:#00aa44;}
 </style>
 </head>
@@ -854,6 +857,13 @@ const AudioSFX = {
       case 'kill_confirm': osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.setValueAtTime(1100, now+0.05); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.12); osc.start(now); osc.stop(now+0.12); break;
       case 'hit_marker': osc.type = 'square'; osc.frequency.setValueAtTime(1600, now); gain.gain.setValueAtTime(0.04*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.04); osc.start(now); osc.stop(now+0.04); break;
       case 'player_death': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(30, now+2); gain.gain.setValueAtTime(0.2*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.8); gain.gain.exponentialRampToValueAtTime(0.001, now+2); osc.start(now); osc.stop(now+2); const sub2 = ctx.createOscillator(); sub2.type = 'sine'; sub2.frequency.value = 40; const sg2 = ctx.createGain(); sg2.gain.setValueAtTime(0.15*vol, now); sg2.gain.exponentialRampToValueAtTime(0.001, now+2.5); sub2.connect(sg2); sg2.connect(ctx.destination); sub2.start(now); sub2.stop(now+2.5); break; }
+      case 'hull_hit': { osc.disconnect(); const dur=0.12; const buf=ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate); const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length)*0.8; const src=ctx.createBufferSource(); src.buffer=buf; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=600; src.connect(lp); lp.connect(gain); gain.gain.setValueAtTime(0.18*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur); src.start(now); return; }
+      case 'loot_credits': osc.type='sine'; osc.frequency.setValueAtTime(880,now); osc.frequency.setValueAtTime(1100,now+0.06); osc.frequency.setValueAtTime(1320,now+0.12); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.2); osc.start(now); osc.stop(now+0.2); break;
+      case 'loot_ammo': osc.type='square'; osc.frequency.setValueAtTime(300,now); osc.frequency.setValueAtTime(450,now+0.05); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.1); osc.start(now); osc.stop(now+0.1); break;
+      case 'loot_health': osc.type='sine'; osc.frequency.setValueAtTime(440,now); osc.frequency.linearRampToValueAtTime(880,now+0.2); gain.gain.setValueAtTime(0.07*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.25); osc.start(now); osc.stop(now+0.25); break;
+      case 'loot_fuel': { osc.disconnect(); const dur2=0.15; const buf2=ctx.createBuffer(1,ctx.sampleRate*dur2,ctx.sampleRate); const d2=buf2.getChannelData(0); for(let i=0;i<d2.length;i++) d2[i]=(Math.random()*2-1)*(1-i/d2.length)*0.3; const src2=ctx.createBufferSource(); src2.buffer=buf2; const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2000; src2.connect(hp); hp.connect(gain); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur2); src2.start(now); return; }
+      case 'dock': osc.type='sine'; osc.frequency.setValueAtTime(300,now); osc.frequency.setValueAtTime(400,now+0.1); osc.frequency.setValueAtTime(500,now+0.2); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.4); osc.start(now); osc.stop(now+0.4); break;
+      case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc.frequency.exponentialRampToValueAtTime(200,now+0.6); gain.gain.setValueAtTime(0.1*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
     }
   },
   ambience: null,
@@ -934,6 +944,45 @@ const AudioSFX = {
     if (!this.engineHum) return;
     try { this.engineHum.osc1.stop(); this.engineHum.osc2.stop(); } catch(e) {}
     this.engineHum = null;
+  },
+  _fuelWarnLast: 0,
+  fuelWarningBeep() {
+    if (!this.ctx) return;
+    const now = performance.now();
+    if (now - this._fuelWarnLast < 2000) return;
+    this._fuelWarnLast = now;
+    this.ensure();
+    const ctx = this.ctx;
+    const vol = state.settings.masterVol * state.settings.sfxVol;
+    if (vol <= 0) return;
+    const t = ctx.currentTime;
+    const g = ctx.createGain(); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.06*vol, t);
+    g.gain.setValueAtTime(0.06*vol, t+0.08);
+    g.gain.setValueAtTime(0.001, t+0.1);
+    g.gain.setValueAtTime(0.06*vol, t+0.15);
+    g.gain.setValueAtTime(0.001, t+0.25);
+    const o = ctx.createOscillator(); o.type = 'square';
+    o.frequency.setValueAtTime(1200, t);
+    o.connect(g); o.start(t); o.stop(t+0.25);
+  },
+  uiClick() {
+    if (!this.ctx) return; this.ensure();
+    const ctx = this.ctx; const t = ctx.currentTime;
+    const vol = state.settings.masterVol * state.settings.sfxVol * 0.5;
+    const g = ctx.createGain(); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.04*vol, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1000;
+    o.connect(g); o.start(t); o.stop(t+0.05);
+  },
+  uiHover() {
+    if (!this.ctx) return; this.ensure();
+    const ctx = this.ctx; const t = ctx.currentTime;
+    const vol = state.settings.masterVol * state.settings.sfxVol * 0.3;
+    const g = ctx.createGain(); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.015*vol, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.03);
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1400;
+    o.connect(g); o.start(t); o.stop(t+0.03);
   },
 };
 
@@ -1644,7 +1693,7 @@ async function connectSocket() {
           const q = state.quests.find(q => q.id === data.questId);
           if (q) { q.active = false; q.completed = true; }
           showToast(`Quest complete! +${data.rewards?.credits || 0} EC`);
-          AudioSFX.play('quest_complete');
+          
           addComms('Mission Board', `Mission complete! Reward: ${data.rewards?.credits || 0} EC`);
           if (state.screen === 'bridge') updateBridgeUI();
         });
@@ -1769,6 +1818,18 @@ function showScreen(name) {
     addComms('System', '3D engine not available. Cannot enter gunner mode.');
     return;
   }
+  // Fade transition for non-gunner screens
+  if (name !== 'gunner' && state.screen !== 'gunner' && name !== state.screen) {
+    const _overlay = document.getElementById('screen-transition-overlay');
+    if (_overlay) {
+      _overlay.classList.add('active');
+      setTimeout(() => { _showScreenInner(name); _overlay.classList.remove('active'); }, 250);
+      return;
+    }
+  }
+  _showScreenInner(name);
+}
+function _showScreenInner(name) {
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
@@ -2285,6 +2346,7 @@ function jumpToSystem(idx) {
   // Report visit to server for quest progress
   if (state.socket) state.socket.emit('system:visit', { systemId: sys.id });
   addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
+  setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
   }
@@ -2449,7 +2511,7 @@ function renderStation() {
     gainSkillXP('trading', 0.1);
   }
 
-  state.location.docked = true;
+  state.location.docked = true; AudioSFX.play('dock');
 }
 
 window._buy = (name, price) => {
@@ -3026,21 +3088,52 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ── Starfield ────
-const starCount = 5000;
-const starGeo = new THREE.BufferGeometry();
-const starPos = new Float32Array(starCount * 3);
-for (let i = 0; i < starCount; i++) {
-  const r = 500 + Math.random() * 9500;
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos(2 * Math.random() - 1);
-  starPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-  starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-  starPos[i*3+2] = r * Math.cos(phi);
-}
-starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xccbbaa, size: 2, sizeAttenuation: true, transparent: true, opacity: 0.8 })));
+// ── Multi-layer Parallax Starfield ────
+const starLayers = [];
+const STAR_LAYER_CFG = [
+  { count: 1500, minR: 400, maxR: 2000, size: 3.5, opacity: 0.95, parallax: 0.04, color: 0xffeedd },
+  { count: 3000, minR: 2000, maxR: 6000, size: 2.0, opacity: 0.7, parallax: 0.015, color: 0xccbbaa },
+  { count: 4000, minR: 6000, maxR: 12000, size: 1.2, opacity: 0.45, parallax: 0.004, color: 0x9999aa },
+];
+STAR_LAYER_CFG.forEach(cfg => {
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(cfg.count * 3);
+  for (let i = 0; i < cfg.count; i++) {
+    const r = cfg.minR + Math.random() * (cfg.maxR - cfg.minR);
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    pos[i*3+2] = r * Math.cos(phi);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: cfg.color, size: cfg.size, sizeAttenuation: true,
+    transparent: true, opacity: cfg.opacity, depthWrite: false,
+  });
+  const points = new THREE.Points(geo, mat);
+  points.userData.parallax = cfg.parallax;
+  scene.add(points);
+  starLayers.push(points);
+});
 
+
+// ── Shield shimmer (additive flash on shield hit) ────
+const shieldShimmerMat = new THREE.MeshBasicMaterial({
+  color: 0x44aaff, transparent: true, opacity: 0, 
+  side: THREE.FrontSide, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const shieldShimmerGeo = new THREE.IcosahedronGeometry(4.5, 1);
+const shieldShimmer = new THREE.Mesh(shieldShimmerGeo, shieldShimmerMat);
+shieldShimmer.name = 'shield-shimmer';
+camera.add(shieldShimmer);
+let shieldShimmerTimer = 0;
+
+function triggerShieldShimmer() {
+  shieldShimmerTimer = 300;
+  shieldShimmerMat.opacity = 0.35;
+  shieldShimmerMat.color.setHex(0x44aaff);
+}
 // Nebulae
 for (let i = 0; i < 4; i++) {
   const nebMat = new THREE.MeshBasicMaterial({
@@ -3466,6 +3559,16 @@ function spawnNail() {
   c.recoilVel = -8;
   c.fireRecoilKick = 0.015; // Camera kick on fire
   muzzleMat.opacity = 1;
+    // Screen-space muzzle flash overlay
+    const _mfDiv = document.createElement('div');
+    _mfDiv.style.cssText = 'position:fixed;inset:0;z-index:14;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(68,170,255,0.12) 0%,transparent 40%);';
+    document.body.appendChild(_mfDiv);
+    setTimeout(() => _mfDiv.remove(), 60);
+    // Muzzle point light burst
+    const _mfLight = new THREE.PointLight(0x88ccff, 8, 20);
+    _mfLight.position.copy(camera.position).add(new THREE.Vector3(0, -0.3, -4).applyQuaternion(camera.quaternion));
+    scene.add(_mfLight);
+    setTimeout(() => scene.remove(_mfLight), 60);
   AudioSFX.play('fire');
   const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
@@ -3512,6 +3615,32 @@ function spawnNail() {
     const sparkG = new THREE.Group(); sparkG.add(spark); sparkG.position.copy(origin); scene.add(sparkG);
     c.explosions.push({ group: sparkG, age: 0, maxAge: 150 });
   }
+}
+
+function spawnImpactSparks(position, color) {
+  color = color || 0xffaa44;
+  const sparkCount = 8 + Math.floor(Math.random() * 5);
+  const g = new THREE.Group();
+  for (let i = 0; i < sparkCount; i++) {
+    const sz = 0.04 + Math.random() * 0.06;
+    const mat = new THREE.MeshBasicMaterial({
+      color: i < 3 ? 0xffffff : color, transparent: true, opacity: 1,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const spark = new THREE.Mesh(new THREE.SphereGeometry(sz, 4, 4), mat);
+    spark.userData = {
+      dir: new THREE.Vector3(
+        (Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2
+      ).normalize(),
+      speed: 15 + Math.random() * 25,
+    };
+    g.add(spark);
+  }
+  const fl = new THREE.PointLight(color, 3, 12);
+  g.add(fl);
+  g.position.copy(position);
+  scene.add(g);
+  c.explosions.push({ group: g, age: 0, maxAge: 250 });
 }
 
 const BOSS_MODELS = ['titan_a', 'titan_b', 'demon_battleship'];
@@ -4165,7 +4294,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('quest_complete'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { state.location.docked = true; showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -5410,7 +5539,7 @@ document.addEventListener('keydown', (e) => {
   // B = dock at station
   if (e.key === 'b' || e.key === 'B') {
     const sys = state.starSystems[state.location.systemIndex];
-    if (sys && sys.hasStation) { state.location.docked = true; showScreen('station'); }
+    if (sys && sys.hasStation) { state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); }
     else addComms('System', 'No station in this system.');
   }
 });
@@ -5636,6 +5765,7 @@ function gameLoop() {
           e.hitFlash = 150;
           AudioSFX.play('hit');
           AudioSFX.play('hit_marker');
+          spawnImpactSparks(p.group.position.clone(), p.isLaser ? 0x44ffaa : 0xffaa44);
           c.hitMarkerTimer = 150;
           if (e.hp <= 0) {
             // Kill streak
@@ -5783,8 +5913,8 @@ function gameLoop() {
       }
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
-        if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); }
-        else state.ship.hull = Math.max(0, state.ship.hull - 0.3);
+        if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
+        else { state.ship.hull = Math.max(0, state.ship.hull - 0.3); AudioSFX.play('hull_hit'); }
         if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
         c.damageFlash = 200;
         if (state.ship.hull <= 0 && !c.dead) {
@@ -5805,8 +5935,8 @@ function gameLoop() {
         if (!c.godMode && performance.now() > c.deathImmunityUntil) {
           const dmg = 3 + Math.random() * 4;
           const hadShield = state.ship.shield > 0;
-          if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); }
-          else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+          if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
+          else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
           if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
           c.damageFlash = 300;
         }
@@ -5849,6 +5979,29 @@ function gameLoop() {
       if (ex.age > ex.maxAge) { scene.remove(ex.group); disposeObject(ex.group); c.explosions.splice(i, 1); }
     }
 
+
+    // Parallax starfield
+    if (typeof starLayers !== 'undefined') {
+      starLayers.forEach(layer => {
+        layer.position.x = -ship.position.x * layer.userData.parallax;
+        layer.position.y = -ship.position.y * layer.userData.parallax;
+        layer.position.z = -ship.position.z * layer.userData.parallax;
+      });
+    }
+
+    // Shield shimmer decay
+    if (shieldShimmerTimer > 0) {
+      shieldShimmerTimer -= dtMs;
+      shieldShimmerMat.opacity = Math.max(0, (shieldShimmerTimer / 300) * 0.35);
+      shieldShimmer.rotation.y += dt * 3;
+      shieldShimmer.rotation.x += dt * 1.5;
+      if (shieldShimmerTimer <= 100) shieldShimmerMat.color.setHex(0x2266cc);
+    }
+
+    // Low fuel warning beep
+    if (state.ship.fuel > 0 && state.ship.fuel <= 15) {
+      AudioSFX.fuelWarningBeep();
+    }
     // Engine exhaust
     if (state.gameTime % 200 < dtMs) spawnExhaust();
     for (let i = exhaustParticles.length - 1; i >= 0; i--) {
@@ -5897,7 +6050,7 @@ function gameLoop() {
             else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
             if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
             c.damageFlash = 350;
-            AudioSFX.play('shield_hit');
+            AudioSFX.play('shield_hit'); triggerShieldShimmer();
             c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
             addComms('EDEN AI', '\u26a0 Asteroid collision! Watch your heading.');
           }
@@ -5951,6 +6104,17 @@ function gameLoop() {
 // ================================================================
 async function init() {
   // Generate star systems
+  // UI sounds — delegated
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.menu-btn,.btn,.nav-btn,.action-btn,.trade-buy,.trade-sell,.sf-tab,.chat-toggle')) {
+      AudioSFX.uiClick();
+    }
+  });
+  document.addEventListener('mouseenter', (e) => {
+    if (e.target.matches('.menu-btn,.btn,.nav-btn,.action-btn')) {
+      AudioSFX.uiHover();
+    }
+  }, true);
   state.starSystems = generateStarSystems();
 
   // Try to connect Socket.IO
