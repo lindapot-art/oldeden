@@ -1177,6 +1177,7 @@ const state = {
     godMode: false,
     playerHasAttacked: false,
     deathImmunityUntil: 0,
+    bossKills: 0,
   },
   // EVE Online-style ship flight
   flight: {
@@ -2055,6 +2056,12 @@ function loadFromServerData(data) {
   if (data.player) Object.assign(state.player, data.player);
   if (data.ship) Object.assign(state.ship, data.ship);
   if (data.location) Object.assign(state.location, data.location);
+  // Sanitize critical numeric fields against corrupted saves
+  state.player.credits = Number.isFinite(state.player.credits) ? Math.max(0, state.player.credits) : 0;
+  state.player.stellarMarks = Number.isFinite(state.player.stellarMarks) ? Math.max(0, state.player.stellarMarks) : 0;
+  state.ship.hull = Number.isFinite(state.ship.hull) ? Math.max(0, state.ship.hull) : state.ship.maxHull;
+  state.ship.shield = Number.isFinite(state.ship.shield) ? Math.max(0, state.ship.shield) : state.ship.maxShield;
+  state.ship.fuel = Number.isFinite(state.ship.fuel) ? Math.max(0, state.ship.fuel) : state.ship.maxFuel;
   if (data.factionRep) Object.assign(state.factionRep, data.factionRep);
   if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; state.combat.bestStreak = data.combat.bestStreak || 0; }
   if (data.chatbot) { state.chatbot.autoTarget = !!data.chatbot.autoTarget; state.chatbot.autoMine = !!data.chatbot.autoMine; }
@@ -2790,7 +2797,7 @@ function renderStation() {
   document.getElementById('station-name').innerHTML = `&#9968; ${sys ? sys.name : 'Unknown'} Station`;
 
   // Request dynamic prices from server — only on initial dock
-  if (state.socket && !state.location.docked) state.socket.emit('station:enter', { systemIndex: state.location.systemIndex });
+  if (state.socket && !state._stationPricesFetched) { state._stationPricesFetched = true; state.socket.emit('station:enter', { systemIndex: state.location.systemIndex }); }
 
   const prices = state.stationPrices || COMMODITIES;
   const market = document.getElementById('trade-market');
@@ -2880,8 +2887,8 @@ function renderStation() {
       <button class="trade-buy" onclick="window._repairHull()" ${hullDmg < 1 ? 'disabled style="opacity:0.4"' : ''}>${repairCost} EC</button></div>
     <div class="trade-row"><span>Restock Ammo (${ammoNeeded})</span>
       <button class="trade-buy" onclick="window._buyAmmo()" ${ammoNeeded < 1 ? 'disabled style="opacity:0.4"' : ''}>${ammoCost} EC</button></div>
-    <div class="trade-row"><span>Refuel (${100 - Math.round(state.ship.fuel)}%)</span>
-      <button class="trade-buy" onclick="window._refuel()" ${state.ship.fuel >= 100 ? 'disabled style="opacity:0.4"' : ''}>${Math.ceil((100 - state.ship.fuel) * 0.5)} EC</button></div>
+    <div class="trade-row"><span>Refuel (${Math.round(state.ship.maxFuel - state.ship.fuel)} units)</span>
+      <button class="trade-buy" onclick="window._refuel()" ${state.ship.fuel >= state.ship.maxFuel ? 'disabled style="opacity:0.4"' : ''}>${Math.ceil((state.ship.maxFuel - state.ship.fuel) * 0.5)} EC</button></div>
     <div style="color:var(--muted);font-size:0.7rem;margin-top:8px">Docking fee: ${state.economy.dockingFee} EC (auto-paid)</div>`;
 
   // ── Past Lives — Your dead characters as station NPCs ──
@@ -3016,12 +3023,12 @@ window._buyAmmo = () => {
   renderStation();
 };
 window._refuel = () => {
-  const needed = 100 - state.ship.fuel;
+  const needed = state.ship.maxFuel - state.ship.fuel;
   if (needed < 1) return;
   const cost = Math.ceil(needed * 0.5);
   if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for fuel.'); return; }
   state.player.credits -= cost;
-  state.ship.fuel = 100;
+  state.ship.fuel = state.ship.maxFuel;
   AudioSFX.play('dock');
   addComms('Station', `Ship refueled. (-${cost} EC)`);
   renderStation();
@@ -3168,7 +3175,7 @@ function createSoulFragment() {
     credits: p.credits,
     faction: p.faction,
     genome: p.genome ? Array.from(p.genome.slice(0, 8)) : [],
-    bossKills: c.enemies.filter(e => e.isBoss && e.hp <= 0).length,
+    bossKills: c.bossKills || 0,
     deathCause: c.dead ? 'combat' : 'rebirth',
     lifespan: Math.floor(state.gameTime),
     resonanceAffinity: affinity,
@@ -4684,7 +4691,6 @@ function renderHUD(dtMs) {
     hudCtx.globalAlpha = 1;
   }
   // Persistent hull damage vignette — starts subtle at 60%, escalates to red at <15%
-  const hullPct = state.ship.hull / state.ship.maxHull;
   if (hullPct < 0.6) {
     const vigIntensity = 1 - (hullPct / 0.6); // 0 at 60%, 1 at 0%
     const vigR = hullPct < 0.3 ? 255 : 255;
@@ -5026,7 +5032,7 @@ document.addEventListener('keydown', (e) => {
   // Don't process game keys while typing in chatbot
   const _chInput = document.getElementById('chatbot-input');
   if (document.activeElement === _chInput) { if (e.key === 'Escape') { _chInput.blur(); } return; }
-  if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
+  if (e.key === 'Escape' && c.active && !c.dead) { exitGunnerMode(); return; }
   // R = reload ammo (1.5s reload animation)
   if ((e.key === 'r' || e.key === 'R') && c.active) {
     if (c.ammo < c.maxAmmo && !c._reloading) {
@@ -5117,7 +5123,7 @@ document.getElementById('btn-create-char').addEventListener('click', createChara
 document.getElementById('btn-back-title').addEventListener('click', () => showScreen('title'));
 
 // Station / Character / Rebirth backs
-document.getElementById('btn-undock').addEventListener('click', () => { state.location.docked = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
+document.getElementById('btn-undock').addEventListener('click', () => { state.location.docked = false; state._stationPricesFetched = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
 document.getElementById('btn-char-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-rebirth-back').addEventListener('click', () => showScreen('bridge'));
 document.getElementById('btn-embrace-rebirth').addEventListener('click', () => {
@@ -7127,7 +7133,7 @@ function gameLoop() {
             // Floating damage number
             c.dmgNumbers.push({ text: '+' + pts, pos: e.group.position.clone(), age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
             if (e.isBoss) {
-              c.bossActive = false; state.player.lifetimeStats.bossKills++;
+              c.bossActive = false; state.player.lifetimeStats.bossKills++; c.bossKills = (c.bossKills || 0) + 1;
               addComms('AI Director', 'Boss destroyed! +500 points');
               // Multi-stage boss explosion — 3 staggered blasts
               const bossPos = e.group.position.clone();
