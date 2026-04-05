@@ -1816,7 +1816,7 @@ function addDeathFeedEvent(type, text) {
   updateDeathTicker();
 }
 
-function _escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;'); }
 function updateDeathTicker() {
   const el = document.getElementById('death-ticker-content');
   if (!el) return;
@@ -1907,6 +1907,7 @@ async function connectSocket() {
         s.on('disconnect', () => {
           state.connected = false;
           updateServerStatus(false);
+          saveGame(); // Emergency save to localStorage (socket emit will silently fail)
         });
         s.on('game:init', (data) => {
           addComms('AI Director', `${data.systems.length} systems online. Tick rate: ${data.tickRate}ms`);
@@ -1922,8 +1923,8 @@ async function connectSocket() {
         // Combat reward from server
         s.on('combat:rewarded', (data) => {
           if (data.wallet) {
-            state.player.credits = data.wallet.ec;
-            state.player.stellarMarks = data.wallet.sm;
+            state.player.credits = Math.max(state.player.credits, data.wallet.ec);
+            state.player.stellarMarks = Math.max(state.player.stellarMarks, data.wallet.sm);
           }
           showToast(`+${data.reward} EC bounty (${data.enemyType})`);
           // Update quest progress on client
@@ -2027,12 +2028,15 @@ async function connectSocket() {
 }
 
 // Toast notification
+const _activeToasts = [];
 function showToast(msg) {
+  while (_activeToasts.length >= 3) { const old = _activeToasts.shift(); if (old.parentNode) old.remove(); }
   const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(212,168,86,0.9);color:#000;padding:8px 20px;border-radius:4px;font-size:0.85rem;z-index:9999;pointer-events:none;animation:fadeIn 0.3s ease;';
+  t.style.cssText = 'position:fixed;top:' + (60 + _activeToasts.length * 36) + 'px;left:50%;transform:translateX(-50%);background:rgba(212,168,86,0.9);color:#000;padding:8px 20px;border-radius:4px;font-size:0.85rem;z-index:9999;pointer-events:none;animation:fadeIn 0.3s ease;';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }, 2000);
+  _activeToasts.push(t);
+  setTimeout(() => { const idx = _activeToasts.indexOf(t); if (idx !== -1) _activeToasts.splice(idx, 1); t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => { if (t.parentNode) t.remove(); }, 500); }, 2000);
 }
 
 function loadFromServerData(data) {
@@ -2040,7 +2044,8 @@ function loadFromServerData(data) {
   if (data.ship) Object.assign(state.ship, data.ship);
   if (data.location) Object.assign(state.location, data.location);
   if (data.factionRep) Object.assign(state.factionRep, data.factionRep);
-  if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; }
+  if (data.combat) { state.combat.score = data.combat.score || 0; state.combat.kills = data.combat.kills || 0; state.combat.cycle = data.combat.cycle || 1; state.combat.bestStreak = data.combat.bestStreak || 0; }
+  if (data.chatbot) { state.chatbot.autoTarget = !!data.chatbot.autoTarget; state.chatbot.autoMine = !!data.chatbot.autoMine; }
   if (data.inventory) state.inventory = data.inventory;
   if (data.quests) state.quests = data.quests;
   if (data.upgrades) Object.assign(state.upgrades, data.upgrades);
@@ -2051,6 +2056,7 @@ function loadFromServerData(data) {
   if (data.soulMemory) Object.assign(state.soulMemory, data.soulMemory);
   if (data.economy) Object.assign(state.economy, data.economy);
   if (data.activeWeapon) state.activeWeapon = data.activeWeapon;
+  if (data.starSystems && data.starSystems.length) state.starSystems = data.starSystems;
   // Restore alt universe state
   if (data.inAltUniverse) {
     state.inAltUniverse = true;
@@ -2627,12 +2633,15 @@ function renderSystemDetail(idx) {
     </div>`;
 }
 
+let _isJumping = false;
 function jumpToSystem(idx) {
+  if (_isJumping) return;
   if (state.ship.fuel < 5) {
     addComms('Navigation', 'Insufficient fuel for warp jump. Dock at a station to refuel.');
     AudioSFX.play('shield_hit');
     return;
   }
+  _isJumping = true;
   AudioSFX.play('jump');
   // Warp flash animation
   const warpOverlay = document.createElement('div');
@@ -2644,7 +2653,7 @@ function jumpToSystem(idx) {
     document.head.appendChild(style);
   }
   document.body.appendChild(warpOverlay);
-  setTimeout(() => { if (warpOverlay.parentNode) warpOverlay.remove(); }, 1500);
+  setTimeout(() => { if (warpOverlay.parentNode) warpOverlay.remove(); _isJumping = false; }, 1500);
   // Star streaks
   const streakCanvas = document.createElement('canvas');
   streakCanvas.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;';
@@ -3443,7 +3452,7 @@ function saveGame() {
     ship: state.ship,
     location: state.location,
     factionRep: state.factionRep,
-    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle },
+    combat: { score: state.combat.score, kills: state.combat.kills, cycle: state.combat.cycle, bestStreak: state.combat.bestStreak || 0 },
     inventory: state.inventory,
     quests: state.quests,
     upgrades: state.upgrades,
@@ -3461,9 +3470,11 @@ function saveGame() {
     _origSystems: state._origSystems || null,
     _origSystemIndex: state._origSystemIndex || 0,
     persistentItems: state.persistentItems,
+    starSystems: state.starSystems,
     currentSkin: state.currentSkin,
     market: state.market,
     insuredItemId: state.insuredItemId,
+    chatbot: { autoTarget: state.chatbot.autoTarget, autoMine: state.chatbot.autoMine },
   };
   try { localStorage.setItem('oe-save', JSON.stringify(data)); }
   catch (e) { addComms('System', 'Save failed — storage full.'); }
@@ -3839,6 +3850,8 @@ function enterGunnerMode() {
   c.yaw = 0; c.pitch = 0;
   spawnAsteroids();
   if (c.spaceDust.length === 0) spawnSpaceDust();
+  // Restore saved skin to 3D ship
+  if (state.currentSkin) setTimeout(() => applySkin(state.currentSkin), 100);
   // Initialize new systems
   createStargate();
   spawnSystemNPCs();
@@ -3983,6 +3996,7 @@ function exitGunnerMode(skipScreenChange) {
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
+  _materialCache.forEach(m => m.dispose()); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
@@ -7122,7 +7136,7 @@ function gameLoop() {
         if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
         c.damageFlash = 200;
         if (state.ship.hull <= 0 && !c.dead) {
-          state.soulMemory.combatInstinct = Math.min(10, state.soulMemory.combatInstinct + (c.kills * 0.02));
+          state.soulMemory.combatInstinct = Math.min(10, state.soulMemory.combatInstinct + Math.min(2, 0.5 + c.kills * 0.005));
           playerDeathSequence('Rammed by hostile ' + e.type);
         }
       }
