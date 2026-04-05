@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Old Eden</title>
 <style>
 :root {
@@ -1821,7 +1821,7 @@ const LASER_HEAT_PER_SHOT = 0.03;
 let lastLaserShot = 0;
 
 function fireLaser() {
-  if (c.heat >= 0.95) return; // overheated
+  if (c.dead || c.heat >= 0.95) return; // dead or overheated
   const now = performance.now();
   if (now - lastLaserShot < LASER_FIRE_RATE) return;
   lastLaserShot = now;
@@ -1842,12 +1842,9 @@ function fireLaser() {
   glow.quaternion.copy(camera.quaternion); glow.rotateX(Math.PI / 2);
   g.add(glow);
   
-  const laserLight = new THREE.PointLight(0x00ff88, 1, 8);
-  g.add(laserLight);
-  
   g.position.copy(origin);
   scene.add(g);
-  c.projectiles.push({ group: g, dir: dir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: glowMat, slugLight: laserLight, isLaser: true, damage: LASER_DAMAGE });
+  c.projectiles.push({ group: g, dir: dir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: glowMat, slugLight: null, isLaser: true, damage: LASER_DAMAGE });
   
   // Small recoil
   c.recoilVel = -2;
@@ -2662,7 +2659,7 @@ function jumpToSystem(idx) {
 //  STATION
 // ================================================================
 const COMMODITIES = [
-  { name: 'Salvage Scrap', buy: 15, sell: 22 },
+  { name: 'Salvage Scrap', buy: 25, sell: 15 },
   { name: 'Titanite Ore', buy: 120, sell: 95 },
   { name: 'Hydrogen Fuel', buy: 45, sell: 35 },
   { name: 'Dark Matter Crystals', buy: 850, sell: 680 },
@@ -3351,6 +3348,12 @@ const SHIP_UPGRADES = [
 ];
 
 function applyUpgrades() {
+  state.upgrades.maxHull = Math.max(100, Math.min(500, state.upgrades.maxHull || 100));
+  state.upgrades.maxShield = Math.max(100, Math.min(500, state.upgrades.maxShield || 100));
+  state.upgrades.maxAmmo = Math.max(24, Math.min(100, state.upgrades.maxAmmo || 24));
+  state.upgrades.railgunDmg = Math.max(1, Math.min(5, state.upgrades.railgunDmg || 1));
+  state.upgrades.shieldRegen = Math.max(3, Math.min(20, state.upgrades.shieldRegen || 3));
+  state.upgrades.engineSpeed = Math.max(1, Math.min(3, state.upgrades.engineSpeed || 1));
   state.ship.maxHull = state.upgrades.maxHull;
   state.ship.maxShield = state.upgrades.maxShield;
   state.combat.maxAmmo = state.upgrades.maxAmmo;
@@ -3989,7 +3992,7 @@ function _loadNextCombatBatch() {
 }
 
 function fireRailgun() {
-  if (!c.weaponReady || c.ammo <= 0) return;
+  if (c.dead || !c.weaponReady || c.ammo <= 0) return;
   c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
   c.playerHasAttacked = true;
   AudioSFX.play('charge');
@@ -4031,24 +4034,17 @@ function spawnNail() {
   heat.quaternion.copy(camera.quaternion); heat.rotateX(Math.PI/2);
   g.add(heat);
 
-  // Point light on slug for environment illumination
-  const slugLight = new THREE.PointLight(0x44aaff, 2, 15);
-  g.add(slugLight);
-
   g.position.copy(origin);
   scene.add(g);
-  c.projectiles.push({ group: g, dir: dir.clone(), speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat2, heatMat, slugLight });
+  c.projectiles.push({ group: g, dir: dir.clone(), speed: NAIL_SPEED, life: 3000, age: 0, trailMat: trailMat2, heatMat, slugLight: null });
 
-  // Muzzle flash particles
+  // Muzzle flash particles (shared geometry)
   for (let i = 0; i < 6; i++) {
     const spark = new THREE.Mesh(
-      new THREE.SphereGeometry(0.03 + Math.random() * 0.04, 4, 4),
+      _explFragGeos[0],
       new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 })
     );
-    const sparkDir = dir.clone().add(new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3));
-    spark.position.copy(origin);
-    scene.add(spark);
-    // Quick spark animation — reuse explosion system
+    spark.scale.setScalar(0.6 + Math.random() * 0.8);
     const sparkG = new THREE.Group(); sparkG.add(spark); sparkG.position.copy(origin); scene.add(sparkG);
     c.explosions.push({ group: sparkG, age: 0, maxAge: 150 });
   }
@@ -4699,7 +4695,7 @@ function renderHUD() {
 // ================================================================
 let mouseHeld = false;
 canvas3d.addEventListener('mousedown', (e) => {
-  if (state.screen !== 'gunner') return;
+  if (state.screen !== 'gunner' || c.dead) return;
   if (!c.locked) { canvas3d.requestPointerLock(); return; }
   if (e.button === 0) {
     mouseHeld = true;
@@ -5901,7 +5897,7 @@ function generateNPCMarketOrders() {
     // NPC sell orders (player can buy from these)
     const sellCount = 1 + Math.floor(Math.random() * 3);
     for (let i = 0; i < sellCount; i++) {
-      const priceVar = 0.8 + Math.random() * 0.4; // ±20%
+      const priceVar = 0.95 + Math.random() * 0.25; // sell: 0.95–1.2x
       state.market.orders.push({
         id: 'npc-s-' + item.name + '-' + i,
         item: item.name,
@@ -5915,7 +5911,7 @@ function generateNPCMarketOrders() {
     // NPC buy orders (player can sell to these)
     const buyCount = 1 + Math.floor(Math.random() * 2);
     for (let i = 0; i < buyCount; i++) {
-      const priceVar = 0.6 + Math.random() * 0.35; // lower than sell
+      const priceVar = 0.5 + Math.random() * 0.3; // buy: 0.5–0.8x (no overlap with sell)
       state.market.orders.push({
         id: 'npc-b-' + item.name + '-' + i,
         item: item.name,
@@ -6663,7 +6659,7 @@ function gameLoop() {
     }
     if (c.cooling && performance.now() >= c.coolEnd) { c.cooling = false; c.weaponReady = true; }
     // Continuous laser fire while mouse held
-    if (mouseHeld && state.activeWeapon === 'laser' && c.locked) fireLaser();
+    if (mouseHeld && state.activeWeapon === 'laser' && c.locked && !c.dead) fireLaser();
     if (muzzleMat.opacity > 0) muzzleMat.opacity = Math.max(0, muzzleMat.opacity - dt * 8);
 
     // Recoil
@@ -6824,7 +6820,7 @@ function gameLoop() {
               });
               if (q.objectives.every(o => (o.current || 0) >= o.required)) {
                 q.completed = true; q.active = false;
-                state.player.credits += q.rewards?.credits || 0;
+                if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
                 addComms('Mission', `COMPLETED: ${q.title || q.name} — +${q.rewards?.credits || 0} EC`);
                 AudioSFX.play('quest_complete');
               }
@@ -7185,10 +7181,12 @@ async function init() {
     if (qResp.ok) {
       const qData = await qResp.json();
       if (qData.quests && qData.quests.length) {
-        state.quests = qData.quests.map(q => ({
+        state.quests = qData.quests.map((q, idx) => ({
+          id: q.id || q._id || ('server-q-' + idx),
           title: q.title || q.objective || 'Unknown Mission',
           summary: q.description || q.hook || 'Complete this mission.',
           reward: q.reward || Math.floor(Math.random() * 500 + 100),
+          rewards: { credits: q.reward || Math.floor(Math.random() * 500 + 100) },
           active: false,
           completed: false,
           objectives: q.objectives || [{ type: 'kill', target: '*', required: 5 + Math.floor(Math.random() * 10), current: 0 }],
