@@ -398,6 +398,19 @@ canvas{display:block;}
 /* ── Muzzle Flash Overlay ────────────────── */
 #muzzle-flash-overlay{position:fixed;inset:0;z-index:14;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(68,170,255,0.12) 0%,transparent 40%);opacity:0;transition:opacity 0.04s ease;}
 
+/* ── WebGL Lost Overlay ───────────────────── */
+#webgl-lost-overlay{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;flex-direction:column;font-family:monospace;}
+#webgl-lost-overlay.active{display:flex;}
+#webgl-lost-overlay .wl-title{font-size:1.6rem;color:#ff4444;margin-bottom:1rem;letter-spacing:0.15em;}
+#webgl-lost-overlay .wl-sub{font-size:0.9rem;color:#888;margin-bottom:1.5rem;}
+#webgl-lost-overlay .wl-btn{padding:10px 24px;background:#cc0000;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1rem;}
+
+/* ── GLB Loading Overlay ─────────────────── */
+#glb-loading-overlay{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:50;padding:6px 18px;background:rgba(10,10,15,0.85);border:1px solid rgba(68,170,255,0.3);border-radius:6px;color:rgba(68,170,255,0.8);font-size:0.75rem;letter-spacing:0.1em;pointer-events:none;opacity:0;transition:opacity 0.3s ease;}
+#glb-loading-overlay.active{opacity:1;}
+#glb-loading-overlay .glb-bar{width:120px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:4px;overflow:hidden;}
+#glb-loading-overlay .glb-fill{height:100%;background:rgba(68,170,255,0.6);border-radius:2px;transition:width 0.2s ease;width:0%;}
+
 /* ── Reduced Motion ──────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -413,6 +426,8 @@ canvas{display:block;}
 <div id="save-indicator">&#10003; SAVED</div>
 <div id="boss-warning-overlay"><div class="bw-title">&#9888; WARNING &#9888;</div><div class="bw-sub">MASSIVE HOSTILE SIGNATURE</div></div>
 <div id="muzzle-flash-overlay"></div>
+<div id="webgl-lost-overlay"><div class="wl-title">&#9888; GPU CONNECTION LOST</div><div class="wl-sub">The WebGL context was lost. This may be a driver issue.</div><button class="wl-btn" onclick="location.reload()">&#8635; Reload Game</button></div>
+<div id="glb-loading-overlay">LOADING ASSETS <span id="glb-load-count">0/0</span><div class="glb-bar"><div class="glb-fill" id="glb-load-fill"></div></div></div>
 
 <!-- Screen transition fade overlay (moved from broken <style> location) -->
 <div id="screen-transition-overlay"></div>
@@ -431,7 +446,12 @@ canvas{display:block;}
     <div class="ctrl-item"><span class="ctrl-key">Q</span><span class="ctrl-desc">Switch weapon</span></div>
     <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-desc">Exit to bridge</span></div>
     <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-desc">Mine asteroid</span></div>
-    <p class="controls-dismiss">Click anywhere or press any key to dismiss</p>
+    <div class="ctrl-item"><span class="ctrl-key">B</span><span class="ctrl-desc">Dock at station</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">F</span><span class="ctrl-desc">Star map / Warp</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">P</span><span class="ctrl-desc">Autopilot</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">G</span><span class="ctrl-desc">Enter stargate</span></div>
+    <div class="ctrl-item"><span class="ctrl-key">H</span><span class="ctrl-desc">Show this help</span></div>
+    <p class="controls-dismiss">Click anywhere or press any key to dismiss &bull; Press H anytime</p>
   </div>
 </div>
 
@@ -601,6 +621,11 @@ canvas{display:block;}
       <span id="vol-sfx-val" style="color:var(--blue);font-size:0.8rem;">80%</span>
     </div>
     <div style="margin-bottom:20px;">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">BGM Volume</label>
+      <input type="range" id="vol-bgm" min="0" max="100" value="60" style="width:100%;accent-color:var(--magenta,#cc44aa);">
+      <span id="vol-bgm-val" style="color:var(--magenta,#cc44aa);font-size:0.8rem;">60%</span>
+    </div>
+    <div style="margin-bottom:20px;">
       <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Mouse Sensitivity</label>
       <input type="range" id="setting-sens" min="1" max="10" value="5" style="width:100%;accent-color:var(--green);">
       <span id="setting-sens-val" style="color:var(--green);font-size:0.8rem;">5</span>
@@ -614,6 +639,29 @@ canvas{display:block;}
       <label style="font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;">
         <input type="checkbox" id="setting-screenshake" checked> Screen shake on damage
       </label>
+    </div>
+    <div style="margin-top:20px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">
+      <h3 style="font-size:0.85rem;color:var(--gold);letter-spacing:0.15em;margin-bottom:10px;">KEYBINDS</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:0.75rem;color:var(--muted);">
+        <span><span style="color:var(--blue);">WASD</span> Fly/Strafe</span>
+        <span><span style="color:var(--blue);">Mouse</span> Aim</span>
+        <span><span style="color:var(--blue);">Click</span> Fire</span>
+        <span><span style="color:var(--blue);">Shift</span> Boost</span>
+        <span><span style="color:var(--blue);">Space</span> Up</span>
+        <span><span style="color:var(--blue);">Ctrl</span> Down</span>
+        <span><span style="color:var(--blue);">R</span> Reload</span>
+        <span><span style="color:var(--blue);">Q</span> Swap weapon</span>
+        <span><span style="color:var(--blue);">M</span> Mine</span>
+        <span><span style="color:var(--blue);">T</span> AI Chat</span>
+        <span><span style="color:var(--blue);">K</span> Skins</span>
+        <span><span style="color:var(--blue);">G</span> Stargate</span>
+        <span><span style="color:var(--blue);">F</span> Star map</span>
+        <span><span style="color:var(--blue);">B</span> Dock</span>
+        <span><span style="color:var(--blue);">P</span> Autopilot</span>
+        <span><span style="color:var(--blue);">L</span> Labels</span>
+        <span><span style="color:var(--blue);">H</span> Controls help</span>
+        <span><span style="color:var(--blue);">ESC</span> Exit gunner</span>
+      </div>
     </div>
   </div>
   <div class="btn-row"><button class="btn" id="btn-settings-back">&larr; Back</button></div>
@@ -763,14 +811,14 @@ canvas{display:block;}
 <!--  ACTION BUTTONS (Gunner Mode HUD)            -->
 <!-- ════════════════════════════════════════════ -->
 <div id="action-bar">
-  <button class="action-btn" id="act-mine" data-action="mine"><span class="act-icon">&#9874;</span><span class="act-label">Mine</span><span class="act-key">M</span></button>
-  <button class="action-btn" id="act-chat" data-action="chat"><span class="act-icon">&#9733;</span><span class="act-label">AI Chat</span><span class="act-key">T</span></button>
-  <button class="action-btn" id="act-skins" data-action="skins"><span class="act-icon">&#9998;</span><span class="act-label">Skins</span><span class="act-key">K</span></button>
-  <button class="action-btn" id="act-gate" data-action="gate"><span class="act-icon">&#10026;</span><span class="act-label">Gate</span><span class="act-key">G</span></button>
-  <button class="action-btn" id="act-collect" data-action="collect"><span class="act-icon">&#10024;</span><span class="act-label">Collect</span><span class="act-key">C</span></button>
-  <button class="action-btn" id="act-reload" data-action="reload"><span class="act-icon">&#8635;</span><span class="act-label">Reload</span><span class="act-key">R</span></button>
-  <button class="action-btn" id="act-warp" data-action="warp"><span class="act-icon">&#9889;</span><span class="act-label">Warp</span><span class="act-key">F</span></button>
-  <button class="action-btn" id="act-dock" data-action="dock"><span class="act-icon">&#9875;</span><span class="act-label">Dock</span><span class="act-key">B</span></button>
+  <button class="action-btn" id="act-mine" data-action="mine" title="Mine nearby asteroids for resources (M)"><span class="act-icon">&#9874;</span><span class="act-label">Mine</span><span class="act-key">M</span></button>
+  <button class="action-btn" id="act-chat" data-action="chat" title="Open EDEN AI chatbot — ask questions, get advice (T)"><span class="act-icon">&#9733;</span><span class="act-label">AI Chat</span><span class="act-key">T</span></button>
+  <button class="action-btn" id="act-skins" data-action="skins" title="Customize your ship skin (K)"><span class="act-icon">&#9998;</span><span class="act-label">Skins</span><span class="act-key">K</span></button>
+  <button class="action-btn" id="act-gate" data-action="gate" title="Enter nearby stargate to alternate universe (G)"><span class="act-icon">&#10026;</span><span class="act-label">Gate</span><span class="act-key">G</span></button>
+  <button class="action-btn" id="act-collect" data-action="collect" title="Collect ancient artifacts in alt universe (C)"><span class="act-icon">&#10024;</span><span class="act-label">Collect</span><span class="act-key">C</span></button>
+  <button class="action-btn" id="act-reload" data-action="reload" title="Reload railgun ammo — 1.5s reload time (R)"><span class="act-icon">&#8635;</span><span class="act-label">Reload</span><span class="act-key">R</span></button>
+  <button class="action-btn" id="act-warp" data-action="warp" title="Open star map — warp to another system (F)"><span class="act-icon">&#9889;</span><span class="act-label">Warp</span><span class="act-key">F</span></button>
+  <button class="action-btn" id="act-dock" data-action="dock" title="Dock at station — trade, upgrade, repair (B)"><span class="act-icon">&#9875;</span><span class="act-label">Dock</span><span class="act-key">B</span></button>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
@@ -780,6 +828,7 @@ canvas{display:block;}
   <div id="touch-move-zone"><div id="touch-stick"></div></div>
   <div id="touch-fire">FIRE</div>
   <div id="touch-reload">R</div>
+  <div id="touch-boost" style="position:absolute;right:20px;bottom:140px;width:50px;height:50px;background:rgba(212,168,86,0.2);border:1px solid rgba(212,168,86,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold,#d4a856);font-size:0.65rem;font-weight:700;letter-spacing:0.05em;user-select:none;-webkit-user-select:none;touch-action:none;">BOOST</div>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
@@ -955,7 +1004,7 @@ const AudioSFX = {
     this.ensure();
     const ctx = this.ctx;
     const masterGain = ctx.createGain();
-    masterGain.gain.value = 0.04 * state.settings.masterVol;
+    masterGain.gain.value = 0.04 * (state.settings.bgmVol != null ? state.settings.bgmVol : state.settings.masterVol);
     masterGain.connect(ctx.destination);
     // Deep bass drone
     const bass = ctx.createOscillator(); bass.type = 'sine'; bass.frequency.value = 55;
@@ -1142,6 +1191,7 @@ const state = {
   settings: {
     masterVol: 0.7,
     sfxVol: 0.8,
+    bgmVol: 0.6,
     sensitivity: 5,
     scanlines: true,
     screenShake: true,
@@ -2005,20 +2055,25 @@ function updateServerStatus(online) {
 // ================================================================
 //  SCREEN MANAGEMENT
 // ================================================================
+let _transitioning = false;
 function showScreen(name) {
+  // Guard: block during active transition to prevent race conditions
+  if (_transitioning) return;
   // Guard: don't enter gunner if 3D engine isn't ready — prevents dead-state trap
   if (name === 'gunner' && !threeReady) {
     addComms('System', '3D engine not available. Cannot enter gunner mode.');
     return;
   }
-  // Fade transition for non-gunner screens
-  if (name !== 'gunner' && state.screen !== 'gunner' && name !== state.screen) {
-    const _overlay = document.getElementById('screen-transition-overlay');
-    if (_overlay) {
-      _overlay.classList.add('active');
-      setTimeout(() => { _showScreenInner(name); _overlay.classList.remove('active'); }, 250);
-      return;
-    }
+  // Same-screen guard
+  if (name === state.screen) return;
+  const _overlay = document.getElementById('screen-transition-overlay');
+  // Fade transition for ALL screen changes (150ms for gunner, 250ms for menus)
+  const dur = (name === 'gunner' || state.screen === 'gunner') ? 150 : 250;
+  if (_overlay) {
+    _transitioning = true;
+    _overlay.classList.add('active');
+    setTimeout(() => { _showScreenInner(name); _overlay.classList.remove('active'); _transitioning = false; }, dur);
+    return;
   }
   _showScreenInner(name);
 }
@@ -3251,6 +3306,12 @@ function initSettingsScreen() {
   document.getElementById('setting-sens-val').textContent = state.settings.sensitivity;
   volM.oninput = () => { state.settings.masterVol = volM.value / 100; document.getElementById('vol-master-val').textContent = volM.value + '%'; };
   volS.oninput = () => { state.settings.sfxVol = volS.value / 100; document.getElementById('vol-sfx-val').textContent = volS.value + '%'; };
+  const volB = document.getElementById('vol-bgm');
+  if (volB) {
+    volB.value = (state.settings.bgmVol || 0.6) * 100;
+    document.getElementById('vol-bgm-val').textContent = Math.round((state.settings.bgmVol || 0.6) * 100) + '%';
+    volB.oninput = () => { state.settings.bgmVol = volB.value / 100; document.getElementById('vol-bgm-val').textContent = volB.value + '%'; if (AudioSFX.bgm) AudioSFX.bgm.masterGain.gain.value = 0.04 * state.settings.bgmVol; };
+  }
   sens.oninput = () => { state.settings.sensitivity = parseInt(sens.value); document.getElementById('setting-sens-val').textContent = sens.value; };
   scan.onchange = () => { state.settings.scanlines = scan.checked; };
   shake.onchange = () => { state.settings.screenShake = shake.checked; };
@@ -3340,6 +3401,23 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.8;
 renderer.shadowMap.enabled = false;
+
+// WebGL context lost/restored recovery
+canvas3d.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault();
+  console.error('[Old Eden] WebGL context lost');
+  const lostDiv = document.getElementById('webgl-lost-overlay');
+  if (lostDiv) lostDiv.classList.add('active');
+});
+canvas3d.addEventListener('webglcontextrestored', () => {
+  console.log('[Old Eden] WebGL context restored');
+  const lostDiv = document.getElementById('webgl-lost-overlay');
+  if (lostDiv) lostDiv.classList.remove('active');
+  // Re-init renderer settings
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.8;
+});
 
 // Bloom post-processing
 // composer declared at module scope above
@@ -3650,12 +3728,20 @@ function enterGunnerMode() {
   createStargate();
   spawnSystemNPCs();
   spawnStationModel();
-  preloadEnemyModel();
-  loadRailgunTurretGLB();
-  loadCockpitGLB();
-  loadDashboardGun();
-  spawnShipLibrary();
-  replaceShipWithGLB();
+  // GLB loading with progress tracking
+  const _glbTasks = ['enemy','railgun_turret','cockpit','dashboard_gun','ship_library','player_ship'];
+  let _glbDone = 0;
+  const _glbOverlay = document.getElementById('glb-loading-overlay');
+  const _glbCount = document.getElementById('glb-load-count');
+  const _glbFill = document.getElementById('glb-load-fill');
+  if (_glbOverlay) { _glbOverlay.classList.add('active'); if (_glbCount) _glbCount.textContent = '0/' + _glbTasks.length; }
+  const _glbTick = () => { _glbDone++; if (_glbCount) _glbCount.textContent = _glbDone + '/' + _glbTasks.length; if (_glbFill) _glbFill.style.width = Math.round(_glbDone/_glbTasks.length*100) + '%'; if (_glbDone >= _glbTasks.length && _glbOverlay) setTimeout(() => _glbOverlay.classList.remove('active'), 800); };
+  preloadEnemyModel().then(_glbTick).catch(_glbTick);
+  loadRailgunTurretGLB().then(_glbTick).catch(_glbTick);
+  loadCockpitGLB().then(_glbTick).catch(_glbTick);
+  loadDashboardGun().then(_glbTick).catch(_glbTick);
+  spawnShipLibrary().then(_glbTick).catch(_glbTick);
+  replaceShipWithGLB().then(_glbTick).catch(_glbTick);
   addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
   addComms('System', 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
@@ -4321,6 +4407,20 @@ function renderHUD() {
       hudCtx.beginPath(); hudCtx.arc(mx, my, 1.5, 0, Math.PI*2); hudCtx.fill();
     }
   });
+  // Asteroid dots (yellow)
+  c.asteroids.forEach(a => {
+    if (!a || !a.position) return;
+    const dx = a.position.x - ship.position.x;
+    const dz = a.position.z - ship.position.z;
+    const mapScale = mapR / (SPAWN_RADIUS + 200);
+    const mx = mapCx + dx * mapScale;
+    const my = mapCy + dz * mapScale;
+    if (Math.abs(mx-mapCx) < mapR && Math.abs(my-mapCy) < mapR) {
+      hudCtx.fillStyle = '#ffcc44';
+      hudCtx.globalAlpha = 0.5;
+      hudCtx.beginPath(); hudCtx.arc(mx, my, 1.5, 0, Math.PI*2); hudCtx.fill();
+    }
+  });
   hudCtx.globalAlpha = 1;
   hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
 
@@ -4663,6 +4763,13 @@ canvas3d.addEventListener('touchstart', (e) => {
       setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500);
     }
   }, { passive: false });
+  // Touch boost button
+  const boostBtn = document.getElementById('touch-boost');
+  if (boostBtn) {
+    boostBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keysDown.add('shift'); }, { passive: false });
+    boostBtn.addEventListener('touchend', () => { keysDown.delete('shift'); });
+    boostBtn.addEventListener('touchcancel', () => { keysDown.delete('shift'); });
+  }
 })();
 
 document.addEventListener('pointerlockchange', () => {
@@ -6313,6 +6420,17 @@ document.addEventListener('keydown', (e) => {
   // K = skin panel toggle
   if (e.key === 'k' || e.key === 'K') {
     document.getElementById('skin-panel').classList.toggle('open');
+  }
+  // H = show controls help overlay
+  if (e.key === 'h' || e.key === 'H') {
+    const _co = document.getElementById('controls-overlay');
+    if (_co) {
+      _co.classList.toggle('active');
+      if (_co.classList.contains('active')) {
+        const _dismissH = () => { _co.classList.add('fading'); setTimeout(() => _co.classList.remove('active', 'fading'), 1500); };
+        setTimeout(() => { document.addEventListener('mousedown', _dismissH, { once: true }); document.addEventListener('keydown', (ev) => { if (ev.key !== 'h' && ev.key !== 'H') _dismissH(); }, { once: true }); }, 300);
+      }
+    }
   }
   // P = autopilot to nearest station or stargate
   if (e.key === 'p' || e.key === 'P') {
