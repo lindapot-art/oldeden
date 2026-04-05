@@ -525,7 +525,7 @@ canvas{display:block;}
 
   <div class="bridge-panel" id="bridge-right">
     <div class="panel-title">Communications</div>
-    <div id="comms-feed"></div>
+    <div id="comms-feed" role="log" aria-live="polite" aria-label="Communications log"></div>
     <div class="panel-title" style="margin-top:16px;">Cargo</div>
     <div id="bridge-inventory"></div>
     <div class="panel-title" style="margin-top:16px;">Active Quests</div>
@@ -873,7 +873,7 @@ canvas{display:block;}
 <!-- ════════════════════════════════════════════ -->
 <!--  NAV BAR                                     -->
 <!-- ════════════════════════════════════════════ -->
-<div id="nav-bar">
+<nav id="nav-bar" role="navigation" aria-label="Game navigation">
   <button class="nav-btn" data-screen="bridge"><span class="nav-icon">&#9678;</span>Bridge</button>
   <button class="nav-btn" data-screen="gunner"><span class="nav-icon">&#9876;</span>Gunner</button>
   <button class="nav-btn" data-screen="starmap"><span class="nav-icon">&#9733;</span>Star Map</button>
@@ -881,8 +881,8 @@ canvas{display:block;}
   <button class="nav-btn" data-screen="market"><span class="nav-icon">&#9878;</span>Market</button>
   <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
   <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
-  <button class="nav-btn" data-screen="settings"><span class="nav-icon">&#9881;</span>Settings</button>
-</div>
+  <button class="nav-btn" data-screen="settings"><span class="nav-icon" aria-hidden="true">&#9881;</span>Settings</button>
+</nav>
 
 <div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
 <div class="version-label">Old Eden v0.1.0-alpha &bull; Free-to-Play</div>
@@ -1063,6 +1063,11 @@ const AudioSFX = {
     if (!this.engineHum) return;
     try { this.engineHum.osc1.stop(); this.engineHum.osc2.stop(); } catch(e) {}
     this.engineHum = null;
+  },
+  stopAmbience() {
+    if (!this.ambience) return;
+    try { this.ambience.stop(); } catch(e) {}
+    this.ambience = null;
   },
   _fuelWarnLast: 0,
   fuelWarningBeep() {
@@ -1942,7 +1947,7 @@ async function connectSocket() {
         });
         s.on('station:bought', (data) => {
           if (data.wallet) { state.player.credits = data.wallet.ec; state.player.stellarMarks = data.wallet.sm; }
-          state.inventory.push({ name: data.name, quantity: 1 });
+          { const exi = state.inventory.find(i => i.name === data.name); if (exi) exi.quantity = (exi.quantity || 1) + 1; else state.inventory.push({ name: data.name, quantity: 1 }); }
           addComms('Station', `Purchased ${data.name} for ${data.price} EC`);
           if (state.screen === 'station') renderStation();
         });
@@ -2034,6 +2039,8 @@ function loadFromServerData(data) {
   }
   if (data.persistentItems) state.persistentItems = data.persistentItems;
   if (data.currentSkin) { state.currentSkin = data.currentSkin; }
+  if (data.market) state.market = data.market;
+  if (data.insuredItemId) state.insuredItemId = data.insuredItemId;
   // Soul Fracture migration for old saves
   if (!state.player.soulFragments) state.player.soulFragments = [];
   if (!state.player.legacyChain) state.player.legacyChain = [];
@@ -2111,7 +2118,7 @@ function _showScreenInner(name) {
   document.body.style.cursor = name === 'gunner' ? 'none' : 'default';
 
   if (name === 'bridge') updateBridgeUI();
-  if (name === 'starmap') { resizeStarMap(); starMapAnimLoop(); }
+  if (name === 'starmap') { resizeStarMap(); if (!_starMapAnimActive) { _starMapAnimActive = true; starMapAnimLoop(); } }
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
   if (name === 'rebirth') updateRebirthScreen();
@@ -2341,11 +2348,12 @@ function updateBridgeUI() {
 
   // Comms
   const feed = document.getElementById('comms-feed');
-  feed.innerHTML = '';
+  let feedHtml = '';
   state.commsLog.slice(0, 8).forEach(m => {
     const ago = formatTimeAgo(m.time);
-    feed.innerHTML += `<div class="comms-msg"><div class="sender">${m.sender} <span style="color:#334;font-weight:normal;font-size:0.65rem">${ago}</span></div>${m.msg}</div>`;
+    feedHtml += `<div class="comms-msg"><div class="sender">${_escHtml(m.sender)} <span style="color:#334;font-weight:normal;font-size:0.65rem">${ago}</span></div>${_escHtml(m.msg)}</div>`;
   });
+  feed.innerHTML = feedHtml;
 
   // Quest tracker with progress
   const qt = document.getElementById('quest-tracker');
@@ -2490,8 +2498,9 @@ function renderStarMap() {
   renderMapLegend();
 }
 
+let _starMapAnimActive = false;
 function starMapAnimLoop() {
-  if (state.screen !== 'starmap') return;
+  if (state.screen !== 'starmap') { _starMapAnimActive = false; return; }
   renderStarMap();
   requestAnimationFrame(starMapAnimLoop);
 }
@@ -2853,7 +2862,9 @@ window._buy = (name, price) => {
     const discountedPrice = Math.ceil(price / getPlayerTradeMult());
     if (state.player.credits < discountedPrice) { addComms('Station', 'Insufficient credits.'); return; }
     state.player.credits -= discountedPrice;
-    state.inventory.push({ name, quantity: 1 });
+    const existingItem = state.inventory.find(i => i.name === name);
+    if (existingItem) existingItem.quantity = (existingItem.quantity || 1) + 1;
+    else state.inventory.push({ name, quantity: 1 });
     AudioSFX.play('dock');
     addComms('Station', `Purchased ${name} for ${discountedPrice} EC${discountedPrice < price ? ' (trade discount!)' : ''}.`);
     renderStation();
@@ -3060,7 +3071,7 @@ function createSoulFragment() {
   // Update lifetime stats
   p.lifetimeStats.totalKills += c.kills;
   p.lifetimeStats.totalScore += c.score;
-  p.lifetimeStats.totalDeaths++;
+  if (c.dead) p.lifetimeStats.totalDeaths++;
   p.lifetimeStats.totalCredits += p.credits;
   p.lifetimeStats.peakStreak = Math.max(p.lifetimeStats.peakStreak, c.bestStreak);
   // Add to legacy chain
@@ -3372,6 +3383,8 @@ function saveGame() {
     _origSystemIndex: state._origSystemIndex || 0,
     persistentItems: state.persistentItems,
     currentSkin: state.currentSkin,
+    market: state.market,
+    insuredItemId: state.insuredItemId,
   };
   localStorage.setItem('oe-save', JSON.stringify(data));
   // Also save to server
@@ -3868,7 +3881,7 @@ function exitGunnerMode(skipScreenChange) {
   paradePhase = "idle"; paradeLabels = []; paradeTimer = 0;
   // Clean up new systems
   if (state.npcShips) { state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); state.npcShips = []; }
-  if (stargateGroup) { scene.remove(stargateGroup); stargateGroup = null; }
+  if (stargateGroup) { scene.remove(stargateGroup); disposeObject(stargateGroup); stargateGroup = null; stargatePortalMat = null; }
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
@@ -3884,6 +3897,7 @@ function exitGunnerMode(skipScreenChange) {
   document.getElementById('mobile-controls').classList.remove('active');
   AudioSFX.stopBGM();
   AudioSFX.stopEngineHum();
+  AudioSFX.stopAmbience();
   if (!skipScreenChange) showScreen('bridge');
 }
 
@@ -4151,18 +4165,23 @@ function renderHUD() {
   hudCtx.clearRect(0, 0, W, H);
   if (!c.active) return;
 
-  // Combat vignette
-  const vigGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
-  vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  // Combat vignette (cached when hull healthy, dynamic when critical)
   const hullPct = state.ship.hull / state.ship.maxHull;
   if (hullPct < 0.25) {
-    // Escalating red vignette: 25%→0.2, 10%→0.35, 5%→0.45
+    const vigGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
     const dangerIntensity = 0.15 + (1 - hullPct / 0.25) * 0.3;
     vigGrad.addColorStop(1, 'rgba(255,0,0,' + (dangerIntensity + Math.sin(performance.now()*0.008)*0.06) + ')');
+    hudCtx.fillStyle = vigGrad;
   } else {
-    vigGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    if (!c._vigCache || c._vigCacheW !== W || c._vigCacheH !== H) {
+      c._vigCache = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+      c._vigCache.addColorStop(0, 'rgba(0,0,0,0)');
+      c._vigCache.addColorStop(1, 'rgba(0,0,0,0.2)');
+      c._vigCacheW = W; c._vigCacheH = H;
+    }
+    hudCtx.fillStyle = c._vigCache;
   }
-  hudCtx.fillStyle = vigGrad;
   hudCtx.fillRect(0, 0, W, H);
 
   const primary = '#44aaff', accent = '#00ff88', warning = '#ffaa00', danger = '#ff4444';
