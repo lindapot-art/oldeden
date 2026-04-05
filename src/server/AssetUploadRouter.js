@@ -175,8 +175,13 @@ export function createAssetUploadRouter({ uploadDir = 'uploads', maxFileSize = 1
       return res.status(400).json({ error: 'Only GLB/glTF files can be inspected.' });
     }
 
-    const report = await glbProcessor.inspect(filePath);
-    res.json({ filename: safeName, ...report });
+    try {
+      const report = await glbProcessor.inspect(filePath);
+      res.json({ filename: safeName, ...report });
+    } catch (err) {
+      console.error('[AssetUpload] Inspect failed:', err.message);
+      res.status(500).json({ error: 'Inspection failed', detail: err.message });
+    }
   });
 
   /**

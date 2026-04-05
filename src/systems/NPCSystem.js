@@ -91,6 +91,49 @@ export class NPCSystem {
    * @param {string} id
    * @returns {NPC|undefined}
    */
+  /**
+   * Register an external NPC (e.g. boss) directly into the NPC map.
+   * @param {object} props — must include at least { id }
+   * @returns {object} the stored NPC record
+   */
+  createNPC(props) {
+    if (!props || !props.id) throw new Error('[NPCSystem] createNPC requires { id }');
+    const npc = {
+      id: props.id,
+      genome: props.genome || null,
+      sectorId: props.sectorId || 'unknown',
+      credits: props.credits || 0,
+      ageYears: props.ageYears || 0,
+      skills: {},
+      reputation: 0,
+      relationships: [],
+      isActive: true,
+      isPlayerAvatar: false,
+      isDeceasedAvatar: false,
+      causeOfDeath: null,
+      isFractured: false,
+      isAscended: false,
+      spawnedAt: Date.now(),
+      ...props,
+    };
+    this._npcs.set(npc.id, npc);
+    this._engine.events.emit('npc:spawned', { npcId: npc.id, sectorId: npc.sectorId });
+    return npc;
+  }
+
+  /**
+   * Remove an NPC from the registry entirely.
+   * @param {string} id
+   * @returns {boolean} true if removed
+   */
+  removeNPC(id) {
+    const npc = this._npcs.get(id);
+    if (!npc) return false;
+    this._npcs.delete(id);
+    this._engine.events.emit('npc:removed', { npcId: id });
+    return true;
+  }
+
   getNPC(id) {
     return this._npcs.get(id);
   }

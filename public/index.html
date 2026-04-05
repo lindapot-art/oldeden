@@ -2823,7 +2823,7 @@ function renderStation() {
   const market = document.getElementById('trade-market');
   market.innerHTML = prices.map(c => {
     const safeName = _escHtml(c.name);
-    const jsName = c.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const jsName = c.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     return `
     <div class="trade-row">
       <span>${safeName}</span>
@@ -4205,8 +4205,8 @@ function spawnNail() {
     // Muzzle point light burst — reuse persistent light
     if (window._mfLight) { window._mfLight.intensity = 8; window._mfLight.position.copy(camera.position).addScaledVector(_tmpV3a.set(0, -0.3, -4).applyQuaternion(camera.quaternion), 1); clearTimeout(window._mfLightTimer); window._mfLightTimer = setTimeout(() => { if (window._mfLight) window._mfLight.intensity = 0; }, 60); }
   AudioSFX.play('fire');
-  const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-  const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
+  const dir = _tmpV3a.set(0,0,-1).applyQuaternion(camera.quaternion);
+  const origin = _tmpV3b.copy(camera.position).addScaledVector(dir, 1);
 
   // Realistic railgun slug — glowing core + plasma trail + spark particles
   const g = new THREE.Group();
@@ -5058,10 +5058,10 @@ document.addEventListener('mousemove', (e) => {
 });
 
 // EVE Online flight: WASD + Space/Ctrl + Shift(boost)
+const _cachedChatInput = document.getElementById('chatbot-input');
 document.addEventListener('keydown', (e) => {
   // Don't process game keys while typing in chatbot
-  const _chInput = document.getElementById('chatbot-input');
-  if (document.activeElement === _chInput) { if (e.key === 'Escape') { _chInput.blur(); } return; }
+  if (document.activeElement === _cachedChatInput) { if (e.key === 'Escape') { _cachedChatInput.blur(); } return; }
   if (e.key === 'Escape' && c.active && !c.dead) { exitGunnerMode(); return; }
   // R = reload ammo (1.5s reload animation)
   if ((e.key === 'r' || e.key === 'R') && c.active) {
@@ -5204,6 +5204,8 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
     state.location.systemIndex = state._origSystemIndex || 0;
     state.inAltUniverse = false;
     state.altUniverse = null;
+    state._origSystems = null;
+    state._origSystemIndex = null;
   }
   // Reset upgrades to baseline (the flesh forgets)
   state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
@@ -5478,6 +5480,7 @@ async function _loadNextParadeShip() {
   const key = PARADE_SHIPS[paradeIndex];
   try {
     const model = await loadGLBModel(key);
+    if (!c.active) return; // Guard: player exited during async load
     paradeShip = model.clone();
     const asset = GLB_ASSETS[key];
     const displayScale = (asset ? asset.scale : 0.6) * 2.5; // bigger for showcase
@@ -5626,6 +5629,7 @@ async function spawnPolicePatrol() {
   const modelKey = POLICE_MODELS[Math.floor(Math.random() * POLICE_MODELS.length)];
   try {
     const model = await loadGLBModel(modelKey);
+    if (!c.active) return; // Guard: player exited during async load
     const patrol = model.clone();
     const asset = GLB_ASSETS[modelKey];
     patrol.scale.setScalar((asset ? asset.scale : 0.6) * 2.0);
@@ -5912,6 +5916,8 @@ function startMining(asteroidIndex) {
   state.mining.active = true;
   state.mining.targetRef = asteroid;
   state.mining.progress = 0;
+  const _sys = state.starSystems[state.location.systemIndex];
+  state.mining.targetOre = _sys?.resources?.[0] || 'Asteroid';
 
   // Create laser beam
   const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.6, depthWrite: false });
@@ -6136,6 +6142,7 @@ async function spawnStationModel() {
   const stationKey = Math.random() > 0.5 ? 'station_a' : 'station_b';
   try {
     const model = await loadGLBModel(stationKey);
+    if (!c.active) return; // Guard: player exited during async load
     const inst = model.clone();
     inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
     scene.add(inst);
@@ -6301,6 +6308,7 @@ window._marketBuy = (orderId) => {
   else state.inventory.push({ name: order.item, quantity: 1 });
   order.quantity--;
   state.market.history.push({ item: order.item, type: 'buy', price: order.price, quantity: 1, time: Date.now() });
+  if (state.market.history.length > 100) state.market.history.splice(0, state.market.history.length - 100);
   if (order.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== orderId);
   addComms('Market', `Purchased ${order.item} for ${order.price} EC`);
   renderMarketScreen();
@@ -6316,6 +6324,7 @@ window._marketSell = (orderId) => {
   state.player.credits += order.price;
   order.quantity--;
   state.market.history.push({ item: order.item, type: 'sell', price: order.price, quantity: 1, time: Date.now() });
+  if (state.market.history.length > 100) state.market.history.splice(0, state.market.history.length - 100);
   if (order.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== orderId);
   addComms('Market', `Sold ${order.item} for ${order.price} EC`);
   renderMarketScreen();
@@ -6365,6 +6374,7 @@ window._placeOrder = () => {
         else state.inventory.push({ name: _ord.item, quantity: fq });
       }
       state.market.history.push({ item: _ord.item, type: _ord.type, price: _ord.price, quantity: fq, time: Date.now() });
+      if (state.market.history.length > 100) state.market.history.splice(0, state.market.history.length - 100);
       if (m.quantity <= 0) state.market.orders = state.market.orders.filter(o => o.id !== m.id);
     }
     if (_filled > 0) {
@@ -6741,6 +6751,7 @@ async function replaceShipWithGLB() {
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
   try {
     const model = await loadGLBModel(PLAYER_SHIP_MODEL);
+    if (!c.active) { disposeObject(model); return; } // Guard: player exited during async load
     playerShipGLB = model.clone();
     playerShipGLB.scale.setScalar(1.5);
     playerShipGLB.position.set(0, -1, 0);
@@ -6813,8 +6824,7 @@ function updateAutopilot(dt) {
 document.addEventListener('keydown', (e) => {
   if (!c.active || c.dead) return;
   // Skip keybinds when chatbot input is focused (let player type freely)
-  const chatInput = document.getElementById('chatbot-input');
-  if (document.activeElement === chatInput) return;
+  if (document.activeElement === _cachedChatInput) return;
   // M = mining toggle
   if (e.key === 'm' || e.key === 'M') {
     if (state.mining.active) stopMining();
