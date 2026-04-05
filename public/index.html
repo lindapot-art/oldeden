@@ -4086,6 +4086,7 @@ function exitGunnerMode(skipScreenChange) {
   stopMining();
   state.mining.active = false;
   c.bossActive = false;
+  autopilotActive = false; autopilotTarget = null;
   state.chatbot.visible = false;
   const chatEl = document.getElementById('chatbot-panel'); if (chatEl) chatEl.classList.remove('open');
   const skinEl = document.getElementById('skin-panel'); if (skinEl) skinEl.classList.remove('open');
@@ -5018,6 +5019,7 @@ canvas3d.addEventListener('touchstart', (e) => {
   window._clearMobileFireInterval = () => { clearInterval(fireInterval); fireInterval = null; };
   fireBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
+    clearInterval(fireInterval); // Prevent leak on rapid touch
     if (c.active) { state.activeWeapon === 'laser' ? fireLaser() : fireRailgun(); }
     fireInterval = setInterval(() => { if (c.active) { state.activeWeapon === 'laser' ? fireLaser() : fireRailgun(); } }, 200);
   }, { passive: false });
@@ -6114,10 +6116,10 @@ function updateNPCShips(dt) {
         _tmpV3b.copy(ship.position).sub(npc.group.position).normalize();
         _tmpV3b.x += (Math.random()-0.5)*0.2; _tmpV3b.y += (Math.random()-0.5)*0.2; _tmpV3b.normalize();
         const boltObj = getBoltFromPool();
-        boltObj.bolt.position.copy(npc.group.position);
+        boltObj.group.position.copy(npc.group.position); boltObj.group.rotation.set(0,0,0);
+        boltObj.bolt.position.set(0,0,0);
         boltObj.bolt.quaternion.setFromUnitVectors(_upVec, _tmpV3b);
-        boltObj.trail.position.copy(boltObj.bolt.position); boltObj.trail.quaternion.copy(boltObj.bolt.quaternion);
-        boltObj.group.position.set(0,0,0); boltObj.group.rotation.set(0,0,0);
+        boltObj.trail.position.set(0,0,0); boltObj.trail.quaternion.copy(boltObj.bolt.quaternion);
         scene.add(boltObj.group);
         c.enemyBolts.push({ group: boltObj.group, dir: _tmpV3b.clone(), speed: 100, age: 0, life: 5000, _poolRef: boltObj });
       }
@@ -6837,7 +6839,7 @@ document.addEventListener('keydown', (e) => {
     state.chatbot.visible = panel.classList.contains('open');
     if (state.chatbot.visible) {
       if (document.pointerLockElement) document.exitPointerLock();
-      setTimeout(() => chatInput.focus(), 100);
+      setTimeout(() => { if (_cachedChatInput) _cachedChatInput.focus(); }, 100);
     } else {
       canvas3d.requestPointerLock()?.catch?.(() => {});
     }
@@ -7335,10 +7337,10 @@ function gameLoop() {
         _tmpV3b.y += (Math.random() - 0.5) * _inaccuracy;
         _tmpV3b.normalize();
         const boltObj = getBoltFromPool();
-        boltObj.bolt.position.copy(e.group.position);
+        boltObj.group.position.copy(e.group.position); boltObj.group.rotation.set(0,0,0);
+        boltObj.bolt.position.set(0,0,0);
         boltObj.bolt.quaternion.setFromUnitVectors(_upVec, _tmpV3b);
-        boltObj.trail.position.copy(boltObj.bolt.position); boltObj.trail.quaternion.copy(boltObj.bolt.quaternion);
-        boltObj.group.position.set(0,0,0); boltObj.group.rotation.set(0,0,0);
+        boltObj.trail.position.set(0,0,0); boltObj.trail.quaternion.copy(boltObj.bolt.quaternion);
         scene.add(boltObj.group);
         c.enemyBolts.push({ group: boltObj.group, dir: _tmpV3b.clone(), speed: 120, age: 0, life: 4000, _poolRef: boltObj });
       }

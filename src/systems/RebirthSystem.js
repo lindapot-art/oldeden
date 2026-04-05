@@ -195,9 +195,8 @@ export class RebirthSystem {
   _onPlayerDeath({ playerId, characterId, causeOfDeath, sectorId }) {
     console.log(`[RebirthSystem] Player ${playerId} died (char: ${characterId}, cause: ${causeOfDeath}).`);
 
-    // Promote old character to permanent NPC
-    const npcSystem = this._engine.getSystem('npc');
-    npcSystem.promoteToNPC(characterId, { causeOfDeath, sectorId });
+    // Note: NPC promotion is handled by chooseDeathPath() per-path, not here.
+    // (SOUL_FRACTURE path does NOT promote to NPC; STANDARD/ASCENSION do.)
 
     // Emit ready-for-rebirth event — server will orchestrate the client UX
     this._engine.events.emit('player:rebirth_ready', { playerId, characterId });
