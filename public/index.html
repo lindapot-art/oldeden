@@ -888,7 +888,7 @@ const AudioSFX = {
       case 'charge': osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(1200, now+0.6); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0.12, now+0.6); osc.start(now); osc.stop(now+0.6); break;
       case 'shield_hit': osc.type = 'sine'; osc.frequency.setValueAtTime(2000, now); osc.frequency.exponentialRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.2); osc.start(now); osc.stop(now+0.2); break;
       case 'jump': osc.type = 'sine'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(2000, now+0.5); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); osc.start(now); osc.stop(now+0.8); break;
-      case 'boss_warn': osc.type = 'square'; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(280, now+0.2); osc.frequency.setValueAtTime(220, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.setValueAtTime(0.001, now+0.6); osc.start(now); osc.stop(now+0.6); break;
+      case 'boss_warn': { osc.type = 'square'; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(280, now+0.15); osc.frequency.setValueAtTime(220, now+0.3); gain.gain.setValueAtTime(0.18*vol, now); gain.gain.setValueAtTime(0.001, now+0.45); osc.start(now); osc.stop(now+0.45); const bw2=ctx.createOscillator(); bw2.type='square'; bw2.frequency.setValueAtTime(280,now+0.55); bw2.frequency.setValueAtTime(350,now+0.7); bw2.frequency.setValueAtTime(280,now+0.85); const bg2=ctx.createGain(); bg2.connect(ctx.destination); bg2.gain.setValueAtTime(0.001,now); bg2.gain.setValueAtTime(0.16*vol,now+0.55); bg2.gain.setValueAtTime(0.001,now+1.0); bw2.connect(bg2); bw2.start(now+0.55); bw2.stop(now+1.0); break; }
       case 'quest_complete': osc.type = 'sine'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.15); osc.frequency.setValueAtTime(784, now+0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.5); osc.start(now); osc.stop(now+0.5); break;
       case 'karma_spin': osc.type = 'sine'; osc.frequency.setValueAtTime(180, now); osc.frequency.exponentialRampToValueAtTime(600, now+1.0); gain.gain.setValueAtTime(0.06*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.8); gain.gain.exponentialRampToValueAtTime(0.001, now+1.2); osc.start(now); osc.stop(now+1.2); break;
       case 'karma_reveal': osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now+0.08); osc.frequency.setValueAtTime(659, now+0.16); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.3); osc.start(now); osc.stop(now+0.3); break;
@@ -898,8 +898,8 @@ const AudioSFX = {
       case 'karma_accept': { const oa=ctx.createOscillator(); oa.type='sine'; oa.frequency.setValueAtTime(440,now); oa.frequency.setValueAtTime(554,now+0.15); oa.frequency.setValueAtTime(659,now+0.3); oa.frequency.setValueAtTime(880,now+0.5); oa.connect(gain); gain.gain.setValueAtTime(0.14*vol,now); gain.gain.linearRampToValueAtTime(0.08*vol,now+0.4); gain.gain.exponentialRampToValueAtTime(0.001,now+1.0); oa.start(now); oa.stop(now+1.0); osc.disconnect(); return; }
       case 'karma_common': osc.type='triangle'; osc.frequency.setValueAtTime(220,now); osc.frequency.exponentialRampToValueAtTime(165,now+0.2); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.25); osc.start(now); osc.stop(now+0.25); break;
       case 'shield_break': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(80, now+0.4); gain.gain.setValueAtTime(0.15*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.4); osc.start(now); osc.stop(now+0.4); break; }
-      case 'kill_confirm': osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.setValueAtTime(1100, now+0.05); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.12); osc.start(now); osc.stop(now+0.12); break;
-      case 'hit_marker': osc.type = 'square'; osc.frequency.setValueAtTime(1600, now); gain.gain.setValueAtTime(0.04*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.04); osc.start(now); osc.stop(now+0.04); break;
+      case 'kill_confirm': { osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.setValueAtTime(1100, now+0.06); gain.gain.setValueAtTime(0.14*vol, now); gain.gain.exponentialRampToValueAtTime(0.02*vol, now+0.1); gain.gain.exponentialRampToValueAtTime(0.001, now+0.25); osc.start(now); osc.stop(now+0.25); const o2k=ctx.createOscillator(); o2k.type='sine'; o2k.frequency.setValueAtTime(660,now+0.1); const g2k=ctx.createGain(); g2k.connect(ctx.destination); g2k.gain.setValueAtTime(0.001,now); g2k.gain.setValueAtTime(0.10*vol,now+0.1); g2k.gain.exponentialRampToValueAtTime(0.001,now+0.22); o2k.connect(g2k); o2k.start(now+0.1); o2k.stop(now+0.22); break; }
+      case 'hit_marker': osc.type = 'square'; osc.frequency.setValueAtTime(1600, now); gain.gain.setValueAtTime(0.10*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.06); osc.start(now); osc.stop(now+0.06); break;
       case 'player_death': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(30, now+2); gain.gain.setValueAtTime(0.2*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.8); gain.gain.exponentialRampToValueAtTime(0.001, now+2); osc.start(now); osc.stop(now+2); const sub2 = ctx.createOscillator(); sub2.type = 'sine'; sub2.frequency.value = 40; const sg2 = ctx.createGain(); sg2.gain.setValueAtTime(0.15*vol, now); sg2.gain.exponentialRampToValueAtTime(0.001, now+2.5); sub2.connect(sg2); sg2.connect(ctx.destination); sub2.start(now); sub2.stop(now+2.5); break; }
       case 'hull_hit': { osc.disconnect(); const dur=0.12; const buf=ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate); const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length)*0.8; const src=ctx.createBufferSource(); src.buffer=buf; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=600; src.connect(lp); lp.connect(gain); gain.gain.setValueAtTime(0.18*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur); src.start(now); return; }
       case 'loot_credits': osc.type='sine'; osc.frequency.setValueAtTime(880,now); osc.frequency.setValueAtTime(1100,now+0.06); osc.frequency.setValueAtTime(1320,now+0.12); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.2); osc.start(now); osc.stop(now+0.2); break;
@@ -3968,7 +3968,9 @@ function renderHUD() {
   vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
   const hullPct = state.ship.hull / state.ship.maxHull;
   if (hullPct < 0.25) {
-    vigGrad.addColorStop(1, 'rgba(255,0,0,' + (0.15 + Math.sin(performance.now()*0.005)*0.05) + ')');
+    // Escalating red vignette: 25%→0.2, 10%→0.35, 5%→0.45
+    const dangerIntensity = 0.15 + (1 - hullPct / 0.25) * 0.3;
+    vigGrad.addColorStop(1, 'rgba(255,0,0,' + (dangerIntensity + Math.sin(performance.now()*0.008)*0.06) + ')');
   } else {
     vigGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
   }
@@ -3996,18 +3998,35 @@ function renderHUD() {
   if (hitActive) {
     hudCtx.globalAlpha = Math.min(1, c.hitMarkerTimer / 80);
     hudCtx.strokeStyle = '#ff4444'; hudCtx.lineWidth = 2;
-    const hm = 10;
-    hudCtx.beginPath(); hudCtx.moveTo(cx-hm, cy-hm); hudCtx.lineTo(cx-4, cy-4); hudCtx.stroke();
-    hudCtx.beginPath(); hudCtx.moveTo(cx+hm, cy-hm); hudCtx.lineTo(cx+4, cy-4); hudCtx.stroke();
-    hudCtx.beginPath(); hudCtx.moveTo(cx-hm, cy+hm); hudCtx.lineTo(cx-4, cy+4); hudCtx.stroke();
-    hudCtx.beginPath(); hudCtx.moveTo(cx+hm, cy+hm); hudCtx.lineTo(cx+4, cy+4); hudCtx.stroke();
+    const hm = 14;
+    hudCtx.beginPath(); hudCtx.moveTo(cx-hm, cy-hm); hudCtx.lineTo(cx-5, cy-5); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(cx+hm, cy-hm); hudCtx.lineTo(cx+5, cy-5); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(cx-hm, cy+hm); hudCtx.lineTo(cx-5, cy+5); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(cx+hm, cy+hm); hudCtx.lineTo(cx+5, cy+5); hudCtx.stroke();
+    // White crosshair flash on hit
+    hudCtx.strokeStyle = '#ffffff'; hudCtx.lineWidth = 1.5; hudCtx.globalAlpha *= 0.6;
+    hudCtx.beginPath(); hudCtx.arc(cx, cy, crossSize + 4, 0, Math.PI*2); hudCtx.stroke();
   }
-  // Kill confirmation ring
+  // Kill confirmation ring + flash + text
   if (killActive) {
-    hudCtx.globalAlpha = Math.min(1, c.killConfirmTimer / 200);
+    const killA = Math.min(1, c.killConfirmTimer / 200);
+    hudCtx.globalAlpha = killA;
     hudCtx.strokeStyle = '#ffcc00'; hudCtx.lineWidth = 3;
     const killRing = 30 + (1 - c.killConfirmTimer / 400) * 15;
     hudCtx.beginPath(); hudCtx.arc(cx, cy, killRing, 0, Math.PI*2); hudCtx.stroke();
+    // Brief white flash on kill
+    if (c.killConfirmTimer > 350) {
+      hudCtx.globalAlpha = (c.killConfirmTimer - 350) / 200;
+      hudCtx.fillStyle = '#ffffff';
+      hudCtx.fillRect(0, 0, W, H);
+    }
+    // "KILL" text below crosshair
+    hudCtx.globalAlpha = killA * 0.9;
+    hudCtx.font = 'bold 18px "Segoe UI"';
+    hudCtx.fillStyle = '#ffcc00';
+    hudCtx.textAlign = 'center';
+    hudCtx.fillText('KILL', cx, cy + 55);
+    hudCtx.textAlign = 'left';
   }
 
   // Charge arc
@@ -4087,10 +4106,31 @@ function renderHUD() {
   if (c.shieldBreakTimer > 0) {
     hudCtx.save();
     hudCtx.globalAlpha = Math.min(1, c.shieldBreakTimer / 500) * (0.6 + 0.4 * Math.sin(state.gameTime * 0.015));
-    hudCtx.font = 'bold 14px "Segoe UI"';
-    hudCtx.fillStyle = '#ff2200';
+    hudCtx.font = 'bold 16px "Segoe UI"';
+    hudCtx.fillStyle = '#44ccff';
+    hudCtx.shadowColor = '#44ccff'; hudCtx.shadowBlur = 12;
     hudCtx.fillText('\u26A0 SHIELDS DOWN', slx, sly + 60);
     hudCtx.restore();
+  }
+  // HULL CRITICAL warning — flashing text + alarm beep
+  if (hullPct < 0.3 && !c.dead) {
+    hudCtx.save();
+    const hullWarnAlpha = 0.5 + 0.5 * Math.sin(performance.now() * 0.01);
+    hudCtx.globalAlpha = hullWarnAlpha;
+    hudCtx.font = 'bold 20px "Segoe UI"';
+    hudCtx.fillStyle = '#ff2200';
+    hudCtx.shadowColor = '#ff0000'; hudCtx.shadowBlur = 15;
+    hudCtx.textAlign = 'center';
+    const hullWarnText = hullPct < 0.1 ? '\u26A0 HULL CRITICAL \u26A0' : '\u26A0 HULL LOW';
+    hudCtx.fillText(hullWarnText, cx, H - 100);
+    hudCtx.textAlign = 'left';
+    hudCtx.restore();
+    // Periodic warning beep (every 1.5s, faster at <15%)
+    const hullBeepInterval = hullPct < 0.15 ? 800 : 1500;
+    if (!c._lastHullWarnBeep || performance.now() - c._lastHullWarnBeep > hullBeepInterval) {
+      c._lastHullWarnBeep = performance.now();
+      AudioSFX.play('shield_hit');
+    }
   }
 
   // Score (top-right)
@@ -4100,11 +4140,28 @@ function renderHUD() {
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
   // Age & Lives display
   hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
-  // Kill streak
+  // Kill streak — escalating visual drama
   if (c.streak >= 3) {
-    const streakColor = c.streak >= 10 ? '#ff2200' : c.streak >= 5 ? '#ffcc00' : '#ff8800';
-    hudCtx.font = 'bold 14px "Segoe UI"'; hudCtx.fillStyle = streakColor;
+    const streakColor = c.streak >= 20 ? '#ff0000' : c.streak >= 15 ? '#ff2200' : c.streak >= 10 ? '#ff4400' : c.streak >= 5 ? '#ffcc00' : '#ff8800';
+    const streakSize = Math.min(28, 14 + Math.floor(c.streak / 3) * 2);
+    const pulse = 1 + 0.08 * Math.sin(state.gameTime * 0.012);
+    hudCtx.save();
+    hudCtx.font = 'bold ' + Math.round(streakSize * pulse) + 'px "Segoe UI"'; hudCtx.fillStyle = streakColor;
+    hudCtx.globalAlpha = 0.9;
+    // Glow
+    hudCtx.shadowColor = streakColor; hudCtx.shadowBlur = c.streak >= 10 ? 12 : 4;
     hudCtx.fillText('\u2605 STREAK x' + c.streak + ' (' + c.streakMultiplier + 'x)', srx, sry+78);
+    // Milestone flash (fades over 1.5s)
+    if (c._streakMilestoneTimer > 0) {
+      hudCtx.globalAlpha = Math.min(1, c._streakMilestoneTimer / 600);
+      const mSize = 24 + (1 - c._streakMilestoneTimer / 1500) * 8;
+      hudCtx.font = 'bold ' + Math.round(mSize) + 'px "Segoe UI"';
+      hudCtx.fillStyle = '#ffffff'; hudCtx.shadowColor = streakColor; hudCtx.shadowBlur = 20;
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText(c._streakMilestoneText || '', cx, cy - 80);
+      hudCtx.textAlign = 'left';
+    }
+    hudCtx.restore();
   }
 
   // Credits (bottom-left)
@@ -4273,10 +4330,15 @@ function renderHUD() {
     dn.age += 16;
     const screenPos = dn.pos.clone().project(camera);
     const sx = (screenPos.x * 0.5 + 0.5) * W;
-    const sy = (-screenPos.y * 0.5 + 0.5) * H - dn.age * 0.05;
+    const sy = (-screenPos.y * 0.5 + 0.5) * H - dn.age * 0.08;
     if (screenPos.z < 1) {
       hudCtx.globalAlpha = Math.max(0, 1 - dn.age / 1200);
-      hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = dn.color;
+      // Scale font size by numeric value — bigger numbers = bigger text
+      const dnVal = Math.abs(parseFloat(dn.text)) || 0;
+      const dnSize = Math.min(26, 14 + Math.floor(dnVal / 50) * 2);
+      // Initial pop: 1.3x at age 0, settles to 1x at age 200
+      const dnPop = dn.age < 200 ? 1 + 0.3 * (1 - dn.age / 200) : 1;
+      hudCtx.font = 'bold ' + Math.round(dnSize * dnPop) + 'px "Segoe UI"'; hudCtx.fillStyle = dn.color;
       hudCtx.fillText(dn.text, sx, sy);
     }
     if (dn.age > 1200) c.dmgNumbers.splice(i, 1);
@@ -6348,6 +6410,7 @@ function gameLoop() {
     if (c.streak > 0) {
       c.streakTimer -= dtMs;
       if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; }
+      if (c._streakMilestoneTimer > 0) c._streakMilestoneTimer -= dtMs;
     }
 
     // Rotate asteroids
@@ -6423,6 +6486,9 @@ function gameLoop() {
             // Kill streak
             c.streak++; c.streakTimer = 5000;
             c.streakMultiplier = c.streak >= 20 ? 4 : c.streak >= 15 ? 3.5 : c.streak >= 10 ? 3 : c.streak >= 5 ? 2 : c.streak >= 3 ? 1.5 : 1;
+            // Streak milestone announcements
+            const _milestones = {5:'RAMPAGE!',10:'UNSTOPPABLE!',15:'GODLIKE!',20:'LEGENDARY!'};
+            if (_milestones[c.streak]) { c._streakMilestoneText = _milestones[c.streak]; c._streakMilestoneTimer = 1500; AudioSFX.play('quest_complete'); }
             if (c.streak > c.bestStreak) c.bestStreak = c.streak;
             const pts = Math.floor(e.points * c.streakMultiplier);
             c.score += pts; c.kills++;
@@ -6437,7 +6503,15 @@ function gameLoop() {
             gainSkillXP('piloting', 0.05);
             // Floating damage number
             c.dmgNumbers.push({ text: '+' + pts, pos: e.group.position.clone(), age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
-            if (e.isBoss) { c.bossActive = false; state.player.lifetimeStats.bossKills++; addComms('AI Director', 'Boss destroyed! +500 points'); }
+            if (e.isBoss) {
+              c.bossActive = false; state.player.lifetimeStats.bossKills++;
+              addComms('AI Director', 'Boss destroyed! +500 points');
+              // Multi-stage boss explosion — 3 staggered blasts
+              const bossPos = e.group.position.clone();
+              setTimeout(() => spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*6-3,Math.random()*6-3,Math.random()*6-3)), (e.cfg.scale||1)*1.5), 200);
+              setTimeout(() => { spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*8-4,Math.random()*8-4,Math.random()*8-4)), (e.cfg.scale||1)*2); AudioSFX.play('explode'); }, 500);
+              c.damageFlash = 500;
+            }
             // Faction rep: killing enemy gains rep with controlling faction, loses with hostile faction
             const sys = state.starSystems[state.location.systemIndex];
             if (sys && sys.controllingFaction) {
