@@ -60,12 +60,12 @@ if not exist ".env" (
     if exist ".env.example" (
         echo [SETUP] Creating .env configuration file...
         copy .env.example .env >nul
-        echo [OK] Configuration file created (.env)
+        echo [OK] Configuration file created ^(.env^)
         echo.
         echo [INFO] You may want to edit .env file to configure:
-        echo   - Database connections (MongoDB, Redis)
-        echo   - Blockchain settings (Polygon)
-        echo   - Server port (default: 3000)
+        echo   - Database connections ^(MongoDB, Redis^)
+        echo   - Blockchain settings ^(Polygon^)
+        echo   - Server port ^(default: 3000^)
         echo.
     ) else (
         echo [WARNING] .env.example not found
@@ -73,14 +73,14 @@ if not exist ".env" (
         echo.
     )
 ) else (
-    echo [OK] Configuration file exists (.env)
+    echo [OK] Configuration file exists ^(.env^)
     echo.
 )
 
 REM Kill any existing process on port 3000 to prevent EADDRINUSE crashes
 echo [CLEANUP] Checking for existing server on port 3000...
 for /f "tokens=5" %%p in ('netstat -aon ^| findstr ":3000 " ^| findstr "LISTENING"') do (
-    echo [CLEANUP] Stopping existing server (PID %%p)...
+    echo [CLEANUP] Stopping existing server ^(PID %%p^)...
     taskkill /F /PID %%p >nul 2>nul
 )
 REM Brief pause to let the port release
@@ -92,7 +92,7 @@ echo   STARTING OLD EDEN SERVER
 echo ========================================
 echo.
 echo The game server will start on http://localhost:3000
-echo (If port 3000 is busy, it will auto-rotate to the next available port)
+echo ^(If port 3000 is busy, it will auto-rotate to the next available port^)
 echo Press Ctrl+C to stop the server
 echo.
 echo ----------------------------------------
@@ -104,6 +104,7 @@ REM If the server exits, pause so user can see any error messages
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo [ERROR] Server exited with error code %ERRORLEVEL%
+    echo Please check the output above for details.
     echo.
     pause
 )
