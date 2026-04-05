@@ -317,6 +317,7 @@ io.on('connection', (socket) => {
   socket.use(([eventName], next) => {
     if (!rateLimiter(eventName)) {
       console.warn(`[RateLimit] ${socket.id} exceeded limit for ${eventName}`);
+      socket.emit('rate:limited', { event: eventName });
       return;
     }
     next();
@@ -329,6 +330,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('player:create', (data) => {
+    try {
     // Input validation
     const name = typeof data?.name === 'string' ? data.name.slice(0, 32).replace(/[<>"'&]/g, '') : 'Unknown Pilot';
     const faction = typeof data?.faction === 'string' && FACTIONS.some(f => f.id === data.faction)
@@ -357,10 +359,12 @@ io.on('connection', (socket) => {
       genome,
       wallet: { ec: wallet.ec, sm: wallet.sm },
     });
+    } catch (err) { console.error('[Socket] player:create error:', err.message); }
   });
 
   // ── Combat Kill → Economy Credit ─────────────────────────────────────────
   socket.on('combat:kill', (data) => {
+    try {
     const player = players.get(socket.id);
     if (!player) return;
     const enemyType = typeof data?.enemyType === 'string' ? data.enemyType : 'fighter';
@@ -394,55 +398,63 @@ io.on('connection', (socket) => {
       enemyType, reward, wallet: { ec: wallet.ec, sm: wallet.sm },
       questUpdates,
     });
+    } catch (err) { console.error('[Socket] combat:kill error:', err.message); }
   });
 
   // ── Death Report → Broadcast to all players ──────────────────────────────
   socket.on('death:report', (data) => {
-    const name = typeof data?.name === 'string' ? data.name.slice(0, 30) : 'Unknown';
-    const cause = typeof data?.cause === 'string' ? data.cause.slice(0, 50) : 'the void';
-    const text = `${name} was destroyed — ${cause}`;
-    io.emit('death:feed', { type: 'death', text });
+    try {
+      const name = typeof data?.name === 'string' ? data.name.slice(0, 30) : 'Unknown';
+      const cause = typeof data?.cause === 'string' ? data.cause.slice(0, 50) : 'the void';
+      const text = `${name} was destroyed — ${cause}`;
+      io.emit('death:feed', { type: 'death', text });
+    } catch (err) { console.error('[Socket] death:report error:', err.message); }
   });
 
   // ── Quest Accept ──────────────────────────────────────────────────────────
   socket.on('quest:accept', (data) => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const questId = typeof data?.questId === 'string' ? data.questId : '';
-    const def = STARTER_QUESTS.find(q => q.id === questId);
-    if (!def || player.activeQuests.has(questId)) return;
-    if (player.activeQuests.size >= 5) {
-      socket.emit('quest:error', { error: 'Max 5 active quests' });
-      return;
-    }
-    const instance = {
-      ...def,
-      objectives: def.objectives.map(o => ({ ...o, current: 0 })),
-      completed: false,
-      acceptedAt: Date.now(),
-    };
-    player.activeQuests.set(questId, instance);
-    socket.emit('quest:accepted', { questId, quest: instance });
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const questId = typeof data?.questId === 'string' ? data.questId : '';
+      const def = STARTER_QUESTS.find(q => q.id === questId);
+      if (!def || player.activeQuests.has(questId)) return;
+      if (player.activeQuests.size >= 5) {
+        socket.emit('quest:error', { error: 'Max 5 active quests' });
+        return;
+      }
+      const instance = {
+        ...def,
+        objectives: def.objectives.map(o => ({ ...o, current: 0 })),
+        completed: false,
+        acceptedAt: Date.now(),
+      };
+      player.activeQuests.set(questId, instance);
+      socket.emit('quest:accepted', { questId, quest: instance });
+    } catch (err) { console.error('[Socket] quest:accept error:', err.message); }
   });
 
   // ── Quest List ────────────────────────────────────────────────────────────
   socket.on('quest:list', () => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const active = [];
-    for (const [qid, aq] of player.activeQuests) {
-      active.push({ questId: qid, ...aq });
-    }
-    socket.emit('quest:active', { quests: active });
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const active = [];
+      for (const [qid, aq] of player.activeQuests) {
+        active.push({ questId: qid, ...aq });
+      }
+      socket.emit('quest:active', { quests: active });
+    } catch (err) { console.error('[Socket] quest:list error:', err.message); }
   });
 
   // ── System Visit (for visit quests) ───────────────────────────────────────
   socket.on('system:visit', (data) => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const systemId = typeof data?.systemId === 'string' ? data.systemId : '';
-    if (!systemId || player.visitedSystems.has(systemId)) return;
-    player.visitedSystems.add(systemId);
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const systemId = typeof data?.systemId === 'string' ? data.systemId : '';
+      if (!systemId || player.visitedSystems.has(systemId)) return;
+      player.visitedSystems.add(systemId);
 
     // Progress visit quests
     for (const [qid, aq] of player.activeQuests) {
@@ -460,20 +472,24 @@ io.on('connection', (socket) => {
         socket.emit('quest:complete', { questId: qid, rewards: rew, wallet: { ec: wallet.ec, sm: wallet.sm } });
       }
     }
+    } catch (err) { console.error('[Socket] system:visit error:', err.message); }
   });
 
   // ── Station: Get Prices ───────────────────────────────────────────────────
   socket.on('station:enter', (data) => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const raw = typeof data?.systemIndex === 'number' ? data.systemIndex : 0;
-    const systemIdx = Math.max(0, Math.min(39, Math.floor(raw)));
-    player.currentStation = systemIdx;
-    const prices = getStationPrices(systemIdx);
-    socket.emit('station:prices', { prices, systemIndex: systemIdx });
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const raw = typeof data?.systemIndex === 'number' ? data.systemIndex : 0;
+      const systemIdx = Math.max(0, Math.min(39, Math.floor(raw)));
+      player.currentStation = systemIdx;
+      const prices = getStationPrices(systemIdx);
+      socket.emit('station:prices', { prices, systemIndex: systemIdx });
+    } catch (err) { console.error('[Socket] station:enter error:', err.message); }
   });
 
   socket.on('station:buy', (data) => {
+    try {
     const player = players.get(socket.id);
     if (!player || player.currentStation < 0) return;
     const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
@@ -505,9 +521,11 @@ io.on('connection', (socket) => {
     } else {
       socket.emit('station:error', { error: 'Insufficient credits' });
     }
+    } catch (err) { console.error('[Socket] station:buy error:', err.message); }
   });
 
   socket.on('station:sell', (data) => {
+    try {
     const player = players.get(socket.id);
     if (!player || player.currentStation < 0) return;
     const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
@@ -529,10 +547,12 @@ io.on('connection', (socket) => {
     econ.credit(player.playerId, 'ec', price);
     const wallet = econ.getWallet(player.playerId);
     socket.emit('station:sold', { name: itemName, price, wallet: { ec: wallet.ec, sm: wallet.sm } });
+    } catch (err) { console.error('[Socket] station:sell error:', err.message); }
   });
 
   // ── Cargo deposit (for client-registered items like mined ore) ──────────
   socket.on('cargo:deposit', (data) => {
+    try {
     const player = players.get(socket.id);
     if (!player) return;
     const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
@@ -547,6 +567,7 @@ io.on('connection', (socket) => {
     }
     player.cargo.set(itemName, held + 1);
     socket.emit('cargo:deposited', { name: itemName, quantity: held + 1 });
+    } catch (err) { console.error('[Socket] cargo:deposit error:', err.message); }
   });
 
   // ── Save / Load via Socket ────────────────────────────────────────────────
@@ -580,32 +601,37 @@ io.on('connection', (socket) => {
   });
 
   socket.on('game:load', async () => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    // Players can only load their own saves (session-scoped auth)
-    const saved = await fileStore.load(player.playerId);
-    socket.emit('game:loaded', saved ? { ok: true, data: saved } : { ok: false });
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      // Players can only load their own saves (session-scoped auth)
+      const saved = await fileStore.load(player.playerId);
+      socket.emit('game:loaded', saved ? { ok: true, data: saved } : { ok: false });
+    } catch (err) { console.error('[Socket] game:load error:', err.message); socket.emit('game:loaded', { ok: false }); }
   });
 
   // ── Wallet Sync (client requests current wallet) ──────────────────────────
   socket.on('player:sync', () => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const econ = engine.getSystem('economy');
-    const wallet = econ.getWallet(player.playerId);
-    const activeQuests = [];
-    for (const [qid, aq] of player.activeQuests) {
-      activeQuests.push({ questId: qid, ...aq });
-    }
-    socket.emit('player:state', {
-      playerId: player.playerId,
-      wallet: { ec: wallet.ec, sm: wallet.sm },
-      activeQuests,
-    });
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const econ = engine.getSystem('economy');
+      const wallet = econ.getWallet(player.playerId);
+      const activeQuests = [];
+      for (const [qid, aq] of player.activeQuests) {
+        activeQuests.push({ questId: qid, ...aq });
+      }
+      socket.emit('player:state', {
+        playerId: player.playerId,
+        wallet: { ec: wallet.ec, sm: wallet.sm },
+        activeQuests,
+      });
+    } catch (err) { console.error('[Socket] player:sync error:', err.message); }
   });
 
   // ── Rebirth ───────────────────────────────────────────────────────────────
   socket.on('rebirth:perform', (data) => {
+    try {
     const player = players.get(socket.id);
     if (!player) return;
     const rebirthSys = engine.getSystem('rebirth');
@@ -651,24 +677,29 @@ io.on('connection', (socket) => {
       npcId: chosenNpc.id,
       statusScore: rebirthSys.computeStatusScore(chosenNpc),
     });
+    } catch (err) { console.error('[Socket] rebirth:perform error:', err.message); }
   });
 
   socket.on('starmap:request', () => {
-    const proc = engine.getSystem('procedural');
-    const systems = [];
-    for (let i = 0; i < 40; i++) {
-      systems.push(proc.generateStarSystem(`system-${i}`));
-    }
-    socket.emit('starmap:data', { systems });
+    try {
+      const proc = engine.getSystem('procedural');
+      const systems = [];
+      for (let i = 0; i < 40; i++) {
+        systems.push(proc.generateStarSystem(`system-${i}`));
+      }
+      socket.emit('starmap:data', { systems });
+    } catch (err) { console.error('[Socket] starmap:request error:', err.message); }
   });
 
   socket.on('quests:request', () => {
+    try {
     const proc = engine.getSystem('procedural');
     const questHooks = [];
     for (let i = 0; i < 5; i++) {
       questHooks.push(proc.generateQuestHook());
     }
     socket.emit('quests:data', { quests: questHooks });
+    } catch (err) { console.error('[Socket] quests:request error:', err.message); }
   });
 
   socket.on('disconnect', async () => {
