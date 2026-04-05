@@ -2697,7 +2697,7 @@ function jumpToSystem(idx) {
   let warpStart = performance.now();
   function drawStreaks() {
     const elapsed = performance.now() - warpStart;
-    if (elapsed > 1200) { warpOverlay.remove(); streakCanvas.remove(); const ws = document.getElementById('warp-flash-style'); if (ws) ws.remove(); return; }
+    if (elapsed > 1200 || !streakCanvas.parentNode) { if (warpOverlay.parentNode) warpOverlay.remove(); if (streakCanvas.parentNode) streakCanvas.remove(); const ws = document.getElementById('warp-flash-style'); if (ws) ws.remove(); return; }
     sctx.clearRect(0, 0, streakCanvas.width, streakCanvas.height);
     const progress = elapsed / 1200;
     const cx = streakCanvas.width / 2, cy = streakCanvas.height / 2;
@@ -5680,7 +5680,6 @@ function createStargate() {
   stargateGroup.add(ring);
 
   // Inner chevrons — 8 glowing markers around the ring
-  const _chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
   if (!createStargate._chevGeo) {
     createStargate._chevGeo = new THREE.BoxGeometry(1.5, 3, 1.5);
     createStargate._chevMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
@@ -5688,7 +5687,8 @@ function createStargate() {
   }
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
-    const chev = new THREE.Mesh(createStargate._chevGeo, createStargate., Math.sin(angle) * 18, 0);
+    const chev = new THREE.Mesh(createStargate._chevGeo, createStargate._chevMat);
+    chev.position.set(Math.cos(angle) * 18, Math.sin(angle) * 18, 0);
     chev.lookAt(0, 0, 0);
     stargateGroup.add(chev);
   }
@@ -5806,9 +5806,7 @@ function exitAltUniverse() {
 }
 
 function collectArtifact() {
-  const existingArt = state.inventory.find(i => i.name === name);
-  if (existingArt) existingArt.quantity++;
-  else if (!state.altUniverse) return;
+  if (!state.altUniverse) return;
   const sys = state.starSystems[state.location.systemIndex];
   if (!sys || !sys.hasArtifact) { addComms('System', 'No artifact in this system.'); return; }
   sys.hasArtifact = false;
@@ -6253,13 +6251,13 @@ window._placeOrder = () => {
   addComms('Market', `Order placed: ${type} ${qty}x ${item} @ ${price} EC`);
   // NPC auto-fill: match player orders against NPC counter-orders
   const _rebirthSnapshot = state.player.rebirths;
-  const _screenSnapshot = state.currentScreen;
+  const _screenSnapshot = state.screen;
   const _altSnapshot = state.inAltUniverse;
   setTimeout(() => {
     if (state.player.rebirths !== _rebirthSnapshot) return; // Guard: abort if rebirth happened
     if (c.dead) return; // Guard: abort if player died
     if (state.inAltUniverse !== _altSnapshot) return; // Guard: abort if dimension changed
-    if (state.currentScreen !== _screenSnapshot) return; // Guard: abort if navigated away
+    if (state.screen !== _screenSnapshot) return; // Guard: abort if navigated away
     const _ord = state.market.orders.find(o => o.id === _orderId);
     if (!_ord || _ord.quantity <= 0) return;
     const _matches = state.market.orders.filter(o =>
