@@ -2823,7 +2823,7 @@ function renderStation() {
   const market = document.getElementById('trade-market');
   market.innerHTML = prices.map(c => {
     const safeName = _escHtml(c.name);
-    const jsName = c.name.replace(/'/g, "\\'");
+    const jsName = c.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
     return `
     <div class="trade-row">
       <span>${safeName}</span>
@@ -2836,7 +2836,7 @@ function renderStation() {
 
   // Inventory display
   const invHtml = state.inventory.length
-    ? state.inventory.map(item => `<div class="trade-row"><span>${item.name}</span><span style="color:var(--muted)">x${item.quantity || 1}</span></div>`).join('')
+    ? state.inventory.map(item => `<div class="trade-row"><span>${_escHtml(item.name)}</span><span style="color:var(--muted)">x${item.quantity || 1}</span></div>`).join('')
     : '<p style="color:var(--muted);font-size:0.8rem">Empty cargo hold.</p>';
 
   // Available server quests
@@ -2845,8 +2845,8 @@ function renderStation() {
   const missions = document.getElementById('mission-board');
   missions.innerHTML = availableQuests.slice(0, 4).map(q => `
     <div class="quest-item">
-      <div class="qt">${q.name}</div>
-      ${q.objectives.map(o => `<span style="color:var(--muted);font-size:0.7rem">${o.type}: ${o.target === '*' ? 'any' : o.target} (${o.required})</span>`).join('<br/>')}
+      <div class="qt">${_escHtml(q.name)}</div>
+      ${q.objectives.map(o => `<span style="color:var(--muted);font-size:0.7rem">${_escHtml(o.type)}: ${o.target === '*' ? 'any' : _escHtml(o.target)} (${o.required})</span>`).join('<br/>')}
       <br/><span style="color:var(--gold)">${q.rewards?.credits || 0} EC</span>
       <button class="btn btn-sm" style="margin-left:8px;padding:3px 10px;font-size:0.7rem" onclick="window._acceptQuest('${q.id}')">Accept</button>
     </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No missions available.</p>';
@@ -3958,8 +3958,10 @@ function enterGunnerMode() {
       _co.classList.add('active');
       let _dismissed = false;
       const _dismiss = () => { if (_dismissed) return; _dismissed = true; _co.classList.add('fading'); setTimeout(() => _co.classList.remove('active', 'fading'), 1500); };
-      setTimeout(() => { document.addEventListener('mousedown', _dismiss, { once: true }); document.addEventListener('keydown', _dismiss, { once: true }); }, 2000);
-      setTimeout(_dismiss, 15000);
+      const _t1 = setTimeout(() => { document.addEventListener('mousedown', _dismiss, { once: true }); document.addEventListener('keydown', _dismiss, { once: true }); }, 2000);
+      const _t2 = setTimeout(_dismiss, 15000);
+      if (!c._tutorialTimeouts) c._tutorialTimeouts = [];
+      c._tutorialTimeouts.push(_t1, _t2);
     }
   }
   // First-life tutorial hints — progressive guidance
@@ -5500,7 +5502,13 @@ async function _loadNextParadeShip() {
   } catch(e) {
     console.warn("[Parade] Failed to load", key, e);
     paradeIndex++;
-    await _loadNextParadeShip();
+    if (paradeIndex < PARADE_SHIPS.length) {
+      await _loadNextParadeShip();
+    } else {
+      paradePhase = "idle";
+      paradeIndex = 0;
+      addComms("System", "Ship parade complete — some models failed to load.");
+    }
   }
 }
 
