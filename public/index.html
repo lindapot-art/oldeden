@@ -3404,6 +3404,7 @@ function enterGunnerMode() {
   preloadEnemyModel();
   loadRailgunTurretGLB();
   loadCockpitGLB();
+  loadDashboardGun();
   spawnShipLibrary();
   replaceShipWithGLB();
   addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
@@ -3518,6 +3519,7 @@ function exitGunnerMode(skipScreenChange) {
   if (stargateGroup) { scene.remove(stargateGroup); stargateGroup = null; }
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
+  if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
   stationModels.forEach(m => scene.remove(m)); stationModels = [];
   glbSceneObjects.forEach(o => scene.remove(o)); glbSceneObjects = []; libraryLabels = [];
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
@@ -5763,6 +5765,43 @@ async function loadCockpitGLB() {
     addComms('System', 'Spacecraft cockpit interior loaded.');
   } catch(e) {
     console.warn('[GLB] Cockpit model failed, using procedural:', e);
+  }
+}
+
+// ================================================================
+//  DASHBOARD GUN — Black futuristic sidearm mounted on cockpit dash
+// ================================================================
+let dashboardGunModel = null;
+
+async function loadDashboardGun() {
+  if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
+  try {
+    const model = await loadGLBModel('gun_futuristic');
+    const gun = model.clone();
+    // Position on the right side of dashboard, angled naturally
+    gun.position.set(0.55, -0.85, -0.6);
+    gun.scale.setScalar(0.12);
+    // Lay flat on dashboard, barrel pointing right-forward
+    gun.rotation.set(-0.1, -0.4, -0.15);
+    gun.name = 'dashboard-gun-glb';
+    // Darken materials for black gun look
+    gun.traverse(child => {
+      if (child.isMesh && child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(m => {
+          m.color.setHex(0x1a1a1a);
+          m.roughness = 0.25;
+          m.metalness = 0.9;
+          m.emissive = new THREE.Color(0x111111);
+          m.emissiveIntensity = 0.1;
+        });
+      }
+    });
+    camera.add(gun);
+    dashboardGunModel = gun;
+    addComms('System', 'Sidearm secured on dashboard.');
+  } catch(e) {
+    console.warn('[GLB] Dashboard gun load failed:', e);
   }
 }
 
