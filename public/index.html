@@ -813,6 +813,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 // ================================================================
 //  AUDIO SFX SYSTEM
@@ -2943,6 +2949,9 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.8;
 renderer.shadowMap.enabled = false;
 
+// Bloom post-processing
+let composer;
+
 scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050510, 0.00012);
 
@@ -2964,9 +2973,15 @@ scene.add(rimLight);
 const hemiLight = new THREE.HemisphereLight(0x88bbff, 0x224466, 1.2);
 scene.add(hemiLight);
 
+composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
+composer.addPass(bloomPass);
+
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h);
+  composer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   hudCanvas.width = w;
@@ -3496,14 +3511,29 @@ function createBossEnemy() {
 
 function spawnExplosion(pos, scale) {
   const g = new THREE.Group();
-  for (let i = 0; i < 10; i++) {
-    const mat2 = new THREE.MeshBasicMaterial({ color: [0xff4422,0xffaa00,0xff6600,0xffcc44][i%4], transparent: true, opacity: 1 });
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.2+Math.random()*0.3,6,6), mat2);
-    m.userData = { dir: new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), speed: 15+Math.random()*25 };
+  const s = scale || 1;
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.5 * s, 8, 8), coreMat);
+  core.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isCore: true };
+  g.add(core);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.6, 16), ringMat);
+  ring.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isRing: true };
+  ring.lookAt(camera.position);
+  g.add(ring);
+  for (let i = 0; i < 18; i++) {
+    const t = i / 18;
+    const color = t < 0.3 ? 0xffffff : t < 0.6 ? 0xff8800 : 0xff2200;
+    const mat2 = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+    const sz = (0.1 + Math.random() * 0.4) * s;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(sz, 4, 4), mat2);
+    m.userData = { dir: new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), speed: 12+Math.random()*30, lifeVariance: 0.7 + Math.random() * 0.6 };
     g.add(m);
   }
-  g.position.copy(pos); g.scale.setScalar(scale||1); scene.add(g);
-  c.explosions.push({ group: g, age: 0, maxAge: 600 });
+  const fl = new THREE.PointLight(0xff6600, 5, 40 * s);
+  g.add(fl);
+  g.position.copy(pos); scene.add(g);
+  c.explosions.push({ group: g, age: 0, maxAge: 700 });
 }
 
 // ================================================================
@@ -3515,6 +3545,18 @@ function renderHUD() {
   const cx = W/2, cy = H/2;
   hudCtx.clearRect(0, 0, W, H);
   if (!c.active) return;
+
+  // Combat vignette
+  const vigGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+  vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  const hullPct = c.hull / c.maxHull;
+  if (hullPct < 0.25) {
+    vigGrad.addColorStop(1, 'rgba(255,0,0,' + (0.15 + Math.sin(performance.now()*0.005)*0.05) + ')');
+  } else {
+    vigGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+  }
+  hudCtx.fillStyle = vigGrad;
+  hudCtx.fillRect(0, 0, W, H);
 
   const primary = '#44aaff', accent = '#00ff88', warning = '#ffaa00', danger = '#ff4444';
 
@@ -5540,6 +5582,15 @@ function gameLoop() {
       }
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
+      // Visual hit flash
+      if (e.hitFlash > 0) {
+        const fi = e.hitFlash / 150;
+        e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissiveIntensity = 0.3 + fi * 3.0; ch.material.emissive.setHex(0xff4422); } });
+        e._wasFlashing = true;
+      } else if (e._wasFlashing) {
+        e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissiveIntensity = 0.3; ch.material.emissive.setHex(0x000000); } });
+        e._wasFlashing = false;
+      }
       // Enemy firing — sentinels shoot back when provoked
       if (!e.lastShot) e.lastShot = state.gameTime;
       const fireInterval = e.isBoss ? 1500 : (e.shootRate || 3000);
@@ -5622,9 +5673,24 @@ function gameLoop() {
       const ex = c.explosions[i];
       if (!ex || !ex.group) { c.explosions.splice(i, 1); continue; }
       ex.age += dtMs;
+      const progress = ex.age / ex.maxAge;
       ex.group.children.forEach(ch => {
-        if (ch.userData && ch.userData.dir) ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
-        if (ch.material) ch.material.opacity = Math.max(0, 1 - ex.age / ex.maxAge);
+        if (ch.isLight) {
+          ch.intensity = Math.max(0, 5 * (1 - progress * 2));
+        } else if (ch.userData && ch.userData.isCore) {
+          ch.scale.setScalar(1 + progress * 3);
+          ch.material.opacity = Math.max(0, 1 - progress * 1.5);
+          if (progress > 0.2) ch.material.color.setHex(0xff8800);
+          if (progress > 0.5) ch.material.color.setHex(0xff2200);
+        } else if (ch.userData && ch.userData.isRing) {
+          ch.scale.setScalar(1 + progress * 8);
+          ch.material.opacity = Math.max(0, 0.6 * (1 - progress));
+        } else if (ch.userData && ch.userData.dir) {
+          const lv = ch.userData.lifeVariance || 1;
+          ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
+          ch.material.opacity = Math.max(0, 1 - (progress / lv));
+          ch.scale.multiplyScalar(0.98);
+        }
       });
       if (ex.age > ex.maxAge) { scene.remove(ex.group); disposeObject(ex.group); c.explosions.splice(i, 1); }
     }
@@ -5722,7 +5788,7 @@ function gameLoop() {
     camera.quaternion.copy(_tmpQuat).multiply(_tmpQuatB.setFromEuler(_tmpEuler));
   }
 
-  renderer.render(scene, camera);
+  composer.render();
 }
 
 // ================================================================
