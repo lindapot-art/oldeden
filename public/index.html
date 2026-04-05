@@ -5053,7 +5053,7 @@ document.addEventListener('keydown', (e) => {
         if (!c.active || c.dead) return;
         c.ammo = c.maxAmmo;
         c.weaponReady = true;
-        AudioSFX.play('quest_complete');
+        AudioSFX.play('reload');
         addComms('System', 'Ammo replenished.');
       }, 1500);
     }
