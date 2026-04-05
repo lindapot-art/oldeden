@@ -1846,7 +1846,7 @@ function _showScreenInner(name) {
 
   // Show death ticker on bridge and title
   const ticker = document.getElementById('death-ticker');
-  if (ticker) ticker.classList.toggle('active', ['bridge','title','eulogy','karma'].includes(name) && state.deathFeed.length > 0);
+  if (ticker) ticker.classList.toggle('active', ['bridge','title','eulogy','karma','gunner'].includes(name) && state.deathFeed.length > 0);
 
   // Update nav active state
   document.querySelectorAll('.nav-btn').forEach(b => {
@@ -3421,6 +3421,11 @@ function spawnLootDrop(pos, type) {
   // Glow ring
   const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 2, 16), new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
   g.add(ring);
+  // Pulsing point light for distance visibility
+  const lootLight = new THREE.PointLight(colors[type] || 0xffffff, 2, 25);
+  g.add(lootLight);
+  g.userData.lootLight = lootLight;
+  g.userData.lootMesh = mesh;
   g.position.copy(pos);
   g.userData.type = type;
   g.userData.age = 0;
@@ -3557,7 +3562,7 @@ function spawnNail() {
   c.ammo--;
   c.heat = Math.min(1, c.heat + 0.12);
   c.recoilVel = -8;
-  c.fireRecoilKick = 0.015; // Camera kick on fire
+  c.fireRecoilKick = 0.045; // Camera kick on fire
   muzzleMat.opacity = 1;
     // Screen-space muzzle flash overlay
     const _mfDiv = document.createElement('div');
@@ -3941,11 +3946,52 @@ function renderHUD() {
   hudCtx.globalAlpha = 1;
   hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
 
+  // Enemy health bars (world-space, above each enemy)
+  c.enemies.forEach(e => {
+    if (!e.group || !e.group.parent) return;
+    const ePos = e.group.position.clone();
+    ePos.y += (e.cfg.scale || 1) * 4;
+    const sp = ePos.project(camera);
+    if (sp.z > 1) return;
+    const ex = (sp.x * 0.5 + 0.5) * W;
+    const ey = (-sp.y * 0.5 + 0.5) * H;
+    if (ex < 0 || ex > W || ey < 0 || ey > H) return;
+    const dist = e.group.position.distanceTo(ship.position);
+    if (dist > 300) return;
+    const barW = e.isBoss ? 60 : 36;
+    const barH = 4;
+    const hpPct = e.hp / e.maxHp;
+    const barColor = hpPct > 0.5 ? '#ff4444' : hpPct > 0.25 ? '#ff8800' : '#ffcc00';
+    hudCtx.globalAlpha = Math.max(0.4, 1 - dist / 300);
+    hudCtx.fillStyle = '#1a1a2a';
+    hudCtx.fillRect(ex - barW/2, ey - barH/2, barW, barH);
+    hudCtx.fillStyle = barColor;
+    hudCtx.fillRect(ex - barW/2, ey - barH/2, barW * hpPct, barH);
+    hudCtx.strokeStyle = 'rgba(255,68,68,0.4)';
+    hudCtx.lineWidth = 0.5;
+    hudCtx.strokeRect(ex - barW/2, ey - barH/2, barW, barH);
+    hudCtx.font = '8px "Segoe UI"';
+    hudCtx.fillStyle = e.isBoss ? '#ff2200' : '#ff8866';
+    hudCtx.textAlign = 'center';
+    hudCtx.fillText(e.type.toUpperCase(), ex, ey - barH - 2);
+    hudCtx.textAlign = 'left';
+    hudCtx.globalAlpha = 1;
+  });
+
   // Damage flash
   if (c.damageFlash > 0) {
-    hudCtx.globalAlpha = (c.damageFlash / 200) * 0.2;
-    hudCtx.fillStyle = '#ff0000';
+    const isHullDmg = state.ship.shield <= 0;
+    const flashAlpha = isHullDmg ? (c.damageFlash / 200) * 0.4 : (c.damageFlash / 200) * 0.2;
+    hudCtx.globalAlpha = flashAlpha;
+    hudCtx.fillStyle = isHullDmg ? '#ff2200' : '#ff0000';
     hudCtx.fillRect(0, 0, W, H);
+    if (isHullDmg) {
+      const vigGrad2 = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.2, cx, cy, Math.max(W,H)*0.55);
+      vigGrad2.addColorStop(0, 'rgba(255,0,0,0)');
+      vigGrad2.addColorStop(1, 'rgba(255,0,0,' + (flashAlpha * 0.6) + ')');
+      hudCtx.fillStyle = vigGrad2;
+      hudCtx.fillRect(0, 0, W, H);
+    }
     hudCtx.globalAlpha = 1;
   }
 
@@ -5661,7 +5707,7 @@ function gameLoop() {
     ship.rotateZ(-fl.strafe * 0.15 * dt);
 
     // ── Camera: world-space orientation from accumulated yaw/pitch + shake ──
-    _tmpEuler.set(-c.pitch + c.shakeY * 0.02 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.02, 0, 'YXZ');
+    _tmpEuler.set(-c.pitch + c.shakeY * 0.08 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.08, 0, 'YXZ');
     camera.quaternion.setFromEuler(_tmpEuler);
 
     // Weapon charge
@@ -5701,7 +5747,7 @@ function gameLoop() {
 
     // Screen shake
     if (state.settings.screenShake && c.damageFlash > 0) {
-      const intensity = (c.damageFlash / 200) * 1.5;
+      const intensity = (c.damageFlash / 200) * 4.0;
       c.shakeX = (Math.random() - 0.5) * intensity;
       c.shakeY = (Math.random() - 0.5) * intensity;
     } else { c.shakeX = 0; c.shakeY = 0; }
@@ -5733,7 +5779,12 @@ function gameLoop() {
     const MAX_ENEMIES = 15;
     // First life: enemies spawn faster and closer to ensure the 10-minute death loop
     const spawnInterval = isFirstLife ? 1500 : SPAWN_INTERVAL;
-    if (c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > spawnInterval) {
+    // Wave pacing: 4-second breather every 10 kills
+    const _inBreather = c.kills > 0 && c.kills % 10 === 0 && c.enemies.length === 0 && !c._breatherDone;
+    if (_inBreather && !c._breatherStart) { c._breatherStart = state.gameTime; addComms('EDEN AI', 'Sector clear... for now.'); }
+    if (c._breatherStart && state.gameTime - c._breatherStart > 4000) { c._breatherDone = true; c._breatherStart = 0; }
+    if (c.kills > 0 && c.kills % 10 !== 0) c._breatherDone = false;
+    if (!_inBreather && c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > spawnInterval) {
       state.lastEnemySpawn = state.gameTime;
       const types = ['scout','fighter','bomber','interceptor'];
       const spawnCount = Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
@@ -5743,7 +5794,19 @@ function gameLoop() {
       if (c.kills > 0 && c.kills % 20 === 0 && !c.bossActive) {
         c.bossActive = true;
         AudioSFX.play('boss_warn');
-        addComms('AI Director', '\u26a0 BOSS DETECTED — massive hostile signature!');
+        addComms('AI Director', '⚠ BOSS DETECTED — massive hostile signature!');
+        // Boss warning full-screen overlay
+        const bossWarn = document.createElement('div');
+        bossWarn.style.cssText = 'position:fixed;inset:0;z-index:16;pointer-events:none;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,0,0,0.08);';
+        bossWarn.innerHTML = '<div style="font-size:clamp(2rem,5vw,4rem);color:#ff2200;font-weight:900;letter-spacing:0.3em;text-shadow:0 0 40px rgba(255,34,0,0.8),0 0 80px rgba(255,34,0,0.4);animation:bossWarnPulse 0.3s ease 3">\u26a0 WARNING \u26a0</div><div style="font-size:1.2rem;color:#ff8844;letter-spacing:0.2em;margin-top:0.5rem;">MASSIVE HOSTILE SIGNATURE</div>';
+        if (!document.getElementById('boss-warn-style')) {
+          const st = document.createElement('style'); st.id = 'boss-warn-style';
+          st.textContent = '@keyframes bossWarnPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}';
+          document.head.appendChild(st);
+        }
+        document.body.appendChild(bossWarn);
+        c.damageFlash = 400;
+        setTimeout(() => bossWarn.remove(), 2500);
         createBossEnemy();
       }
     }
@@ -5767,6 +5830,7 @@ function gameLoop() {
           AudioSFX.play('hit_marker');
           spawnImpactSparks(p.group.position.clone(), p.isLaser ? 0x44ffaa : 0xffaa44);
           c.hitMarkerTimer = 150;
+          c.dmgNumbers.push({ text: '-' + genomeDmg.toFixed(1), pos: p.group.position.clone(), age: 0, color: '#ff6644' });
           if (e.hp <= 0) {
             // Kill streak
             c.streak++; c.streakTimer = 3000;
@@ -6018,6 +6082,10 @@ function gameLoop() {
       l.age += dtMs;
       l.group.rotation.y += dt * 2;
       l.group.position.y += Math.sin(l.age * 0.003) * 0.02;
+      // Pulse loot glow
+      const _lootPulse = 0.5 + 0.5 * Math.sin(l.age * 0.006);
+      if (l.group.userData.lootLight) l.group.userData.lootLight.intensity = 1 + _lootPulse * 3;
+      if (l.group.userData.lootMesh) l.group.userData.lootMesh.scale.setScalar(0.9 + _lootPulse * 0.3);
       // Player collect
       if (l.group.position.distanceTo(ship.position) < 12) {
         if (l.type === 'credits') { state.player.credits += 25; c.dmgNumbers.push({ text: '+25 EC', pos: l.group.position.clone(), age: 0, color: '#ffd700' }); }
