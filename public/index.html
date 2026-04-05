@@ -3812,9 +3812,9 @@ const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 
 const CHARGE_TIME = 350, COOLDOWN_TIME = 200, MOUSE_SENS = 0.002;
 
 // ---- SHARED GEOMETRIES & MATERIALS (reused, never re-created) ----
-const _boltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4);
+const _boltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4); _boltGeo._pooled = true;
 const _boltMat = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.9 });
-const _boltTrailGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4);
+const _boltTrailGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4); _boltTrailGeo._pooled = true;
 const _boltTrailMat = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.5 });
 const _upVec = new THREE.Vector3(0, 1, 0);
 
@@ -3858,7 +3858,7 @@ function disposeObject(obj) {
   if (!obj) return;
   obj.traverse(child => {
     if (child.isMesh) {
-      if (child.geometry && child.geometry !== _boltGeo && child.geometry !== _boltTrailGeo) {
+      if (child.geometry && !child.geometry._pooled) {
         child.geometry.dispose();
       }
       if (child.material && !child.material._pooled) {
@@ -3984,7 +3984,7 @@ function spawnAsteroids() {
   }
 }
 
-const _dustGeo = new THREE.SphereGeometry(0.08, 4, 4);
+const _dustGeo = new THREE.SphereGeometry(0.08, 4, 4); _dustGeo._pooled = true;
 const _dustMat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.45 });
 function spawnSpaceDust() {
   for (let i = 0; i < 40; i++) {
@@ -4283,24 +4283,24 @@ function createBossEnemy() {
   addComms('THREAT', `⚠ ${bossTint.name} detected! Massive hostile signature incoming!`);
 }
 
-const _nailSlugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6);
-const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6);
-const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6);
+const _nailSlugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6); _nailSlugGeo._pooled = true;
+const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6); _nailTrailGeo._pooled = true;
+const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6); _nailHeatGeo._pooled = true;
 const _nailSlugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
 const _nailTrailTpl = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
 const _nailHeatTpl = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
 const _sparkMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 });
-const _sparkUnitGeo = new THREE.SphereGeometry(1, 4, 4);
-const _lootOctGeo = new THREE.OctahedronGeometry(1.2, 0);
-const _lootRingGeo = new THREE.RingGeometry(1.5, 2, 16);
-const _lootSphereGeo = new THREE.SphereGeometry(2.5, 8, 8);
-const _laserBeamGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4);
-const _laserGlowGeo = new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4);
+const _sparkUnitGeo = new THREE.SphereGeometry(1, 4, 4); _sparkUnitGeo._pooled = true;
+const _lootOctGeo = new THREE.OctahedronGeometry(1.2, 0); _lootOctGeo._pooled = true;
+const _lootRingGeo = new THREE.RingGeometry(1.5, 2, 16); _lootRingGeo._pooled = true;
+const _lootSphereGeo = new THREE.SphereGeometry(2.5, 8, 8); _lootSphereGeo._pooled = true;
+const _laserBeamGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4); _laserBeamGeo._pooled = true;
+const _laserGlowGeo = new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4); _laserGlowGeo._pooled = true;
 const _laserBeamTpl = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
-const _laserGlowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
-const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8);
-const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => new THREE.SphereGeometry(r, 4, 4));
-const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16);
+const _laserGlowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }); _laserGlowMat._pooled = true;
+const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8); _explCoreGeo._pooled = true;
+const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => { const g = new THREE.SphereGeometry(r, 4, 4); g._pooled = true; return g; });
+const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16); _explRingGeo._pooled = true;
 function spawnExplosion(pos, scale) {
   const g = new THREE.Group();
   const s = scale || 1;
@@ -5932,6 +5932,8 @@ function updateMining(dt) {
     });
     // Remove asteroid
     scene.remove(asteroid);
+    disposeObject(asteroid);
+    disposeObject(asteroid);
     const _aidx = c.asteroids.indexOf(asteroid);
     if (_aidx >= 0) c.asteroids.splice(_aidx, 1);
     stopMining();
@@ -7135,10 +7137,11 @@ function gameLoop() {
             if (e.isBoss) {
               c.bossActive = false; state.player.lifetimeStats.bossKills++; c.bossKills = (c.bossKills || 0) + 1;
               addComms('AI Director', 'Boss destroyed! +500 points');
-              // Multi-stage boss explosion — 3 staggered blasts
+              // Multi-stage boss explosion — 3 staggered blasts (tracked for cleanup)
               const bossPos = e.group.position.clone();
-              setTimeout(() => spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*6-3,Math.random()*6-3,Math.random()*6-3)), (e.cfg.scale||1)*1.5), 200);
-              setTimeout(() => { spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*8-4,Math.random()*8-4,Math.random()*8-4)), (e.cfg.scale||1)*2); AudioSFX.play('explode'); }, 500);
+              const _bossT1 = setTimeout(() => { if (c.active) spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*6-3,Math.random()*6-3,Math.random()*6-3)), (e.cfg.scale||1)*1.5); }, 200);
+              const _bossT2 = setTimeout(() => { if (c.active) { spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*8-4,Math.random()*8-4,Math.random()*8-4)), (e.cfg.scale||1)*2); AudioSFX.play('explode'); } }, 500);
+              _deathTimeouts.push(_bossT1, _bossT2);
               c.damageFlash = 500;
             }
             // Faction rep: killing enemy gains rep with controlling faction, loses with rivals
