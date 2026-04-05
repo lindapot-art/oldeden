@@ -2009,8 +2009,13 @@ async function connectSocket() {
           state.player.stellarMarks = data.wallet.sm;
           state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
           state.combat.bossActive = false; state.combat.bossKills = 0;
+          state.combat.dead = false;
+          state.combat._nextCycleAt = 15; state.combat._nextBossAt = 20; state.combat._nextBreatherAt = 10; state.combat._breatherStart = 0;
+          state.chatbot.messages = [];
+          resetSkills();
           state.inventory = [];
           state.quests = state.quests.filter(q => !q.active);
+          state.market.orders = []; // Clear stale orders from previous life
           // Reset upgrades to baseline before applying resonance
           state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
           state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
@@ -5171,6 +5176,7 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
     state.inventory = [];
   }
   state.quests = state.quests.filter(q => !q.active);
+  state.market.orders = []; // Clear stale orders from previous life
   // Restore original universe if player died in alt universe
   if (state.inAltUniverse && state._origSystems) {
     state.starSystems = state._origSystems;
