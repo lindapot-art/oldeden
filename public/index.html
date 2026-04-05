@@ -882,14 +882,14 @@ const AudioSFX = {
     const osc = ctx.createOscillator();
     osc.connect(gain);
     switch(type) {
-      case 'fire': osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.exponentialRampToValueAtTime(40, now+0.15); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.15); osc.start(now); osc.stop(now+0.15); break;
-      case 'hit': osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now+0.08); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.08); osc.start(now); osc.stop(now+0.08); break;
-      case 'explode': { const dur = 0.35; const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i/d.length); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now+dur); src.start(now); return; }
-      case 'charge': osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(1200, now+0.6); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0.12, now+0.6); osc.start(now); osc.stop(now+0.6); break;
-      case 'shield_hit': osc.type = 'sine'; osc.frequency.setValueAtTime(2000, now); osc.frequency.exponentialRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.2); osc.start(now); osc.stop(now+0.2); break;
-      case 'jump': osc.type = 'sine'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(2000, now+0.5); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); osc.start(now); osc.stop(now+0.8); break;
+      case 'fire': osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.exponentialRampToValueAtTime(40, now+0.15); gain.gain.setValueAtTime(0.22*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.15); osc.start(now); osc.stop(now+0.15); break;
+      case 'hit': osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now+0.08); gain.gain.setValueAtTime(0.1*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.08); osc.start(now); osc.stop(now+0.08); break;
+      case 'explode': { const dur = 0.35; const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i/d.length); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); gain.gain.setValueAtTime(0.2*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+dur); src.start(now); return; }
+      case 'charge': osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(1200, now+0.6); gain.gain.setValueAtTime(0.05*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.6); osc.start(now); osc.stop(now+0.6); break;
+      case 'shield_hit': osc.type = 'sine'; osc.frequency.setValueAtTime(2000, now); osc.frequency.exponentialRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.2); osc.start(now); osc.stop(now+0.2); break;
+      case 'jump': osc.type = 'sine'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(2000, now+0.5); gain.gain.setValueAtTime(0.1*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); osc.start(now); osc.stop(now+0.8); break;
       case 'boss_warn': { osc.type = 'square'; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(280, now+0.15); osc.frequency.setValueAtTime(220, now+0.3); gain.gain.setValueAtTime(0.18*vol, now); gain.gain.setValueAtTime(0.001, now+0.45); osc.start(now); osc.stop(now+0.45); const bw2=ctx.createOscillator(); bw2.type='square'; bw2.frequency.setValueAtTime(280,now+0.55); bw2.frequency.setValueAtTime(350,now+0.7); bw2.frequency.setValueAtTime(280,now+0.85); const bg2=ctx.createGain(); bg2.connect(ctx.destination); bg2.gain.setValueAtTime(0.001,now); bg2.gain.setValueAtTime(0.16*vol,now+0.55); bg2.gain.setValueAtTime(0.001,now+1.0); bw2.connect(bg2); bw2.start(now+0.55); bw2.stop(now+1.0); break; }
-      case 'quest_complete': osc.type = 'sine'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.15); osc.frequency.setValueAtTime(784, now+0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.5); osc.start(now); osc.stop(now+0.5); break;
+      case 'quest_complete': osc.type = 'sine'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.15); osc.frequency.setValueAtTime(784, now+0.3); gain.gain.setValueAtTime(0.1*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.5); osc.start(now); osc.stop(now+0.5); break;
       case 'karma_spin': osc.type = 'sine'; osc.frequency.setValueAtTime(180, now); osc.frequency.exponentialRampToValueAtTime(600, now+1.0); gain.gain.setValueAtTime(0.06*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.8); gain.gain.exponentialRampToValueAtTime(0.001, now+1.2); osc.start(now); osc.stop(now+1.2); break;
       case 'karma_reveal': osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now+0.08); osc.frequency.setValueAtTime(659, now+0.16); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.3); osc.start(now); osc.stop(now+0.3); break;
       case 'karma_rare': { const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.setValueAtTime(523, now); o2.frequency.setValueAtTime(659, now+0.15); o2.frequency.setValueAtTime(784, now+0.3); o2.frequency.setValueAtTime(1047, now+0.5); o2.connect(gain); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); o2.start(now); o2.stop(now+0.8); osc.disconnect(); return; }
@@ -1276,8 +1276,8 @@ function storePastLife(deathCause) {
     timestamp: Date.now(),
   };
   state.pastLives.push(life);
-  // Archive system: keep ALL past lives for the "thousand lives" fantasy
-  // Station display is limited to most recent 100 for performance
+  // Cap at 200 to prevent localStorage bloat (~5MB limit)
+  if (state.pastLives.length > 200) state.pastLives.splice(0, state.pastLives.length - 200);
 }
 function getPastLivesAtStation(systemIndex) {
   const sysName = state.starSystems[systemIndex]?.name;
@@ -1949,6 +1949,14 @@ function loadFromServerData(data) {
   if (data.soulMemory) Object.assign(state.soulMemory, data.soulMemory);
   if (data.economy) Object.assign(state.economy, data.economy);
   if (data.activeWeapon) state.activeWeapon = data.activeWeapon;
+  // Restore alt universe state
+  if (data.inAltUniverse) {
+    state.inAltUniverse = true;
+    state.altUniverse = data.altUniverse;
+    state._origSystems = data._origSystems;
+    state._origSystemIndex = data._origSystemIndex || 0;
+  }
+  if (data.persistentItems) state.persistentItems = data.persistentItems;
   // Soul Fracture migration for old saves
   if (!state.player.soulFragments) state.player.soulFragments = [];
   if (!state.player.legacyChain) state.player.legacyChain = [];
@@ -2203,13 +2211,24 @@ function generateQuests() {
     const haz = hazards[Math.floor(Math.random()*hazards.length)];
     const fac = FACTIONS[Math.floor(Math.random()*FACTIONS.length)];
     const reward = 100 + Math.floor(Math.random()*900);
+    // Determine objective type based on verb
+    const killVerbs = ['Eliminate','Sabotage','Protect'];
+    const visitVerbs = ['Explore','Investigate'];
+    let objType, objTarget, objRequired;
+    if (killVerbs.includes(obj)) { objType = 'kill'; objTarget = '*'; objRequired = 3 + Math.floor(Math.random() * 8); }
+    else if (visitVerbs.includes(obj)) { objType = 'visit'; objTarget = '*'; objRequired = 2 + Math.floor(Math.random() * 3); }
+    else { objType = 'collect'; objTarget = '*'; objRequired = 2 + Math.floor(Math.random() * 5); }
     state.quests.push({
       id: 'q-' + i,
       title: `${obj} ${res}`,
+      name: `${obj} ${res}`,
       summary: `${obj} ${res} in a sector threatened by ${haz}. Contact: ${fac.name}`,
       reward: reward,
+      rewards: { credits: reward },
       faction: fac.id,
       active: i < 2,
+      completed: false,
+      objectives: [{ type: objType, target: objTarget, required: objRequired, current: 0 }],
     });
   }
 }
@@ -2517,6 +2536,20 @@ function jumpToSystem(idx) {
   const sys = state.starSystems[idx];
   // Report visit to server for quest progress
   if (state.socket) state.socket.emit('system:visit', { systemId: sys.id });
+  // Offline visit quest progress
+  state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
+    q.objectives.forEach(o => {
+      if (o.type === 'visit' && (o.target === '*' || o.target === sys.id)) {
+        o.current = (o.current || 0) + 1;
+      }
+    });
+    if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+      q.completed = true; q.active = false;
+      state.player.credits += q.rewards?.credits || 0;
+      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+      AudioSFX.play('quest_complete');
+    }
+  });
   addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
   setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
   if (sys.hazards && sys.hazards.length) {
@@ -2727,10 +2760,12 @@ function renderStation() {
 window._buy = (name, price) => {
   if (state.socket) {
     state.socket.emit('station:buy', { name, price });
-  } else if (state.player.credits >= price) {
-    state.player.credits -= price;
+  } else {
+    const discountedPrice = Math.ceil(price / getPlayerTradeMult());
+    if (state.player.credits < discountedPrice) { addComms('Station', 'Insufficient credits.'); return; }
+    state.player.credits -= discountedPrice;
     state.inventory.push({ name, quantity: 1 });
-    addComms('Station', `Purchased ${name} for ${price} EC.`);
+    addComms('Station', `Purchased ${name} for ${discountedPrice} EC${discountedPrice < price ? ' (trade discount!)' : ''}.`);
     renderStation();
   }
 };
@@ -2741,9 +2776,10 @@ window._sell = (name, price) => {
     state.inventory.splice(idx, 1);
     state.socket.emit('station:sell', { name, price });
   } else {
+    const boostedPrice = Math.floor(price * getPlayerTradeMult());
     state.inventory.splice(idx, 1);
-    state.player.credits += price;
-    addComms('Station', `Sold ${name} for ${price} EC.`);
+    state.player.credits += boostedPrice;
+    addComms('Station', `Sold ${name} for ${boostedPrice} EC${boostedPrice > price ? ' (trade bonus!)' : ''}.`);
     renderStation();
   }
 };
@@ -2850,6 +2886,19 @@ function renderCharSheet() {
       return `<div class="stat-row" style="font-size:0.78rem;">
         ${a.name} <div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:var(--blue)"></div></div>
         <span style="min-width:30px;text-align:right;color:var(--muted);font-size:0.7rem">${pct}%</span>
+      </div>`;
+    }).join('');
+    // Active skill levels (change during gameplay)
+    const skillNames = ['gunnery','piloting','engineering','trading','mining','hacking'];
+    const skillLabels = ['Gunnery','Piloting','Engineering','Trading','Mining','Hacking'];
+    skills.innerHTML += '<div style="margin-top:8px;font-size:0.7rem;color:var(--muted);border-top:1px solid rgba(255,255,255,0.1);padding-top:6px">Trained Skills</div>';
+    skills.innerHTML += skillNames.map((sk, i) => {
+      const lvl = state.skills[sk] || 0;
+      const ceil = getSkillCeiling(sk);
+      const pct2 = (lvl / Math.max(1, ceil) * 100).toFixed(0);
+      return `<div class="stat-row" style="font-size:0.74rem;">
+        ${skillLabels[i]} <span style="color:var(--gold);font-size:0.65rem">Lv${Math.floor(lvl)}/${ceil}</span>
+        <div class="stat-bar"><div class="stat-fill" style="width:${pct2}%;background:var(--gold)"></div></div>
       </div>`;
     }).join('');
   }
@@ -3216,6 +3265,12 @@ function saveGame() {
     soulMemory: state.soulMemory,
     economy: state.economy,
     activeWeapon: state.activeWeapon,
+    // Alt universe state
+    altUniverse: state.altUniverse,
+    inAltUniverse: state.inAltUniverse,
+    _origSystems: state._origSystems || null,
+    _origSystemIndex: state._origSystemIndex || 0,
+    persistentItems: state.persistentItems,
   };
   localStorage.setItem('oe-save', JSON.stringify(data));
   // Also save to server
@@ -3667,7 +3722,7 @@ function exitGunnerMode(skipScreenChange) {
   // Clean up all 3D objects (guard each removal) + dispose GPU resources
   c.enemyBolts.forEach(b => { if (b && b.group) scene.remove(b.group); }); c.enemyBolts = [];
   c.enemies.forEach(e => { if (e && e.group) { scene.remove(e.group); disposeObject(e.group); } }); c.enemies = [];
-  c.projectiles.forEach(p => { if (p && p.group) scene.remove(p.group); }); c.projectiles = [];
+  c.projectiles.forEach(p => { if (p && p.group) { scene.remove(p.group); disposeObject(p.group); } }); c.projectiles = [];
   c.explosions.forEach(ex => { if (ex && ex.group) { scene.remove(ex.group); disposeObject(ex.group); } }); c.explosions = [];
   c.asteroids.forEach(a => { if (a) { scene.remove(a); disposeObject(a); } }); c.asteroids = [];
   c.lootDrops.forEach(l => { if (l && l.group) { scene.remove(l.group); disposeObject(l.group); } }); c.lootDrops = [];
@@ -4366,9 +4421,9 @@ function renderHUD() {
     hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ffaa00';
     hudCtx.fillText('\u26CF MINING: ' + (state.mining.targetOre || 'Asteroid'), mx, my);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(mx, my + 4, 160, 8);
-    hudCtx.fillStyle = '#ffaa00'; hudCtx.fillRect(mx, my + 4, 160 * state.mining.progress, 8);
+    hudCtx.fillStyle = '#ffaa00'; hudCtx.fillRect(mx, my + 4, 160 * (state.mining.progress / 100), 8);
     hudCtx.strokeStyle = '#ffaa00'; hudCtx.lineWidth = 0.5; hudCtx.strokeRect(mx, my + 4, 160, 8);
-    hudCtx.fillStyle = '#ffcc44'; hudCtx.fillText(Math.floor(state.mining.progress * 100) + '%', mx + 165, my + 11);
+    hudCtx.fillStyle = '#ffcc44'; hudCtx.fillText(Math.floor(state.mining.progress) + '%', mx + 165, my + 11);
   }
 
   // NPC ships on radar
@@ -4704,6 +4759,13 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
     state.inventory = [];
   }
   state.quests = state.quests.filter(q => !q.active);
+  // Restore original universe if player died in alt universe
+  if (state.inAltUniverse && state._origSystems) {
+    state.starSystems = state._origSystems;
+    state.location.systemIndex = state._origSystemIndex || 0;
+    state.inAltUniverse = false;
+    state.altUniverse = null;
+  }
   // Reset upgrades to baseline (the flesh forgets)
   state.upgrades.railgunDmg = 1; state.upgrades.shieldRegen = 3;
   state.upgrades.maxAmmo = 24; state.upgrades.maxHull = 100;
@@ -5437,6 +5499,20 @@ function updateMining(dt) {
     c.dmgNumbers.push({ text: '+' + ore, pos: asteroid.position.clone(), age: 0, color: '#00ff88' });
     addComms('Mining', `Extracted ${qty}x ${ore} (+${credits} EC)`);
     AudioSFX.play('quest_complete');
+    // Offline collect quest progress
+    state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
+      q.objectives.forEach(o => {
+        if (o.type === 'collect' && (o.target === '*' || o.target === ore)) {
+          o.current = (o.current || 0) + qty;
+        }
+      });
+      if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+        q.completed = true; q.active = false;
+        state.player.credits += q.rewards?.credits || 0;
+        addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+        AudioSFX.play('quest_complete');
+      }
+    });
     // Remove asteroid
     scene.remove(asteroid);
     c.asteroids.splice(state.mining.target, 1);
@@ -5448,7 +5524,9 @@ function stopMining() {
   state.mining.active = false;
   state.mining.target = null;
   state.mining.progress = 0;
-  if (miningLaserBeam) { scene.remove(miningLaserBeam); miningLaserBeam = null; }
+  if (miningLaserBeam) { scene.remove(miningLaserBeam); miningLaserBeam.geometry.dispose(); miningLaserBeam.material.dispose(); miningLaserBeam = null; }
+  // Ensure mining state is clean
+  state.mining.active = false; state.mining.target = null; state.mining.progress = 0;
 }
 
 // ================================================================
@@ -6535,8 +6613,10 @@ function gameLoop() {
             });
             AudioSFX.play('explode');
             spawnExplosion(e.group.position.clone(), e.cfg.scale);
-            // Loot drop chance
-            if (e.isBoss || Math.random() < 0.4) {
+            // Loot drop chance (hacking skill improves drop rate)
+            const lootChance = Math.min(0.7, 0.4 * getSkillBonus('hacking'));
+            if (e.isBoss || Math.random() < lootChance) {
+              gainSkillXP('hacking', 0.1);
               const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel';
               const _lootCreditVal = e.isBoss ? Math.ceil(e.points * 0.6) : Math.ceil((e.points || 50) * 0.4);
               spawnLootDrop(e.group.position.clone(), lootType, _lootCreditVal);
