@@ -2031,6 +2031,7 @@ function loadFromServerData(data) {
     state._origSystemIndex = data._origSystemIndex || 0;
   }
   if (data.persistentItems) state.persistentItems = data.persistentItems;
+  if (data.currentSkin) { state.currentSkin = data.currentSkin; }
   // Soul Fracture migration for old saves
   if (!state.player.soulFragments) state.player.soulFragments = [];
   if (!state.player.legacyChain) state.player.legacyChain = [];
@@ -2549,10 +2550,16 @@ function renderSystemDetail(idx) {
       <p style="margin-top:6px;">Resources:</p>
       <div>${(s.resources||[]).map(r => `<span class="tag">${r}</span>`).join('')}</div>
       ${s.hazards && s.hazards.length ? `<p style="margin-top:6px;">Hazards:</p><div>${s.hazards.map(h => `<span class="tag" style="color:var(--warn);border-color:rgba(255,170,0,0.2);background:rgba(255,170,0,0.06)">${h}</span>`).join('')}</div>` : ''}
+      ${!isCurrent ? `<p style="margin-top:8px;font-size:0.8rem;color:var(--muted);">Jump cost: <span style="color:${state.ship.fuel >= 5 ? 'var(--green)' : 'var(--danger)'}">5 fuel</span> (you have ${state.ship.fuel.toFixed(0)})</p>` : ''}
     </div>`;
 }
 
 function jumpToSystem(idx) {
+  if (state.ship.fuel < 5) {
+    addComms('Navigation', 'Insufficient fuel for warp jump. Dock at a station to refuel.');
+    AudioSFX.play('shield_hit');
+    return;
+  }
   AudioSFX.play('jump');
   // Warp flash animation
   const warpOverlay = document.createElement('div');
@@ -2564,6 +2571,7 @@ function jumpToSystem(idx) {
     document.head.appendChild(style);
   }
   document.body.appendChild(warpOverlay);
+  setTimeout(() => { if (warpOverlay.parentNode) warpOverlay.remove(); }, 1500);
   // Star streaks
   const streakCanvas = document.createElement('canvas');
   streakCanvas.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;';
@@ -3361,6 +3369,7 @@ function saveGame() {
     _origSystems: state._origSystems || null,
     _origSystemIndex: state._origSystemIndex || 0,
     persistentItems: state.persistentItems,
+    currentSkin: state.currentSkin,
   };
   localStorage.setItem('oe-save', JSON.stringify(data));
   // Also save to server
@@ -6008,9 +6017,11 @@ const EDEN_AI_RESPONSES = {
 
 function chatbotRespond(input) {
   const lower = input.toLowerCase().trim();
-  // Check keywords
-  for (const [key, resp] of Object.entries(EDEN_AI_RESPONSES)) {
+  // Check keywords — sorted by specificity (longest match first)
+  const sortedKeys = Object.keys(EDEN_AI_RESPONSES).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
     if (lower.includes(key)) {
+      const resp = EDEN_AI_RESPONSES[key];
       return typeof resp === 'function' ? resp() : resp;
     }
   }
@@ -6370,13 +6381,17 @@ function updateAutopilot(dt) {
   if (dist < 15) {
     disengageAutopilot();
     fl.thrust = 0;
+    fl.velocity = { x: 0, y: 0, z: 0 };
+    fl.speed = 0;
     return;
   }
 
   // Rotate ship towards target
   const targetDir = toTarget.normalize();
-  const currentFwd = new THREE.Vector3(0, 0, -1).applyQuaternion(ship.quaternion);
-  const cross = new THREE.Vector3().crossVectors(currentFwd, targetDir);
+  _tmpV3a.set(0, 0, -1).applyQuaternion(ship.quaternion);
+  _tmpV3b.set(0,0,0).crossVectors(_tmpV3a, targetDir);
+  const currentFwd = _tmpV3a;
+  const cross = _tmpV3b;
   const dot = currentFwd.dot(targetDir);
 
   // Yaw towards target
@@ -6495,11 +6510,9 @@ function playerDeathSequence(cause) {
   state._deathTimeDilation = 0.2;
   AudioSFX.play('player_death');
   spawnExplosion(ship.position.clone(), 4);
-  let pullback = 0;
-  const pullInterval = setInterval(() => { pullback = Math.min(pullback + 0.5, 20); }, 16);
-  state._deathPullback = { active: true, getValue: () => pullback };
+  const _deathStart = performance.now();
+  state._deathPullback = { active: true, getValue: () => Math.min(20, (performance.now() - _deathStart) * 0.007) };
   setTimeout(() => {
-    clearInterval(pullInterval);
     state._deathTimeDilation = 1;
     state._deathPullback = null;
     _deathSequenceActive = false;
@@ -6552,6 +6565,8 @@ function gameLoop() {
     if (keysDown.has(' ')) fl.vertical = 1;    // Space = up
     if (keysDown.has('control')) fl.vertical = -1; // Ctrl = down
     fl.afterburner = keysDown.has('shift');
+    // Disengage autopilot on manual flight input
+    if (autopilotActive && (fl.thrust !== 0 || fl.strafe !== 0 || fl.vertical !== 0)) disengageAutopilot();
     const speedMult = fl.afterburner ? fl.afterburnerMult : 1;
     // Fuel penalty: when empty, max speed reduced by 70% (emergency power only)
     const fuelPenalty = state.ship.fuel <= 0 ? 0.3 : 1;
@@ -6753,10 +6768,16 @@ function gameLoop() {
               setTimeout(() => { spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*8-4,Math.random()*8-4,Math.random()*8-4)), (e.cfg.scale||1)*2); AudioSFX.play('explode'); }, 500);
               c.damageFlash = 500;
             }
-            // Faction rep: killing enemy gains rep with controlling faction, loses with hostile faction
+            // Faction rep: killing enemy gains rep with controlling faction, loses with rivals
             const sys = state.starSystems[state.location.systemIndex];
             if (sys && sys.controllingFaction) {
               state.factionRep[sys.controllingFaction] = Math.min(1000, (state.factionRep[sys.controllingFaction] || 0) + 5);
+              // Rival factions lose rep (opposite ideology factions)
+              FACTIONS.forEach(f => {
+                if (f.id !== sys.controllingFaction) {
+                  state.factionRep[f.id] = Math.max(-500, (state.factionRep[f.id] || 0) - 2);
+                }
+              });
             }
             // Report kill to server for economy credit + quest progress
             if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
@@ -7132,6 +7153,8 @@ async function init() {
           summary: q.description || q.hook || 'Complete this mission.',
           reward: q.reward || Math.floor(Math.random() * 500 + 100),
           active: false,
+          completed: false,
+          objectives: q.objectives || [{ type: 'kill', target: '*', required: 5 + Math.floor(Math.random() * 10), current: 0 }],
         }));
       }
     }
