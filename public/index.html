@@ -311,15 +311,27 @@ canvas{display:block;}
 #screen-karma{background:radial-gradient(ellipse at center,#1a0a2e 0%,#080416 60%,#030308 90%);z-index:86;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 #screen-karma h2{color:var(--gold);font-size:1.8rem;font-weight:200;letter-spacing:0.3em;margin-bottom:0.5rem;}
 .karma-subtitle{color:var(--muted);font-size:0.85rem;letter-spacing:0.1em;margin-bottom:2rem;}
+/* Spinning wheel phase */
+.karma-spinner{width:120px;height:120px;border-radius:50%;border:3px solid rgba(168,85,247,0.3);border-top-color:#a855f7;border-right-color:#d4a856;animation:karmaWheelSpin 0.8s cubic-bezier(0.4,0,0.2,1) infinite;margin:0 auto 1.5rem;position:relative;opacity:1;transition:opacity 0.5s;}
+.karma-spinner.hidden{opacity:0;pointer-events:none;}
+.karma-spinner::after{content:'\2638';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--gold);animation:karmaWheelSpinReverse 1.6s linear infinite;}
+@keyframes karmaWheelSpin{0%{transform:rotate(0deg);border-top-color:#a855f7;border-right-color:#d4a856;}50%{border-top-color:#d4a856;border-right-color:#a855f7;}100%{transform:rotate(360deg);}}
+@keyframes karmaWheelSpinReverse{from{transform:rotate(0deg);}to{transform:rotate(-360deg);}}
+/* Rarity aura glow behind card */
+.karma-aura{position:absolute;width:400px;height:400px;border-radius:50%;filter:blur(80px);opacity:0;transition:opacity 1.5s ease;pointer-events:none;z-index:-1;}
+.karma-aura.active{opacity:1;}
 .karma-card{width:340px;background:rgba(13,17,23,0.95);border:2px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;transform:scale(0.8);opacity:0;transition:all 0.8s cubic-bezier(0.16,1,0.3,1);}
 .karma-card.revealed{transform:scale(1);opacity:1;border-color:var(--gold);box-shadow:0 0 40px rgba(212,168,86,0.2),0 0 80px rgba(168,85,247,0.1);}
 .karma-card.rarity-common{border-color:#aaa;}
-.karma-card.rarity-uncommon{border-color:#22cc66;}
-.karma-card.rarity-rare{border-color:#44aaff;box-shadow:0 0 30px rgba(68,170,255,0.3);}
-.karma-card.rarity-epic{border-color:#a855f7;box-shadow:0 0 40px rgba(168,85,247,0.4);}
-.karma-card.rarity-legendary{border-color:#ffd700;box-shadow:0 0 60px rgba(255,215,0,0.5);animation:legendaryPulse 2s ease infinite;}
-@keyframes legendaryPulse{0%,100%{box-shadow:0 0 60px rgba(255,215,0,0.5);}50%{box-shadow:0 0 80px rgba(255,215,0,0.8);}}
-.karma-npc-name{font-size:1.4rem;color:#eee;letter-spacing:0.1em;margin-bottom:4px;}
+.karma-card.rarity-uncommon{border-color:#22cc66;box-shadow:0 0 20px rgba(34,204,102,0.2);}
+.karma-card.rarity-rare{border-color:#44aaff;box-shadow:0 0 40px rgba(68,170,255,0.35),0 0 80px rgba(68,170,255,0.1);}
+.karma-card.rarity-epic{border-color:#a855f7;box-shadow:0 0 50px rgba(168,85,247,0.45),0 0 100px rgba(168,85,247,0.15);}
+.karma-card.rarity-legendary{border-color:#ffd700;box-shadow:0 0 80px rgba(255,215,0,0.6),0 0 160px rgba(255,215,0,0.2);animation:legendaryPulse 2s ease infinite;}
+@keyframes legendaryPulse{0%,100%{box-shadow:0 0 60px rgba(255,215,0,0.5),0 0 120px rgba(255,215,0,0.15);}50%{box-shadow:0 0 100px rgba(255,215,0,0.8),0 0 200px rgba(255,215,0,0.3);}}
+/* Name shimmer for epic+ */
+.karma-npc-name{font-size:1.4rem;color:#eee;letter-spacing:0.1em;margin-bottom:4px;transition:all 0.5s;}
+.karma-npc-name.shimmer{background:linear-gradient(90deg,#eee 0%,#ffd700 50%,#eee 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:nameShimmer 2s ease infinite;}
+@keyframes nameShimmer{0%{background-position:100%;}100%{background-position:-100%;}}
 .karma-npc-title{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:16px;}
 .karma-genome-mini{display:flex;gap:6px;justify-content:center;margin:12px 0;}
 .karma-gene-bar{width:40px;height:6px;background:#111;border-radius:3px;overflow:hidden;position:relative;}
@@ -330,10 +342,14 @@ canvas{display:block;}
 .karma-backstory{font-size:0.75rem;color:var(--muted);margin-top:12px;line-height:1.5;font-style:italic;max-height:0;overflow:hidden;transition:max-height 1s ease 0.5s;}
 .karma-card.revealed .karma-backstory{max-height:100px;}
 .karma-rarity-badge{position:absolute;top:10px;right:10px;font-size:0.65rem;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;}
-.karma-actions{display:flex;gap:12px;margin-top:2rem;justify-content:center;}
+.karma-actions{display:flex;gap:12px;margin-top:2rem;justify-content:center;opacity:0;transform:translateY(10px);transition:all 0.5s ease;}
+.karma-actions.visible{opacity:1;transform:translateY(0);}
 .karma-spin-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
 .karma-spin-particle{position:absolute;width:3px;height:3px;border-radius:50%;animation:karmaSpin 1.5s ease-out forwards;}
 @keyframes karmaSpin{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0);}}
+/* Karma screen shake */
+@keyframes karmaScreenShake{0%,100%{transform:translate(0,0);}10%{transform:translate(-4px,2px);}20%{transform:translate(3px,-3px);}30%{transform:translate(-2px,4px);}40%{transform:translate(4px,-1px);}50%{transform:translate(-3px,-2px);}60%{transform:translate(2px,3px);}70%{transform:translate(-4px,1px);}80%{transform:translate(3px,-4px);}90%{transform:translate(-1px,3px);}}
+.karma-shake{animation:karmaScreenShake 0.4s ease-out;}
 
 /* ── Death Ticker ────────────────────────── */
 #death-ticker{position:fixed;top:0;left:0;right:0;height:28px;background:rgba(10,10,15,0.85);border-bottom:1px solid rgba(255,68,68,0.15);z-index:200;overflow:hidden;display:none;}
@@ -634,6 +650,7 @@ canvas{display:block;}
   <div class="eulogy-stats" id="eulogy-stats"></div>
   <div class="eulogy-epitaph" id="eulogy-epitaph">"The void remembers what the flesh forgets."</div>
   <div class="eulogy-transition">But in Old Eden, death is a door...</div>
+  <button class="btn btn-sm" id="btn-eulogy-skip" style="margin-top:1.5rem;opacity:0;transition:opacity 1s ease;border-color:var(--muted);color:var(--muted);">Continue &rarr;</button>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
@@ -641,8 +658,10 @@ canvas{display:block;}
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-karma">
   <div class="karma-spin-fx" id="karma-particles"></div>
+  <div class="karma-aura" id="karma-aura"></div>
   <h2>&#9752; Karma Wheel</h2>
-  <p class="karma-subtitle">The soul seeks its next vessel...</p>
+  <p class="karma-subtitle" id="karma-subtitle">The soul seeks its next vessel...</p>
+  <div class="karma-spinner" id="karma-spinner"></div>
   <div class="karma-card" id="karma-card">
     <div class="karma-rarity-badge" id="karma-rarity">COMMON</div>
     <div class="karma-npc-name" id="karma-name">???</div>
@@ -824,6 +843,13 @@ const AudioSFX = {
       case 'jump': osc.type = 'sine'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(2000, now+0.5); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); osc.start(now); osc.stop(now+0.8); break;
       case 'boss_warn': osc.type = 'square'; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(280, now+0.2); osc.frequency.setValueAtTime(220, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.setValueAtTime(0.001, now+0.6); osc.start(now); osc.stop(now+0.6); break;
       case 'quest_complete': osc.type = 'sine'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.15); osc.frequency.setValueAtTime(784, now+0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.5); osc.start(now); osc.stop(now+0.5); break;
+      case 'karma_spin': osc.type = 'sine'; osc.frequency.setValueAtTime(180, now); osc.frequency.exponentialRampToValueAtTime(600, now+1.0); gain.gain.setValueAtTime(0.06*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.8); gain.gain.exponentialRampToValueAtTime(0.001, now+1.2); osc.start(now); osc.stop(now+1.2); break;
+      case 'karma_reveal': osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now+0.08); osc.frequency.setValueAtTime(659, now+0.16); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.3); osc.start(now); osc.stop(now+0.3); break;
+      case 'karma_rare': { const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.setValueAtTime(523, now); o2.frequency.setValueAtTime(659, now+0.15); o2.frequency.setValueAtTime(784, now+0.3); o2.frequency.setValueAtTime(1047, now+0.5); o2.connect(gain); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); o2.start(now); o2.stop(now+0.8); osc.disconnect(); return; }
+      case 'karma_legendary': { const g2 = ctx.createGain(); g2.connect(ctx.destination); g2.gain.setValueAtTime(0.15*vol, now); g2.gain.exponentialRampToValueAtTime(0.001, now+1.5); const o3 = ctx.createOscillator(); o3.type = 'sine'; o3.frequency.setValueAtTime(261, now); o3.frequency.setValueAtTime(329, now+0.2); o3.frequency.setValueAtTime(392, now+0.4); o3.frequency.setValueAtTime(523, now+0.6); o3.frequency.setValueAtTime(659, now+0.8); o3.frequency.setValueAtTime(784, now+1.0); o3.connect(g2); o3.start(now); o3.stop(now+1.5); const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 65; const sg = ctx.createGain(); sg.gain.setValueAtTime(0.08*vol, now); sg.gain.exponentialRampToValueAtTime(0.001, now+1.5); sub.connect(sg); sg.connect(ctx.destination); sub.start(now); sub.stop(now+1.5); osc.disconnect(); return; }
+      case 'shield_break': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(80, now+0.4); gain.gain.setValueAtTime(0.15*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.4); osc.start(now); osc.stop(now+0.4); break; }
+      case 'kill_confirm': osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.setValueAtTime(1100, now+0.05); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.12); osc.start(now); osc.stop(now+0.12); break;
+      case 'hit_marker': osc.type = 'square'; osc.frequency.setValueAtTime(1600, now); gain.gain.setValueAtTime(0.04*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.04); osc.start(now); osc.stop(now+0.04); break;
     }
   },
   ambience: null,
@@ -926,6 +952,11 @@ const state = {
     dmgNumbers: [],
     streak: 0, streakTimer: 0, bestStreak: 0, streakMultiplier: 1,
     shakeX: 0, shakeY: 0,
+    hitMarkerTimer: 0,      // crosshair flash on hit
+    killConfirmTimer: 0,    // kill confirmation flash
+    shieldBroken: false,    // shield break warning state
+    shieldBreakTimer: 0,    // shield break visual timer
+    fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
     lastAutoSave: 0,
@@ -1194,12 +1225,20 @@ function showEulogy(deathStats, deathCause) {
   
   showScreen('eulogy');
   
-  // Auto-advance to Karma Wheel after 8 seconds
-  setTimeout(() => {
-    if (state.screen === 'eulogy') {
-      rollKarmaWheel();
-    }
-  }, 8000);
+  // Show skip button after 3 seconds
+  const skipBtn = document.getElementById('btn-eulogy-skip');
+  skipBtn.style.opacity = '0';
+  let eulogyAdvanced = false;
+  function advanceToKarma() {
+    if (eulogyAdvanced) return;
+    eulogyAdvanced = true;
+    if (state.screen === 'eulogy') rollKarmaWheel();
+  }
+  setTimeout(() => { skipBtn.style.opacity = '1'; }, 3000);
+  skipBtn.onclick = advanceToKarma;
+  
+  // Auto-advance to Karma Wheel after 6 seconds
+  setTimeout(advanceToKarma, 6000);
 }
 
 // ================================================================
@@ -1260,7 +1299,26 @@ function rollKarmaWheel() {
   const roll = generateKarmaRoll();
   state.karmaRoll = roll;
   showScreen('karma');
-  presentKarmaCard(roll);
+  // Phase 1: Spinning — show the wheel for 2s before revealing
+  const spinner = document.getElementById('karma-spinner');
+  const card = document.getElementById('karma-card');
+  const actionsEl = document.getElementById('karma-actions');
+  const subtitle = document.getElementById('karma-subtitle');
+  const aura = document.getElementById('karma-aura');
+  spinner.classList.remove('hidden');
+  card.className = 'karma-card'; // reset — hidden
+  actionsEl.classList.remove('visible');
+  actionsEl.style.display = 'flex';
+  subtitle.textContent = 'The soul seeks its next vessel...';
+  aura.className = 'karma-aura';
+  aura.style.background = '';
+  AudioSFX.play('karma_spin');
+  // Phase 2: After spin, reveal the card
+  setTimeout(() => {
+    spinner.classList.add('hidden');
+    subtitle.textContent = 'Your fate has been decided.';
+    presentKarmaCard(roll);
+  }, 2000);
 }
 
 function presentKarmaCard(roll) {
@@ -1273,11 +1331,13 @@ function presentKarmaCard(roll) {
   const factionEl = document.getElementById('karma-faction');
   const backstoryEl = document.getElementById('karma-backstory');
   const actionsEl = document.getElementById('karma-actions');
+  const aura = document.getElementById('karma-aura');
   
   // Reset card state
   card.className = 'karma-card';
-  actionsEl.style.display = 'none';
+  actionsEl.classList.remove('visible');
   nameEl.textContent = '???';
+  nameEl.className = 'karma-npc-name';
   titleEl.textContent = '???';
   rarityEl.textContent = '';
   genesEl.innerHTML = '';
@@ -1285,22 +1345,49 @@ function presentKarmaCard(roll) {
   factionEl.textContent = '';
   backstoryEl.textContent = '';
   
-  // Particle burst
+  // Particle burst — more for higher rarity
+  const particleCount = roll.rarity === 'legendary' ? 80 : roll.rarity === 'epic' ? 60 : roll.rarity === 'rare' ? 45 : 30;
   const particleEl = document.getElementById('karma-particles');
   particleEl.innerHTML = '';
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < particleCount; i++) {
     const p = document.createElement('div');
     p.className = 'karma-spin-particle';
     p.style.left = '50%';
     p.style.top = '50%';
     p.style.background = roll.rarityColor;
-    p.style.setProperty('--dx', (Math.random() - 0.5) * 400 + 'px');
-    p.style.setProperty('--dy', (Math.random() - 0.5) * 400 + 'px');
-    p.style.animationDelay = Math.random() * 0.5 + 's';
+    const angle = (i / particleCount) * Math.PI * 2;
+    const dist = 150 + Math.random() * 300;
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    p.style.animationDelay = Math.random() * 0.3 + 's';
+    p.style.width = (2 + Math.random() * 3) + 'px';
+    p.style.height = p.style.width;
     particleEl.appendChild(p);
   }
   
-  // Staged reveal
+  // Rarity aura glow
+  const auraColors = {
+    common: 'transparent',
+    uncommon: 'rgba(34,204,102,0.12)',
+    rare: 'rgba(68,170,255,0.18)',
+    epic: 'rgba(168,85,247,0.22)',
+    legendary: 'rgba(255,215,0,0.25)',
+  };
+  aura.style.background = auraColors[roll.rarity] || 'transparent';
+  
+  // Screen shake on rare+
+  const karmaScreen = document.getElementById('screen-karma');
+  if (['rare','epic','legendary'].includes(roll.rarity)) {
+    karmaScreen.classList.add('karma-shake');
+    setTimeout(() => karmaScreen.classList.remove('karma-shake'), 500);
+  }
+  
+  // Rarity-specific reveal SFX
+  if (roll.rarity === 'legendary') AudioSFX.play('karma_legendary');
+  else if (roll.rarity === 'epic' || roll.rarity === 'rare') AudioSFX.play('karma_rare');
+  else AudioSFX.play('karma_reveal');
+  
+  // Staged reveal with SFX per stage
   setTimeout(() => {
     // Step 1: Name + title
     nameEl.textContent = roll.name;
@@ -1309,10 +1396,13 @@ function presentKarmaCard(roll) {
     rarityEl.style.background = roll.rarityColor + '22';
     rarityEl.style.color = roll.rarityColor;
     rarityEl.style.border = '1px solid ' + roll.rarityColor;
+    // Shimmer for epic+
+    if (['epic','legendary'].includes(roll.rarity)) nameEl.classList.add('shimmer');
+    AudioSFX.play('karma_reveal');
   }, 600);
   
   setTimeout(() => {
-    // Step 2: Genome bars (Combat, Piloting, Engineering, Trade, Science)
+    // Step 2: Genome bars
     const geneNames = ['CMB','PLT','ENG','TRD','SCI'];
     const geneColors = ['#ff4444','#44aaff','#22cc66','#ffd700','#a855f7'];
     genesEl.innerHTML = geneNames.map((n, i) => {
@@ -1321,41 +1411,56 @@ function presentKarmaCard(roll) {
         <div class="karma-gene-bar"><div class="karma-gene-fill" id="kg-${i}" style="width:0%;background:${geneColors[i]}"></div></div>
       </div>`;
     }).join('');
-    // Animate gene bars
     requestAnimationFrame(() => {
       geneNames.forEach((_, i) => {
         const bar = document.getElementById('kg-' + i);
         if (bar) bar.style.width = (roll.genome[32 + i] / 255 * 100) + '%';
       });
     });
-    // Draw genome canvas
     drawGenome(new Uint8Array(roll.genome), document.getElementById('karma-genome-canvas'), 96);
+    AudioSFX.play('karma_reveal');
   }, 1200);
   
   setTimeout(() => {
     // Step 3: Faction
     factionEl.innerHTML = `Faction: <span style="color:${roll.factionColor}">${roll.factionName}</span>`;
+    AudioSFX.play('karma_reveal');
   }, 1800);
   
   setTimeout(() => {
-    // Step 4: Wealth (last — most dramatic)
-    const wealthTier = roll.wealth >= 3000 ? 'rich' : roll.wealth >= 1000 ? 'comfortable' : roll.wealth >= 300 ? 'modest' : 'destitute';
-    const wealthColor = roll.wealth >= 3000 ? '#ffd700' : roll.wealth >= 1000 ? '#22cc66' : roll.wealth >= 300 ? '#aaa' : '#ff4444';
-    wealthEl.innerHTML = `Wealth: <span class="kw-val" style="color:${wealthColor}">${roll.wealth.toLocaleString()} EC</span> <span style="font-size:0.7rem;color:var(--muted)">(${wealthTier})</span>`;
+    // Step 4: Wealth — counting animation for drama
+    const wealthTarget = roll.wealth;
+    const wealthTier = wealthTarget >= 3000 ? 'rich' : wealthTarget >= 1000 ? 'comfortable' : wealthTarget >= 300 ? 'modest' : 'destitute';
+    const wealthColor = wealthTarget >= 3000 ? '#ffd700' : wealthTarget >= 1000 ? '#22cc66' : wealthTarget >= 300 ? '#aaa' : '#ff4444';
+    let wealthCurrent = 0;
+    const wealthDuration = 800;
+    const wealthStart = performance.now();
+    function animateWealth() {
+      const elapsed = performance.now() - wealthStart;
+      const progress = Math.min(1, elapsed / wealthDuration);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      wealthCurrent = Math.floor(wealthTarget * eased);
+      wealthEl.innerHTML = `Wealth: <span class="kw-val" style="color:${wealthColor}">${wealthCurrent.toLocaleString()} EC</span> <span style="font-size:0.7rem;color:var(--muted)">(${progress >= 1 ? wealthTier : '...'})</span>`;
+      if (progress < 1) requestAnimationFrame(animateWealth);
+    }
+    animateWealth();
+    AudioSFX.play('karma_reveal');
   }, 2400);
   
   setTimeout(() => {
-    // Step 5: Card reveal + backstory
+    // Step 5: Card reveal + backstory + aura
     card.classList.add('revealed', 'rarity-' + roll.rarity);
     backstoryEl.textContent = roll.backstory;
-  }, 3000);
+    aura.classList.add('active');
+  }, 3200);
   
   setTimeout(() => {
-    // Step 6: Show action buttons
-    actionsEl.style.display = 'flex';
+    // Step 6: Show action buttons with fade-in
+    actionsEl.classList.add('visible');
     const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
     document.getElementById('reroll-cost').textContent = cost;
-  }, 3500);
+  }, 3800);
 }
 
 // ================================================================
@@ -3106,6 +3211,11 @@ function enterGunnerMode() {
   addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
   addComms('System', 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
+  // First-life tutorial hints
+  if (state.player.rebirths === 0) {
+    setTimeout(() => addComms('EDEN AI', '\u26a0 Warning: Hostile contacts approaching. Click to fire your railgun!'), 3000);
+    setTimeout(() => addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'), 8000);
+  }
 }
 
 function spawnAsteroids() {
@@ -3246,7 +3356,9 @@ function createEnemy(type) {
   g.add(engineGlow);
 
   const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
-  const r = SPAWN_RADIUS + Math.random()*100;
+  // First life: spawn closer so players encounter enemies faster
+  const firstLife = state.player.rebirths === 0;
+  const r = firstLife ? (80 + Math.random()*80) : (SPAWN_RADIUS + Math.random()*100);
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
@@ -3288,6 +3400,7 @@ function spawnNail() {
   c.ammo--;
   c.heat = Math.min(1, c.heat + 0.12);
   c.recoilVel = -8;
+  c.fireRecoilKick = 0.015; // Camera kick on fire
   muzzleMat.opacity = 1;
   AudioSFX.play('fire');
   const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
@@ -3403,14 +3516,37 @@ function renderHUD() {
   const primary = '#44aaff', accent = '#00ff88', warning = '#ffaa00', danger = '#ff4444';
 
   // Crosshair
-  hudCtx.strokeStyle = primary; hudCtx.lineWidth = 1.5; hudCtx.globalAlpha = 0.8;
-  hudCtx.beginPath(); hudCtx.arc(cx, cy, 30, 0, Math.PI*2); hudCtx.stroke();
-  hudCtx.fillStyle = primary; hudCtx.globalAlpha = 0.9;
+  const hitActive = c.hitMarkerTimer > 0;
+  const killActive = c.killConfirmTimer > 0;
+  const crossColor = killActive ? '#ffcc00' : hitActive ? '#ff4444' : primary;
+  const crossSize = killActive ? 36 : hitActive ? 33 : 30;
+  hudCtx.strokeStyle = crossColor; hudCtx.lineWidth = hitActive ? 2.5 : 1.5; hudCtx.globalAlpha = 0.8;
+  hudCtx.beginPath(); hudCtx.arc(cx, cy, crossSize, 0, Math.PI*2); hudCtx.stroke();
+  hudCtx.fillStyle = crossColor; hudCtx.globalAlpha = 0.9;
   hudCtx.beginPath(); hudCtx.arc(cx, cy, 2, 0, Math.PI*2); hudCtx.fill();
   hudCtx.globalAlpha = 0.5;
-  [[cx-40,cy,cx-15,cy],[cx+15,cy,cx+40,cy],[cx,cy-40,cx,cy-15],[cx,cy+15,cx,cy+40]].forEach(([x1,y1,x2,y2]) => {
+  const lineGap = hitActive ? 12 : 15;
+  const lineLen = hitActive ? 42 : 40;
+  [[cx-lineLen,cy,cx-lineGap,cy],[cx+lineGap,cy,cx+lineLen,cy],[cx,cy-lineLen,cx,cy-lineGap],[cx,cy+lineGap,cx,cy+lineLen]].forEach(([x1,y1,x2,y2]) => {
     hudCtx.beginPath(); hudCtx.moveTo(x1,y1); hudCtx.lineTo(x2,y2); hudCtx.stroke();
   });
+  // Hit marker X
+  if (hitActive) {
+    hudCtx.globalAlpha = Math.min(1, c.hitMarkerTimer / 80);
+    hudCtx.strokeStyle = '#ff4444'; hudCtx.lineWidth = 2;
+    const hm = 10;
+    hudCtx.beginPath(); hudCtx.moveTo(cx-hm, cy-hm); hudCtx.lineTo(cx-4, cy-4); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(cx+hm, cy-hm); hudCtx.lineTo(cx+4, cy-4); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(cx-hm, cy+hm); hudCtx.lineTo(cx-4, cy+4); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(cx+hm, cy+hm); hudCtx.lineTo(cx+4, cy+4); hudCtx.stroke();
+  }
+  // Kill confirmation ring
+  if (killActive) {
+    hudCtx.globalAlpha = Math.min(1, c.killConfirmTimer / 200);
+    hudCtx.strokeStyle = '#ffcc00'; hudCtx.lineWidth = 3;
+    const killRing = 30 + (1 - c.killConfirmTimer / 400) * 15;
+    hudCtx.beginPath(); hudCtx.arc(cx, cy, killRing, 0, Math.PI*2); hudCtx.stroke();
+  }
 
   // Charge arc
   if (c.charging) {
@@ -3485,15 +3621,26 @@ function renderHUD() {
   hudCtx.fillStyle = '#778899';
   hudCtx.fillText(Math.floor(state.ship.shield)+'%', slx+185, sly+14);
   hudCtx.fillText(Math.floor(state.ship.hull)+'%', slx+185, sly+46);
+  // Shield break warning
+  if (c.shieldBreakTimer > 0) {
+    hudCtx.save();
+    hudCtx.globalAlpha = Math.min(1, c.shieldBreakTimer / 500) * (0.6 + 0.4 * Math.sin(state.gameTime * 0.015));
+    hudCtx.font = 'bold 14px "Segoe UI"';
+    hudCtx.fillStyle = '#ff2200';
+    hudCtx.fillText('\u26A0 SHIELDS DOWN', slx, sly + 60);
+    hudCtx.restore();
+  }
 
   // Score (top-right)
   const srx = W-200, sry = 30;
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
   hudCtx.font = 'bold 22px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
+  // Age & Lives display
+  hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
   // Kill streak
   if (c.streak >= 3) {
-    const streakColor = c.streak >= 10 ? '#ff2200' : c.streak >= 5 ? '#ffcc00' : '#ff8800';
+    const streakColor = c.streak >= 10 ? '#ff2200' : c.streak >= 5 ? '#ffcc00' : '#ff8800';78
     hudCtx.font = 'bold 14px "Segoe UI"'; hudCtx.fillStyle = streakColor;
     hudCtx.fillText('\u2605 STREAK x' + c.streak + ' (' + c.streakMultiplier + 'x)', srx, sry+62);
   }
@@ -3501,6 +3648,8 @@ function renderHUD() {
   // Credits (bottom-left)
   hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('CREDITS', 24, H-60);
   hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(state.player.credits.toLocaleString() + ' EC', 24, H-42);
+  // Stellar Marks
+  hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#a855f7'; hudCtx.fillText('\u2726 ' + state.player.stellarMarks + ' SM', 24, H-28);
 
   // Speed indicator (left side, below shield/hull)
   const fl = state.flight;
@@ -3584,6 +3733,24 @@ function renderHUD() {
   if (c.enemyBolts.length > 0) {
     hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ff4444';
     hudCtx.fillText('\u26a0 INCOMING: ' + c.enemyBolts.length, 24, H-20);
+  }
+
+  // Afterburner speed lines
+  if (state.flight.afterburner && state.flight.speed > 10) {
+    hudCtx.save();
+    hudCtx.globalAlpha = Math.min(0.3, state.flight.speed / 300);
+    hudCtx.strokeStyle = '#88ccff';
+    hudCtx.lineWidth = 1;
+    for (let sl = 0; sl < 12; sl++) {
+      const angle = (sl / 12) * Math.PI * 2 + state.gameTime * 0.001;
+      const innerR = 60 + Math.random() * 30;
+      const outerR = innerR + 40 + Math.random() * 60;
+      hudCtx.beginPath();
+      hudCtx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+      hudCtx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+      hudCtx.stroke();
+    }
+    hudCtx.restore();
   }
 
   // Floating damage numbers
@@ -3901,7 +4068,17 @@ document.getElementById('btn-karma-reroll').addEventListener('click', () => {
   state.karmaRerollCount++;
   const roll = generateKarmaRoll();
   state.karmaRoll = roll;
-  presentKarmaCard(roll);
+  // Show spinner briefly for re-rolls
+  const spinner = document.getElementById('karma-spinner');
+  const subtitle = document.getElementById('karma-subtitle');
+  spinner.classList.remove('hidden');
+  subtitle.textContent = 'Reweaving fate...';
+  AudioSFX.play('karma_spin');
+  setTimeout(() => {
+    spinner.classList.add('hidden');
+    subtitle.textContent = 'Your new fate awaits.';
+    presentKarmaCard(roll);
+  }, 1200);
   showToast(`Re-rolled! (-${cost} SM)`);
 });
 
@@ -5056,6 +5233,8 @@ function gameLoop() {
   camera.position.copy(_tmpV3a);
 
   if (c.active) {
+    // First-life flag (used for spawn tuning, auto-aggro, tutorial pacing)
+    const isFirstLife = state.player.rebirths === 0;
     // ── EVE Online-style ship flight ──
     const fl = state.flight;
     fl.thrust = 0; fl.strafe = 0; fl.vertical = 0;
@@ -5110,7 +5289,7 @@ function gameLoop() {
     ship.rotateZ(-fl.strafe * 0.15 * dt);
 
     // ── Camera: world-space orientation from accumulated yaw/pitch + shake ──
-    _tmpEuler.set(-c.pitch + c.shakeY * 0.02, -c.yaw + c.shakeX * 0.02, 0, 'YXZ');
+    _tmpEuler.set(-c.pitch + c.shakeY * 0.02 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.02, 0, 'YXZ');
     camera.quaternion.setFromEuler(_tmpEuler);
 
     // Weapon charge
@@ -5155,6 +5334,16 @@ function gameLoop() {
       c.shakeY = (Math.random() - 0.5) * intensity;
     } else { c.shakeX = 0; c.shakeY = 0; }
 
+    // Combat feedback timers
+    if (c.hitMarkerTimer > 0) c.hitMarkerTimer = Math.max(0, c.hitMarkerTimer - dtMs);
+    if (c.killConfirmTimer > 0) c.killConfirmTimer = Math.max(0, c.killConfirmTimer - dtMs);
+    if (c.shieldBreakTimer > 0) c.shieldBreakTimer = Math.max(0, c.shieldBreakTimer - dtMs);
+    // Fire recoil kick (recovers over time)
+    if (c.fireRecoilKick > 0) {
+      c.fireRecoilKick *= 0.88;
+      if (c.fireRecoilKick < 0.001) c.fireRecoilKick = 0;
+    }
+
     // Kill streak decay
     if (c.streak > 0) {
       c.streakTimer -= dtMs;
@@ -5170,7 +5359,9 @@ function gameLoop() {
 
     // Spawn enemies (capped at MAX_ENEMIES for performance)
     const MAX_ENEMIES = 15;
-    if (c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > SPAWN_INTERVAL) {
+    // First life: enemies spawn faster and closer to ensure the 10-minute death loop
+    const spawnInterval = isFirstLife ? 1500 : SPAWN_INTERVAL;
+    if (c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > spawnInterval) {
       state.lastEnemySpawn = state.gameTime;
       const types = ['scout','fighter','bomber','interceptor'];
       const spawnCount = Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
@@ -5201,6 +5392,8 @@ function gameLoop() {
           e.hp -= genomeDmg;
           e.hitFlash = 150;
           AudioSFX.play('hit');
+          AudioSFX.play('hit_marker');
+          c.hitMarkerTimer = 150;
           if (e.hp <= 0) {
             // Kill streak
             c.streak++; c.streakTimer = 3000;
@@ -5209,6 +5402,9 @@ function gameLoop() {
             const pts = Math.floor(e.points * c.streakMultiplier);
             c.score += pts; c.kills++;
             state.player.credits += pts;
+            // Kill confirmation feedback
+            c.killConfirmTimer = 400;
+            AudioSFX.play('kill_confirm');
             // Earn Stellar Marks (1 per kill, +5 for bosses — offline & online)
             state.player.stellarMarks += e.isBoss ? 6 : 1;
             // Skill XP: combat actions level gunnery + piloting
@@ -5259,7 +5455,9 @@ function gameLoop() {
       if (!e || !e.group || !e.group.parent) { c.enemies.splice(ei, 1); continue; }
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
-      if (c.playerHasAttacked) {
+      // On first life, auto-aggro after 60s to push players into the combat loop
+      const autoAggro = isFirstLife && state.gameTime > 60000;
+      if (c.playerHasAttacked || autoAggro) {
         e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
       }
       e.group.lookAt(ship.position);
@@ -5268,7 +5466,7 @@ function gameLoop() {
       if (!e.lastShot) e.lastShot = state.gameTime;
       const fireInterval = e.isBoss ? 1500 : (e.shootRate || 3000);
       const MAX_BOLTS = 30;
-      if (c.playerHasAttacked && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
+      if ((c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
         e.lastShot = state.gameTime;
         _tmpV3b.copy(ship.position).sub(e.group.position).normalize();
         // Add slight inaccuracy
@@ -5284,8 +5482,10 @@ function gameLoop() {
         c.enemyBolts.push({ group: boltObj.group, dir: _tmpV3b.clone(), speed: 120, age: 0, life: 4000, _poolRef: boltObj });
       }
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && performance.now() > c.deathImmunityUntil) {
+        const hadShield = state.ship.shield > 0;
         if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); }
         else state.ship.hull = Math.max(0, state.ship.hull - 0.3);
+        if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
         c.damageFlash = 200;
         if (state.ship.hull <= 0 && !c.dead) {
           c.dead = true;
@@ -5314,8 +5514,10 @@ function gameLoop() {
       if (b.group.position.distanceTo(ship.position) < 6) {
         if (!c.godMode && performance.now() > c.deathImmunityUntil) {
           const dmg = 3 + Math.random() * 4;
+          const hadShield = state.ship.shield > 0;
           if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); }
           else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+          if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
           c.damageFlash = 300;
         }
         if (b._poolRef) returnBoltToPool(b._poolRef); else scene.remove(b.group);
