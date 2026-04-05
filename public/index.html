@@ -816,9 +816,6 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 // ================================================================
 //  AUDIO SFX SYSTEM
@@ -856,6 +853,7 @@ const AudioSFX = {
       case 'shield_break': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(80, now+0.4); gain.gain.setValueAtTime(0.15*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.4); osc.start(now); osc.stop(now+0.4); break; }
       case 'kill_confirm': osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.setValueAtTime(1100, now+0.05); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.12); osc.start(now); osc.stop(now+0.12); break;
       case 'hit_marker': osc.type = 'square'; osc.frequency.setValueAtTime(1600, now); gain.gain.setValueAtTime(0.04*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.04); osc.start(now); osc.stop(now+0.04); break;
+      case 'player_death': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(30, now+2); gain.gain.setValueAtTime(0.2*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.8); gain.gain.exponentialRampToValueAtTime(0.001, now+2); osc.start(now); osc.stop(now+2); const sub2 = ctx.createOscillator(); sub2.type = 'sine'; sub2.frequency.value = 40; const sg2 = ctx.createGain(); sg2.gain.setValueAtTime(0.15*vol, now); sg2.gain.exponentialRampToValueAtTime(0.001, now+2.5); sub2.connect(sg2); sg2.connect(ctx.destination); sub2.start(now); sub2.stop(now+2.5); break; }
     }
   },
   ambience: null,
@@ -905,6 +903,37 @@ const AudioSFX = {
     if (!this.bgm) return;
     try { this.bgm.bass.stop(); this.bgm.pad.stop(); this.bgm.lfo.stop(); this.bgm.noise.stop(); } catch(e) {}
     this.bgm = null;
+  },
+  engineHum: null,
+  startEngineHum() {
+    if (!this.ctx || this.engineHum) return;
+    this.ensure();
+    const ctx = this.ctx;
+    const gain = ctx.createGain(); gain.gain.value = 0;
+    gain.connect(ctx.destination);
+    const osc1 = ctx.createOscillator(); osc1.type = "sawtooth"; osc1.frequency.value = 60;
+    const osc1Gain = ctx.createGain(); osc1Gain.gain.value = 0.06;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 200;
+    osc1.connect(osc1Gain); osc1Gain.connect(lp); lp.connect(gain); osc1.start();
+    const osc2 = ctx.createOscillator(); osc2.type = "sine"; osc2.frequency.value = 40;
+    const osc2Gain = ctx.createGain(); osc2Gain.gain.value = 0.1;
+    osc2.connect(osc2Gain); osc2Gain.connect(gain); osc2.start();
+    this.engineHum = { osc1, osc2, gain, lp };
+  },
+  updateEngineAudio(speed, maxSpeed, afterburner) {
+    if (!this.engineHum || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const ratio = Math.min(speed / (maxSpeed || 1), 1);
+    this.engineHum.osc1.frequency.setTargetAtTime(60 + ratio * 120, t, 0.1);
+    this.engineHum.osc2.frequency.setTargetAtTime(40 + ratio * 60, t, 0.1);
+    const vol = (0.02 + ratio * 0.08) * state.settings.masterVol;
+    this.engineHum.gain.gain.setTargetAtTime(vol, t, 0.1);
+    this.engineHum.lp.frequency.setTargetAtTime(200 + ratio * 600 + (afterburner ? 400 : 0), t, 0.1);
+  },
+  stopEngineHum() {
+    if (!this.engineHum) return;
+    try { this.engineHum.osc1.stop(); this.engineHum.osc2.stop(); } catch(e) {}
+    this.engineHum = null;
   },
 };
 
@@ -1285,7 +1314,7 @@ function generateKarmaRoll() {
   else { rarity = 'common'; rarityColor = '#aaaaaa'; }
   
   const faction = FACTIONS[Math.floor(Math.random() * FACTIONS.length)];
-  const wealthRoll = Math.floor(Math.random() * 5000);
+  const wealthRoll = 300 + Math.floor(Math.random() * 4700);
   const name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + '-' + Math.floor(Math.random() * 999);
   
   return {
@@ -1770,7 +1799,7 @@ function showScreen(name) {
   document.body.style.cursor = name === 'gunner' ? 'none' : 'default';
 
   if (name === 'bridge') updateBridgeUI();
-  if (name === 'starmap') { resizeStarMap(); renderStarMap(); }
+  if (name === 'starmap') { resizeStarMap(); starMapAnimLoop(); }
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
   if (name === 'rebirth') updateRebirthScreen();
@@ -2126,6 +2155,13 @@ function renderStarMap() {
   // Legend
   renderMapLegend();
 }
+
+function starMapAnimLoop() {
+  if (state.screen !== 'starmap') return;
+  renderStarMap();
+  requestAnimationFrame(starMapAnimLoop);
+}
+window.addEventListener('resize', () => { if (state.screen === 'starmap') resizeStarMap(); });
 
 function renderMapLegend() {
   const el = document.getElementById('map-legend');
@@ -3207,6 +3243,7 @@ function enterGunnerMode() {
   c.deathImmunityUntil = performance.now() + 5000;
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
+  AudioSFX.startEngineHum();
   canvas3d.requestPointerLock();
   document.getElementById('action-bar').classList.add('active');
   document.getElementById('mobile-controls').classList.add('active');
@@ -3237,7 +3274,16 @@ function enterGunnerMode() {
 }
 
 function spawnAsteroids() {
-  for (let i = 0; i < 30; i++) {
+  const sys = state.starSystems[state.location.systemIndex];
+  const hasAsteroidHazard = sys?.hazards?.some(h => h.includes('Asteroid'));
+  const baseCount = hasAsteroidHazard ? 50 : 30;
+  const tints = { 'Titanite Ore': 0x665544, 'Dark Matter Crystals': 0x332255, 'Hydrogen Fuel': 0x334455, 'Rare Earth Compounds': 0x556633, 'Ancient Artefacts': 0x554422, 'Quantum Processors': 0x335566 };
+  const resTint = tints[sys?.resources?.[0]] || 0x554433;
+  const fogColors = { hegemony_vanguard: 0x050a14, free_traders: 0x050f08, void_cult: 0x0a0512, iron_syndicate: 0x0f0a05, eden_remnants: 0x0a0a08, stellar_church: 0x0f050a, autonomous_collective: 0x050a0f, rogue_ai_network: 0x100508 };
+  const fogColor = fogColors[sys?.controllingFaction] || 0x050510;
+  scene.fog = new THREE.FogExp2(fogColor, 0.0015);
+  scene.background = new THREE.Color(fogColor);
+  for (let i = 0; i < baseCount; i++) {
     const g = new THREE.Group();
     const size = 2 + Math.random() * 6;
     const geo = new THREE.IcosahedronGeometry(size, 0);
@@ -3247,7 +3293,7 @@ function spawnAsteroids() {
       pos.setXYZ(v, pos.getX(v) * (0.7 + Math.random()*0.6), pos.getY(v) * (0.7 + Math.random()*0.6), pos.getZ(v) * (0.7 + Math.random()*0.6));
     }
     geo.computeVertexNormals();
-    const mat = new THREE.MeshStandardMaterial({ color: 0x554433, roughness: 0.9, metalness: 0.2, flatShading: true });
+    const mat = new THREE.MeshStandardMaterial({ color: resTint, roughness: 0.9, metalness: 0.2, flatShading: true });
     const mesh = new THREE.Mesh(geo, mat);
     g.add(mesh);
     const angle = Math.random() * Math.PI * 2;
@@ -3274,7 +3320,7 @@ function spawnSpaceDust() {
 
 function spawnLootDrop(pos, type) {
   const g = new THREE.Group();
-  const colors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44 };
+  const colors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
   const geo = new THREE.OctahedronGeometry(1.2, 0);
   const mat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.8 });
   const mesh = new THREE.Mesh(geo, mat);
@@ -3317,6 +3363,7 @@ function exitGunnerMode(skipScreenChange) {
   document.getElementById('action-bar').classList.remove('active');
   document.getElementById('mobile-controls').classList.remove('active');
   AudioSFX.stopBGM();
+  AudioSFX.stopEngineHum();
   if (!skipScreenChange) showScreen('bridge');
 }
 
@@ -3325,15 +3372,11 @@ const ENEMY_CONFIGS = {
   scout:       { scale: 0.4, hp: 2, points: 10, speed: 1.3, shootRate: 5000, model: 'fighter_alpha',    tint: 0xff2200 },
   fighter:     { scale: 0.6, hp: 4, points: 25, speed: 1.0, shootRate: 3000, model: 'iron_sentinel',    tint: 0xff2200 },
   bomber:      { scale: 0.9, hp: 8, points: 50, speed: 0.7, shootRate: 2500, model: 'alien_battleship', tint: 0xff4400 },
-  interceptor: { scale: 0.5, hp: 3, points: 15, speed: 1.6, shootRate: 4000, model: 'fighter_beta',     tint: 0xff2200 },
-};
-
-// ---- MATERIAL POOL: reuse materials by (modelKey + tint) to reduce draw calls ----
-const _materialCache = new Map();
-function _getCachedMaterial(baseMat, tintColor, emissiveIntensity) {
-  const key = (baseMat.uuid || '') + '_' + tintColor + '_' + emissiveIntensity;
-  if (_materialCache.has(key)) return _materialCache.get(key);
-  const m = baseMat.clone();
+  interceptor: { scale: 0.5, hp: 3, points: 15, speed: 1.6, shootRate:, fuel: 0xff8844 };
+  const geo = new THREE.OctahedronGeometry(1.2, 0);
+  const mat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.8 });
+  const mesh = new THREE.Mesh(geo, mat);
+  g.add(mesh);();
   m.emissive = new THREE.Color(tintColor);
   m.emissiveIntensity = emissiveIntensity;
   m._pooled = true; // mark as pooled — never dispose
@@ -3979,6 +4022,64 @@ canvas3d.addEventListener('touchstart', (e) => {
   }
 });
 
+// Mobile touch controls: virtual joystick, fire, reload
+(function initMobileControls() {
+  const moveZone = document.getElementById('touch-move-zone');
+  const stick = document.getElementById('touch-stick');
+  const fireBtn = document.getElementById('touch-fire');
+  const reloadBtn = document.getElementById('touch-reload');
+  let touchOrigin = null, touchId = null;
+  moveZone.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    touchOrigin = { x: t.clientX, y: t.clientY };
+    touchId = t.identifier;
+    stick.style.opacity = '1';
+  }, { passive: false });
+  moveZone.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!touchOrigin) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier !== touchId) continue;
+      const dx = t.clientX - touchOrigin.x;
+      const dy = t.clientY - touchOrigin.y;
+      const maxR = 40;
+      const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxR);
+      const angle = Math.atan2(dy, dx);
+      const nx = Math.cos(angle) * dist;
+      const ny = Math.sin(angle) * dist;
+      stick.style.transform = `translate(${nx}px, ${ny}px)`;
+      state.flight.thrust = -(ny / maxR);
+      state.flight.strafe = nx / maxR;
+    }
+  }, { passive: false });
+  const endTouch = () => {
+    touchOrigin = null; touchId = null;
+    stick.style.transform = 'translate(0,0)';
+    stick.style.opacity = '0.5';
+    state.flight.thrust = 0;
+    state.flight.strafe = 0;
+  };
+  moveZone.addEventListener('touchend', endTouch);
+  moveZone.addEventListener('touchcancel', endTouch);
+  let fireInterval = null;
+  fireBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (c.active && typeof fireWeapon === 'function') fireWeapon();
+    fireInterval = setInterval(() => { if (c.active && typeof fireWeapon === 'function') fireWeapon(); }, 200);
+  }, { passive: false });
+  fireBtn.addEventListener('touchend', () => { clearInterval(fireInterval); fireInterval = null; });
+  fireBtn.addEventListener('touchcancel', () => { clearInterval(fireInterval); fireInterval = null; });
+  reloadBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (c.active && c.ammo < c.maxAmmo && !c._reloading) {
+      c._reloading = true; c.weaponReady = false;
+      addComms('System', 'Reloading...');
+      setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('quest_complete'); addComms('System', 'Ammo replenished.'); }, 1500);
+    }
+  }, { passive: false });
+})();
+
 document.addEventListener('pointerlockchange', () => {
   c.locked = document.pointerLockElement === canvas3d;
   document.getElementById('lock-prompt').style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
@@ -4045,6 +4146,23 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     }
     else if (target === 'settings') showScreen('settings');
     else showScreen(target);
+  });
+});
+
+// Action bar click handlers (mirror keyboard shortcuts for mouse/touch users)
+document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
+  btn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    if (!c.active) return;
+    const action = btn.dataset.action;
+    if (action === 'mine') { if (state.mining.active) stopMining(); else if (c.asteroids.length > 0) startMining(0); }
+    else if (action === 'chat') { const panel = document.getElementById('chatbot-panel'); panel.classList.toggle('open'); state.chatbot.visible = panel.classList.contains('open'); if (state.chatbot.visible) { if (document.pointerLockElement) document.exitPointerLock(); setTimeout(() => document.getElementById('chatbot-input').focus(), 100); } }
+    else if (action === 'skins') { document.getElementById('skin-panel').classList.toggle('open'); }
+    else if (action === 'gate') { if (stargateGroup && ship.position.distanceTo(stargateGroup.position) < 40) { if (state.inAltUniverse) exitAltUniverse(); else enterAltUniverse(); } else addComms('System', 'No stargate in range.'); }
+    else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
+    else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('quest_complete'); addComms('System', 'Ammo replenished.'); }, 1500); } }
+    else if (action === 'warp') { showScreen('starmap'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { state.location.docked = true; showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -5282,7 +5400,47 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'c' || e.key === 'C') {
     if (state.inAltUniverse) collectArtifact();
   }
+  // F = warp (open star map)
+  if (e.key === 'f' || e.key === 'F') {
+    showScreen('starmap');
+  }
+  // B = dock at station
+  if (e.key === 'b' || e.key === 'B') {
+    const sys = state.starSystems[state.location.systemIndex];
+    if (sys && sys.hasStation) { state.location.docked = true; showScreen('station'); }
+    else addComms('System', 'No station in this system.');
+  }
 });
+
+// ================================================================
+//  CINEMATIC DEATH SEQUENCE
+// ================================================================
+let _deathSequenceActive = false;
+function playerDeathSequence(cause) {
+  if (_deathSequenceActive) return;
+  _deathSequenceActive = true;
+  c.dead = true;
+  c.deathStats = { kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
+  const frag = createSoulFragment();
+  addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
+  addDeathFeedEvent('death', `${state.player.name} ${cause} in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
+  if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause, kills: c.kills, score: c.score });
+  state._deathTimeDilation = 0.2;
+  AudioSFX.play('player_death');
+  spawnExplosion(ship.position.clone(), 4);
+  let pullback = 0;
+  const pullInterval = setInterval(() => { pullback = Math.min(pullback + 0.5, 20); }, 16);
+  state._deathPullback = { active: true, getValue: () => pullback };
+  setTimeout(() => {
+    clearInterval(pullInterval);
+    state._deathTimeDilation = 1;
+    state._deathPullback = null;
+    _deathSequenceActive = false;
+    c.dead = false;
+    exitGunnerMode(true);
+    showEulogy(c.deathStats, cause);
+  }, 3000);
+}
 
 // ================================================================
 //  GAME LOOP
@@ -5294,13 +5452,20 @@ function gameLoop() {
   if (!scene || !camera || !ship || !turretMount) return;
   if (!state._frameCount) state._frameCount = 0;
   state._frameCount++;
-  const dt = Math.min(clock.getDelta(), 0.1);
+  const rawDt = Math.min(clock.getDelta(), 0.1);
+  const dt = rawDt * (state._deathTimeDilation || 1);
   const dtMs = dt * 1000;
   state.gameTime += dtMs;
 
   // Camera — always positioned at turret mount
   turretMount.getWorldPosition(_tmpV3a);
   camera.position.copy(_tmpV3a);
+  // Death camera pullback
+  if (state._deathPullback && state._deathPullback.active) {
+    const pb = state._deathPullback.getValue();
+    const backDir = new THREE.Vector3(0, 0.3, 1).applyQuaternion(camera.quaternion).normalize();
+    camera.position.addScaledVector(backDir, pb);
+  }
 
   if (c.active) {
     // First-life flag (used for spawn tuning, auto-aggro, tutorial pacing)
@@ -5351,6 +5516,8 @@ function gameLoop() {
     ship.position.x += fl.velocity.x * dt;
     ship.position.y += fl.velocity.y * dt;
     ship.position.z += fl.velocity.z * dt;
+    // Update engine audio pitch/volume based on speed
+    AudioSFX.updateEngineAudio(fl.speed, maxSpd, fl.afterburner);
     // Ship model tracks camera direction smoothly (fly where you look)
     _tmpV3b.set(0, 0, -1).applyQuaternion(camera.quaternion);
     _tmpV3c.copy(ship.position).add(_tmpV3b.multiplyScalar(50));
@@ -5510,7 +5677,7 @@ function gameLoop() {
             spawnExplosion(e.group.position.clone(), e.cfg.scale);
             // Loot drop chance
             if (Math.random() < 0.4) {
-              const lootType = Math.random() < 0.5 ? 'credits' : Math.random() < 0.5 ? 'ammo' : 'health';
+              const r = Math.random(); const lootType = r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel';
               spawnLootDrop(e.group.position.clone(), lootType);
             }
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
@@ -5617,18 +5784,8 @@ function gameLoop() {
         if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
         c.damageFlash = 200;
         if (state.ship.hull <= 0 && !c.dead) {
-          c.dead = true;
-          c.deathStats = { kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
-          const frag = createSoulFragment();
-          addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
-          AudioSFX.play('explode');
-          spawnExplosion(ship.position.clone(), 3);
-          // Update soul memory based on death cause
           state.soulMemory.combatInstinct = Math.min(10, state.soulMemory.combatInstinct + (c.kills * 0.02));
-          // Broadcast death to ticker
-          addDeathFeedEvent('death', `${state.player.name} destroyed by ${e.type} in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
-          if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause: 'Rammed by ' + e.type, kills: c.kills, score: c.score });
-          setTimeout(() => { c.dead = false; exitGunnerMode(true); showEulogy(c.deathStats, 'Rammed by hostile ' + e.type); }, 2500);
+          playerDeathSequence('Rammed by hostile ' + e.type);
         }
       }
     }
@@ -5652,23 +5809,16 @@ function gameLoop() {
         if (b._poolRef) returnBoltToPool(b._poolRef); else scene.remove(b.group);
         c.enemyBolts.splice(i, 1);
         if (!c.godMode && state.ship.hull <= 0 && !c.dead) {
-          c.dead = true;
-          c.deathStats = { kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
-          const frag = createSoulFragment();
-          addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
-          AudioSFX.play('explode'); spawnExplosion(ship.position.clone(), 3);
-          // Update soul memory
           state.soulMemory.shieldMemory = Math.min(10, state.soulMemory.shieldMemory + 0.5);
-          addDeathFeedEvent('death', `${state.player.name} destroyed by enemy fire in ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}`);
-          if (state.socket) state.socket.emit('death:report', { name: state.player.name, cause: 'Enemy bolt fire', kills: c.kills, score: c.score });
-          setTimeout(() => { c.dead = false; exitGunnerMode(true); showEulogy(c.deathStats, 'Destroyed by enemy weapons fire'); }, 2500);
+          playerDeathSequence('Destroyed by enemy weapons fire');
         }
         continue;
       }
       if (b.age > b.life) { if (b._poolRef) returnBoltToPool(b._poolRef); else scene.remove(b.group); c.enemyBolts.splice(i, 1); }
     }
 
-    // Update explosions
+    // Update explosr = Math.random();
+              const lootType = r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel
     for (let i = c.explosions.length - 1; i >= 0; i--) {
       const ex = c.explosions[i];
       if (!ex || !ex.group) { c.explosions.splice(i, 1); continue; }
@@ -5716,6 +5866,7 @@ function gameLoop() {
         if (l.type === 'credits') { state.player.credits += 25; c.dmgNumbers.push({ text: '+25 EC', pos: l.group.position.clone(), age: 0, color: '#ffd700' }); }
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', pos: l.group.position.clone(), age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', pos: l.group.position.clone(), age: 0, color: '#44ff44' }); }
+        else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', pos: l.group.position.clone(), age: 0, color: '#ff8844' }); }
         AudioSFX.play('quest_complete');
         scene.remove(l.group); c.lootDrops.splice(i, 1); continue;
       }
@@ -5873,4 +6024,5 @@ window.enableDevCheats = () => {
 init();
 </script>
 </body>
+        else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', pos: l.group.position.clone(), age: 0, color: '#ff8844' }); }
 </html>
