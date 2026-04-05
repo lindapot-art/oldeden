@@ -366,6 +366,9 @@ canvas{display:block;}
 /* Karma screen shake */
 @keyframes karmaScreenShake{0%,100%{transform:translate(0,0);}10%{transform:translate(-4px,2px);}20%{transform:translate(3px,-3px);}30%{transform:translate(-2px,4px);}40%{transform:translate(4px,-1px);}50%{transform:translate(-3px,-2px);}60%{transform:translate(2px,3px);}70%{transform:translate(-4px,1px);}80%{transform:translate(3px,-4px);}90%{transform:translate(-1px,3px);}}
 .karma-shake{animation:karmaScreenShake 0.4s ease-out;}
+.karma-shake-epic{animation:karmaScreenShake 0.6s ease-out;}
+@keyframes karmaShakeLegendary{0%,100%{transform:translate(0,0);}10%{transform:translate(-8px,4px);}20%{transform:translate(6px,-6px);}30%{transform:translate(-5px,8px);}40%{transform:translate(8px,-3px);}50%{transform:translate(-6px,-5px);}60%{transform:translate(5px,6px);}70%{transform:translate(-8px,3px);}80%{transform:translate(6px,-8px);}90%{transform:translate(-3px,6px);}}
+.karma-shake-legendary{animation:karmaShakeLegendary 0.8s ease-out;}
 
 /* ── Death Ticker ────────────────────────── */
 #death-ticker{position:fixed;top:0;left:0;right:0;height:28px;background:rgba(10,10,15,0.85);border-bottom:1px solid rgba(255,68,68,0.15);z-index:200;overflow:hidden;display:none;}
@@ -891,6 +894,9 @@ const AudioSFX = {
       case 'karma_reveal': osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now+0.08); osc.frequency.setValueAtTime(659, now+0.16); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.3); osc.start(now); osc.stop(now+0.3); break;
       case 'karma_rare': { const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.setValueAtTime(523, now); o2.frequency.setValueAtTime(659, now+0.15); o2.frequency.setValueAtTime(784, now+0.3); o2.frequency.setValueAtTime(1047, now+0.5); o2.connect(gain); gain.gain.setValueAtTime(0.12*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); o2.start(now); o2.stop(now+0.8); osc.disconnect(); return; }
       case 'karma_legendary': { const g2 = ctx.createGain(); g2.connect(ctx.destination); g2.gain.setValueAtTime(0.15*vol, now); g2.gain.exponentialRampToValueAtTime(0.001, now+1.5); const o3 = ctx.createOscillator(); o3.type = 'sine'; o3.frequency.setValueAtTime(261, now); o3.frequency.setValueAtTime(329, now+0.2); o3.frequency.setValueAtTime(392, now+0.4); o3.frequency.setValueAtTime(523, now+0.6); o3.frequency.setValueAtTime(659, now+0.8); o3.frequency.setValueAtTime(784, now+1.0); o3.connect(g2); o3.start(now); o3.stop(now+1.5); const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 65; const sg = ctx.createGain(); sg.gain.setValueAtTime(0.08*vol, now); sg.gain.exponentialRampToValueAtTime(0.001, now+1.5); sub.connect(sg); sg.connect(ctx.destination); sub.start(now); sub.stop(now+1.5); osc.disconnect(); return; }
+      case 'karma_step': osc.type='triangle'; osc.frequency.setValueAtTime(330,now); osc.frequency.setValueAtTime(440,now+0.06); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.15); osc.start(now); osc.stop(now+0.15); break;
+      case 'karma_accept': { const oa=ctx.createOscillator(); oa.type='sine'; oa.frequency.setValueAtTime(440,now); oa.frequency.setValueAtTime(554,now+0.15); oa.frequency.setValueAtTime(659,now+0.3); oa.frequency.setValueAtTime(880,now+0.5); oa.connect(gain); gain.gain.setValueAtTime(0.14*vol,now); gain.gain.linearRampToValueAtTime(0.08*vol,now+0.4); gain.gain.exponentialRampToValueAtTime(0.001,now+1.0); oa.start(now); oa.stop(now+1.0); osc.disconnect(); return; }
+      case 'karma_common': osc.type='triangle'; osc.frequency.setValueAtTime(220,now); osc.frequency.exponentialRampToValueAtTime(165,now+0.2); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.25); osc.start(now); osc.stop(now+0.25); break;
       case 'shield_break': { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(80, now+0.4); gain.gain.setValueAtTime(0.15*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.4); osc.start(now); osc.stop(now+0.4); break; }
       case 'kill_confirm': osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.setValueAtTime(1100, now+0.05); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.12); osc.start(now); osc.stop(now+0.12); break;
       case 'hit_marker': osc.type = 'square'; osc.frequency.setValueAtTime(1600, now); gain.gain.setValueAtTime(0.04*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.04); osc.start(now); osc.stop(now+0.04); break;
@@ -1327,6 +1333,13 @@ function showEulogy(deathStats, deathCause) {
   
   document.getElementById('eulogy-epitaph').textContent = EPITAPHS[Math.floor(Math.random() * EPITAPHS.length)];
   
+  // Past-life continuity — display life number on subsequent deaths
+  const lifeNum = (state.player.rebirths || 0) + 1;
+  if (lifeNum > 1) {
+    const transEl = document.querySelector('.eulogy-transition');
+    if (transEl) transEl.textContent = 'Life #' + lifeNum + ' ends — But in Old Eden, death is a door...';
+  }
+  
   // Spawn floating dust particles
   const dustEl = document.getElementById('eulogy-dust');
   dustEl.innerHTML = '';
@@ -1351,11 +1364,11 @@ function showEulogy(deathStats, deathCause) {
     eulogyAdvanced = true;
     if (state.screen === 'eulogy') rollKarmaWheel();
   }
-  setTimeout(() => { skipBtn.style.opacity = '1'; }, 3000);
+  setTimeout(() => { skipBtn.style.opacity = '1'; }, 5000);
   skipBtn.onclick = advanceToKarma;
   
-  // Auto-advance to Karma Wheel after 6 seconds
-  setTimeout(advanceToKarma, 6000);
+  // Auto-advance to Karma Wheel after 9 seconds — let all animations finish
+  setTimeout(advanceToKarma, 9000);
 }
 
 // ================================================================
@@ -1393,7 +1406,9 @@ function generateKarmaRoll() {
   else { rarity = 'common'; rarityColor = '#aaaaaa'; }
   
   const faction = FACTIONS[Math.floor(Math.random() * FACTIONS.length)];
-  const wealthRoll = 300 + Math.floor(Math.random() * 4700);
+  const wealthBase = {legendary:2500,epic:1500,rare:800,uncommon:400,common:300};
+  const wealthRange = {legendary:2500,epic:2000,rare:1500,uncommon:800,common:400};
+  const wealthRoll = (wealthBase[rarity]||300) + Math.floor(Math.random() * (wealthRange[rarity]||400));
   const name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + '-' + Math.floor(Math.random() * 999);
   
   return {
@@ -1462,8 +1477,13 @@ function presentKarmaCard(roll) {
   factionEl.textContent = '';
   backstoryEl.textContent = '';
   
-  // Particle burst — more for higher rarity
-  const particleCount = roll.rarity === 'legendary' ? 80 : roll.rarity === 'epic' ? 60 : roll.rarity === 'rare' ? 45 : 30;
+  // Timing scales by rarity — legendary gets dramatic pauses, common is brisk
+  const rd = {common:0.6,uncommon:0.7,rare:0.85,epic:1.0,legendary:1.3}[roll.rarity] || 1.0;
+  const t1 = Math.round(600*rd), t2 = Math.round(1200*rd), t3 = Math.round(1800*rd);
+  const t4 = Math.round(2400*rd), t5 = Math.round(3200*rd), t6 = Math.round(3800*rd);
+  
+  // Particle burst — dramatic contrast between rarities
+  const particleCount = {legendary:80,epic:60,rare:45,uncommon:20,common:10}[roll.rarity] || 10;
   const particleEl = document.getElementById('karma-particles');
   particleEl.innerHTML = '';
   for (let i = 0; i < particleCount; i++) {
@@ -1477,56 +1497,56 @@ function presentKarmaCard(roll) {
     p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
     p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
     p.style.animationDelay = Math.random() * 0.3 + 's';
-    p.style.width = (2 + Math.random() * 3) + 'px';
+    const pSize = roll.rarity === 'common' ? (1 + Math.random()*1.5) : (2 + Math.random()*3);
+    p.style.width = pSize + 'px';
     p.style.height = p.style.width;
     particleEl.appendChild(p);
   }
   
-  // Rarity aura glow
-  const auraColors = {
-    common: 'transparent',
-    uncommon: 'rgba(34,204,102,0.12)',
-    rare: 'rgba(68,170,255,0.18)',
-    epic: 'rgba(168,85,247,0.22)',
-    legendary: 'rgba(255,215,0,0.25)',
-  };
+  // Rarity aura — size and blur scale with rarity
+  const auraColors = {common:'transparent',uncommon:'rgba(34,204,102,0.12)',rare:'rgba(68,170,255,0.18)',epic:'rgba(168,85,247,0.22)',legendary:'rgba(255,215,0,0.25)'};
   aura.style.background = auraColors[roll.rarity] || 'transparent';
+  const auraSize = {common:'0',uncommon:'300px',rare:'400px',epic:'500px',legendary:'600px'}[roll.rarity] || '400px';
+  aura.style.width = auraSize; aura.style.height = auraSize;
+  aura.style.filter = 'blur(' + ({common:'40px',uncommon:'60px',rare:'80px',epic:'100px',legendary:'120px'}[roll.rarity] || '80px') + ')';
   
-  // Screen shake on rare+
+  // Screen shake scales by rarity — legendary rumbles harder
   const karmaScreen = document.getElementById('screen-karma');
-  if (['rare','epic','legendary'].includes(roll.rarity)) {
+  if (roll.rarity === 'legendary') {
+    karmaScreen.classList.add('karma-shake-legendary');
+    setTimeout(() => karmaScreen.classList.remove('karma-shake-legendary'), 900);
+  } else if (roll.rarity === 'epic') {
+    karmaScreen.classList.add('karma-shake-epic');
+    setTimeout(() => karmaScreen.classList.remove('karma-shake-epic'), 700);
+  } else if (roll.rarity === 'rare') {
     karmaScreen.classList.add('karma-shake');
     setTimeout(() => karmaScreen.classList.remove('karma-shake'), 500);
   }
   
-  // Rarity-specific reveal SFX
+  // Rarity reveal SFX — no t=0 for common/uncommon (prevents double-beep)
   if (roll.rarity === 'legendary') AudioSFX.play('karma_legendary');
   else if (roll.rarity === 'epic' || roll.rarity === 'rare') AudioSFX.play('karma_rare');
-  else AudioSFX.play('karma_reveal');
   
-  // Staged reveal with SFX per stage
+  // ── Staged reveal with distinct SFX per stage ──
   setTimeout(() => {
-    // Step 1: Name + title
+    // Step 1: Name + title + rarity badge
     nameEl.textContent = roll.name;
     titleEl.textContent = roll.title;
     rarityEl.textContent = roll.rarity.toUpperCase();
     rarityEl.style.background = roll.rarityColor + '22';
     rarityEl.style.color = roll.rarityColor;
     rarityEl.style.border = '1px solid ' + roll.rarityColor;
-    // Shimmer for epic+
     if (['epic','legendary'].includes(roll.rarity)) nameEl.classList.add('shimmer');
-    AudioSFX.play('karma_reveal');
-  }, 600);
+    AudioSFX.play('karma_step');
+  }, t1);
   
   setTimeout(() => {
-    // Step 2: Genome bars
+    // Step 2: Genome bars + pixel art
     const geneNames = ['CMB','PLT','ENG','TRD','SCI'];
     const geneColors = ['#ff4444','#44aaff','#22cc66','#ffd700','#a855f7'];
     genesEl.innerHTML = geneNames.map((n, i) => {
-      const val = roll.genome[32 + i];
-      return `<div style="text-align:center;font-size:0.6rem;color:var(--muted);">${n}
-        <div class="karma-gene-bar"><div class="karma-gene-fill" id="kg-${i}" style="width:0%;background:${geneColors[i]}"></div></div>
-      </div>`;
+      return '<div style="text-align:center;font-size:0.6rem;color:var(--muted);">' + n +
+        '<div class="karma-gene-bar"><div class="karma-gene-fill" id="kg-' + i + '" style="width:0%;background:' + geneColors[i] + '"></div></div></div>';
     }).join('');
     requestAnimationFrame(() => {
       geneNames.forEach((_, i) => {
@@ -1536,13 +1556,13 @@ function presentKarmaCard(roll) {
     });
     drawGenome(new Uint8Array(roll.genome), document.getElementById('karma-genome-canvas'), 96);
     AudioSFX.play('karma_reveal');
-  }, 1200);
+  }, t2);
   
   setTimeout(() => {
     // Step 3: Faction
-    factionEl.innerHTML = `Faction: <span style="color:${roll.factionColor}">${roll.factionName}</span>`;
-    AudioSFX.play('karma_reveal');
-  }, 1800);
+    factionEl.innerHTML = 'Faction: <span style="color:' + roll.factionColor + '">' + roll.factionName + '</span>';
+    AudioSFX.play('karma_step');
+  }, t3);
   
   setTimeout(() => {
     // Step 4: Wealth — counting animation for drama
@@ -1555,29 +1575,28 @@ function presentKarmaCard(roll) {
     function animateWealth() {
       const elapsed = performance.now() - wealthStart;
       const progress = Math.min(1, elapsed / wealthDuration);
-      // Ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       wealthCurrent = Math.floor(wealthTarget * eased);
-      wealthEl.innerHTML = `Wealth: <span class="kw-val" style="color:${wealthColor}">${wealthCurrent.toLocaleString()} EC</span> <span style="font-size:0.7rem;color:var(--muted)">(${progress >= 1 ? wealthTier : '...'})</span>`;
+      wealthEl.innerHTML = 'Wealth: <span class="kw-val" style="color:' + wealthColor + '">' + wealthCurrent.toLocaleString() + ' EC</span> <span style="font-size:0.7rem;color:var(--muted)">(' + (progress >= 1 ? wealthTier : '...') + ')</span>';
       if (progress < 1) requestAnimationFrame(animateWealth);
     }
     animateWealth();
     AudioSFX.play('karma_reveal');
-  }, 2400);
+  }, t4);
   
   setTimeout(() => {
-    // Step 5: Card reveal + backstory + aura
+    // Step 5: Card reveal + backstory + aura glow
     card.classList.add('revealed', 'rarity-' + roll.rarity);
     backstoryEl.textContent = roll.backstory;
     aura.classList.add('active');
-  }, 3200);
+  }, t5);
   
   setTimeout(() => {
-    // Step 6: Show action buttons with fade-in
+    // Step 6: Show action buttons
     actionsEl.classList.add('visible');
     const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
     document.getElementById('reroll-cost').textContent = cost;
-  }, 3800);
+  }, t6);
 }
 
 // ================================================================
@@ -4472,12 +4491,25 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   state.combat.godMode = false; // No god mode in new life
   addDeathFeedEvent('rebirth', `A new soul enters the galaxy: ${roll.name}, ${roll.title}`);
   addComms('AI Director', `You have been reborn as ${roll.name}, ${roll.title}. ${roll.factionName} welcomes you.`);
-  AudioSFX.play('karma_reveal');
+  AudioSFX.play('karma_accept');
   checkAndClaimMilestones();
   saveGame();
   state.karmaRoll = null;
   updateRebirthScreen();
-  showScreen('bridge');
+  // Rebirth transition — "A new soul awakens"
+  const rb = document.createElement('div');
+  rb.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:background 0.8s ease 0.3s;';
+  rb.innerHTML = '<span style="color:#1a0a2e;font-size:1.3rem;letter-spacing:0.3em;font-weight:200;opacity:0;transition:opacity 0.5s ease 0.2s;">A new soul awakens...</span>';
+  document.body.appendChild(rb);
+  requestAnimationFrame(() => {
+    rb.style.background = '#1a0a2e';
+    rb.querySelector('span').style.opacity = '1';
+  });
+  setTimeout(() => {
+    rb.style.opacity = '0';
+    rb.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => { rb.remove(); showScreen('bridge'); }, 600);
+  }, 2000);
 });
 
 // Karma Wheel: Re-roll
@@ -4497,11 +4529,12 @@ document.getElementById('btn-karma-reroll').addEventListener('click', () => {
   spinner.classList.remove('hidden');
   subtitle.textContent = 'Reweaving fate...';
   AudioSFX.play('karma_spin');
+  const rerollDur = 2000 + Math.min(state.karmaRerollCount * 300, 1500);
   setTimeout(() => {
     spinner.classList.add('hidden');
     subtitle.textContent = 'Your new fate awaits.';
     presentKarmaCard(roll);
-  }, 1200);
+  }, rerollDur);
   showToast(`Re-rolled! (-${cost} SM)`);
 });
 
@@ -5954,6 +5987,11 @@ function playerDeathSequence(cause) {
     state._deathPullback = null;
     _deathSequenceActive = false;
     c.dead = false;
+    // Soul departure flash — bridges 3D→2D transition
+    const df = document.createElement('div');
+    df.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:9999;opacity:1;transition:opacity 0.5s ease;pointer-events:none;';
+    document.body.appendChild(df);
+    requestAnimationFrame(() => { df.style.opacity = '0'; setTimeout(() => df.remove(), 600); });
     exitGunnerMode(true);
     showEulogy(c.deathStats, cause);
   }, 3000);
