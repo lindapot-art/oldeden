@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { APTITUDE_GENES, PHYSICAL_GENES } from './GeneticSystem.js';
+import { APTITUDE_GENES } from './GeneticSystem.js';
 
 /**
  * NPCSystem — manages the autonomous NPC population of Old Eden.

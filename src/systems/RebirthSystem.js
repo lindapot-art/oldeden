@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { APTITUDE_GENES, PHYSICAL_GENES } from './GeneticSystem.js';
+import { APTITUDE_GENES } from './GeneticSystem.js';
 
 export const DEATH_PATH = Object.freeze({
   STANDARD_REBIRTH: 'standard_rebirth',

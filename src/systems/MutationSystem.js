@@ -1,4 +1,4 @@
-import { GENOME_LENGTH, GENE_CLUSTER, PHYSICAL_GENES } from './GeneticSystem.js';
+import { GENOME_LENGTH, GENE_CLUSTER } from './GeneticSystem.js';
 
 /**
  * MutationSystem — applies radiation and environmental mutations to genomes.

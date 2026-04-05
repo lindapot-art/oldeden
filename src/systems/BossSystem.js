@@ -27,7 +27,7 @@
  *   console.log(`Phase ${boss.currentPhase}/${boss.maxPhases}`);
  */
 
-import { WEAPON_TYPE, ARMOR_TYPE } from './CombatSystem.js';
+import { ARMOR_TYPE } from './CombatSystem.js';
 
 /** Boss behavior states */
 const BOSS_STATE = {
@@ -364,6 +364,7 @@ export class BossSystem {
 
   async init(engine) {
     this._engine = engine;
+    this.events = engine.events;
     console.log('[BossSystem] Initialised.');
   }
 
