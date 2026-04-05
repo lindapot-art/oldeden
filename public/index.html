@@ -1794,11 +1794,12 @@ function addDeathFeedEvent(type, text) {
   updateDeathTicker();
 }
 
+function _escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function updateDeathTicker() {
   const el = document.getElementById('death-ticker-content');
   if (!el) return;
   el.innerHTML = state.deathFeed.map(e => 
-    `<span class="ticker-${e.type}">${e.text}</span>`
+    `<span class="ticker-${_escHtml(e.type)}">${_escHtml(e.text)}</span>`
   ).join('');
   document.getElementById('death-ticker').classList.add('active');
 }
@@ -2471,7 +2472,7 @@ function renderStarMap() {
     // Label
     if (isCurrent || isSelected || scale > 0.8) {
       smCtx.fillStyle = isCurrent ? '#d4a856' : 'rgba(200,214,229,0.6)';
-      smCtx.font = `${isCurrent ? 11 : 9}px "Segoe UI"`;
+      smCtx.font = `${isCurrent ? 11 : 9}px "Segoe UI", system-ui, sans-serif`;
       smCtx.fillText(s.name, sx + r + 4, sy + 3);
     }
 
@@ -3024,7 +3025,7 @@ const SOUL_MILESTONES = [
   { id: 'boss_10',        name: 'Boss Hunter',           desc: 'Defeat 10 bosses',                     check: s => s.bossKills >= 10,    reward: 300,  icon: '🏆' },
   { id: 'deaths_10',      name: 'Soul Veteran',          desc: 'Die 10 times (experience is wisdom)',  check: s => s.totalDeaths >= 10,  reward: 25,   icon: '💀' },
   { id: 'streak_25',      name: 'Unstoppable',           desc: 'Achieve a 25 kill streak',             check: s => s.peakStreak >= 25,   reward: 100,  icon: '🔥' },
-  { id: 'rebirths_5',     name: 'Phoenix',               desc: 'Complete 5 rebirths',                  check: s => s.totalDeaths >= 5,   reward: 60,   icon: '🐦' },
+  { id: 'rebirths_5',     name: 'Phoenix',               desc: 'Complete 5 rebirths',                  check: (s, p) => p.rebirths >= 5, reward: 60,   icon: '🐦' },
   { id: 'fragments_10',   name: 'Soul Collector',        desc: 'Collect 10 soul fragments',            check: (s, p) => p.soulFragments.length >= 10, reward: 80, icon: '💎' },
   { id: 'resonance_50',   name: 'Resonant Being',        desc: 'Reach 50% total resonance',            check: (s, p) => { const r = p.resonanceBonuses; return (r.dmg + r.shield + r.speed + r.luck) >= 50; }, reward: 200, icon: '✧' },
   { id: 'credits_100k',   name: 'Space Tycoon',          desc: 'Earn 100,000 lifetime credits',        check: s => s.totalCredits >= 100000, reward: 120, icon: '💰' },
@@ -3849,7 +3850,7 @@ function exitGunnerMode(skipScreenChange) {
   c.active = false;
   if (document.pointerLockElement) document.exitPointerLock();
   // Clean up all 3D objects (guard each removal) + dispose GPU resources
-  c.enemyBolts.forEach(b => { if (b && b.group) scene.remove(b.group); }); c.enemyBolts = [];
+  c.enemyBolts.forEach(b => { if (b && b._poolRef) returnBoltToPool(b._poolRef); else if (b && b.group) { scene.remove(b.group); disposeObject(b.group); } }); c.enemyBolts = [];
   c.enemies.forEach(e => { if (e && e.group) { scene.remove(e.group); disposeObject(e.group); } }); c.enemies = [];
   c.projectiles.forEach(p => { if (p && p.group) { scene.remove(p.group); disposeObject(p.group); } }); c.projectiles = [];
   c.explosions.forEach(ex => { if (ex && ex.group) { scene.remove(ex.group); disposeObject(ex.group); } }); c.explosions = [];
@@ -4201,7 +4202,7 @@ function renderHUD() {
     }
     // "KILL" text below crosshair
     hudCtx.globalAlpha = killA * 0.9;
-    hudCtx.font = 'bold 18px "Segoe UI"';
+    hudCtx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillStyle = '#ffcc00';
     hudCtx.textAlign = 'center';
     hudCtx.fillText('KILL', cx, cy + 55);
@@ -4218,7 +4219,7 @@ function renderHUD() {
   // God Mode indicator
   if (c.godMode) {
     hudCtx.save();
-    hudCtx.font = 'bold 18px "Segoe UI"';
+    hudCtx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillStyle = '#ffcc00';
     hudCtx.globalAlpha = 0.6 + 0.4 * Math.sin(state.gameTime * 0.005);
     hudCtx.textAlign = 'center';
@@ -4230,7 +4231,7 @@ function renderHUD() {
   if (performance.now() < c.deathImmunityUntil) {
     const remaining = Math.ceil((c.deathImmunityUntil - performance.now()) / 1000);
     hudCtx.save();
-    hudCtx.font = 'bold 16px "Segoe UI"';
+    hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillStyle = '#44ddff';
     hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.008);
     hudCtx.textAlign = 'center';
@@ -4241,10 +4242,10 @@ function renderHUD() {
   // Weapon (bottom-right) — shows active weapon
   const wrx = W-220, wry = H-140;
   const isRailgun = state.activeWeapon === 'railgun';
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('WEAPON [Q]', wrx, wry);
-  hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = isRailgun ? primary : '#00ff88';
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('WEAPON [Q]', wrx, wry);
+  hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = isRailgun ? primary : '#00ff88';
   hudCtx.fillText(isRailgun ? 'RAILGUN MK-II' : 'LASER TURRET', wrx, wry+20);
-  hudCtx.font = '11px "Segoe UI"';
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
   if (isRailgun) {
     hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
     hudCtx.fillText('AMMO  ' + c.ammo + ' / ' + c.maxAmmo, wrx, wry+42);
@@ -4270,7 +4271,7 @@ function renderHUD() {
 
   // Shield/Hull (top-left)
   const slx = 24, sly = 30;
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SHIELD', slx, sly);
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SHIELD', slx, sly);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+6, 180, 8);
   hudCtx.fillStyle = state.ship.shield > 30 ? '#44aaff' : danger;
   hudCtx.fillRect(slx, sly+6, 180*(state.ship.shield/state.ship.maxShield), 8);
@@ -4285,7 +4286,7 @@ function renderHUD() {
   if (c.shieldBreakTimer > 0) {
     hudCtx.save();
     hudCtx.globalAlpha = Math.min(1, c.shieldBreakTimer / 500) * (0.6 + 0.4 * Math.sin(state.gameTime * 0.015));
-    hudCtx.font = 'bold 16px "Segoe UI"';
+    hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillStyle = '#44ccff';
     hudCtx.shadowColor = '#44ccff'; hudCtx.shadowBlur = 12;
     hudCtx.fillText('\u26A0 SHIELDS DOWN', slx, sly + 60);
@@ -4296,7 +4297,7 @@ function renderHUD() {
     hudCtx.save();
     const hullWarnAlpha = 0.5 + 0.5 * Math.sin(performance.now() * 0.01);
     hudCtx.globalAlpha = hullWarnAlpha;
-    hudCtx.font = 'bold 20px "Segoe UI"';
+    hudCtx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillStyle = '#ff2200';
     hudCtx.shadowColor = '#ff0000'; hudCtx.shadowBlur = 15;
     hudCtx.textAlign = 'center';
@@ -4314,9 +4315,9 @@ function renderHUD() {
 
   // Score (top-right)
   const srx = W-200, sry = 30;
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
-  hudCtx.font = 'bold 22px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
+  hudCtx.font = 'bold 22px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
   // Age & Lives display
   hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
   // Kill streak — escalating visual drama
@@ -4325,7 +4326,7 @@ function renderHUD() {
     const streakSize = Math.min(28, 14 + Math.floor(c.streak / 3) * 2);
     const pulse = 1 + 0.08 * Math.sin(state.gameTime * 0.012);
     hudCtx.save();
-    hudCtx.font = 'bold ' + Math.round(streakSize * pulse) + 'px "Segoe UI"'; hudCtx.fillStyle = streakColor;
+    hudCtx.font = 'bold ' + Math.round(streakSize * pulse) + 'px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = streakColor;
     hudCtx.globalAlpha = 0.9;
     // Glow
     hudCtx.shadowColor = streakColor; hudCtx.shadowBlur = c.streak >= 10 ? 12 : 4;
@@ -4334,7 +4335,7 @@ function renderHUD() {
     if (c._streakMilestoneTimer > 0) {
       hudCtx.globalAlpha = Math.min(1, c._streakMilestoneTimer / 600);
       const mSize = 24 + (1 - c._streakMilestoneTimer / 1500) * 8;
-      hudCtx.font = 'bold ' + Math.round(mSize) + 'px "Segoe UI"';
+      hudCtx.font = 'bold ' + Math.round(mSize) + 'px "Segoe UI", system-ui, sans-serif';
       hudCtx.fillStyle = '#ffffff'; hudCtx.shadowColor = streakColor; hudCtx.shadowBlur = 20;
       hudCtx.textAlign = 'center';
       hudCtx.fillText(c._streakMilestoneText || '', cx, cy - 80);
@@ -4344,22 +4345,22 @@ function renderHUD() {
   }
 
   // Credits (bottom-left)
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('CREDITS', 24, H-60);
-  hudCtx.font = 'bold 16px "Segoe UI"'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(state.player.credits.toLocaleString() + ' EC', 24, H-42);
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('CREDITS', 24, H-60);
+  hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(state.player.credits.toLocaleString() + ' EC', 24, H-42);
   // Stellar Marks
-  hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#a855f7'; hudCtx.fillText('\u2726 ' + state.player.stellarMarks + ' SM', 24, H-28);
+  hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#a855f7'; hudCtx.fillText('\u2726 ' + state.player.stellarMarks + ' SM', 24, H-28);
 
   // Speed indicator (left side, below shield/hull)
   const fl = state.flight;
   const spdPct = fl.speed / (fl.maxSpeed * fl.afterburnerMult * state.upgrades.engineSpeed);
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SPEED', slx, sly+66);
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SPEED', slx, sly+66);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+72, 180, 8);
   hudCtx.fillStyle = fl.afterburner ? '#ff8800' : '#44aaff';
   hudCtx.fillRect(slx, sly+72, 180 * Math.min(1, spdPct), 8);
   hudCtx.fillStyle = '#778899';
   hudCtx.fillText(Math.floor(fl.speed) + ' m/s' + (fl.afterburner ? ' [AB]' : ''), slx+185, sly+80);
   // Fuel bar
-  hudCtx.font = '11px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('FUEL', slx, sly+98);
+  hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('FUEL', slx, sly+98);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+104, 180, 8);
   hudCtx.fillStyle = state.ship.fuel > 25 ? '#ffaa00' : danger;
   hudCtx.fillRect(slx, sly+104, 180 * (state.ship.fuel / state.ship.maxFuel), 8);
@@ -4369,15 +4370,15 @@ function renderHUD() {
   if (state.ship.fuel <= 0) {
     hudCtx.save();
     hudCtx.globalAlpha = 0.6 + 0.4 * Math.sin(state.gameTime * 0.01);
-    hudCtx.font = 'bold 12px "Segoe UI"'; hudCtx.fillStyle = '#ff4444';
+    hudCtx.font = 'bold 12px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#ff4444';
     hudCtx.fillText('\u26a0 FUEL EMPTY — 30% SPEED', slx, sly+126);
     hudCtx.restore();
   } else if (state.ship.fuel <= 15) {
-    hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ff8800';
+    hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#ff8800';
     hudCtx.fillText('\u26a0 LOW FUEL', slx+100, sly+112);
   }
   // Controls reminder
-  hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.6;
+  hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.6;
   hudCtx.fillText('WASD/Arrows fly | Shift boost | RClick/DblClick nav', slx, sly+130);
   hudCtx.globalAlpha = 1;
 
@@ -4431,7 +4432,7 @@ function renderHUD() {
     }
   });
   hudCtx.globalAlpha = 1;
-  hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
+  hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
 
   // Enemy health bars (world-space, above each enemy)
   c.enemies.forEach(e => {
@@ -4457,7 +4458,7 @@ function renderHUD() {
     hudCtx.strokeStyle = 'rgba(255,68,68,0.4)';
     hudCtx.lineWidth = 0.5;
     hudCtx.strokeRect(ex - barW/2, ey - barH/2, barW, barH);
-    hudCtx.font = '8px "Segoe UI"';
+    hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillStyle = e.isBoss ? '#ff2200' : '#ff8866';
     hudCtx.textAlign = 'center';
     hudCtx.fillText(e.type.toUpperCase(), ex, ey - barH - 2);
@@ -4486,7 +4487,7 @@ function renderHUD() {
   const boss = c.enemies.find(e => e.isBoss);
   if (boss) {
     const bw = 300, bh = 12, bx = cx - bw/2, by = 60;
-    hudCtx.fillStyle = '#445566'; hudCtx.font = 'bold 13px "Segoe UI"';
+    hudCtx.fillStyle = '#445566'; hudCtx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
     hudCtx.fillText('\u26a0 BOSS', bx, by-6);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(bx, by, bw, bh);
     hudCtx.fillStyle = '#ff2200'; hudCtx.fillRect(bx, by, bw*(boss.hp/boss.maxHp), bh);
@@ -4495,7 +4496,7 @@ function renderHUD() {
 
   // Enemy bolt count on HUD
   if (c.enemyBolts.length > 0) {
-    hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ff4444';
+    hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#ff4444';
     hudCtx.fillText('\u26a0 INCOMING: ' + c.enemyBolts.length, 24, H-20);
   }
 
@@ -4531,7 +4532,7 @@ function renderHUD() {
       const dnSize = Math.min(26, 14 + Math.floor(dnVal / 50) * 2);
       // Initial pop: 1.3x at age 0, settles to 1x at age 200
       const dnPop = dn.age < 200 ? 1 + 0.3 * (1 - dn.age / 200) : 1;
-      hudCtx.font = 'bold ' + Math.round(dnSize * dnPop) + 'px "Segoe UI"'; hudCtx.fillStyle = dn.color;
+      hudCtx.font = 'bold ' + Math.round(dnSize * dnPop) + 'px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = dn.color;
       hudCtx.fillText(dn.text, sx, sy);
     }
     if (dn.age > 1200) c.dmgNumbers.splice(i, 1);
@@ -4542,7 +4543,7 @@ function renderHUD() {
   const activeQuests = state.quests.filter(q => q.active);
   if (activeQuests.length > 0) {
     const qx = 24, qy = 110;
-    hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#556677';
+    hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#556677';
     hudCtx.fillText('MISSIONS', qx, qy);
     activeQuests.slice(0, 3).forEach((q, qi) => {
       const y = qy + 14 + qi * 16;
@@ -4556,7 +4557,7 @@ function renderHUD() {
   // Mining progress bar (left side, below quests)
   if (state.mining && state.mining.active) {
     const mx = 24, my = 200;
-    hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#ffaa00';
+    hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#ffaa00';
     hudCtx.fillText('\u26CF MINING: ' + (state.mining.targetOre || 'Asteroid'), mx, my);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(mx, my + 4, 160, 8);
     hudCtx.fillStyle = '#ffaa00'; hudCtx.fillRect(mx, my + 4, 160 * (state.mining.progress / 100), 8);
@@ -4590,14 +4591,14 @@ function renderHUD() {
     if (Math.abs(sgMx - mapCx) < mapR && Math.abs(sgMy - mapCy) < mapR) {
       hudCtx.strokeStyle = '#cc44ff'; hudCtx.lineWidth = 1.5;
       hudCtx.beginPath(); hudCtx.arc(sgMx, sgMy, 5, 0, Math.PI * 2); hudCtx.stroke();
-      hudCtx.fillStyle = '#cc44ff'; hudCtx.font = '7px "Segoe UI"';
+      hudCtx.fillStyle = '#cc44ff'; hudCtx.font = '7px "Segoe UI", system-ui, sans-serif';
       hudCtx.fillText('SG', sgMx - 5, sgMy - 7);
     }
   }
 
   // Alt universe status
   if (state.inAltUniverse) {
-    hudCtx.font = 'bold 12px "Segoe UI"'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.003);
+    hudCtx.font = 'bold 12px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.003);
     hudCtx.fillText('\u2726 ALT UNIVERSE — Artifacts: ' + (state.altUniverse ? state.altUniverse.artifactsCollected : 0), cx - 100, 22);
     hudCtx.globalAlpha = 1;
   }
@@ -4609,7 +4610,7 @@ function renderHUD() {
       const fInfo = typeof FACTIONS !== 'undefined' && FACTIONS.find(f => f.id === sys.controllingFaction || f.name === sys.controllingFaction);
       const fColor = sys.factionColor || (fInfo ? fInfo.color : '#556677');
       const fName = fInfo ? fInfo.name : sys.controllingFaction;
-      hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = fColor; hudCtx.globalAlpha = 0.7;
+      hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = fColor; hudCtx.globalAlpha = 0.7;
       hudCtx.fillText('\u2691 ' + fName + ' territory', 24, H - 36);
       hudCtx.globalAlpha = 1;
     }
@@ -4620,14 +4621,14 @@ function renderHUD() {
     const sgDist = ship.position.distanceTo(stargateGroup.position);
     if (sgDist < 120) {
       const sgAlpha = Math.max(0.4, 1 - sgDist / 120);
-      hudCtx.font = 'bold 11px "Segoe UI"'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = sgAlpha;
+      hudCtx.font = 'bold 11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = sgAlpha;
       hudCtx.fillText('\u2726 STARGATE: ' + Math.floor(sgDist) + 'm' + (sgDist < 40 ? ' \u2014 [G] to enter' : ''), cx - 80, H - 50);
       hudCtx.globalAlpha = 1;
     }
   }
 
   // Keybind hints (bottom-right, above weapon)
-  hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#445566'; hudCtx.globalAlpha = 0.6;
+  hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.globalAlpha = 0.6;
   const kx = W - 180, ky = H - 160;
   hudCtx.fillText('M:Mine  T:Chat  K:Skins  G:Gate  C:Collect', kx - 40, ky);
   hudCtx.globalAlpha = 1;
@@ -4641,7 +4642,7 @@ function renderHUD() {
 
   // ── Age + Character Skills (right side, below score) ──
   const skillX = W - 200, skillY = sry + 80;
-  hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#445566';
+  hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566';
   hudCtx.fillText('AGE: ' + Math.floor(state.player.age) + ' yrs', skillX, skillY);
   // Show top 3 skills by level
   const skillEntries = Object.entries(state.skills).sort((a, b) => b[1] - a[1]).slice(0, 3);
@@ -4649,7 +4650,7 @@ function renderHUD() {
     const sy2 = skillY + 16 + i * 14;
     const ceiling = getSkillCeiling(name);
     const pct = ceiling > 0 ? (level / ceiling) : 0;
-    hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#556677';
+    hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#556677';
     hudCtx.fillText(name.toUpperCase().slice(0, 4), skillX, sy2);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(skillX + 38, sy2 - 7, 80, 6);
     hudCtx.fillStyle = pct >= 0.9 ? '#d4a856' : pct >= 0.5 ? '#44aaff' : '#445566';
@@ -6044,7 +6045,7 @@ function renderChatbot() {
   const el = document.getElementById('chatbot-messages');
   if (!el) return;
   el.innerHTML = state.chatbot.messages.slice(-15).map(m =>
-    `<div class="chat-msg ${m.ai ? 'ai' : 'user'}">${m.text}</div>`
+    `<div class="chat-msg ${m.ai ? 'ai' : 'user'}">${_escHtml(m.text)}</div>`
   ).join('');
   el.scrollTop = el.scrollHeight;
 }
@@ -6164,9 +6165,9 @@ function renderSkinPreview(skin) {
     ctx.fillRect(Math.random()*260, Math.random()*80, 2+Math.random()*4, 1+Math.random()*3);
   }
   // Label
-  ctx.font = 'bold 12px "Segoe UI"'; ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif'; ctx.fillStyle = '#fff';
   ctx.fillText(skin.name, 10, 20);
-  ctx.font = '10px "Segoe UI"'; ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.6)';
   ctx.fillText(`R:${skin.roughness.toFixed(1)} M:${skin.metalness.toFixed(1)}`, 10, 36);
 }
 
@@ -6588,10 +6589,11 @@ function gameLoop() {
     if (fl.vertical !== 0) {
       fl.velocity.y += fl.vertical * fl.accel * 0.5 * dt;
     }
-    // Drag
-    fl.velocity.x *= fl.drag;
-    fl.velocity.y *= fl.drag;
-    fl.velocity.z *= fl.drag;
+    // Drag — frame-rate-independent (normalize to 60fps base)
+    const _frameDrag = Math.pow(fl.drag, dt * 60);
+    fl.velocity.x *= _frameDrag;
+    fl.velocity.y *= _frameDrag;
+    fl.velocity.z *= _frameDrag;
     // Clamp speed
     fl.speed = Math.sqrt(fl.velocity.x**2 + fl.velocity.y**2 + fl.velocity.z**2);
     if (fl.speed > maxSpd) {
@@ -6772,12 +6774,14 @@ function gameLoop() {
             const sys = state.starSystems[state.location.systemIndex];
             if (sys && sys.controllingFaction) {
               state.factionRep[sys.controllingFaction] = Math.min(1000, (state.factionRep[sys.controllingFaction] || 0) + 5);
-              // Rival factions lose rep (opposite ideology factions)
-              FACTIONS.forEach(f => {
-                if (f.id !== sys.controllingFaction) {
-                  state.factionRep[f.id] = Math.max(-500, (state.factionRep[f.id] || 0) - 2);
-                }
-              });
+              // Rival factions lose rep (2 most different factions by index distance)
+              const _ctrlIdx = FACTIONS.findIndex(f => f.id === sys.controllingFaction);
+              if (_ctrlIdx >= 0) {
+                const _rival1 = FACTIONS[(_ctrlIdx + 3) % FACTIONS.length];
+                const _rival2 = FACTIONS[(_ctrlIdx + 5) % FACTIONS.length];
+                if (_rival1) state.factionRep[_rival1.id] = Math.max(-500, (state.factionRep[_rival1.id] || 0) - 3);
+                if (_rival2) state.factionRep[_rival2.id] = Math.max(-500, (state.factionRep[_rival2.id] || 0) - 2);
+              }
             }
             // Report kill to server for economy credit + quest progress
             if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
@@ -6820,7 +6824,7 @@ function gameLoop() {
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
       // On first life, auto-aggro after 60s to push players into the combat loop
-      const autoAggro = isFirstLife && state.gameTime > 10000;
+      const autoAggro = isFirstLife && state.gameTime > 60000;
       if (c.playerHasAttacked || autoAggro) {
         const distToPlayer = e.group.position.distanceTo(ship.position);
         // Type-specific AI movement patterns
@@ -6832,11 +6836,11 @@ function gameLoop() {
             if (distToPlayer > 60) {
               e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
             } else {
-              // Strafe perpendicular to player
-              const strafeDir = new THREE.Vector3(-_tmpV3a.z, 0, _tmpV3a.x);
+              // Strafe perpendicular to player (reuse temp vector)
+              _tmpV3d.set(-_tmpV3a.z, 0, _tmpV3a.x);
               const sway = Math.sin(e._aiTimer * 3) * 0.7;
               e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 0.3);
-              e.group.position.addScaledVector(strafeDir, e.speed * dt * sway);
+              e.group.position.addScaledVector(_tmpV3d, e.speed * dt * sway);
             }
             break;
           case 'bomber':
@@ -6857,9 +6861,9 @@ function gameLoop() {
             if (distToPlayer > 80) {
               e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
             } else {
-              // Orbit player
-              const orbitDir = new THREE.Vector3(-_tmpV3a.z, 0, _tmpV3a.x);
-              e.group.position.addScaledVector(orbitDir, e.speed * dt * 0.8);
+              // Orbit player (reuse temp vector)
+              _tmpV3d.set(-_tmpV3a.z, 0, _tmpV3a.x);
+              e.group.position.addScaledVector(_tmpV3d, e.speed * dt * 0.8);
               // Drift inward/outward to maintain orbit
               const orbitPull = (distToPlayer - 50) * 0.02;
               e.group.position.addScaledVector(_tmpV3a, orbitPull * dt * e.speed);
@@ -7019,10 +7023,10 @@ function gameLoop() {
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', pos: l.group.position.clone(), age: 0, color: '#44ff44' }); }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', pos: l.group.position.clone(), age: 0, color: '#ff8844' }); }
         AudioSFX.play('loot_' + l.type);
-        scene.remove(l.group); c.lootDrops.splice(i, 1); continue;
+        scene.remove(l.group); disposeObject(l.group); c.lootDrops.splice(i, 1); continue;
       }
       // Despawn after 15s
-      if (l.age > 15000) { scene.remove(l.group); c.lootDrops.splice(i, 1); }
+      if (l.age > 15000) { scene.remove(l.group); disposeObject(l.group); c.lootDrops.splice(i, 1); }
     }
 
     // Space dust drift
@@ -7032,12 +7036,15 @@ function gameLoop() {
     if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
       if (!c._asteroidHitCooldown) c._asteroidHitCooldown = 0;
       if (performance.now() > c._asteroidHitCooldown) {
-        c.asteroids.forEach(a => {
-          if (!a || !a.position) return;
+        let _astHit = false;
+        for (let _ai = 0; _ai < c.asteroids.length && !_astHit; _ai++) {
+          const a = c.asteroids[_ai];
+          if (!a || !a.position) continue;
           const dist = a.position.distanceTo(ship.position);
           const mesh = a.children && a.children[0];
           const radius = (mesh && mesh.geometry && mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius) || 4;
           if (dist < radius + 3) {
+            _astHit = true;
             const dmg = 15 + Math.random() * 10;
             const hadShield = state.ship.shield > 0;
             if (state.ship.shield > 0) state.ship.shield = Math.max(0, state.ship.shield - dmg);
@@ -7049,7 +7056,7 @@ function gameLoop() {
             addComms('EDEN AI', '\u26a0 Asteroid collision! Watch your heading.');
             if (state.ship.hull <= 0 && !c.dead) { playerDeathSequence('Destroyed by asteroid collision'); }
           }
-        });
+        }
       }
     }
 
