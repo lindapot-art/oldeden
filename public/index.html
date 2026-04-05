@@ -356,7 +356,7 @@ canvas{display:block;}
 .karma-wealth .kw-val{color:var(--gold);font-weight:bold;}
 .karma-faction{font-size:0.8rem;margin-top:8px;}
 .karma-backstory{font-size:0.75rem;color:var(--muted);margin-top:12px;line-height:1.5;font-style:italic;max-height:0;overflow:hidden;transition:max-height 1s ease 0.5s;}
-.karma-card.revealed .karma-backstory{max-height:100px;}
+.karma-card.revealed .karma-backstory{max-height:100px;overflow-y:auto;}
 .karma-rarity-badge{position:absolute;top:10px;right:10px;font-size:0.65rem;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;}
 .karma-actions{display:flex;gap:12px;margin-top:2rem;justify-content:center;opacity:0;transform:translateY(10px);transition:all 0.5s ease;}
 .karma-actions.visible{opacity:1;transform:translateY(0);}
@@ -389,8 +389,8 @@ canvas{display:block;}
 #save-indicator.show{opacity:1;}
 
 /* ── Boss Warning Overlay ────────────────── */
-#boss-warning-overlay{position:fixed;inset:0;z-index:16;pointer-events:none;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,0,0,0.08);}
-#boss-warning-overlay.active{display:flex;}
+#boss-warning-overlay{position:fixed;inset:0;z-index:16;pointer-events:none;display:flex;opacity:0;visibility:hidden;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,0,0,0.08);transition:opacity 0.4s ease,visibility 0.4s;}
+#boss-warning-overlay.active{opacity:1;visibility:visible;}
 #boss-warning-overlay .bw-title{font-size:clamp(2rem,5vw,4rem);color:#ff2200;font-weight:900;letter-spacing:0.3em;text-shadow:0 0 40px rgba(255,34,0,0.8),0 0 80px rgba(255,34,0,0.4);animation:bossWarnPulse 0.3s ease 3;}
 #boss-warning-overlay .bw-sub{font-size:1.2rem;color:#ff8844;letter-spacing:0.2em;margin-top:0.5rem;}
 @keyframes bossWarnPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.7;transform:scale(1.05);}}
@@ -1885,10 +1885,11 @@ function purchaseLifeInsurance() {
     showToast('No items to insure');
     return;
   }
-  // Insure the most valuable item
+  // Insure the most valuable item (by market base price)
+  const _getItemVal = (n) => (MARKET_ITEMS.find(m => m.name === n)?.basePrice || 0);
   let best = state.inventory[0];
   state.inventory.forEach(item => {
-    if ((item.value || 0) > (best.value || 0)) best = item;
+    if (_getItemVal(item.name) > _getItemVal(best.name)) best = item;
   });
   state.insuredItemId = best.name;
   state.player.stellarMarks -= 100;
@@ -1929,8 +1930,8 @@ async function connectSocket() {
         // Combat reward from server
         s.on('combat:rewarded', (data) => {
           if (data.wallet) {
-            state.player.credits = Math.max(state.player.credits, data.wallet.ec);
-            state.player.stellarMarks = Math.max(state.player.stellarMarks, data.wallet.sm);
+            state.player.credits = data.wallet.ec;
+            state.player.stellarMarks = data.wallet.sm;
           }
           showToast(`+${data.reward} EC bounty (${data.enemyType})`);
           // Update quest progress on client
@@ -2125,6 +2126,8 @@ function showScreen(name) {
   _showScreenInner(name);
 }
 function _showScreenInner(name) {
+  // Exit gunner if leaving it via nav
+  if (state.screen === 'gunner' && name !== 'gunner' && c.active) { exitGunnerMode(true); }
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
@@ -2207,11 +2210,16 @@ function initCreateScreen() {
     card.innerHTML = `<div class="fname" style="color:${f.color}">${f.name}</div>
       <div class="fdetail">${f.ideology} &mdash; ${f.home}</div>
       <div class="fdetail" style="margin-top:4px;">${f.desc}</div>`;
-    card.addEventListener('click', () => {
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', f.name + ' faction');
+    const _selectFaction = () => {
       grid.querySelectorAll('.faction-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       state.player.faction = f.id;
-    });
+    };
+    card.addEventListener('click', _selectFaction);
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _selectFaction(); } });
     grid.appendChild(card);
   });
   randomizeGenome();
@@ -3311,7 +3319,7 @@ function renderResonancePanel() {
   ];
   bars.innerHTML = items.map(it => `<div class="sf-bar-row">
     <div class="sf-bar-label">${it.label}</div>
-    <div class="sf-bar-track"><div class="sf-bar-fill" style="width:${r[it.key] * 2}%;background:${it.color};"></div></div>
+    <div class="sf-bar-track"><div class="sf-bar-fill" style="width:${Math.min(100, r[it.key] * 2)}%;background:${it.color};"></div></div>
     <div class="sf-bar-val">+${r[it.key]}%</div>
   </div>`).join('');
 }
@@ -4519,7 +4527,8 @@ function renderHUD(dtMs) {
 
   // Speed indicator (left side, below shield/hull)
   const fl = state.flight;
-  const spdPct = fl.speed / (fl.maxSpeed * fl.afterburnerMult * state.upgrades.engineSpeed);
+  const _fuelPen = state.ship.fuel <= 0 ? 0.3 : 1;
+  const spdPct = fl.speed / (fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult() * _fuelPen);
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SPEED', slx, sly+66);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+72, 180, 8);
   hudCtx.fillStyle = fl.afterburner ? '#ff8800' : '#44aaff';
@@ -6253,6 +6262,14 @@ window._placeOrder = () => {
       state.market.orders = state.market.orders.filter(o => o.id !== _orderId);
       if (refund > 0) addComms('Market', 'Order expired. Refunded ' + refund + ' EC for unfilled ' + _ord.item + '.');
     }
+    // Return unfilled sell order items to cargo
+    if (_ord && _ord.quantity > 0 && _ord.type === 'sell') {
+      const _retItem = state.inventory.find(i => i.name === _ord.item);
+      if (_retItem) _retItem.quantity += _ord.quantity;
+      else state.inventory.push({ name: _ord.item, quantity: _ord.quantity });
+      state.market.orders = state.market.orders.filter(o => o.id !== _orderId);
+      addComms('Market', 'Sell order expired. ' + _ord.quantity + 'x ' + _ord.item + ' returned to cargo.');
+    }
     renderMarketScreen();
   }, 2000 + Math.random() * 3000);
   renderMarketScreen();
@@ -6278,7 +6295,7 @@ function chatbotRespond(input) {
   // Check keywords — sorted by specificity (longest match first)
   const sortedKeys = Object.keys(EDEN_AI_RESPONSES).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
-    if (lower.includes(key)) {
+    if (new RegExp('\\b' + key + '\\b').test(lower)) {
       const resp = EDEN_AI_RESPONSES[key];
       return typeof resp === 'function' ? resp() : resp;
     }
@@ -7180,8 +7197,14 @@ function gameLoop() {
       }
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
-        if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - 0.5); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
-        else { state.ship.hull = Math.max(0, state.ship.hull - 0.3); AudioSFX.play('hull_hit'); }
+        const _ramDmg = 0.5;
+        if (state.ship.shield > 0) {
+          const _absorbed = Math.min(state.ship.shield, _ramDmg);
+          state.ship.shield -= _absorbed;
+          const _overflow = _ramDmg - _absorbed;
+          if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.6);
+          AudioSFX.play('shield_hit'); triggerShieldShimmer();
+        } else { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); AudioSFX.play('hull_hit'); }
         if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
         c.damageFlash = 200;
         if (state.ship.hull <= 0 && !c.dead) {
@@ -7202,8 +7225,13 @@ function gameLoop() {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
           const dmg = isFirstLife ? (2 + Math.random() * 2) : (3 + Math.random() * 4);
           const hadShield = state.ship.shield > 0;
-          if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
-          else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
+          if (state.ship.shield > 0) {
+            const _absorbed = Math.min(state.ship.shield, dmg);
+            state.ship.shield -= _absorbed;
+            const _overflow = dmg - _absorbed;
+            if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
+            AudioSFX.play('shield_hit'); triggerShieldShimmer();
+          } else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
           if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
           c.damageFlash = 300;
         }
@@ -7325,8 +7353,12 @@ function gameLoop() {
             _astHit = true;
             const dmg = 15 + Math.random() * 10;
             const hadShield = state.ship.shield > 0;
-            if (state.ship.shield > 0) state.ship.shield = Math.max(0, state.ship.shield - dmg);
-            else state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5);
+            if (state.ship.shield > 0) {
+              const _absorbed = Math.min(state.ship.shield, dmg);
+              state.ship.shield -= _absorbed;
+              const _overflow = dmg - _absorbed;
+              if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
+            } else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); }
             if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
             c.damageFlash = 350;
             AudioSFX.play('shield_hit'); triggerShieldShimmer();
