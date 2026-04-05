@@ -1873,7 +1873,7 @@ function fireLaser() {
   
   g.position.copy(origin);
   scene.add(g);
-  c.projectiles.push({ group: g, dir: _laserDir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: glowMat, slugLight: null, isLaser: true, damage: LASER_DAMAGE });
+  c.projectiles.push({ group: g, dir: _laserDir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: null, slugLight: null, isLaser: true, damage: LASER_DAMAGE });
   
   // Small recoil
   c.recoilVel = -2;
@@ -4295,10 +4295,10 @@ function createBossEnemy() {
 const _nailSlugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6); _nailSlugGeo._pooled = true;
 const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6); _nailTrailGeo._pooled = true;
 const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6); _nailHeatGeo._pooled = true;
-const _nailSlugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
+const _nailSlugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff }); _nailSlugMat._pooled = true;
 const _nailTrailTpl = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
 const _nailHeatTpl = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
-const _sparkMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 });
+const _sparkMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 }); _sparkMat._pooled = true;
 const _sparkUnitGeo = new THREE.SphereGeometry(1, 4, 4); _sparkUnitGeo._pooled = true;
 const _lootOctGeo = new THREE.OctahedronGeometry(1.2, 0); _lootOctGeo._pooled = true;
 const _lootRingGeo = new THREE.RingGeometry(1.5, 2, 16); _lootRingGeo._pooled = true;
