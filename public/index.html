@@ -1403,11 +1403,11 @@ function showEulogy(deathStats, deathCause) {
     eulogyAdvanced = true;
     if (state.screen === 'eulogy') rollKarmaWheel();
   }
-  setTimeout(() => { skipBtn.style.opacity = '1'; }, 5000);
+  // First death: faster pacing to maintain momentum through first death→rebirth
+  const _firstDeath = (state.player.rebirths || 0) === 0;
+  setTimeout(() => { skipBtn.style.opacity = '1'; }, _firstDeath ? 800 : 5000);
   skipBtn.onclick = advanceToKarma;
-  
-  // Auto-advance to Karma Wheel after 9 seconds — let all animations finish
-  setTimeout(advanceToKarma, 9000);
+  setTimeout(advanceToKarma, _firstDeath ? 4500 : 9000);
 }
 
 // ================================================================
@@ -2166,6 +2166,14 @@ function createCharacter() {
   saveGame();
   showScreen('bridge');
   addComms('EDEN AI', '\u2694 Click ENTER SPACE to launch into combat, pilot.');
+  // First life: create combat urgency to push player into the core loop FAST
+  if ((state.player.rebirths || 0) === 0) {
+    setTimeout(() => addComms('EDEN AI', '\u26a0 ALERT: Hostile signatures detected in your sector! Launch immediately!'), 1200);
+    setTimeout(() => {
+      const launchBtn = document.getElementById('btn-launch');
+      if (launchBtn) { launchBtn.style.animation = 'pulse 1s ease infinite'; launchBtn.style.boxShadow = '0 0 20px rgba(255,100,0,0.6)'; }
+    }, 1500);
+  }
 }
 
 // ================================================================
@@ -2523,6 +2531,7 @@ function jumpToSystem(idx) {
 //  STATION
 // ================================================================
 const COMMODITIES = [
+  { name: 'Salvage Scrap', buy: 15, sell: 22 },
   { name: 'Titanite Ore', buy: 120, sell: 95 },
   { name: 'Hydrogen Fuel', buy: 45, sell: 35 },
   { name: 'Dark Matter Crystals', buy: 850, sell: 680 },
@@ -3561,6 +3570,11 @@ function enterGunnerMode() {
   addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
   addComms('System', 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
+  // Rebirth flavor — remind player of their journey
+  if (state.player.rebirths > 0 && state.pastLives.length > 0) {
+    const prevLife = state.pastLives[state.pastLives.length - 1];
+    addComms('EDEN AI', 'Soul resonance detected. Previous incarnation: ' + prevLife.name + ' (' + prevLife.occupation + '). The wheel turns.');
+  }
   // Controls overlay — show on first gunner entry this session
   if (!state._controlsShown) {
     state._controlsShown = true;
@@ -3569,8 +3583,8 @@ function enterGunnerMode() {
       _co.classList.add('active');
       let _dismissed = false;
       const _dismiss = () => { if (_dismissed) return; _dismissed = true; _co.classList.add('fading'); setTimeout(() => _co.classList.remove('active', 'fading'), 1500); };
-      setTimeout(() => { document.addEventListener('mousedown', _dismiss, { once: true }); document.addEventListener('keydown', _dismiss, { once: true }); }, 500);
-      setTimeout(_dismiss, 10000);
+      setTimeout(() => { document.addEventListener('mousedown', _dismiss, { once: true }); document.addEventListener('keydown', _dismiss, { once: true }); }, 2000);
+      setTimeout(_dismiss, 15000);
     }
   }
   // First-life tutorial hints
@@ -3625,7 +3639,7 @@ function spawnSpaceDust() {
   }
 }
 
-function spawnLootDrop(pos, type) {
+function spawnLootDrop(pos, type, creditValue) {
   const g = new THREE.Group();
   const colors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
   const geo = new THREE.OctahedronGeometry(1.2, 0);
@@ -3644,7 +3658,7 @@ function spawnLootDrop(pos, type) {
   g.userData.type = type;
   g.userData.age = 0;
   scene.add(g);
-  c.lootDrops.push({ group: g, type, age: 0 });
+  c.lootDrops.push({ group: g, type, age: 0, creditValue: creditValue || 50 });
 }
 
 function exitGunnerMode(skipScreenChange) {
@@ -4204,7 +4218,7 @@ function renderHUD() {
   // Damage flash
   if (c.damageFlash > 0) {
     const isHullDmg = state.ship.shield <= 0;
-    const flashAlpha = isHullDmg ? (c.damageFlash / 200) * 0.4 : (c.damageFlash / 200) * 0.2;
+    const flashAlpha = isHullDmg ? (c.damageFlash / 200) * 0.4 : (c.damageFlash / 200) * 0.3;
     hudCtx.globalAlpha = flashAlpha;
     hudCtx.fillStyle = isHullDmg ? '#ff2200' : '#ff0000';
     hudCtx.fillRect(0, 0, W, H);
@@ -6357,8 +6371,11 @@ function gameLoop() {
     if (!_inBreather && c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > spawnInterval) {
       state.lastEnemySpawn = state.gameTime;
       const types = ['scout','fighter','bomber','interceptor'];
+      // First life: weight spawns toward easier enemies (scouts/interceptors)
+      const firstLifeTypes = ['scout','scout','scout','interceptor','interceptor','fighter'];
+      const spawnTypes = (isFirstLife && c.cycle <= 2) ? firstLifeTypes : types;
       const spawnCount = Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
-      for (let si = 0; si < spawnCount; si++) createEnemy(types[Math.floor(Math.random()*4)]);
+      for (let si = 0; si < spawnCount; si++) createEnemy(spawnTypes[Math.floor(Math.random()*spawnTypes.length)]);
       if (c.kills >= (c._nextCycleAt || 15)) { c._nextCycleAt = (c._nextCycleAt || 15) + 15; c.cycle++; addComms('AI Director', 'Cycle ' + c.cycle + ' — hostiles intensifying'); }
       // Boss spawn every 20 kills
       if (c.kills >= (c._nextBossAt || 20) && !c.bossActive) {
@@ -6447,7 +6464,8 @@ function gameLoop() {
             // Loot drop chance
             if (e.isBoss || Math.random() < 0.4) {
               const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel';
-              spawnLootDrop(e.group.position.clone(), lootType);
+              const _lootCreditVal = e.isBoss ? Math.ceil(e.points * 0.6) : Math.ceil((e.points || 50) * 0.4);
+              spawnLootDrop(e.group.position.clone(), lootType, _lootCreditVal);
             }
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
           }
@@ -6464,7 +6482,7 @@ function gameLoop() {
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
       // On first life, auto-aggro after 60s to push players into the combat loop
-      const autoAggro = isFirstLife && state.gameTime > 60000;
+      const autoAggro = isFirstLife && state.gameTime > 10000;
       if (c.playerHasAttacked || autoAggro) {
         const distToPlayer = e.group.position.distanceTo(ship.position);
         // Type-specific AI movement patterns
@@ -6568,7 +6586,7 @@ function gameLoop() {
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
-          const dmg = 3 + Math.random() * 4;
+          const dmg = isFirstLife ? (2 + Math.random() * 2) : (3 + Math.random() * 4);
           const hadShield = state.ship.shield > 0;
           if (state.ship.shield > 0) { state.ship.shield = Math.max(0, state.ship.shield - dmg); AudioSFX.play('shield_hit'); triggerShieldShimmer(); }
           else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
@@ -6658,7 +6676,7 @@ function gameLoop() {
       if (l.group.userData.lootMesh) l.group.userData.lootMesh.scale.setScalar(0.9 + _lootPulse * 0.3);
       // Player collect
       if (l.group.position.distanceTo(ship.position) < 12) {
-        if (l.type === 'credits') { state.player.credits += 25; c.dmgNumbers.push({ text: '+25 EC', pos: l.group.position.clone(), age: 0, color: '#ffd700' }); }
+        if (l.type === 'credits') { const lootAmt = l.creditValue || 50; state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC', pos: l.group.position.clone(), age: 0, color: '#ffd700' }); }
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', pos: l.group.position.clone(), age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', pos: l.group.position.clone(), age: 0, color: '#44ff44' }); }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', pos: l.group.position.clone(), age: 0, color: '#ff8844' }); }
