@@ -1,0 +1,1011 @@
+================================================================================
+  AUDIT 30 — Deep Dive: public/index.html (7433 lines)
+  Categories: CSS/Visual | Audio | Three.js Pipeline | Error Handling | Edge Cases
+  Date: 2026-04-05
+================================================================================
+
+Note: All items from the already-fixed exclusion list (audits 1–29) are omitted.
+
+
+================================================================================
+CATEGORY 1: CSS / VISUAL BUGS
+================================================================================
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 1.1 — z-index collision: #save-indicator (200) vs #death-ticker (200)
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 374 and 388
+
+Code (line 374):
+  #death-ticker{position:fixed;top:0;left:0;right:0;height:28px;
+    background:rgba(10,10,15,0.85);border-bottom:1px solid rgba(255,68,68,0.15);
+    z-index:200;overflow:hidden;display:none;}
+
+Code (line 388):
+  #save-indicator{position:fixed;top:10px;right:10px;color:rgba(0,255,136,0.7);
+    font-size:0.72rem;z-index:200;pointer-events:none;opacity:0;
+    transition:opacity 0.3s ease;letter-spacing:0.08em;}
+
+Problem:
+  Both elements share z-index 200. Auto-save triggers every 60s during combat.
+  When the death ticker scrolls a kill/death/boss event at the same moment the
+  save indicator fades in, the stacking order is undefined (browser resolves by
+  DOM order). The save indicator sits at top:10px / right:10px and the death
+  ticker spans the full top of the viewport (top:0, height:28px). Their bounding
+  boxes overlap in the top-right corner.
+
+Fix:
+  Bump save-indicator to z-index:201 so it always renders on top of the ticker.
+
+  #save-indicator { z-index: 201; }
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 1.2 — Rebirth white-flash overlay and death-flash overlay share z-index 9999
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines ~5488 (karma accept) and ~6896 (playerDeathSequence)
+
+Code (line ~5488 — karma accept rebirth flash):
+  const rb = document.createElement('div');
+  rb.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;
+    display:flex;align-items:center;justify-content:center;pointer-events:none;
+    transition:background 0.8s ease 0.3s;';
+
+Code (line ~6896 — death soul departure flash):
+  const df = document.createElement('div');
+  df.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:9999;
+    opacity:1;transition:opacity 0.5s ease;pointer-events:none;';
+
+Problem:
+  Both dynamically created overlays use z-index:9999. If `playerDeathSequence`  
+  fires its soul departure flash and the player rapidly triggers a rebirth
+  (e.g., automated test or lag), both overlays exist simultaneously with
+  identical z-index. The DOM-order tiebreak can cause the "A new soul awakens"
+  text to render behind the white death flash, making the rebirth text invisible.
+
+Fix:
+  Give the rebirth flash a slightly higher z-index so it always wins:
+
+  // Rebirth flash (karma accept):
+  rb.style.cssText = '...z-index:10000;...';
+
+  // Keep death flash at 9999
+
+
+================================================================================
+CATEGORY 2: AUDIO SYSTEM
+================================================================================
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 2.1 — Ambience has no gain node — volume cannot be controlled
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 1042–1052 (AudioSFX.startAmbience)
+
+Code:
+  startAmbience() {
+    if (!this.ctx || this.ambience) return;
+    this.ensure();
+    const ctx = this.ctx;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.008;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 300;
+    src.connect(filt); filt.connect(ctx.destination); src.start();
+    this.ambience = src;
+  },
+
+Problem:
+  Unlike BGM (which uses a masterGain node) and engine hum (which uses a gain
+  node), the ambience path connects: src → filter → destination with NO
+  intermediate GainNode. This means:
+  1. Ambience volume cannot be adjusted at runtime (masterVol/sfxVol settings
+     are ignored for ambience).
+  2. The ambience plays at the fixed hardcoded amplitude (0.008 * random)
+     regardless of user volume settings.
+  3. There is no way to fade out ambience gracefully — `stopAmbience()` does an
+     abrupt `.stop()` which can cause an audible click/pop.
+
+Fix:
+  Add a GainNode between filter and destination, scaled by settings:
+
+  startAmbience() {
+    if (!this.ctx || this.ambience) return;
+    this.ensure();
+    const ctx = this.ctx;
+    const vol = state.settings.masterVol * state.settings.sfxVol;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.008;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 300;
+    const gain = ctx.createGain(); gain.gain.value = vol;
+    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination); src.start();
+    this.ambience = { src, gain };
+  },
+  stopAmbience() {
+    if (!this.ambience) return;
+    try { this.ambience.src.stop(); } catch(e) {}
+    try { this.ambience.gain.disconnect(); } catch(e) {}
+    this.ambience = null;
+  },
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 2.2 — play() leaks orphan GainNode on early-return paths
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 964–1030 (AudioSFX.play, cases: karma_rare, karma_legendary,
+          karma_accept, hull_hit, loot_fuel, reload)
+
+Code (example — karma_rare, line ~975):
+  play(type) {
+    ...
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);       // ← gain connected to output
+    const osc = ctx.createOscillator();
+    osc.connect(gain);
+    switch(type) {
+      ...
+      case 'karma_rare': {
+        const o2 = ctx.createOscillator();
+        ...
+        o2.connect(gain);
+        ...
+        o2.start(now); o2.stop(now+0.8);
+        osc.disconnect();                // ← osc disconnected
+        return;                          // ← gain never disconnected
+      }
+
+Problem:
+  Six sound types follow a pattern of: create gain → create osc → switch case
+  creates a DIFFERENT source (o2, src, etc.) → connects new source to gain →
+  `osc.disconnect(); return;`. The original `osc` is disconnected from `gain`,
+  but `gain` remains connected to `ctx.destination`. The replacement source
+  (o2, src, etc.) is scheduled to stop, and once it stops, WebAudio will
+  eventually collect the chain. However, until the browser's GC runs, the gain
+  node is an orphaned live connection to the audio destination.
+
+  In rapid fire scenarios (e.g., collecting many loot drops quickly, each
+  triggering loot_fuel or hull_hit), dozens of orphan GainNodes accumulate on
+  `ctx.destination`. While WebAudio spec says they're eventually collected
+  after all connected sources end, the timing is implementation-dependent.
+  On Safari (WebKit), these can persist for several seconds, causing audio
+  artifacts when many GainNodes sum into the destination.
+
+Fix:
+  Disconnect osc AND gain before returning, or don't create osc at all for
+  buffer-source sound types. Simplest fix — don't connect osc for cases that
+  don't use it:
+
+  // At top of play():
+  const gain = ctx.createGain();
+  gain.connect(ctx.destination);
+  // Only create+connect osc for cases that use it
+  let osc = null;
+  // ... in each case that needs osc:
+  //   osc = ctx.createOscillator(); osc.connect(gain);
+  // ... in cases that DON'T need osc (hull_hit, loot_fuel, reload, etc.):
+  //   just use buffer source directly, no orphan osc
+
+  Alternative (minimal change): in the early-return cases, add gain cleanup:
+
+  case 'hull_hit': {
+    const dur=0.12; ...
+    src.start(now);
+    src.onended = () => { gain.disconnect(); };
+    return;
+  }
+
+
+================================================================================
+CATEGORY 3: THREE.JS RENDERING PIPELINE
+================================================================================
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.1 — spawnNail() creates 3 new geometries + 4 new materials per railgun shot
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4148–4190
+
+Code:
+  function spawnNail() {
+    ...
+    // Slug core — bright white-blue cylinder
+    const slugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
+    const slug = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6), slugMat);
+    ...
+    // Plasma glow trail
+    const trailMat2 = new THREE.MeshBasicMaterial({ color: 0x44aaff, ... });
+    const trail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.01, 3, 6), trailMat2);
+    ...
+    // Outer heat glow
+    const heatMat = new THREE.MeshBasicMaterial({ color: 0xff6600, ... });
+    const heat = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6), heatMat);
+    ...
+    // Muzzle flash particles — 6 new materials
+    for (let i = 0; i < 6; i++) {
+      const spark = new THREE.Mesh(
+        _explFragGeos[0],
+        new THREE.MeshBasicMaterial({ color: 0x88ccff, ... })
+      );
+
+Problem:
+  Every railgun shot allocates:
+    - 3× CylinderGeometry (slug 0.03/0.02/0.8, trail 0.06/0.01/3, heat 0.08/0.02/1.5)
+    - 1× MeshBasicMaterial (slug)
+    - 1× MeshBasicMaterial (trail — kept as trailMat2 ref for fade)
+    - 1× MeshBasicMaterial (heat — kept as heatMat ref)
+    - 6× MeshBasicMaterial (spark particles)
+  = 3 geometries + 9 materials per shot.
+
+  At rapid fire during combat (charge time 350ms), this is ~3 shots/sec =
+  9 geometries + 27 materials per second, all needing GPU upload + later GC.
+
+Fix:
+  Pre-allocate shared geometries (they're always the same dimensions):
+
+  // At module scope (near other shared geos):
+  const _slugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6);
+  const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6);
+  const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6);
+
+  // In spawnNail(), clone only the materials (needed for per-instance opacity fade):
+  const slug = new THREE.Mesh(_slugGeo, new THREE.MeshBasicMaterial({...}));
+  const trail = new THREE.Mesh(_nailTrailGeo, trailMat2);
+  const heat = new THREE.Mesh(_nailHeatGeo, heatMat);
+
+  For materials: consider a small pool of pre-created materials, or reuse
+  a single material per type and animate opacity via uniforms.
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.2 — spawnImpactSparks() creates 8–13 unique geometries per impact
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4200–4230
+
+Code:
+  function spawnImpactSparks(position, color) {
+    color = color || 0xffaa44;
+    const sparkCount = 8 + Math.floor(Math.random() * 5);
+    const g = new THREE.Group();
+    for (let i = 0; i < sparkCount; i++) {
+      const sz = 0.04 + Math.random() * 0.06;
+      const mat = new THREE.MeshBasicMaterial({
+        color: i < 3 ? 0xffffff : color, transparent: true, opacity: 1,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      });
+      const spark = new THREE.Mesh(new THREE.SphereGeometry(sz, 4, 4), mat);
+
+Problem:
+  Each impact creates 8–13 SphereGeometry instances with unique radii
+  (0.04–0.10). Since radii vary per spark, they can't share a geometry.
+  Each also gets its own MeshBasicMaterial. During intense combat (multiple
+  hits per second), this produces 50+ geometries + 50+ materials per second.
+  
+  Combined with spawnNail (Bug 3.1), a single railgun shot that hits produces:
+  3 geom + 9 mat (nail) + ~10 geom + ~10 mat (sparks) = ~13 geom + ~19 mat
+  per hit. At 3 hits/sec = ~39 geometries + ~57 materials per second.
+
+Fix:
+  Pre-allocate a small set of shared spark geometries and use scale to vary
+  apparent size:
+
+  // At module scope:
+  const _sparkGeo = new THREE.SphereGeometry(1, 4, 4); // unit sphere
+  // In spawnImpactSparks():
+  const spark = new THREE.Mesh(_sparkGeo, mat);
+  spark.scale.setScalar(sz);  // Scale to desired size
+
+  For materials: use a 2-material pool (white + tinted) and control opacity
+  via the explosion update loop.
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.3 — spawnExplosion() creates 18+ new MeshBasicMaterial per explosion
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4263–4310
+
+Code:
+  function spawnExplosion(pos, scale) {
+    ...
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, ... });
+    ...
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff8800, ... });
+    ...
+    for (let i = 0; i < 18; i++) {
+      const t = i / 18;
+      const color = t < 0.3 ? 0xffffff : t < 0.6 ? 0xff8800 : 0xff2200;
+      const mat2 = new THREE.MeshBasicMaterial({ color, ... });
+
+Problem:
+  Each explosion allocates 1 core material + 1 ring material + 18 fragment
+  materials = 20 MeshBasicMaterial instances. Boss kills trigger 3 staggered
+  explosions = 60 materials. Geometries are shared (_explCoreGeo, _explFragGeos,
+  _explRingGeo) which is excellent, but the materials are all unique because
+  each fragment needs independent opacity for the fade-out animation.
+
+Fix:
+  Pre-create 3 base materials (white, orange, red) and clone() them in the
+  loop. While clone() still creates new objects, it's cheaper than full
+  constructor calls. Better: use a material pool that recycles on explosion end:
+
+  // At module scope:
+  const _explMats = {
+    white: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true,
+      opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false }),
+    orange: new THREE.MeshBasicMaterial({ color: 0xff8800, ... }),
+    red: new THREE.MeshBasicMaterial({ color: 0xff2200, ... }),
+  };
+  // In spawnExplosion():
+  const mat2 = _explMats[t < 0.3 ? 'white' : t < 0.6 ? 'orange' : 'red'].clone();
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.4 — spawnAsteroids() creates unique non-reusable geometry per asteroid
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 3935–3955
+
+Code:
+  for (let i = 0; i < baseCount; i++) {
+    const g = new THREE.Group();
+    const size = 2 + Math.random() * 6;
+    const geo = new THREE.IcosahedronGeometry(size, 0);
+    // Deform vertices for rocky look
+    const pos = geo.attributes.position;
+    for (let v = 0; v < pos.count; v++) {
+      pos.setXYZ(v,
+        pos.getX(v) * (0.7 + Math.random()*0.6),
+        pos.getY(v) * (0.7 + Math.random()*0.6),
+        pos.getZ(v) * (0.7 + Math.random()*0.6));
+    }
+    geo.computeVertexNormals();
+    const mat = new THREE.MeshStandardMaterial({ color: resTint, ... });
+    const mesh = new THREE.Mesh(geo, mat);
+
+Problem:
+  Every enter-gunner-mode spawns 30–50 asteroids, each with a unique
+  IcosahedronGeometry (random size + per-vertex deformation). That's 30–50
+  unique geometries uploaded to GPU, plus 30–50 unique MeshStandardMaterial
+  instances (though they share the same color/roughness/metalness).
+
+  The vertex deformation makes sharing impossible as-is, but the MATERIAL
+  could be shared since all asteroids in a system use the same `resTint`.
+
+Fix (partial — share material):
+  // Before the loop:
+  const sharedAsteroidMat = new THREE.MeshStandardMaterial({
+    color: resTint, roughness: 0.9, metalness: 0.2, flatShading: true
+  });
+  // In loop:
+  const mesh = new THREE.Mesh(geo, sharedAsteroidMat);
+
+  For geometry: pre-generate a pool of ~5 deformed IcosahedronGeometries at
+  a unit size, then use mesh.scale to vary apparent asteroid size. This reduces
+  GPU geometry uploads from 30–50 to 5.
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.5 — Enemy health bar HUD: per-frame Vector3 allocation via .clone()
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4610–4650
+
+Code:
+  c.enemies.forEach(e => {
+    if (!e.group || !e.group.parent) return;
+    const ePos = e.group.position.clone();    // ← new Vector3 per enemy per frame
+    ePos.y += (e.cfg.scale || 1) * 4;
+    const sp = ePos.project(camera);
+
+Problem:
+  `.clone()` allocates a new THREE.Vector3 every frame per living enemy.
+  With up to 15 enemies, this is 15 allocations/frame × 60fps = 900 Vector3
+  objects per second, all immediately becoming garbage. This causes GC micro-
+  stalls that manifest as frame hitches during intense combat.
+
+Fix:
+  Use one of the pre-allocated temp vectors:
+
+  c.enemies.forEach(e => {
+    if (!e.group || !e.group.parent) return;
+    _tmpV3a.copy(e.group.position);        // reuse pre-allocated vector
+    _tmpV3a.y += (e.cfg.scale || 1) * 4;
+    const sp = _tmpV3a.project(camera);
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.6 — Floating damage numbers: per-frame Vector3 allocation
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4760–4780
+
+Code:
+  for (let i = c.dmgNumbers.length - 1; i >= 0; i--) {
+    const dn = c.dmgNumbers[i];
+    dn.age += 16;
+    const screenPos = dn.pos.clone().project(camera);  // ← new Vector3 per number per frame
+
+Problem:
+  Same issue as Bug 3.5. Each floating damage number allocates a new Vector3
+  every frame for its screen projection. With many kills producing "+points"
+  and "+credits" and damage numbers, there can be 10–20 active numbers, each
+  lasting 1200ms = ~72 frames × 20 numbers = 1440 clone() calls before they
+  expire. Additionally, `.project()` mutates the vector in-place, so it
+  destroys the clone — but the allocation pressure is the real problem.
+
+Fix:
+  _tmpV3b.copy(dn.pos).project(camera);
+  const sx = (_tmpV3b.x * 0.5 + 0.5) * W;
+  const sy = (-_tmpV3b.y * 0.5 + 0.5) * H - dn.age * 0.08;
+  if (_tmpV3b.z < 1) { ... }
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 3.7 — Hull-critical HUD vignette: new RadialGradient every frame
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4340–4350
+
+Code:
+  const hullPct = state.ship.hull / state.ship.maxHull;
+  if (hullPct < 0.25) {
+    const vigGrad = hudCtx.createRadialGradient(
+      cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    const dangerIntensity = 0.15 + (1 - hullPct / 0.25) * 0.3;
+    vigGrad.addColorStop(1, 'rgba(255,0,0,' +
+      (dangerIntensity + Math.sin(performance.now()*0.008)*0.06) + ')');
+    hudCtx.fillStyle = vigGrad;
+
+Problem:
+  When hull < 25%, `createRadialGradient()` is called every single frame.
+  The healthy-hull path (else branch) correctly caches its gradient in
+  `c._vigCache`, but the critical-hull path creates a new CanvasGradient
+  object every frame because the danger intensity includes a `Math.sin()`
+  animation term. While CanvasGradient is lightweight compared to Three.js
+  objects, it's still an unnecessary per-frame allocation.
+
+Fix:
+  Cache the gradient and only recreate when canvas dimensions change.
+  Animate via globalAlpha instead of gradient color stop:
+
+  if (hullPct < 0.25) {
+    if (!c._dangerVigCache || c._dangerVigW !== W || c._dangerVigH !== H) {
+      c._dangerVigCache = hudCtx.createRadialGradient(
+        cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+      c._dangerVigCache.addColorStop(0, 'rgba(0,0,0,0)');
+      c._dangerVigCache.addColorStop(1, 'rgba(255,0,0,0.45)');
+      c._dangerVigW = W; c._dangerVigH = H;
+    }
+    const dangerIntensity = 0.15 + (1 - hullPct / 0.25) * 0.3;
+    hudCtx.globalAlpha = dangerIntensity + Math.sin(performance.now()*0.008)*0.06;
+    hudCtx.fillStyle = c._dangerVigCache;
+    hudCtx.fillRect(0, 0, W, H);
+    hudCtx.globalAlpha = 1;
+
+
+================================================================================
+CATEGORY 4: ERROR HANDLING GAPS
+================================================================================
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 4.1 — enterGunnerMode() does not reset c.dead — potential soft-lock
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 3834–3840
+
+Code:
+  function enterGunnerMode() {
+    c.active = true;
+    c.streak = 0; c.streakTimer = 0; c.streakMultiplier = 1;
+    c.playerHasAttacked = false;
+    c.deathImmunityUntil = performance.now() + 5000;
+    AudioSFX.startAmbience();
+    ...
+
+Problem:
+  `enterGunnerMode()` sets `c.active = true` but never sets `c.dead = false`.
+  
+  While `c.dead` is not persisted to localStorage (the save function only
+  saves score/kills/cycle/bestStreak from combat), it IS live state within
+  a single page session.
+
+  Scenario that triggers the bug within one page session:
+  1. Player dies → playerDeathSequence sets c.dead = true
+  2. Death sequence completes (4.5s later) → sets c.dead = false, calls
+     exitGunnerMode(true), shows eulogy
+  3. Player closes the eulogy/karma overlay using a developer-injected script
+     or an extremely fast click on a nav button that becomes briefly clickable
+     during the z-index transition between eulogy (85) and karma (86)
+  4. Player enters gunner mode from bridge → enterGunnerMode() runs
+  5. If step 2's setTimeout hasn't fired yet (due to timer coalescing or tab
+     throttling), c.dead is still true
+  6. Player is now in gunner mode with c.dead = true → cannot fire, enemies
+     cannot kill them again, soft-locked
+
+  This is an edge case but trivially fixable.
+
+Fix:
+  Add `c.dead = false;` at the top of enterGunnerMode():
+
+  function enterGunnerMode() {
+    c.active = true;
+    c.dead = false;                          // ← ADD THIS
+    c.streak = 0; c.streakTimer = 0; ...
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 4.2 — HUD division by zero if maxHull or maxShield is 0
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 4340, 4410, 4416
+
+Code (line 4340):
+  const hullPct = state.ship.hull / state.ship.maxHull;
+
+Code (line 4410):
+  hudCtx.fillRect(slx, sly+6, 180*(state.ship.shield/state.ship.maxShield), 8);
+
+Code (line 4416):
+  hudCtx.fillRect(slx, sly+38, 180*(state.ship.hull/state.ship.maxHull), 8);
+
+Problem:
+  If `state.ship.maxHull` or `state.ship.maxShield` is 0 (which can happen
+  if upgrades are misconfigured, save data is corrupted, or a mod sets it),
+  these divisions produce Infinity or NaN. Canvas fillRect with NaN
+  dimensions silently renders nothing (the bar disappears), but `hullPct`
+  being NaN propagates to the vignette gradient (`1 - hullPct / 0.25` = NaN)
+  and the HULL CRITICAL warning logic (`hullPct < 0.3` → false for NaN),
+  causing the warning system to silently fail.
+
+Fix:
+  Guard divisions:
+
+  const hullPct = state.ship.maxHull > 0
+    ? state.ship.hull / state.ship.maxHull : 0;
+
+  // And similarly for shield:
+  const shieldPct = state.ship.maxShield > 0
+    ? state.ship.shield / state.ship.maxShield : 0;
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 4.3 — loadGame() has no schema migration for old saves
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 3483–3490
+
+Code:
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem('oe-save');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      loadFromServerData(data);
+      return true;
+    } catch(e) { return false; }
+  }
+
+Problem:
+  `loadFromServerData()` blindly merges saved data into the state object.
+  If the save was created before the soul fracture system, market system,
+  alt universe system, or chatbot auto-target/auto-mine features were added,
+  those fields will be `undefined` in the loaded data. This works most of
+  the time because JavaScript gracefully handles `undefined` in many
+  contexts, but specific crashes can occur:
+
+  - `state.player.soulFragments` undefined → `frags.length` in mint button
+    handler throws TypeError
+  - `state.market.orders` undefined → `.filter()` in renderMarketScreen
+    throws TypeError
+  - `state.chatbot.autoTarget` undefined → toggle button logic works
+    (undefined is falsy) but `classList.toggle()` passes undefined
+
+  The try/catch in loadGame catches the JSON.parse failure but NOT the
+  downstream TypeError from loadFromServerData, because that function
+  itself may not throw immediately — the crash happens later when the
+  player opens a screen that reads the missing field.
+
+Fix:
+  Add defaults after loading:
+
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem('oe-save');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      loadFromServerData(data);
+      // Schema migration — ensure new fields exist
+      if (!state.player.soulFragments) state.player.soulFragments = [];
+      if (!state.market.orders) { state.market.orders = []; state.market.history = []; }
+      if (!state.altUniverse) { state.altUniverse = null; state.inAltUniverse = false; }
+      if (!state.chatbot) state.chatbot = { messages:[], visible:false, autoTarget:false, autoMine:false };
+      if (!state.pastLives) state.pastLives = [];
+      if (!state.skills) state.skills = {};
+      if (!state.soulMemory) state.soulMemory = { combatInstinct:0, shieldMemory:0, fuelConservation:0, lootSense:0, spatialAwareness:0 };
+      return true;
+    } catch(e) { return false; }
+  }
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 4.4 — playerDeathSequence() uses nested setTimeout with no cleanup
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 6870–6910
+
+Code:
+  function playerDeathSequence(cause) {
+    if (_deathSequenceActive) return;
+    _deathSequenceActive = true;
+    c.dead = true;
+    ...
+    setTimeout(() => {
+      state._deathTimeDilation = 0;
+      setTimeout(() => {
+        state._deathTimeDilation = 1;
+        state._deathPullback = null;
+        _deathSequenceActive = false;
+        c.dead = false;
+        const df = document.createElement('div');
+        df.style.cssText = '...';
+        document.body.appendChild(df);
+        requestAnimationFrame(() => {
+          df.style.opacity = '0';
+          setTimeout(() => df.remove(), 600);
+        });
+        exitGunnerMode(true);
+        showEulogy(c.deathStats, cause);
+      }, 1500);
+    }, 3000);
+  }
+
+Problem:
+  The 4.5-second setTimeout chain has no cancellation mechanism. If the player
+  navigates away from gunner mode before the chain completes (e.g., by a
+  rapid double-ESC that triggers `exitGunnerMode` + `showScreen('bridge')`
+  between the setTimeout callbacks), the deferred callbacks still fire:
+
+  1. `state._deathTimeDilation = 1` — sets time dilation on bridge (harmless)
+  2. `_deathSequenceActive = false; c.dead = false` — resets flags (harmless)
+  3. `document.body.appendChild(df)` — appends white flash div to body while
+     on bridge screen (visual glitch — white flash appears)
+  4. `exitGunnerMode(true)` — tries to exit gunner mode that's already exited
+     (calls stopBGM/stopEngineHum/stopAmbience on already-stopped audio —
+     harmless but wasteful)
+  5. `showEulogy(...)` — shows eulogy screen when player is on bridge
+     (BREAKS UX — player sees unexpected screen change)
+
+Fix:
+  Store timeout IDs and clear them in exitGunnerMode:
+
+  let _deathTimeout1 = null, _deathTimeout2 = null;
+
+  function playerDeathSequence(cause) {
+    ...
+    _deathTimeout1 = setTimeout(() => {
+      ...
+      _deathTimeout2 = setTimeout(() => { ... }, 1500);
+    }, 3000);
+  }
+
+  // In exitGunnerMode():
+  if (_deathTimeout1) { clearTimeout(_deathTimeout1); _deathTimeout1 = null; }
+  if (_deathTimeout2) { clearTimeout(_deathTimeout2); _deathTimeout2 = null; }
+  _deathSequenceActive = false;
+
+
+================================================================================
+CATEGORY 5: EDGE CASES IN GAME FLOW
+================================================================================
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 5.1 — Refresh during warp animation leaks DOM overlay elements
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 2505–2570 (jumpToSystem warp animation)
+
+Code (reconstructed from reading):
+  function jumpToSystem(targetIdx) {
+    if (state._isJumping) return;
+    state._isJumping = true;
+    ...
+    // Create warp overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'warp-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9990;...';
+    document.body.appendChild(overlay);
+    // Create star streak canvas
+    const streakCanvas = document.createElement('canvas');
+    ...
+    overlay.appendChild(streakCanvas);
+    ...
+    setTimeout(() => {
+      // Cleanup
+      overlay.remove();
+      state._isJumping = false;
+      ...
+    }, warpDuration);
+  }
+
+Problem:
+  Not about refresh (which cleans DOM naturally), but about the scenario where
+  `jumpToSystem` is called and then the player presses ESC or clicks a nav
+  button DURING the warp animation. The `_isJumping` guard prevents a second
+  jump, but it does NOT prevent the player from exiting via nav buttons or
+  keyboard shortcuts (F, B, etc.) during the warp. If they exit to another
+  screen while `_isJumping = true`:
+
+  1. The warp overlay with z-index 9990 stays on screen covering everything
+  2. The cleanup setTimeout still fires and calls `overlay.remove()` (removing
+     the overlay) and `state._isJumping = false` (allowing a new jump)
+  3. But the `showScreen()` call inside the timeout goes to 'bridge', which
+     may conflict with whatever screen the player navigated to
+
+  The timing window is small (2–3 second warp) but reproducible with keyboard
+  shortcuts.
+
+Fix:
+  Block all screen transitions while _isJumping is true:
+
+  // In showScreen() / _showScreenInner():
+  if (state._isJumping && target !== 'bridge') return;
+
+  Or: disable keyboard shortcuts during warp:
+  // In the keydown handlers, add near the top:
+  if (state._isJumping) return;
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 5.2 — collectArtifact() has no proximity or spatial check
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 6025–6042
+
+Code:
+  function collectArtifact() {
+    if (!state.altUniverse) return;
+    const sys = state.starSystems[state.location.systemIndex];
+    if (!sys || !sys.hasArtifact) {
+      addComms('System', 'No artifact in this system.'); return;
+    }
+    sys.hasArtifact = false;
+    state.altUniverse.artifactsCollected++;
+    ...
+  }
+
+Problem:
+  The function checks only if the current SYSTEM has an artifact, not
+  whether the player is physically near any artifact point in 3D space.
+  The player can press 'C' from anywhere in the system — docked at a
+  station, in the middle of combat, or 1000m away from any object — and
+  instantly collect the artifact. This trivializes the alt-universe
+  exploration mechanic since pressing 'C' at every system is enough.
+
+Fix:
+  Add a spatial constraint (e.g., require being near a specific 3D point
+  or require being undocked and not in combat):
+
+  function collectArtifact() {
+    if (!state.altUniverse) return;
+    if (state.location.docked) { addComms('System', 'Undock first.'); return; }
+    if (c.dead) return;
+    const sys = state.starSystems[state.location.systemIndex];
+    if (!sys || !sys.hasArtifact) { ... }
+    // Optionally: require player to fly to artifact beacon location
+    // (would need to spawn artifact beacons in 3D space)
+    ...
+  }
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 5.3 — Tutorial setTimeout callbacks fire after gunner mode exit
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines 3900–3910 (enterGunnerMode tutorial hints)
+
+Code:
+  if (state.player.rebirths === 0) {
+    setTimeout(() => addComms('EDEN AI',
+      '\u26a0 Warning: Hostile contacts approaching. Click to fire!'), 3000);
+    setTimeout(() => addComms('EDEN AI',
+      'Hold Shift to boost. WASD or Arrow keys to fly.'), 7000);
+    setTimeout(() => addComms('EDEN AI',
+      'Press B near a station to dock...'), 15000);
+    setTimeout(() => addComms('EDEN AI',
+      'Press F near a stargate to warp...'), 25000);
+    setTimeout(() => addComms('EDEN AI',
+      'In Old Eden, death is not the end...'), 40000);
+    setTimeout(() => addComms('EDEN AI',
+      'Your genome shapes your potential...'), 60000);
+  }
+
+Problem:
+  Six setTimeout callbacks are scheduled with delays up to 60 seconds.
+  If the player exits gunner mode (ESC) before all have fired, the
+  remaining callbacks still fire on the bridge or other screens. The
+  `addComms()` function prepends messages to the bridge comms panel,
+  so the player sees "Click to fire your railgun!" while on the bridge
+  or station screen — confusing and immersion-breaking.
+
+  On a first-life player who exits gunner mode quickly (scared,
+  confused, hit ESC), they'd see progressively more irrelevant combat
+  tips on the bridge screen over the next 60 seconds.
+
+Fix:
+  Store timeout IDs and clear them on exit:
+
+  // Module scope:
+  let _tutorialTimeouts = [];
+
+  // In enterGunnerMode():
+  if (state.player.rebirths === 0) {
+    _tutorialTimeouts.push(
+      setTimeout(() => addComms('EDEN AI', '...'), 3000),
+      setTimeout(() => addComms('EDEN AI', '...'), 7000),
+      ...
+    );
+  }
+
+  // In exitGunnerMode():
+  _tutorialTimeouts.forEach(clearTimeout);
+  _tutorialTimeouts = [];
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 5.4 — Double event listener on 'keydown' can cause duplicate actions
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines ~5090 and ~6720 (two separate keydown listeners)
+
+Code (line ~5090 — first listener):
+  document.addEventListener('keydown', (e) => {
+    const _chInput = document.getElementById('chatbot-input');
+    if (document.activeElement === _chInput) { ... return; }
+    if (e.key === 'Escape' && c.active) { exitGunnerMode(); return; }
+    if ((e.key === 'r' || e.key === 'R') && c.active) { /* reload */ }
+    ...
+    keysDown.add(e.key.toLowerCase());
+  });
+
+Code (line ~6720 — second listener, chatbot Enter):
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement ===
+      document.getElementById('chatbot-input')) {
+      window._chatSend();
+    }
+  });
+
+Code (line ~6730 — third listener, additional keybinds):
+  document.addEventListener('keydown', (e) => {
+    if (!c.active) return;
+    const chatInput = document.getElementById('chatbot-input');
+    if (document.activeElement === chatInput) return;
+    if (e.key === 'm' || e.key === 'M') { ... mining ... }
+    if (e.key === 't' || e.key === 'T') { ... chatbot ... }
+    ...
+  });
+
+Problem:
+  There are THREE separate keydown listeners on `document`. The 'T' key
+  (chatbot toggle) in the third listener calls `document.exitPointerLock()`
+  and then `setTimeout(() => chatInput.focus(), 100)`. But the first
+  listener also processes 'T' — it adds 't' to `keysDown`. This means:
+
+  1. Player presses T → first listener adds 't' to keysDown (sets thrust
+     to some movement key if 't' maps to anything — it doesn't directly,
+     but keysDown is checked for WASD only, so 't' is harmless)
+  2. Third listener toggles chatbot panel open
+  3. Pointer lock exits, chatbot input focuses after 100ms
+  4. Player releases T → keyup removes 't' from keysDown
+
+  This specific case is harmless because 't' isn't a movement key. But the
+  architecture of 3 separate `document.addEventListener('keydown', ...)` calls
+  means all 3 fire for every key press. Currently safe due to early-return
+  guards, but fragile — adding a 'T' binding in the first listener would
+  cause double-triggering.
+
+  The real issue: the `keysDown.add(e.key.toLowerCase())` in the first
+  listener runs for ALL keys including M, T, K, H, P, B, F, G, C — keys
+  that also have action handlers in the third listener. While keysDown is
+  only checked for flight (WASD/arrows/space/ctrl/shift), adding keysDown
+  entries for every key wastes memory (the Set grows) and makes the code
+  harder to reason about.
+
+Fix:
+  Consolidate into a single keydown handler, or at minimum, only add
+  recognized flight keys to keysDown:
+
+  // In the first listener:
+  const FLIGHT_KEYS = new Set(['w','a','s','d','arrowup','arrowdown',
+    'arrowleft','arrowright',' ','control','shift']);
+  if (FLIGHT_KEYS.has(e.key.toLowerCase())) keysDown.add(e.key.toLowerCase());
+
+─────────────────────────────────────────────────────────────────────────────────
+BUG 5.5 — Reload during combat resets ammo but shares timer across UI paths
+─────────────────────────────────────────────────────────────────────────────────
+
+Location: Lines ~5095, ~5163, ~5300 (three separate reload implementations)
+
+Code (keyboard R — line ~5095):
+  if ((e.key === 'r' || e.key === 'R') && c.active) {
+    if (c.ammo < c.maxAmmo && !c._reloading) {
+      c._reloading = true; c.weaponReady = false;
+      addComms('System', 'Reloading...');
+      setTimeout(() => {
+        c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true;
+        AudioSFX.play('quest_complete');
+        addComms('System', 'Ammo replenished.');
+      }, 1500);
+    }
+  }
+
+Code (touch reload button — line ~5163):
+  reloadBtn.addEventListener('touchstart', (e) => {
+    ...
+    if (c.active && c.ammo < c.maxAmmo && !c._reloading) {
+      c._reloading = true; c.weaponReady = false;
+      addComms('System', 'Reloading...');
+      setTimeout(() => { c.ammo = c.maxAmmo; ... }, 1500);
+    }
+  }, { passive: false });
+
+Code (action bar reload button — line ~5300):
+  else if (action === 'reload') {
+    if (c.ammo < c.maxAmmo && !c._reloading) {
+      c._reloading = true; c.weaponReady = false;
+      addComms('System', 'Reloading...');
+      setTimeout(() => { c.ammo = c.maxAmmo; ... }, 1500);
+    }
+  }
+
+Problem:
+  Three separate, identical reload implementations. The `c._reloading`
+  guard prevents double-triggering, but the setTimeout callback has no
+  guard for the player having died or exited gunner mode during the 1.5s
+  reload window:
+
+  1. Player presses R (starts reload, c._reloading = true)
+  2. Player dies 0.5s later (death sequence starts)
+  3. 1.0s later the reload timeout fires → sets c.ammo = c.maxAmmo,
+     c._reloading = false, c.weaponReady = true, plays quest_complete
+     sound, adds "Ammo replenished" comms
+  4. Player is in death sequence / eulogy but hearing "ding!" and
+     seeing "Ammo replenished" in comms
+
+Fix:
+  Guard the timeout callback:
+
+  setTimeout(() => {
+    if (!c.active || c.dead) { c._reloading = false; return; }
+    c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true;
+    ...
+  }, 1500);
+
+  Also: extract into a single `startReload()` function to DRY up the 3 copies.
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Total findings: 16
+
+  Category 1 (CSS/Visual):     2 bugs
+  Category 2 (Audio):          2 bugs
+  Category 3 (Three.js):       7 bugs
+  Category 4 (Error Handling):  4 bugs
+  Category 5 (Edge Cases):     5 bugs (includes 4 with exact fixes)
+
+Severity breakdown:
+  CRITICAL (soft-lock/crash):   1 (Bug 4.1 — c.dead not reset)
+  HIGH (memory/GC pressure):    5 (Bugs 3.1–3.4, 3.7)
+  MEDIUM (per-frame alloc):     2 (Bugs 3.5, 3.6)
+  MEDIUM (UX/flow):             5 (Bugs 4.4, 5.1, 5.3, 5.4, 5.5)
+  LOW (visual/audio):           3 (Bugs 1.1, 1.2, 2.1)
+
+Recommended fix priority:
+  1. Bug 4.1 (add c.dead = false in enterGunnerMode) — 1 line
+  2. Bug 4.4 (clear death sequence timeouts on exit) — 5 lines
+  3. Bug 5.3 (clear tutorial timeouts on exit) — 4 lines
+  4. Bug 3.5 + 3.6 (use temp vectors instead of clone) — 2 lines each
+  5. Bug 3.1 + 3.2 (pre-allocate railgun/spark geometries) — 10 lines
+  6. Bug 2.1 (add gain node to ambience) — 5 lines
+  7. Bug 5.5 (guard reload timeout + DRY) — 10 lines
+  8. Remaining bugs in order of severity

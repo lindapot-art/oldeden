@@ -385,7 +385,7 @@ canvas{display:block;}
 #qa-unverified-banner.qa-passed{background:#00aa44;}
 
 /* ── Save Indicator ──────────────────────── */
-#save-indicator{position:fixed;top:10px;right:10px;color:rgba(0,255,136,0.7);font-size:0.72rem;z-index:200;pointer-events:none;opacity:0;transition:opacity 0.3s ease;letter-spacing:0.08em;}
+#save-indicator{position:fixed;top:10px;right:10px;color:rgba(0,255,136,0.7);font-size:0.72rem;z-index:201;pointer-events:none;opacity:0;transition:opacity 0.3s ease;letter-spacing:0.08em;}
 #save-indicator.show{opacity:1;}
 
 /* ── Boss Warning Overlay ────────────────── */
@@ -991,13 +991,15 @@ const AudioSFX = {
     if (!this.ctx || this.ambience) return;
     this.ensure();
     const ctx = this.ctx;
+    const vol = (state.settings.masterVol || 1) * (state.settings.sfxVol || 1);
     const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.008;
     const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
     const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 300;
-    src.connect(filt); filt.connect(ctx.destination); src.start();
-    this.ambience = src;
+    const gain = ctx.createGain(); gain.gain.value = vol;
+    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination); src.start();
+    this.ambience = { src, gain, filt };
   },
   startBGM() {
     if (!this.ctx || this.bgm) return;
@@ -1068,7 +1070,8 @@ const AudioSFX = {
   },
   stopAmbience() {
     if (!this.ambience) return;
-    try { this.ambience.stop(); } catch(e) {}
+    try { this.ambience.src.stop(); } catch(e) {}
+    try { this.ambience.gain.disconnect(); this.ambience.filt.disconnect(); } catch(e) {}
     this.ambience = null;
   },
   _fuelWarnLast: 0,
@@ -3488,6 +3491,13 @@ function loadGame() {
     if (!raw) return false;
     const data = JSON.parse(raw);
     loadFromServerData(data);
+    // Schema migration — ensure new fields exist for old saves
+    if (!state.player.soulFragments) state.player.soulFragments = [];
+    if (!state.market) state.market = { orders: [], history: [] };
+    if (!state.market.orders) state.market.orders = [];
+    if (!state.market.history) state.market.history = [];
+    if (!state.pastLives) state.pastLives = [];
+    if (!state.soulMemory) state.soulMemory = { combatInstinct:0, shieldMemory:0, fuelConservation:0, lootSense:0, spatialAwareness:0 };
     return true;
   } catch(e) { return false; }
 }
@@ -3833,6 +3843,8 @@ const keysDown = new Set();
 
 function enterGunnerMode() {
   c.active = true;
+  c.dead = false;
+  _deathSequenceActive = false;
   c.streak = 0; c.streakTimer = 0; c.streakMultiplier = 1;
   c.playerHasAttacked = false;
   // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
@@ -3892,12 +3904,14 @@ function enterGunnerMode() {
   }
   // First-life tutorial hints — progressive guidance
   if (state.player.rebirths === 0) {
-    setTimeout(() => addComms('EDEN AI', '\u26a0 Warning: Hostile contacts approaching. Click to fire your railgun!'), 3000);
-    setTimeout(() => addComms('EDEN AI', 'Hold Shift to boost. WASD or Arrow keys to fly.'), 7000);
-    setTimeout(() => addComms('EDEN AI', 'Press B near a station to dock — buy upgrades, trade cargo, and repair.'), 15000);
-    setTimeout(() => addComms('EDEN AI', 'Press F near a stargate to warp to new systems. Explore the frontier!'), 25000);
-    setTimeout(() => addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'), 40000);
-    setTimeout(() => addComms('EDEN AI', 'Your genome shapes your potential. Trade, fight, and explore to grow skills.'), 60000);
+    c._tutorialTimeouts = [
+      setTimeout(() => { if (c.active) addComms('EDEN AI', '\u26a0 Warning: Hostile contacts approaching. Click to fire your railgun!'); }, 3000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'Hold Shift to boost. WASD or Arrow keys to fly.'); }, 7000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'Press B near a station to dock — buy upgrades, trade cargo, and repair.'); }, 15000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'Press F near a stargate to warp to new systems. Explore the frontier!'); }, 25000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'); }, 40000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'Your genome shapes your potential. Trade, fight, and explore to grow skills.'); }, 60000),
+    ];
   }
 }
 
@@ -3996,6 +4010,7 @@ function exitGunnerMode(skipScreenChange) {
   if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
   if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
+  if (c._tutorialTimeouts) { c._tutorialTimeouts.forEach(clearTimeout); c._tutorialTimeouts = []; }
   _materialCache.forEach(m => m.dispose()); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
@@ -4128,19 +4143,19 @@ function spawnNail() {
 
   // Slug core — bright white-blue cylinder
   const slugMat = new THREE.MeshBasicMaterial({ color: 0xddeeff });
-  const slug = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6), slugMat);
+  const slug = new THREE.Mesh(_nailSlugGeo, slugMat);
   slug.quaternion.copy(camera.quaternion); slug.rotateX(Math.PI/2);
   g.add(slug);
 
   // Plasma glow trail — additive blending
   const trailMat2 = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
-  const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.01, 3, 6), trailMat2);
+  const trail = new THREE.Mesh(_nailTrailGeo, trailMat2);
   trail.quaternion.copy(camera.quaternion); trail.rotateX(Math.PI/2);
   g.add(trail);
 
   // Outer heat glow
   const heatMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
-  const heat = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6), heatMat);
+  const heat = new THREE.Mesh(_nailHeatGeo, heatMat);
   heat.quaternion.copy(camera.quaternion); heat.rotateX(Math.PI/2);
   g.add(heat);
 
@@ -4170,7 +4185,8 @@ function spawnImpactSparks(position, color) {
       color: i < 3 ? 0xffffff : color, transparent: true, opacity: 1,
       blending: THREE.AdditiveBlending, depthWrite: false,
     });
-    const spark = new THREE.Mesh(new THREE.SphereGeometry(sz, 4, 4), mat);
+    const spark = new THREE.Mesh(_sparkUnitGeo, mat);
+    spark.scale.setScalar(sz);
     spark.userData = {
       dir: new THREE.Vector3(
         (Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2
@@ -4228,6 +4244,10 @@ function createBossEnemy() {
   addComms('THREAT', `⚠ ${bossTint.name} detected! Massive hostile signature incoming!`);
 }
 
+const _nailSlugGeo = new THREE.CylinderGeometry(0.03, 0.02, 0.8, 6);
+const _nailTrailGeo = new THREE.CylinderGeometry(0.06, 0.01, 3, 6);
+const _nailHeatGeo = new THREE.CylinderGeometry(0.08, 0.02, 1.5, 6);
+const _sparkUnitGeo = new THREE.SphereGeometry(1, 4, 4);
 const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8);
 const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => new THREE.SphereGeometry(r, 4, 4));
 const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16);
@@ -4272,13 +4292,19 @@ function renderHUD() {
   if (!c.active) return;
 
   // Combat vignette (cached when hull healthy, dynamic when critical)
-  const hullPct = state.ship.hull / state.ship.maxHull;
+  const hullPct = state.ship.maxHull > 0 ? state.ship.hull / state.ship.maxHull : 0;
   if (hullPct < 0.25) {
-    const vigGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
-    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    if (!c._dangerVigCache || c._dangerVigW !== W || c._dangerVigH !== H) {
+      c._dangerVigCache = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+      c._dangerVigCache.addColorStop(0, 'rgba(0,0,0,0)');
+      c._dangerVigCache.addColorStop(1, 'rgba(255,0,0,0.45)');
+      c._dangerVigW = W; c._dangerVigH = H;
+    }
     const dangerIntensity = 0.15 + (1 - hullPct / 0.25) * 0.3;
-    vigGrad.addColorStop(1, 'rgba(255,0,0,' + (dangerIntensity + Math.sin(performance.now()*0.008)*0.06) + ')');
-    hudCtx.fillStyle = vigGrad;
+    hudCtx.globalAlpha = dangerIntensity + Math.sin(performance.now()*0.008)*0.06;
+    hudCtx.fillStyle = c._dangerVigCache;
+    hudCtx.fillRect(0, 0, W, H);
+    hudCtx.globalAlpha = 1;
   } else {
     if (!c._vigCache || c._vigCacheW !== W || c._vigCacheH !== H) {
       c._vigCache = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
@@ -4287,8 +4313,8 @@ function renderHUD() {
       c._vigCacheW = W; c._vigCacheH = H;
     }
     hudCtx.fillStyle = c._vigCache;
+    hudCtx.fillRect(0, 0, W, H);
   }
-  hudCtx.fillRect(0, 0, W, H);
 
   const primary = '#44aaff', accent = '#00ff88', warning = '#ffaa00', danger = '#ff4444';
 
@@ -4570,9 +4596,9 @@ function renderHUD() {
   // Enemy health bars (world-space, above each enemy)
   c.enemies.forEach(e => {
     if (!e.group || !e.group.parent) return;
-    const ePos = e.group.position.clone();
-    ePos.y += (e.cfg.scale || 1) * 4;
-    const sp = ePos.project(camera);
+    _tmpV3a.copy(e.group.position);
+    _tmpV3a.y += (e.cfg.scale || 1) * 4;
+    const sp = _tmpV3a.project(camera);
     if (sp.z > 1) return;
     const ex = (sp.x * 0.5 + 0.5) * W;
     const ey = (-sp.y * 0.5 + 0.5) * H;
@@ -4655,10 +4681,10 @@ function renderHUD() {
   for (let i = c.dmgNumbers.length - 1; i >= 0; i--) {
     const dn = c.dmgNumbers[i];
     dn.age += 16;
-    const screenPos = dn.pos.clone().project(camera);
-    const sx = (screenPos.x * 0.5 + 0.5) * W;
-    const sy = (-screenPos.y * 0.5 + 0.5) * H - dn.age * 0.08;
-    if (screenPos.z < 1) {
+    _tmpV3b.copy(dn.pos).project(camera);
+    const sx = (_tmpV3b.x * 0.5 + 0.5) * W;
+    const sy = (-_tmpV3b.y * 0.5 + 0.5) * H - dn.age * 0.08;
+    if (_tmpV3b.z < 1) {
       hudCtx.globalAlpha = Math.max(0, 1 - dn.age / 1200);
       // Scale font size by numeric value — bigger numbers = bigger text
       const dnVal = Math.abs(parseFloat(dn.text)) || 0;
@@ -4903,7 +4929,7 @@ canvas3d.addEventListener('touchstart', (e) => {
     if (c.active && c.ammo < c.maxAmmo && !c._reloading) {
       c._reloading = true; c.weaponReady = false;
       addComms('System', 'Reloading...');
-      setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500);
+      setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500);
     }
   }, { passive: false });
   // Touch boost button
@@ -4944,6 +4970,7 @@ document.addEventListener('keydown', (e) => {
       c.weaponReady = false;
       addComms('System', 'Reloading...');
       setTimeout(() => {
+        if (!c.active || c.dead) { c._reloading = false; return; }
         c.ammo = c.maxAmmo;
         c._reloading = false;
         c.weaponReady = true;
@@ -4998,7 +5025,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'skins') { document.getElementById('skin-panel').classList.toggle('open'); }
     else if (action === 'gate') { if (stargateGroup && ship.position.distanceTo(stargateGroup.position) < 40) { if (state.inAltUniverse) exitAltUniverse(); else enterAltUniverse(); } else addComms('System', 'No stargate in range.'); }
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
-    else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
+    else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
     else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } state.location.docked = true; AudioSFX.play('dock'); showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
