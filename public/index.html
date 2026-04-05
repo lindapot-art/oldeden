@@ -383,12 +383,36 @@ canvas{display:block;}
 /* ── QA UNVERIFIED BANNER ─────────────────── */
 #qa-unverified-banner{position:fixed;top:0;left:0;right:0;z-index:99999;background:repeating-linear-gradient(45deg,#ff0000,#ff0000 10px,#cc0000 10px,#cc0000 20px);color:#fff;text-align:center;font-size:0.85rem;font-weight:700;letter-spacing:0.15em;padding:6px 0;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.6);font-family:monospace;}
 #qa-unverified-banner.qa-passed{background:#00aa44;}
+
+/* ── Save Indicator ──────────────────────── */
+#save-indicator{position:fixed;top:10px;right:10px;color:rgba(0,255,136,0.7);font-size:0.72rem;z-index:200;pointer-events:none;opacity:0;transition:opacity 0.3s ease;letter-spacing:0.08em;}
+#save-indicator.show{opacity:1;}
+
+/* ── Boss Warning Overlay ────────────────── */
+#boss-warning-overlay{position:fixed;inset:0;z-index:16;pointer-events:none;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,0,0,0.08);}
+#boss-warning-overlay.active{display:flex;}
+#boss-warning-overlay .bw-title{font-size:clamp(2rem,5vw,4rem);color:#ff2200;font-weight:900;letter-spacing:0.3em;text-shadow:0 0 40px rgba(255,34,0,0.8),0 0 80px rgba(255,34,0,0.4);animation:bossWarnPulse 0.3s ease 3;}
+#boss-warning-overlay .bw-sub{font-size:1.2rem;color:#ff8844;letter-spacing:0.2em;margin-top:0.5rem;}
+@keyframes bossWarnPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.7;transform:scale(1.05);}}
+
+/* ── Muzzle Flash Overlay ────────────────── */
+#muzzle-flash-overlay{position:fixed;inset:0;z-index:14;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(68,170,255,0.12) 0%,transparent 40%);opacity:0;transition:opacity 0.04s ease;}
+
+/* ── Reduced Motion ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .title-star { animation: none; opacity: 0.5; }
+  .karma-spin-particle { animation: none; }
+}
 </style>
 </head>
 <body>
 
 <!-- QA VERIFICATION BANNER — removed only by qa_proxy_live.cjs passing -->
 <div id="qa-unverified-banner">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
+<div id="save-indicator">&#10003; SAVED</div>
+<div id="boss-warning-overlay"><div class="bw-title">&#9888; WARNING &#9888;</div><div class="bw-sub">MASSIVE HOSTILE SIGNATURE</div></div>
+<div id="muzzle-flash-overlay"></div>
 
 <!-- Screen transition fade overlay (moved from broken <style> location) -->
 <div id="screen-transition-overlay"></div>
@@ -2765,13 +2789,14 @@ window._buy = (name, price) => {
     if (state.player.credits < discountedPrice) { addComms('Station', 'Insufficient credits.'); return; }
     state.player.credits -= discountedPrice;
     state.inventory.push({ name, quantity: 1 });
+    AudioSFX.play('dock');
     addComms('Station', `Purchased ${name} for ${discountedPrice} EC${discountedPrice < price ? ' (trade discount!)' : ''}.`);
     renderStation();
   }
 };
 window._sell = (name, price) => {
   const idx = state.inventory.findIndex(i => i.name === name);
-  if (idx < 0) return;
+  if (idx < 0) { addComms('Station', 'You don\'t have that item.'); return; }
   if (state.socket) {
     state.inventory.splice(idx, 1);
     state.socket.emit('station:sell', { name, price });
@@ -2779,6 +2804,7 @@ window._sell = (name, price) => {
     const boostedPrice = Math.floor(price * getPlayerTradeMult());
     state.inventory.splice(idx, 1);
     state.player.credits += boostedPrice;
+    AudioSFX.play('loot_credits');
     addComms('Station', `Sold ${name} for ${boostedPrice} EC${boostedPrice > price ? ' (trade bonus!)' : ''}.`);
     renderStation();
   }
@@ -2790,6 +2816,7 @@ window._repairHull = () => {
   if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for repair.'); return; }
   state.player.credits -= cost;
   state.ship.hull = state.ship.maxHull;
+  AudioSFX.play('charge');
   addComms('Station', `Hull fully repaired. (-${cost} EC)`);
   gainSkillXP('engineering', 0.1);
   renderStation();
@@ -2801,6 +2828,7 @@ window._buyAmmo = () => {
   if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for ammo.'); return; }
   state.player.credits -= cost;
   state.combat.ammo = state.combat.maxAmmo;
+  AudioSFX.play('reload');
   addComms('Station', `Ammo restocked. (-${cost} EC)`);
   renderStation();
 };
@@ -2811,6 +2839,7 @@ window._refuel = () => {
   if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for fuel.'); return; }
   state.player.credits -= cost;
   state.ship.fuel = 100;
+  AudioSFX.play('dock');
   addComms('Station', `Ship refueled. (-${cost} EC)`);
   renderStation();
 };
@@ -2827,7 +2856,7 @@ window._acceptQuest = (id) => {
         state.quests.push(q);
       }
     }
-    if (q) { q.active = true; addComms('Mission Board', `Accepted: ${q.title || q.name}`); renderStation(); }
+    if (q) { q.active = true; AudioSFX.play('quest_complete'); addComms('Mission Board', `Accepted: ${q.title || q.name}`); renderStation(); }
   }
 };
 
@@ -3322,6 +3351,10 @@ camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
 
 // Lighting — bright space sunlight for visibility
 scene.add(new THREE.AmbientLight(0x667799, 2.0));
+
+// Persistent muzzle flash point light (reused per shot)
+window._mfLight = new THREE.PointLight(0x88ccff, 0, 20);
+scene.add(window._mfLight);
 const starLight = new THREE.DirectionalLight(0xfff8e8, 4.0);
 starLight.position.set(500, 400, 300);
 starLight.castShadow = false;
@@ -3546,6 +3579,7 @@ const _tmpV3a = new THREE.Vector3();
 const _tmpV3b = new THREE.Vector3();
 const _tmpV3c = new THREE.Vector3();
 const _tmpV3d = new THREE.Vector3();
+const _deathPullDir = new THREE.Vector3();
 const _tmpMat4 = new THREE.Matrix4();
 const _tmpQuat = new THREE.Quaternion();
 const _tmpQuatB = new THREE.Quaternion();
@@ -3855,16 +3889,11 @@ function spawnNail() {
   c.recoilVel = -8;
   c.fireRecoilKick = 0.045; // Camera kick on fire
   muzzleMat.opacity = 1;
-    // Screen-space muzzle flash overlay
-    const _mfDiv = document.createElement('div');
-    _mfDiv.style.cssText = 'position:fixed;inset:0;z-index:14;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(68,170,255,0.12) 0%,transparent 40%);';
-    document.body.appendChild(_mfDiv);
-    setTimeout(() => _mfDiv.remove(), 60);
-    // Muzzle point light burst
-    const _mfLight = new THREE.PointLight(0x88ccff, 8, 20);
-    _mfLight.position.copy(camera.position).add(new THREE.Vector3(0, -0.3, -4).applyQuaternion(camera.quaternion));
-    scene.add(_mfLight);
-    setTimeout(() => scene.remove(_mfLight), 60);
+    // Screen-space muzzle flash overlay — reuse persistent element
+    const _mfEl = document.getElementById('muzzle-flash-overlay');
+    if (_mfEl) { _mfEl.style.opacity = '1'; clearTimeout(_mfEl._hideTimer); _mfEl._hideTimer = setTimeout(() => { _mfEl.style.opacity = '0'; }, 60); }
+    // Muzzle point light burst — reuse persistent light
+    if (window._mfLight) { window._mfLight.intensity = 8; window._mfLight.position.copy(camera.position).addScaledVector(_tmpV3a.set(0, -0.3, -4).applyQuaternion(camera.quaternion), 1); clearTimeout(window._mfLightTimer); window._mfLightTimer = setTimeout(() => { if (window._mfLight) window._mfLight.intensity = 0; }, 60); }
   AudioSFX.play('fire');
   const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   const origin = camera.position.clone().add(dir.clone().multiplyScalar(1));
@@ -4462,6 +4491,30 @@ function renderHUD() {
     hudCtx.font = 'bold 12px "Segoe UI"'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.003);
     hudCtx.fillText('\u2726 ALT UNIVERSE — Artifacts: ' + (state.altUniverse ? state.altUniverse.artifactsCollected : 0), cx - 100, 22);
     hudCtx.globalAlpha = 1;
+  }
+
+  // Faction territory indicator (bottom-left)
+  {
+    const sys = state.starSystems[state.location.systemIndex];
+    if (sys && sys.controllingFaction) {
+      const fInfo = typeof FACTIONS !== 'undefined' && FACTIONS.find(f => f.id === sys.controllingFaction || f.name === sys.controllingFaction);
+      const fColor = sys.factionColor || (fInfo ? fInfo.color : '#556677');
+      const fName = fInfo ? fInfo.name : sys.controllingFaction;
+      hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = fColor; hudCtx.globalAlpha = 0.7;
+      hudCtx.fillText('\u2691 ' + fName + ' territory', 24, H - 36);
+      hudCtx.globalAlpha = 1;
+    }
+  }
+
+  // Stargate proximity indicator
+  if (stargateGroup) {
+    const sgDist = ship.position.distanceTo(stargateGroup.position);
+    if (sgDist < 120) {
+      const sgAlpha = Math.max(0.4, 1 - sgDist / 120);
+      hudCtx.font = 'bold 11px "Segoe UI"'; hudCtx.fillStyle = '#cc44ff'; hudCtx.globalAlpha = sgAlpha;
+      hudCtx.fillText('\u2726 STARGATE: ' + Math.floor(sgDist) + 'm' + (sgDist < 40 ? ' \u2014 [G] to enter' : ''), cx - 80, H - 50);
+      hudCtx.globalAlpha = 1;
+    }
   }
 
   // Keybind hints (bottom-right, above weapon)
@@ -6364,8 +6417,8 @@ function gameLoop() {
   // Death camera pullback
   if (state._deathPullback && state._deathPullback.active) {
     const pb = state._deathPullback.getValue();
-    const backDir = new THREE.Vector3(0, 0.3, 1).applyQuaternion(camera.quaternion).normalize();
-    camera.position.addScaledVector(backDir, pb);
+    _deathPullDir.set(0, 0.3, 1).applyQuaternion(camera.quaternion).normalize();
+    camera.position.addScaledVector(_deathPullDir, pb);
   }
 
   if (c.active) {
@@ -6524,18 +6577,10 @@ function gameLoop() {
         c.bossActive = true;
         AudioSFX.play('boss_warn');
         addComms('AI Director', '⚠ BOSS DETECTED — massive hostile signature!');
-        // Boss warning full-screen overlay
-        const bossWarn = document.createElement('div');
-        bossWarn.style.cssText = 'position:fixed;inset:0;z-index:16;pointer-events:none;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,0,0,0.08);';
-        bossWarn.innerHTML = '<div style="font-size:clamp(2rem,5vw,4rem);color:#ff2200;font-weight:900;letter-spacing:0.3em;text-shadow:0 0 40px rgba(255,34,0,0.8),0 0 80px rgba(255,34,0,0.4);animation:bossWarnPulse 0.3s ease 3">\u26a0 WARNING \u26a0</div><div style="font-size:1.2rem;color:#ff8844;letter-spacing:0.2em;margin-top:0.5rem;">MASSIVE HOSTILE SIGNATURE</div>';
-        if (!document.getElementById('boss-warn-style')) {
-          const st = document.createElement('style'); st.id = 'boss-warn-style';
-          st.textContent = '@keyframes bossWarnPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}';
-          document.head.appendChild(st);
-        }
-        document.body.appendChild(bossWarn);
+        // Boss warning — reuse persistent overlay element
+        const _bwEl = document.getElementById('boss-warning-overlay');
+        if (_bwEl) { _bwEl.classList.add('active'); setTimeout(() => _bwEl.classList.remove('active'), 2500); }
         c.damageFlash = 400;
-        setTimeout(() => bossWarn.remove(), 2500);
         createBossEnemy();
       }
     }
@@ -6895,6 +6940,8 @@ function gameLoop() {
     if (state.gameTime - c.lastAutoSave > 60000) {
       c.lastAutoSave = state.gameTime;
       saveGame();
+      const _si = document.getElementById('save-indicator');
+      if (_si) { _si.classList.add('show'); setTimeout(() => _si.classList.remove('show'), 1500); }
     }
 
     renderHUD();
