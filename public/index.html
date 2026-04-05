@@ -991,6 +991,24 @@ const state = {
   activeWeapon: 'railgun',  // 'railgun' or 'laser'
   // ── NPC ships ──
   npcShips: [],
+  // ── Past Lives — your dead characters become NPCs ──
+  pastLives: [],            // Array of { name, faction, genome, credits, kills, score, deathCause, station, occupation, timestamp }
+  // ── Character Skills (genome-gated, reset on death) ──
+  skills: {
+    gunnery: 0,    // Improves weapon damage — genome gene 32
+    piloting: 0,   // Improves speed/handling — genome gene 33
+    engineering: 0, // Improves shield regen — genome gene 34
+    trading: 0,    // Improves buy/sell prices — genome gene 35
+    mining: 0,     // Improves mining speed — genome gene 36
+    hacking: 0,    // Improves loot drops — genome gene 37
+  },
+  // ── Economy Sinks ──
+  economy: {
+    fuelCostPerJump: 15,    // Credits per warp jump
+    repairCostPerHp: 3,     // Credits per hull point repaired
+    ammoCostPer10: 5,       // Credits per 10 ammo purchased
+    dockingFee: 25,         // Credits per station dock
+  },
   // ── Market ──
   market: { orders: [], history: [] },
   // ── AI Chatbot ──
@@ -1016,16 +1034,108 @@ function getGenomeMult(geneIndex, soulBonus = 0) {
   return base * (1 + Math.min(soulBonus, 0.15));
 }
 function getPlayerDamageMult() {
-  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * state.upgrades.railgunDmg;
+  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * state.upgrades.railgunDmg * getSkillBonus('gunnery');
 }
 function getPlayerSpeedMult() {
-  return getGenomeMult(33); // Piloting gene
+  return getGenomeMult(33) * getSkillBonus('piloting');
 }
 function getPlayerShieldRegenMult() {
-  return getGenomeMult(34, state.soulMemory.shieldMemory / 100); // Engineering gene
+  return getGenomeMult(34, state.soulMemory.shieldMemory / 100) * getSkillBonus('engineering');
 }
 function getPlayerTradeMult() {
-  return getGenomeMult(35, state.soulMemory.tradeInsight / 100); // Trade gene
+  return getGenomeMult(35, state.soulMemory.tradeInsight / 100) * getSkillBonus('trading');
+}
+
+// ================================================================
+//  CHARACTER SKILLS — Fast-leveling, genome-gated ceilings
+// ================================================================
+// Skill ceiling = genome aptitude gene value / 255 * 10 (max level 10)
+// Rate = base XP × (genome aptitude / 128) — high aptitude levels 2× faster
+function getSkillCeiling(skillName) {
+  const geneMap = { gunnery: 32, piloting: 33, engineering: 34, trading: 35, mining: 36, hacking: 37 };
+  if (!state.player.genome) return 5;
+  const raw = state.player.genome[geneMap[skillName]] || 128;
+  return Math.max(1, Math.round((raw / 255) * 10));
+}
+function getSkillRate(skillName) {
+  const geneMap = { gunnery: 32, piloting: 33, engineering: 34, trading: 35, mining: 36, hacking: 37 };
+  if (!state.player.genome) return 1;
+  const raw = state.player.genome[geneMap[skillName]] || 128;
+  return 0.5 + (raw / 128); // 0.5× to 2.5× speed
+}
+function gainSkillXP(skillName, amount) {
+  const ceiling = getSkillCeiling(skillName);
+  const rate = getSkillRate(skillName);
+  const prev = state.skills[skillName];
+  state.skills[skillName] = Math.min(ceiling, state.skills[skillName] + amount * rate);
+  // Notify on full level-ups
+  const prevLevel = Math.floor(prev);
+  const newLevel = Math.floor(state.skills[skillName]);
+  if (newLevel > prevLevel && newLevel > 0) {
+    addComms('Skills', `${skillName.charAt(0).toUpperCase() + skillName.slice(1)} leveled to ${newLevel}/${ceiling}!`);
+  }
+}
+function getSkillBonus(skillName) {
+  return 1 + (state.skills[skillName] * 0.05); // +5% per level, max +50% at level 10
+}
+function resetSkills() {
+  Object.keys(state.skills).forEach(k => { state.skills[k] = 0; });
+}
+
+// ================================================================
+//  PAST LIVES — Dead characters become NPCs
+// ================================================================
+function storePastLife(deathCause) {
+  if (!state.player.name || state.player.name === '') return;
+  const occupations = ['Shopkeeper', 'Bartender', 'Mechanic', 'Bounty Board Operator', 'Fuel Vendor', 'Arms Dealer', 'Station Guard', 'Dock Worker'];
+  const life = {
+    name: state.player.name,
+    faction: state.player.faction,
+    genome: state.player.genome ? [...state.player.genome] : null,
+    credits: state.player.credits,
+    kills: state.combat.kills,
+    score: state.combat.score,
+    bestStreak: state.combat.bestStreak,
+    deathCause: deathCause || 'Unknown',
+    station: state.starSystems[state.location.systemIndex]?.name || 'Deep Space',
+    occupation: occupations[Math.floor(Math.random() * occupations.length)],
+    rebirthNum: state.player.rebirths,
+    timestamp: Date.now(),
+  };
+  state.pastLives.push(life);
+  // Cap at 50 past lives to prevent memory bloat
+  if (state.pastLives.length > 50) state.pastLives.shift();
+}
+function getPastLivesAtStation(systemIndex) {
+  const sysName = state.starSystems[systemIndex]?.name;
+  if (!sysName) return [];
+  // Each past life has a chance of "settling" at any station
+  return state.pastLives.filter(life => {
+    // Deterministic hash — same life always appears at same stations
+    const hash = (life.name.charCodeAt(0) * 31 + life.rebirthNum * 17 + systemIndex * 7) % 100;
+    return hash < 30; // 30% chance this life is at this station
+  });
+}
+
+// ================================================================
+//  AGING — Natural session timer
+// ================================================================
+function updateAging(dtMs) {
+  if (!state.combat.active && state.screen !== 'bridge') return;
+  // 1 game-year per 3 real minutes → death at ~80 years = ~4 hours max life
+  // Median life ~20 years game-time = ~60 real minutes
+  state.player.age += (dtMs / 1000) / 180; // 180 seconds = 1 year
+  if (state.player.age >= 80 && !state.combat.dead) {
+    // Natural death — old age
+    state.combat.dead = true;
+    state.combat.deathStats = { kills: state.combat.kills, score: state.combat.score, streak: state.combat.bestStreak, credits: state.player.credits };
+    addComms('AI Director', 'Your body has given out. Age claims another soul.');
+    setTimeout(() => {
+      state.combat.dead = false;
+      if (state.combat.active) exitGunnerMode();
+      showEulogy(state.combat.deathStats, 'Died of old age at ' + Math.floor(state.player.age) + ' years');
+    }, 2000);
+  }
 }
 
 // ================================================================
@@ -1045,6 +1155,8 @@ const EPITAPHS = [
 ];
 
 function showEulogy(deathStats, deathCause) {
+  // Store this life as a past life NPC before moving on
+  storePastLife(deathCause);
   const name = state.player.name || 'Unknown Soul';
   const faction = FACTIONS.find(f => f.id === state.player.faction);
   document.getElementById('eulogy-name').textContent = name;
@@ -1999,6 +2111,16 @@ function jumpToSystem(idx) {
   state.location.systemIndex = idx;
   state.location.docked = false;
   state.ship.fuel = Math.max(0, state.ship.fuel - 5);
+  // Economy sink: fuel cost for warp jump
+  const fuelCost = state.economy.fuelCostPerJump;
+  if (state.player.credits >= fuelCost) {
+    state.player.credits -= fuelCost;
+  } else {
+    // No credits? Take hull damage — desperation jump
+    state.ship.hull = Math.max(1, state.ship.hull - 10);
+    addComms('Engineering', 'Emergency jump — hull integrity compromised! Earn credits for safer travel.');
+  }
+  gainSkillXP('piloting', 0.2);
   state.selectedSystem = null;
   const sys = state.starSystems[idx];
   // Report visit to server for quest progress
@@ -2112,6 +2234,59 @@ function renderStation() {
   }
   upgradePanel.innerHTML = `<div class="panel-title">Ship Upgrades</div>${upgradesHtml}`;
 
+  // ── Station Services: Repair + Ammo + Fuel ──
+  let servicePanel = document.getElementById('service-panel');
+  if (!servicePanel) {
+    servicePanel = document.createElement('div');
+    servicePanel.id = 'service-panel';
+    servicePanel.className = 'station-panel';
+    stationGrid.appendChild(servicePanel);
+  }
+  const hullDmg = state.ship.maxHull - state.ship.hull;
+  const repairCost = Math.ceil(hullDmg * state.economy.repairCostPerHp);
+  const ammoNeeded = state.combat.maxAmmo - state.combat.ammo;
+  const ammoCost = Math.ceil((ammoNeeded / 10) * state.economy.ammoCostPer10);
+  servicePanel.innerHTML = `<div class="panel-title">Station Services</div>
+    <div class="trade-row"><span>Hull Repair (${Math.round(hullDmg)} HP)</span>
+      <button class="trade-buy" onclick="window._repairHull()" ${hullDmg < 1 ? 'disabled style="opacity:0.4"' : ''}>${repairCost} EC</button></div>
+    <div class="trade-row"><span>Restock Ammo (${ammoNeeded})</span>
+      <button class="trade-buy" onclick="window._buyAmmo()" ${ammoNeeded < 1 ? 'disabled style="opacity:0.4"' : ''}>${ammoCost} EC</button></div>
+    <div class="trade-row"><span>Refuel (${100 - Math.round(state.ship.fuel)}%)</span>
+      <button class="trade-buy" onclick="window._refuel()" ${state.ship.fuel >= 100 ? 'disabled style="opacity:0.4"' : ''}>${Math.ceil((100 - state.ship.fuel) * 0.5)} EC</button></div>
+    <div style="color:var(--muted);font-size:0.7rem;margin-top:8px">Docking fee: ${state.economy.dockingFee} EC (auto-paid)</div>`;
+
+  // ── Past Lives — Your dead characters as station NPCs ──
+  const pastLivesHere = getPastLivesAtStation(state.location.systemIndex);
+  let pastPanel = document.getElementById('past-lives-panel');
+  if (!pastPanel) {
+    pastPanel = document.createElement('div');
+    pastPanel.id = 'past-lives-panel';
+    pastPanel.className = 'station-panel';
+    stationGrid.appendChild(pastPanel);
+  }
+  if (pastLivesHere.length > 0) {
+    const livesHtml = pastLivesHere.map(life => {
+      const fac = FACTIONS.find(f => f.id === life.faction);
+      return `<div class="trade-row" style="flex-direction:column;align-items:flex-start;gap:4px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <div style="color:var(--gold);font-size:0.95rem">${life.name} <span style="color:var(--muted);font-size:0.7rem">— ${life.occupation}</span></div>
+        <div style="font-size:0.75rem;color:var(--muted)">Life #${life.rebirthNum + 1} · ${life.kills} kills · ${life.score} pts · Died: ${life.deathCause}</div>
+        <div style="font-size:0.7rem;color:${fac?.color || '#888'}">${fac?.name || 'Independent'}</div>
+      </div>`;
+    }).join('');
+    pastPanel.innerHTML = `<div class="panel-title" style="color:#a855f7">&#128123; Past Lives Here</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;font-style:italic">"You recognize these souls... they were you."</div>${livesHtml}`;
+    pastPanel.style.display = '';
+  } else {
+    pastPanel.innerHTML = '';
+    pastPanel.style.display = 'none';
+  }
+
+  // Docking fee
+  if (state.player.credits >= state.economy.dockingFee) {
+    state.player.credits -= state.economy.dockingFee;
+  }
+  gainSkillXP('trading', 0.1);
+
   state.location.docked = true;
 }
 
@@ -2137,6 +2312,37 @@ window._sell = (name, price) => {
     addComms('Station', `Sold ${name} for ${price} EC.`);
     renderStation();
   }
+};
+window._repairHull = () => {
+  const dmg = state.ship.maxHull - state.ship.hull;
+  if (dmg < 1) return;
+  const cost = Math.ceil(dmg * state.economy.repairCostPerHp);
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for repair.'); return; }
+  state.player.credits -= cost;
+  state.ship.hull = state.ship.maxHull;
+  addComms('Station', `Hull fully repaired. (-${cost} EC)`);
+  gainSkillXP('engineering', 0.1);
+  renderStation();
+};
+window._buyAmmo = () => {
+  const needed = state.combat.maxAmmo - state.combat.ammo;
+  if (needed < 1) return;
+  const cost = Math.ceil((needed / 10) * state.economy.ammoCostPer10);
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for ammo.'); return; }
+  state.player.credits -= cost;
+  state.combat.ammo = state.combat.maxAmmo;
+  addComms('Station', `Ammo restocked. (-${cost} EC)`);
+  renderStation();
+};
+window._refuel = () => {
+  const needed = 100 - state.ship.fuel;
+  if (needed < 1) return;
+  const cost = Math.ceil(needed * 0.5);
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for fuel.'); return; }
+  state.player.credits -= cost;
+  state.ship.fuel = 100;
+  addComms('Station', `Ship refueled. (-${cost} EC)`);
+  renderStation();
 };
 window._acceptQuest = (id) => {
   if (state.socket) {
@@ -3440,6 +3646,24 @@ function renderHUD() {
     hudCtx.globalAlpha = 1;
   }
 
+  // ── Age + Character Skills (right side, below score) ──
+  const skillX = W - 200, skillY = sry + 80;
+  hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#445566';
+  hudCtx.fillText('AGE: ' + Math.floor(state.player.age) + ' yrs', skillX, skillY);
+  // Show top 3 skills by level
+  const skillEntries = Object.entries(state.skills).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  skillEntries.forEach(([name, level], i) => {
+    const sy2 = skillY + 16 + i * 14;
+    const ceiling = getSkillCeiling(name);
+    const pct = ceiling > 0 ? (level / ceiling) : 0;
+    hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#556677';
+    hudCtx.fillText(name.toUpperCase().slice(0, 4), skillX, sy2);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(skillX + 38, sy2 - 7, 80, 6);
+    hudCtx.fillStyle = pct >= 0.9 ? '#d4a856' : pct >= 0.5 ? '#44aaff' : '#445566';
+    hudCtx.fillRect(skillX + 38, sy2 - 7, 80 * pct, 6);
+    hudCtx.fillStyle = '#667788'; hudCtx.fillText(Math.floor(level) + '/' + ceiling, skillX + 124, sy2);
+  });
+
   // Corner brackets
   hudCtx.strokeStyle = '#334455'; hudCtx.lineWidth = 1; hudCtx.globalAlpha = 0.4;
   const bl = 40;
@@ -3599,6 +3823,8 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   state.player.stellarMarks = 0;
   state.player.age = 0;
   state.combat.score = 0; state.combat.kills = 0; state.combat.cycle = 1; state.combat.bestStreak = 0;
+  // Reset character skills (the flesh forgets, the soul remembers)
+  resetSkills();
   // Preserve insured item if any
   if (state.insuredItemId) {
     const insured = state.inventory.find(i => i.name === state.insuredItemId);
@@ -4026,6 +4252,7 @@ function updateMining(dt) {
     else state.inventory.push({ name: ore, quantity: qty });
     const credits = 20 + Math.floor(Math.random() * 80);
     state.player.credits += credits;
+    gainSkillXP('mining', 0.3);
     c.dmgNumbers.push({ text: '+' + ore, pos: asteroid.position.clone(), age: 0, color: '#00ff88' });
     addComms('Mining', `Extracted ${qty}x ${ore} (+${credits} EC)`);
     AudioSFX.play('quest_complete');
@@ -4946,6 +5173,9 @@ function gameLoop() {
             const pts = Math.floor(e.points * c.streakMultiplier);
             c.score += pts; c.kills++;
             state.player.credits += pts;
+            // Skill XP: combat actions level gunnery + piloting
+            gainSkillXP('gunnery', 0.15);
+            gainSkillXP('piloting', 0.05);
             // Floating damage number
             c.dmgNumbers.push({ text: '+' + pts, pos: e.group.position.clone(), age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
             if (e.isBoss) { c.bossActive = false; addComms('AI Director', 'Boss destroyed! +500 points'); }
@@ -5123,6 +5353,10 @@ function gameLoop() {
     updateNPCShips(dt);
     updateMining(dt);
     updateAutoSystems(dt);
+    updateAging(dtMs);
+    // Passive skill gains: piloting XP from flying, engineering from shield regen
+    if (fl.speed > 10) gainSkillXP('piloting', 0.002 * dt);
+    if (state.ship.shield < state.ship.maxShield) gainSkillXP('engineering', 0.003 * dt);
     if (stargateGroup) animateStargate(state.gameTime);
     updateLibraryRotation(dt);
     updateAutopilot(dt);
