@@ -27,3 +27,8 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+
+# Raw/unoptimized 3D model sources (only optimized/ versions are used)
+glbs/
+public/3d/glb/*.glb
+temp_fbx_convert/
