@@ -589,7 +589,18 @@ io.on('connection', (socket) => {
       };
       // Allow non-authoritative display data (position, settings, etc.)
       if (data && typeof data === 'object') {
-        for (const key of ['position', 'rotation', 'currentSystem', 'settings']) {
+        // Payload size guard — reject excessively large saves (> 512 KB)
+        const payloadSize = JSON.stringify(data).length;
+        if (payloadSize > 524288) {
+          socket.emit('game:saved', { ok: false, error: 'Payload too large' });
+          return;
+        }
+        const allowedKeys = ['position', 'rotation', 'currentSystem', 'settings',
+          'combat', 'inventory', 'quests', 'upgrades', 'flight', 'pastLives',
+          'skills', 'soulMemory', 'economy', 'activeWeapon', 'persistentItems',
+          'currentSkin', 'market', 'insuredItemId', 'chatbot', 'factionRep',
+          'ship', 'location', 'player'];
+        for (const key of allowedKeys) {
           if (data[key] !== undefined) serverState[key] = data[key];
         }
       }
@@ -667,6 +678,8 @@ io.on('connection', (socket) => {
     player.trades = 0;
     player.cargo.clear();
     player.genome = Array.from(chosenNpc.genome);
+    player.name = chosenNpc.name || player.name;
+    player.faction = chosenNpc.faction || player.faction;
     // Mark chosen NPC as player avatar
     chosenNpc.isPlayerAvatar = true;
     socket.emit('rebirth:result', {
@@ -678,6 +691,22 @@ io.on('connection', (socket) => {
       statusScore: rebirthSys.computeStatusScore(chosenNpc),
     });
     } catch (err) { console.error('[Socket] rebirth:perform error:', err.message); }
+  });
+
+  // Karma wheel sync — client sends rolled identity after karma accept
+  socket.on('rebirth:sync', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      if (!data || typeof data !== 'object') return;
+      if (typeof data.name === 'string') player.name = data.name.slice(0, 50);
+      if (typeof data.faction === 'string') player.faction = data.faction.slice(0, 50);
+      if (Array.isArray(data.genome) && data.genome.length === 7) player.genome = data.genome.map(Number);
+      player.activeQuests.clear();
+      player.visitedSystems.clear();
+      player.trades = 0;
+      player.cargo.clear();
+    } catch (err) { console.error('[Socket] rebirth:sync error:', err.message); }
   });
 
   socket.on('starmap:request', () => {
@@ -716,6 +745,9 @@ io.on('connection', (socket) => {
           genome: player.genome,
           wallet: { ec: wallet.ec, sm: wallet.sm },
           trades: player.trades,
+          cargo: [...player.cargo.entries()],
+          activeQuests: [...player.activeQuests.entries()],
+          visitedSystems: [...player.visitedSystems],
           savedAt: Date.now(),
         });
       } catch (e) {

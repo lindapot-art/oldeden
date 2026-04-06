@@ -2150,7 +2150,7 @@ function showScreen(name) {
   if (_overlay) {
     _transitioning = true;
     _overlay.classList.add('active');
-    setTimeout(() => { _showScreenInner(name); _overlay.classList.remove('active'); _transitioning = false; }, dur);
+    setTimeout(() => { try { _showScreenInner(name); } finally { _overlay.classList.remove('active'); _transitioning = false; } }, dur);
     return;
   }
   _showScreenInner(name);
@@ -3207,6 +3207,8 @@ function createSoulFragment() {
     timestamp: Date.now(),
   };
   p.soulFragments.push(fragment);
+  // Cap fragments to prevent unbounded localStorage growth
+  if (p.soulFragments.length > 100) p.soulFragments.splice(0, p.soulFragments.length - 100);
   // Update lifetime stats
   p.lifetimeStats.totalKills += c.kills;
   p.lifetimeStats.totalScore += c.score;
@@ -3966,14 +3968,15 @@ function enterGunnerMode() {
   }
   // First-life tutorial hints — progressive guidance
   if (state.player.rebirths === 0) {
-    c._tutorialTimeouts = [
+    if (!c._tutorialTimeouts) c._tutorialTimeouts = [];
+    c._tutorialTimeouts.push(
       setTimeout(() => { if (c.active) addComms('EDEN AI', '\u26a0 Warning: Hostile contacts approaching. Click to fire your railgun!'); }, 3000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Hold Shift to boost. WASD or Arrow keys to fly.'); }, 7000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Press B near a station to dock — buy upgrades, trade cargo, and repair.'); }, 15000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Press F near a stargate to warp to new systems. Explore the frontier!'); }, 25000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'); }, 40000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Your genome shapes your potential. Trade, fight, and explore to grow skills.'); }, 60000),
-    ];
+    );
   }
 }
 
@@ -4083,6 +4086,9 @@ function exitGunnerMode(skipScreenChange) {
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
+  // Reset fog and background to default ambient values (combat sets dense fog)
+  scene.fog = new THREE.FogExp2(0x050510, 0.00012);
+  scene.background = null;
   stopMining();
   state.mining.active = false;
   c.bossActive = false;
@@ -5230,6 +5236,8 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
   AudioSFX.play('karma_accept');
   checkAndClaimMilestones();
   saveGame();
+  // Sync new identity to server (karma roll is client-side)
+  if (state.socket) state.socket.emit('rebirth:sync', { name: roll.name, faction: roll.faction, genome: roll.genome });
   state.karmaRoll = null;
   updateRebirthScreen();
   // Rebirth transition — "A new soul awakens"
