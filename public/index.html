@@ -2090,7 +2090,13 @@ function loadFromServerData(data) {
   if (data.pastLives) state.pastLives = data.pastLives;
   if (data.skills) Object.assign(state.skills, data.skills);
   if (data.soulMemory) Object.assign(state.soulMemory, data.soulMemory);
-  if (data.economy) Object.assign(state.economy, data.economy);
+  if (data.economy && typeof data.economy === 'object') {
+    // Validate economy fields against allowed ranges to prevent save tampering
+    const econ = data.economy;
+    if (Number.isFinite(econ.dockingFee) && econ.dockingFee >= 0 && econ.dockingFee <= 1000) state.economy.dockingFee = econ.dockingFee;
+    if (Number.isFinite(econ.repairCostPerHp) && econ.repairCostPerHp >= 0 && econ.repairCostPerHp <= 100) state.economy.repairCostPerHp = econ.repairCostPerHp;
+    if (Number.isFinite(econ.refuelCostPerUnit) && econ.refuelCostPerUnit >= 0 && econ.refuelCostPerUnit <= 100) state.economy.refuelCostPerUnit = econ.refuelCostPerUnit;
+  }
   if (data.activeWeapon) state.activeWeapon = data.activeWeapon;
   if (data.starSystems && data.starSystems.length) state.starSystems = data.starSystems;
   // Restore alt universe state
@@ -4073,9 +4079,9 @@ function exitGunnerMode(skipScreenChange) {
   // Clean up new systems
   if (state.npcShips) { state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); state.npcShips = []; }
   if (stargateGroup) { scene.remove(stargateGroup); disposeObject(stargateGroup); stargateGroup = null; stargatePortalMat = null; }
-  if (railgunModel) { cockpit.remove(railgunModel); railgunModel = null; }
-  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
-  if (dashboardGunModel) { camera.remove(dashboardGunModel); dashboardGunModel = null; }
+  if (railgunModel) { cockpit.remove(railgunModel); disposeObject(railgunModel); railgunModel = null; }
+  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); disposeObject(cockpitGLBModel); cockpitGLBModel = null; }
+  if (dashboardGunModel) { camera.remove(dashboardGunModel); disposeObject(dashboardGunModel); dashboardGunModel = null; }
   if (c._tutorialTimeouts) { c._tutorialTimeouts.forEach(clearTimeout); c._tutorialTimeouts = []; }
   _deathTimeouts.forEach(clearTimeout); _deathTimeouts = [];
   _deathSequenceActive = false;
@@ -4085,7 +4091,7 @@ function exitGunnerMode(skipScreenChange) {
   _materialCache.forEach(m => m.dispose()); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
-  if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
+  if (playerShipGLB) { ship.remove(playerShipGLB); disposeObject(playerShipGLB); playerShipGLB = null; }
   // Reset fog and background to default ambient values (combat sets dense fog)
   scene.fog = new THREE.FogExp2(0x050510, 0.00012);
   scene.background = null;
@@ -5946,14 +5952,12 @@ function updateMining(dt) {
 
   // Update laser beam visual
   if (miningLaserBeam) {
-    const from = ship.position.clone();
-    const to = asteroid.position.clone();
-    const mid = from.clone().add(to).multiplyScalar(0.5);
-    const dist = from.distanceTo(to);
-    miningLaserBeam.position.copy(mid);
+    const dist = ship.position.distanceTo(asteroid.position);
+    _tmpV3c.copy(ship.position).add(asteroid.position).multiplyScalar(0.5);
+    miningLaserBeam.position.copy(_tmpV3c);
     miningLaserBeam.scale.set(1, dist, 1);
     // Align cylinder (Y-axis) along beam direction via quaternion
-    _tmpV3a.copy(to).sub(from).normalize();
+    _tmpV3a.copy(asteroid.position).sub(ship.position).normalize();
     miningLaserBeam.quaternion.setFromUnitVectors(_upVec, _tmpV3a);
     miningLaserBeam.material.opacity = 0.4 + Math.sin(state.gameTime * 0.01) * 0.3;
     miningLaserBeam.material.color.setHSL(0.33 + Math.sin(state.gameTime * 0.005) * 0.05, 1, 0.5);
@@ -6310,7 +6314,7 @@ function renderMarketScreen() {
 
 window._marketBuy = (orderId) => {
   const order = state.market.orders.find(o => o.id === orderId);
-  if (!order) return;
+  if (!order || order.quantity <= 0) return;
   if (state.player.credits < order.price) { addComms('Market', 'Insufficient credits.'); return; }
   state.player.credits -= order.price;
   const existing = state.inventory.find(i => i.name === order.item);
@@ -6799,8 +6803,8 @@ function disengageAutopilot() {
 function updateAutopilot(dt) {
   if (!autopilotActive || !autopilotTarget) return;
   const fl = state.flight;
-  const toTarget = autopilotTarget.clone().sub(ship.position);
-  const dist = toTarget.length();
+  _tmpV3b.copy(autopilotTarget).sub(ship.position);
+  const dist = _tmpV3b.length();
 
   if (dist < 15) {
     disengageAutopilot();
@@ -6811,8 +6815,8 @@ function updateAutopilot(dt) {
   }
 
   // Steer camera yaw/pitch toward target (ship follows camera via quaternion slerp)
-  const targetDir = toTarget.normalize();
-  _tmpV3a.copy(targetDir);
+  _tmpV3b.normalize();
+  _tmpV3a.copy(_tmpV3b);
   _tmpQuat.copy(camera.quaternion).invert();
   _tmpV3a.applyQuaternion(_tmpQuat);
   const steerYaw = -Math.atan2(_tmpV3a.x, -_tmpV3a.z);
@@ -6823,9 +6827,9 @@ function updateAutopilot(dt) {
 
   // Thrust
   const speedFactor = dist > 100 ? 1.0 : dist / 100;
-  fl.velocity.x += targetDir.x * fl.accel * speedFactor * dt;
-  fl.velocity.y += targetDir.y * fl.accel * speedFactor * dt;
-  fl.velocity.z += targetDir.z * fl.accel * speedFactor * dt;
+  fl.velocity.x += _tmpV3b.x * fl.accel * speedFactor * dt;
+  fl.velocity.y += _tmpV3b.y * fl.accel * speedFactor * dt;
+  fl.velocity.z += _tmpV3b.z * fl.accel * speedFactor * dt;
 }
 
 // ================================================================

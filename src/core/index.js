@@ -213,7 +213,14 @@ app.post('/api/game/save', async (req, res) => {
 
 app.get('/api/game/load/:id', async (req, res) => {
   try {
-    const data = await fileStore.load(req.params.id);
+    // Authorization: only allow loading if the requesting player ID matches an active session
+    const requestedId = req.params.id;
+    let authorized = false;
+    for (const [, player] of players) {
+      if (player.playerId === requestedId) { authorized = true; break; }
+    }
+    if (!authorized) return res.status(403).json({ error: 'Unauthorized — no active session for this player' });
+    const data = await fileStore.load(requestedId);
     if (!data) return res.status(404).json({ error: 'Save not found' });
     res.json(data);
   } catch (e) {
@@ -404,8 +411,9 @@ io.on('connection', (socket) => {
   // ── Death Report → Broadcast to all players ──────────────────────────────
   socket.on('death:report', (data) => {
     try {
-      const name = typeof data?.name === 'string' ? data.name.slice(0, 30) : 'Unknown';
-      const cause = typeof data?.cause === 'string' ? data.cause.slice(0, 50) : 'the void';
+      const player = players.get(socket.id);
+      const name = player ? player.name.slice(0, 30) : 'Unknown';
+      const cause = typeof data?.cause === 'string' ? data.cause.slice(0, 50).replace(/[<>&"']/g, '') : 'the void';
       const text = `${name} was destroyed — ${cause}`;
       io.emit('death:feed', { type: 'death', text });
     } catch (err) { console.error('[Socket] death:report error:', err.message); }
@@ -453,7 +461,7 @@ io.on('connection', (socket) => {
       const player = players.get(socket.id);
       if (!player) return;
       const systemId = typeof data?.systemId === 'string' ? data.systemId : '';
-      if (!systemId || player.visitedSystems.has(systemId)) return;
+      if (!systemId || !/^system-\d{1,2}$/.test(systemId) || player.visitedSystems.has(systemId)) return;
       player.visitedSystems.add(systemId);
 
     // Progress visit quests
@@ -597,9 +605,9 @@ io.on('connection', (socket) => {
         }
         const allowedKeys = ['position', 'rotation', 'currentSystem', 'settings',
           'combat', 'inventory', 'quests', 'upgrades', 'flight', 'pastLives',
-          'skills', 'soulMemory', 'economy', 'activeWeapon', 'persistentItems',
+          'skills', 'soulMemory', 'activeWeapon', 'persistentItems',
           'currentSkin', 'market', 'insuredItemId', 'chatbot', 'factionRep',
-          'ship', 'location', 'player'];
+          'ship', 'location'];
         for (const key of allowedKeys) {
           if (data[key] !== undefined) serverState[key] = data[key];
         }
@@ -700,8 +708,11 @@ io.on('connection', (socket) => {
       if (!player) return;
       if (!data || typeof data !== 'object') return;
       if (typeof data.name === 'string') player.name = data.name.slice(0, 50);
-      if (typeof data.faction === 'string') player.faction = data.faction.slice(0, 50);
-      if (Array.isArray(data.genome) && data.genome.length === 7) player.genome = data.genome.map(Number);
+      if (typeof data.faction === 'string' && FACTIONS.some(f => f.id === data.faction)) player.faction = data.faction;
+      if (Array.isArray(data.genome) && data.genome.length === 7) {
+        const validated = data.genome.map(v => { const n = Number(v); return Number.isFinite(n) ? Math.max(0, Math.min(255, Math.round(n))) : 128; });
+        player.genome = validated;
+      }
       player.activeQuests.clear();
       player.visitedSystems.clear();
       player.trades = 0;
@@ -754,10 +765,24 @@ io.on('connection', (socket) => {
         console.error(`[Socket.IO] Auto-save failed for ${player.playerId}:`, e.message);
       }
     }
-    // Clean up economy state to prevent memory leak
+    // Clean up all system state to prevent memory leaks
     if (player) {
+      const pid = player.playerId;
       const econ = engine.getSystem('economy');
-      econ.removePlayer?.(player.playerId);
+      econ.removePlayer?.(pid);
+      // Clean up per-player Maps in remaining systems
+      const factionSys = engine.getSystem('factions');
+      if (factionSys?._reputation) factionSys._reputation.delete(pid);
+      const skillSys = engine.getSystem('skills');
+      if (skillSys?._players) skillSys._players.delete(pid);
+      const invSys = engine.getSystem('inventory');
+      if (invSys?._inventories) invSys._inventories.delete(pid);
+      const questSys = engine.getSystem('quests');
+      if (questSys?._players) questSys._players.delete(pid);
+      const cosmeticsSys = engine.getSystem('cosmetics');
+      if (cosmeticsSys?._playerInventory) cosmeticsSys._playerInventory.delete(pid);
+      const cycleSys = engine.getSystem('cyclepass');
+      if (cycleSys?._playerProgress) cycleSys._playerProgress.delete(pid);
     }
     players.delete(socket.id);
     console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
