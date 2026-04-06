@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-04-04T02:00:00Z",
+  "commit": "post-remediation",
+  "metrics": {
+    "html_sections": 0,
+    "nav_buttons": 6,
+    "event_listeners": 19,
+    "exported_functions": 70,
+    "css_rules": 0,
+    "js_files": 38,
+    "test_files": 19,
+    "systems_registered": 19,
+    "api_endpoints": 6,
+    "express_routes": 12,
+    "socketio_handlers": 7,
+    "tests_passing": 451,
+    "tests_failing": 8,
+    "ukraine_donation_split": true
+  },
+  "security_issues": [
+    "LOW: innerHTML usage in station rendering (public/index.html)",
+    "LOW: CDN import without SRI (public/index.html)",
+    "INFO: No rate limiting on API endpoints"
+  ]
+}

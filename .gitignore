@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+
+# Build artifacts
+dist/
+build/
+artifacts/
+cache/
+
+# Uploads
+uploads/
+
+# Hardhat
+typechain/
+typechain-types/
+
+# Coverage
+coverage/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Raw/unoptimized 3D model sources (only optimized/ versions are used)
+glbs/
+public/3d/glb/*.glb
+temp_fbx_convert/

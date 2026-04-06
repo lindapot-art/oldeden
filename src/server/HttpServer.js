@@ -1,0 +1,98 @@
+/**
+ * HttpServer — Express HTTP server for Old Eden.
+ *
+ * Provides REST API endpoints for:
+ *   - Asset uploads (3D models, textures) via /api/assets
+ *   - Static file serving from the uploads directory
+ *   - Health check at GET /health
+ *
+ * Designed to run alongside the GameEngine and be initialised from index.js.
+ */
+
+import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createAssetUploadRouter } from './AssetUploadRouter.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicDir = path.resolve(__dirname, '..', '..', 'public');
+
+/**
+ * Create and configure the Express application.
+ *
+ * @param {object} [options]
+ * @param {string} [options.uploadDir='uploads']  Root directory for uploaded files
+ * @param {number} [options.maxFileSize]           Max upload size in bytes
+ * @returns {{ app: express.Application, start: (port: number) => Promise<import('http').Server> }}
+ */
+export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
+  const app = express();
+
+  // JSON body parsing for non-upload routes
+  app.use(express.json());
+
+  // ── Serve frontend static files ───────────────────────────────────────────
+  app.use(express.static(publicDir));
+
+  // ── Health check ──────────────────────────────────────────────────────────
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', uptime: process.uptime() });
+  });
+
+  // ── Static serving of uploaded assets ─────────────────────────────────────
+  app.use('/assets', express.static(path.resolve(uploadDir)));
+
+  // ── Asset upload API ──────────────────────────────────────────────────────
+  app.use('/api/assets', createAssetUploadRouter({ uploadDir, maxFileSize }));
+
+  /**
+   * Add the SPA fallback — call AFTER registering game API routes in index.js.
+   */
+  function addFallback() {
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(publicDir, 'index.html'));
+    });
+  }
+
+  /**
+   * Start the HTTP server on the given port.
+   * If the port is busy, automatically tries the next port (up to maxRetries).
+   * @param {number} port
+   * @param {object} [opts]
+   * @param {number} [opts.maxRetries=10]
+   * @returns {Promise<import('http').Server>}
+   */
+  function start(port, { maxRetries = 10 } = {}) {
+    return new Promise((resolve, reject) => {
+      let attempt = 0;
+
+      function tryListen(p) {
+        const server = app.listen(p);
+
+        server.once('listening', () => {
+          if (p !== port) {
+            console.log(`[HttpServer] Port ${port} was busy — auto-rotated to port ${p}`);
+          }
+          console.log(`[HttpServer] Listening on port ${p}`);
+          resolve(server);
+        });
+
+        server.once('error', (err) => {
+          if (err.code === 'EADDRINUSE' && attempt < maxRetries) {
+            attempt++;
+            const next = port + attempt;
+            console.log(`[HttpServer] Port ${p} in use, trying ${next}…`);
+            tryListen(next);
+          } else {
+            reject(err);
+          }
+        });
+      }
+
+      tryListen(port);
+    });
+  }
+
+  return { app, start, addFallback };
+}
