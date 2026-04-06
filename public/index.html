@@ -3230,6 +3230,7 @@ function createSoulFragment() {
     faction: p.faction,
     timestamp: Date.now(),
   });
+  if (p.legacyChain.length > 200) p.legacyChain.splice(0, p.legacyChain.length - 200);
   return fragment;
 }
 
@@ -3610,7 +3611,7 @@ canvas3d.addEventListener('webglcontextrestored', () => {
   try {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.35, 0.5, 0.6);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
     composer.addPass(bloom);
     console.log('[Old Eden] Post-processing rebuilt after context restore');
   } catch (e) { console.warn('[Old Eden] Composer rebuild failed:', e); }
@@ -3622,7 +3623,7 @@ canvas3d.addEventListener('webglcontextrestored', () => {
 scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050510, 0.00012);
 
-camera = new THREE.PerspectiveCamera(75, 1, 0.01, 50000);
+camera = new THREE.PerspectiveCamera(75, 1, 0.1, 50000);
 
 // Lighting — bright space sunlight for visibility
 scene.add(new THREE.AmbientLight(0x667799, 2.0));
@@ -3759,14 +3760,14 @@ cockpit = new THREE.Group(); cockpit.name = 'gunner-cockpit';
 const cpCanopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
 const cpCanopy = new THREE.Mesh(new THREE.SphereGeometry(3.0,32,24,0,Math.PI*2,0,Math.PI*0.6), cpCanopyMat);
 cpCanopy.position.set(0,0,-2.5); cpCanopy.rotation.x = Math.PI; cockpit.add(cpCanopy);
-const frameMat = new THREE.MeshBasicMaterial({ color: 0x334466, transparent: true, opacity: 0.5 });
+const frameMat = new THREE.MeshStandardMaterial({ color: 0x334466, transparent: true, opacity: 0.5, roughness: 0.6, metalness: 0.8 });
 for (let i = 0; i < 6; i++) {
   const angle = (i/6)*Math.PI*2;
   const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,3.5,4), frameMat);
   strut.position.set(Math.sin(angle)*2.8, Math.cos(angle)*2.0, -3.0);
   strut.rotation.x = Math.PI*0.3; strut.rotation.z = angle; cockpit.add(strut);
 }
-const seatMat = new THREE.MeshBasicMaterial({ color: 0x2a3540, transparent: true, opacity: 0.7 });
+const seatMat = new THREE.MeshStandardMaterial({ color: 0x2a3540, transparent: true, opacity: 0.7, roughness: 0.8, metalness: 0.3 });
 { const sb = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.6,0.08), seatMat); sb.position.set(0,-0.1,0.4); cockpit.add(sb); }
 { const ss = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.08,0.5), seatMat); ss.position.set(0,-0.5,0.1); cockpit.add(ss); }
 { const aL = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat); aL.position.set(-0.35,-0.35,0); cockpit.add(aL); }
@@ -3774,7 +3775,7 @@ const seatMat = new THREE.MeshBasicMaterial({ color: 0x2a3540, transparent: true
 { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.3,8), frameMat); sp.position.set(0,-0.75,0.1); cockpit.add(sp); }
 
 // Railgun barrels + glow
-const railMat = new THREE.MeshBasicMaterial({ color: 0x556677, transparent: true, opacity: 0.8 });
+const railMat = new THREE.MeshStandardMaterial({ color: 0x556677, transparent: true, opacity: 0.8, roughness: 0.3, metalness: 0.9 });
 railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
 railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
 railL = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5,8), railMat);
@@ -3788,12 +3789,12 @@ const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.3,12,12), muzzleMat);
 muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
 
 // Side panels
-const panelMat = new THREE.MeshBasicMaterial({ color: 0x1a2030, transparent: true, opacity: 0.6 });
+const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a2030, transparent: true, opacity: 0.6, roughness: 0.7, metalness: 0.5 });
 const pnlL = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.8,1.2), panelMat);
 pnlL.position.set(-1.3,-0.2,-0.5); pnlL.rotation.y = 0.4; cockpit.add(pnlL);
 const pnlR = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.8,1.2), panelMat);
 pnlR.position.set(1.3,-0.2,-0.5); pnlR.rotation.y = -0.4; cockpit.add(pnlR);
-const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.08,0.8), new THREE.MeshBasicMaterial({ color: 0x1a2030, transparent: true, opacity: 0.5 }));
+const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.08,0.8), new THREE.MeshStandardMaterial({ color: 0x1a2030, transparent: true, opacity: 0.5, roughness: 0.7, metalness: 0.5 }));
 consoleMesh.position.set(0,-0.6,-0.8); consoleMesh.rotation.x = -0.3; cockpit.add(consoleMesh);
 const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6), new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.15 }));
 screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; cockpit.add(screenMesh);
@@ -3994,7 +3995,7 @@ function spawnAsteroids() {
   const resTint = tints[sys?.resources?.[0]] || 0x554433;
   const fogColors = { hegemony_vanguard: 0x050a14, free_traders: 0x050f08, void_cult: 0x0a0512, iron_syndicate: 0x0f0a05, eden_remnants: 0x0a0a08, stellar_church: 0x0f050a, autonomous_collective: 0x050a0f, rogue_ai_network: 0x100508 };
   const fogColor = fogColors[sys?.controllingFaction] || 0x050510;
-  scene.fog = new THREE.FogExp2(fogColor, 0.0015);
+  scene.fog = new THREE.FogExp2(fogColor, 0.00025);
   scene.background = new THREE.Color(fogColor);
   for (let i = 0; i < baseCount; i++) {
     const g = new THREE.Group();
@@ -4032,18 +4033,25 @@ function spawnSpaceDust() {
   }
 }
 
+// Pooled loot materials (one set per type — reused across drops)
+const _lootColors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
+const _lootMatPool = {};
+const _lootRingMatPool = {};
+const _lootGlowMatPool = {};
+for (const [lt, lc] of Object.entries(_lootColors)) {
+  _lootMatPool[lt] = new THREE.MeshBasicMaterial({ color: lc, transparent: true, opacity: 0.8 }); _lootMatPool[lt]._pooled = true;
+  _lootRingMatPool[lt] = new THREE.MeshBasicMaterial({ color: lc, transparent: true, opacity: 0.3, side: THREE.DoubleSide }); _lootRingMatPool[lt]._pooled = true;
+  _lootGlowMatPool[lt] = new THREE.MeshBasicMaterial({ color: lc, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }); _lootGlowMatPool[lt]._pooled = true;
+}
 function spawnLootDrop(pos, type, creditValue) {
   const g = new THREE.Group();
-  const colors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
-  const mat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.8 });
-  const mesh = new THREE.Mesh(_lootOctGeo, mat);
+  const mesh = new THREE.Mesh(_lootOctGeo, (_lootMatPool[type] || _lootMatPool.credits).clone());
   g.add(mesh);
   // Glow ring
-  const ring = new THREE.Mesh(_lootRingGeo, new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
+  const ring = new THREE.Mesh(_lootRingGeo, (_lootRingMatPool[type] || _lootRingMatPool.credits).clone());
   g.add(ring);
   // Emissive glow sphere — cheaper than PointLight
-  const _lootGlowMat = new THREE.MeshBasicMaterial({ color: colors[type] || 0xffffff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false });
-  const lootGlow = new THREE.Mesh(_lootSphereGeo, _lootGlowMat);
+  const lootGlow = new THREE.Mesh(_lootSphereGeo, (_lootGlowMatPool[type] || _lootGlowMatPool.credits).clone());
   g.add(lootGlow);
   g.userData.lootLight = lootGlow;
   g.userData.lootMesh = mesh;
@@ -4157,8 +4165,10 @@ function createEnemy(type) {
     g.add(new THREE.Mesh(new THREE.BoxGeometry(2*cfg.scale, 0.6*cfg.scale, 3*cfg.scale), mat));
   }
 
-  // Engine glow
-  const engineGlow = new THREE.PointLight(0xff4422, 1.5, 15);
+  // Engine glow — emissive sprite instead of PointLight for performance
+  const _engGlowGeo = new THREE.SphereGeometry(0.5 * cfg.scale, 6, 6);
+  const _engGlowMat = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+  const engineGlow = new THREE.Mesh(_engGlowGeo, _engGlowMat);
   engineGlow.position.set(0, 0, 2 * cfg.scale);
   g.add(engineGlow);
 
@@ -4257,16 +4267,26 @@ function spawnNail() {
   }
 }
 
+// Pooled spark material templates
+const _sparkWhiteTpl = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false }); _sparkWhiteTpl._pooled = true;
+const _sparkTintTpls = new Map();
+function _getSparkTintTpl(color) {
+  if (_sparkTintTpls.has(color)) return _sparkTintTpls.get(color);
+  const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+  m._pooled = true;
+  _sparkTintTpls.set(color, m);
+  if (_sparkTintTpls.size > 20) { const first = _sparkTintTpls.keys().next().value; _sparkTintTpls.get(first).dispose(); _sparkTintTpls.delete(first); }
+  return m;
+}
+const _sparkFlashGeo = new THREE.SphereGeometry(0.8, 6, 6); _sparkFlashGeo._pooled = true;
 function spawnImpactSparks(position, color) {
   color = color || 0xffaa44;
   const sparkCount = 8 + Math.floor(Math.random() * 5);
   const g = new THREE.Group();
+  const tintMat = _getSparkTintTpl(color);
   for (let i = 0; i < sparkCount; i++) {
     const sz = 0.04 + Math.random() * 0.06;
-    const mat = new THREE.MeshBasicMaterial({
-      color: i < 3 ? 0xffffff : color, transparent: true, opacity: 1,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    });
+    const mat = (i < 3 ? _sparkWhiteTpl : tintMat).clone();
     const spark = new THREE.Mesh(_sparkUnitGeo, mat);
     spark.scale.setScalar(sz);
     spark.userData = {
@@ -4277,7 +4297,9 @@ function spawnImpactSparks(position, color) {
     };
     g.add(spark);
   }
-  const fl = new THREE.PointLight(color, 3, 12);
+  // Emissive flash sphere instead of PointLight
+  const flMat = tintMat.clone(); flMat.opacity = 0.7;
+  const fl = new THREE.Mesh(_sparkFlashGeo, flMat);
   g.add(fl);
   g.position.copy(position);
   scene.add(g);
@@ -4344,23 +4366,33 @@ const _laserGlowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent
 const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8); _explCoreGeo._pooled = true;
 const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => { const g = new THREE.SphereGeometry(r, 4, 4); g._pooled = true; return g; });
 const _explRingGeo = new THREE.RingGeometry(0.3, 0.6, 16); _explRingGeo._pooled = true;
+// Pooled explosion materials (reused across explosions)
+const _explCoreTpl = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false }); _explCoreTpl._pooled = true;
+const _explRingTpl = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false }); _explRingTpl._pooled = true;
+const _explFragTpls = [
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false }),
+  new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false }),
+  new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false }),
+]; _explFragTpls.forEach(m => m._pooled = true);
+const _explFlashGeo = new THREE.SphereGeometry(2, 6, 6); _explFlashGeo._pooled = true;
+const _explFlashTpl = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }); _explFlashTpl._pooled = true;
 function spawnExplosion(pos, scale) {
   const g = new THREE.Group();
   const s = scale || 1;
-  const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const coreMat = _explCoreTpl.clone();
   const core = new THREE.Mesh(_explCoreGeo, coreMat);
   core.scale.setScalar(s);
   core.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isCore: true };
   g.add(core);
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const ringMat = _explRingTpl.clone();
   const ring = new THREE.Mesh(_explRingGeo, ringMat);
   ring.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isRing: true };
   ring.lookAt(camera.position);
   g.add(ring);
   for (let i = 0; i < 18; i++) {
     const t = i / 18;
-    const color = t < 0.3 ? 0xffffff : t < 0.6 ? 0xff8800 : 0xff2200;
-    const mat2 = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+    const tplIdx = t < 0.3 ? 0 : t < 0.6 ? 1 : 2;
+    const mat2 = _explFragTpls[tplIdx].clone();
     const sz = (0.1 + Math.random() * 0.4) * s;
     const geoIdx = Math.min(3, Math.floor(Math.random() * 4));
     const m = new THREE.Mesh(_explFragGeos[geoIdx], mat2);
@@ -4368,7 +4400,9 @@ function spawnExplosion(pos, scale) {
     m.userData = { dir: new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), speed: 12+Math.random()*30, lifeVariance: 0.7 + Math.random() * 0.6 };
     g.add(m);
   }
-  const fl = new THREE.PointLight(0xff6600, 5, 40 * s);
+  // Emissive flash mesh instead of PointLight
+  const fl = new THREE.Mesh(_explFlashGeo, _explFlashTpl.clone());
+  fl.scale.setScalar(s * 3);
   g.add(fl);
   g.position.copy(pos); scene.add(g);
   c.explosions.push({ group: g, age: 0, maxAge: 700 });
@@ -5594,9 +5628,10 @@ function renderLibraryLabels() {
   const W = hudCanvas.width, H = hudCanvas.height;
   for (const lbl of paradeLabels) {
     if (!lbl.obj || !lbl.obj.parent) continue;
-    const pos = lbl.obj.position.clone();
-    pos.y += 10;
-    pos.project(camera);
+    _tmpV3a.copy(lbl.obj.position);
+    _tmpV3a.y += 10;
+    _tmpV3a.project(camera);
+    const pos = _tmpV3a;
     if (pos.z > 1) continue;
     const sx = (pos.x * 0.5 + 0.5) * W;
     const sy = (-pos.y * 0.5 + 0.5) * H;
@@ -5665,14 +5700,18 @@ async function spawnPolicePatrol() {
     patrol.userData.orbitY = ship.position.y + (Math.random() - 0.5) * 20;
     patrol.userData.age = 0;
     patrol.userData.patrolId = "EDEN-" + Math.floor(Math.random() * 999).toString().padStart(3, "0");
-    // Blue police lights (point light)
-    const policeLight = new THREE.PointLight(0x4488ff, 3, 30);
+    // Blue police lights (emissive mesh — cheaper than PointLight)
+    const _policeLightGeo = new THREE.SphereGeometry(0.6, 6, 6);
+    const _policeLightMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+    const policeLight = new THREE.Mesh(_policeLightGeo, _policeLightMat);
     policeLight.position.set(0, 1, 0);
     patrol.add(policeLight);
     patrol.userData.policeLight = policeLight;
     patrol.userData.lightTimer = 0;
-    // Engine glow (blue for police)
-    const engGlow = new THREE.PointLight(0x44aaff, 1.5, 15);
+    // Engine glow (blue for police — emissive mesh)
+    const _polEngGeo = new THREE.SphereGeometry(0.4, 6, 6);
+    const _polEngMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+    const engGlow = new THREE.Mesh(_polEngGeo, _polEngMat);
     engGlow.position.set(0, 0, 2);
     patrol.add(engGlow);
     scene.add(patrol);
@@ -5717,8 +5756,8 @@ function updatePolicePatrol(dt, dtMs) {
     p.userData.lightTimer += dtMs;
     if (p.userData.policeLight) {
       const flash = Math.sin(p.userData.lightTimer * 0.008) > 0;
-      p.userData.policeLight.color.setHex(flash ? 0x4488ff : 0xff2244);
-      p.userData.policeLight.intensity = 2 + Math.sin(p.userData.lightTimer * 0.012) * 2;
+      p.userData.policeLight.material.color.setHex(flash ? 0x4488ff : 0xff2244);
+      p.userData.policeLight.material.opacity = 0.4 + Math.sin(p.userData.lightTimer * 0.012) * 0.4;
     }
 
     // Despawn after lifetime
@@ -5735,9 +5774,10 @@ function renderPoliceLabels() {
   if (!c.active || policeShips.length === 0) return;
   const W = hudCanvas.width, H = hudCanvas.height;
   for (const p of policeShips) {
-    const pos = p.position.clone();
-    pos.y += 6;
-    pos.project(camera);
+    _tmpV3a.copy(p.position);
+    _tmpV3a.y += 6;
+    _tmpV3a.project(camera);
+    const pos = _tmpV3a;
     if (pos.z > 1) continue;
     const sx = (pos.x * 0.5 + 0.5) * W;
     const sy = (-pos.y * 0.5 + 0.5) * H;

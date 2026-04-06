@@ -46,6 +46,16 @@ export class NPCSystem {
         this._simulateNPC(npc, inGameYearsPassed, deltaMs);
       }
     }
+
+    // Reaper: prune dead non-player NPCs older than 10 minutes when map grows large
+    if (this._npcs.size > 500) {
+      const cutoff = Date.now() - 600_000;
+      for (const [id, npc] of this._npcs) {
+        if (!npc.isActive && !npc.isPlayerAvatar && !npc.isDeceasedAvatar && !npc.isAscended && npc.spawnedAt < cutoff) {
+          this._npcs.delete(id);
+        }
+      }
+    }
   }
 
   async destroy() {

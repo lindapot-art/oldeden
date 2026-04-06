@@ -722,12 +722,16 @@ io.on('connection', (socket) => {
 
   socket.on('starmap:request', () => {
     try {
-      const proc = engine.getSystem('procedural');
-      const systems = [];
-      for (let i = 0; i < 40; i++) {
-        systems.push(proc.generateStarSystem(`system-${i}`));
+      // Cache star systems once — they are deterministic and don't change
+      if (!engine._starmapCache) {
+        const proc = engine.getSystem('procedural');
+        const systems = [];
+        for (let i = 0; i < 40; i++) {
+          systems.push(proc.generateStarSystem(`system-${i}`));
+        }
+        engine._starmapCache = { systems };
       }
-      socket.emit('starmap:data', { systems });
+      socket.emit('starmap:data', engine._starmapCache);
     } catch (err) { console.error('[Socket] starmap:request error:', err.message); }
   });
 
