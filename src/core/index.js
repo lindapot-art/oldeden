@@ -277,7 +277,10 @@ const actualPort = httpServer.address().port;
 // ── Socket.IO ────────────────────────────────────────────────────────────────
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
-  : [`http://localhost:${actualPort}`];
+  : [
+      `http://localhost:${actualPort}`,
+      'https://oldeden.onrender.com',
+    ];
 
 io = new SocketServer(httpServer, {
   cors: { origin: allowedOrigins },
