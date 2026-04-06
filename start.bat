@@ -77,14 +77,16 @@ if not exist ".env" (
     echo.
 )
 
-REM Kill any existing process on port 3000 to prevent EADDRINUSE crashes
-echo [CLEANUP] Checking for existing server on port 3000...
-for /f "tokens=5" %%p in ('netstat -aon ^| findstr ":3000 " ^| findstr "LISTENING"') do (
-    echo [CLEANUP] Stopping existing server ^(PID %%p^)...
-    taskkill /F /PID %%p >nul 2>nul
+REM Check if port 3000 is busy (don't kill — other apps may be using it)
+echo [CHECK] Checking port 3000 availability...
+netstat -aon | findstr ":3000 " | findstr "LISTENING" >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [INFO] Port 3000 is busy — server will auto-rotate to next available port
+    echo.
+) else (
+    echo [OK] Port 3000 is available
+    echo.
 )
-REM Brief pause to let the port release
-timeout /T 1 /NOBREAK >nul 2>nul
 
 REM Start the game server
 echo ========================================
