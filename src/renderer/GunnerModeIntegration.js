@@ -136,6 +136,11 @@ export class GunnerModeIntegration {
     /** Player position (updated externally or from ship) */
     this._playerPosition = new this._THREE.Vector3(0, 0, 0);
 
+    // Reusable temp objects for targeting (avoid per-frame allocation)
+    this._tmpCamDir = new this._THREE.Vector3();
+    this._tmpTargetPos = new this._THREE.Vector3();
+    this._tmpToTarget = new this._THREE.Vector3();
+
     // ── Event listeners ─────────────────────────────────────────────────
     
     // Listen for fire events from GunnerView
@@ -288,6 +293,7 @@ export class GunnerModeIntegration {
     this._railgun.dispose();
     this._projectileRenderer.dispose();
     this._enemyRenderer.dispose();
+    this._bossRenderer.dispose();
   }
 
   // ── Private Helpers ─────────────────────────────────────────────────────────
@@ -483,22 +489,17 @@ export class GunnerModeIntegration {
     const bosses = this._bossSystem.getActiveBosses();
     if (bosses.length > 0) {
       // Target nearest boss
-      const cameraDir = new this._THREE.Vector3(0, 0, -1);
-      cameraDir.applyQuaternion(this._camera.quaternion);
+      this._tmpCamDir.set(0, 0, -1).applyQuaternion(this._camera.quaternion);
 
       let nearest = null;
       let nearestDist = Infinity;
 
       for (const boss of bosses) {
-        const bossPos = new this._THREE.Vector3(
-          boss.position.x,
-          boss.position.y,
-          boss.position.z
-        );
+        this._tmpTargetPos.set(boss.position.x, boss.position.y, boss.position.z);
         
-        const toBoss = bossPos.clone().sub(this._camera.position);
-        const dist = toBoss.length();
-        const angle = cameraDir.angleTo(toBoss.normalize());
+        this._tmpToTarget.copy(this._tmpTargetPos).sub(this._camera.position);
+        const dist = this._tmpToTarget.length();
+        const angle = this._tmpCamDir.angleTo(this._tmpToTarget.normalize());
 
         // Bosses have wider targeting cone (60 degrees)
         if (angle < Math.PI / 3 && dist < nearestDist && dist < 500) {
@@ -529,22 +530,17 @@ export class GunnerModeIntegration {
     }
 
     // Find nearest enemy in front of camera
-    const cameraDir = new this._THREE.Vector3(0, 0, -1);
-    cameraDir.applyQuaternion(this._camera.quaternion);
+    this._tmpCamDir.set(0, 0, -1).applyQuaternion(this._camera.quaternion);
 
     let nearest = null;
     let nearestDist = Infinity;
 
     for (const enemy of enemies) {
-      const enemyPos = new this._THREE.Vector3(
-        enemy.position.x,
-        enemy.position.y,
-        enemy.position.z
-      );
+      this._tmpTargetPos.set(enemy.position.x, enemy.position.y, enemy.position.z);
       
-      const toEnemy = enemyPos.clone().sub(this._camera.position);
-      const dist = toEnemy.length();
-      const angle = cameraDir.angleTo(toEnemy.normalize());
+      this._tmpToTarget.copy(this._tmpTargetPos).sub(this._camera.position);
+      const dist = this._tmpToTarget.length();
+      const angle = this._tmpCamDir.angleTo(this._tmpToTarget.normalize());
 
       // Only consider enemies within 45-degree cone in front
       if (angle < Math.PI / 4 && dist < nearestDist && dist < 300) {
@@ -608,12 +604,9 @@ export class GunnerModeIntegration {
     const enemies = this._enemySpawnSystem.getActiveEnemies();
     
     for (const enemy of enemies) {
+      this._tmpTargetPos.set(enemy.position.x, enemy.position.y, enemy.position.z);
       this._projectileSystem.registerTarget(enemy.id, {
-        position: new this._THREE.Vector3(
-          enemy.position.x,
-          enemy.position.y,
-          enemy.position.z
-        ),
+        position: this._tmpTargetPos,
         radius: enemy.scale * 2,  // Collision radius
         armorType: enemy.armorType,
       });

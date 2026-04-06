@@ -253,6 +253,7 @@ export class SkillSystem {
         state.xp = Math.max(0, state.xp - loss);
         const newLevel = this.levelFromXp(state.xp);
 
+        // Only emit events on actual level changes to avoid flooding
         if (newLevel < prevLevel) {
           this._engine.events.emit('skill:level_down', {
             playerId,
@@ -261,13 +262,6 @@ export class SkillSystem {
             newLevel,
           });
         }
-
-        this._engine.events.emit('skill:decay', {
-          playerId,
-          skillId,
-          xpLost: loss,
-          remainingXp: state.xp,
-        });
       }
     }
   }

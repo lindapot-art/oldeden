@@ -25,6 +25,13 @@ export class EnemyRenderer {
 
     /** Map<enemyId, THREE.Group> - visual representation of each enemy */
     this._enemyMeshes = new Map();
+
+    // Reusable temp objects (avoid per-frame allocation)
+    this._tmpDir = new THREE.Vector3();
+    this._tmpUp = new THREE.Vector3(0, 1, 0);
+    this._tmpQuat = new THREE.Quaternion();
+    this._tmpMat4 = new THREE.Matrix4();
+    this._tmpOrigin = new THREE.Vector3();
   }
 
   // ── Public API ──────────────────────────────────────────────────────────────
@@ -303,16 +310,15 @@ export class EnemyRenderer {
       const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
       
       if (speed > 0.1) {
-        const direction = new THREE.Vector3(vx, vy, vz).normalize();
-        const up = new THREE.Vector3(0, 1, 0);
+        this._tmpDir.set(vx, vy, vz).normalize();
+        this._tmpUp.set(0, 1, 0);
+        this._tmpOrigin.set(0, 0, 0);
         
-        const targetQuat = new THREE.Quaternion();
-        const matrix = new THREE.Matrix4();
-        matrix.lookAt(new THREE.Vector3(0, 0, 0), direction, up);
-        targetQuat.setFromRotationMatrix(matrix);
+        this._tmpMat4.lookAt(this._tmpOrigin, this._tmpDir, this._tmpUp);
+        this._tmpQuat.setFromRotationMatrix(this._tmpMat4);
         
         // Smooth rotation
-        group.quaternion.slerp(targetQuat, 0.1);
+        group.quaternion.slerp(this._tmpQuat, 0.1);
       }
     }
 

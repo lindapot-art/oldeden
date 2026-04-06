@@ -162,7 +162,27 @@ export class SceneManager {
    */
   dispose() {
     this._resizeObserver?.disconnect();
-    this._scene?.clear();
+
+    // Dispose all entity geometries and materials before clearing the scene
+    if (this._scene) {
+      this._scene.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(m => m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      });
+      // Dispose background cubemap texture if present
+      if (this._scene.background && this._scene.background.isTexture) {
+        this._scene.background.dispose();
+      }
+      this._scene.clear();
+    }
+
+    this._entities.clear();
     this._renderer?.dispose();
   }
 

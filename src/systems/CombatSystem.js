@@ -504,6 +504,11 @@ export class CombatSystem {
           });
         }
       }
+
+      // Clean up empty arrays to prevent memory leak
+      if (effects.length === 0) {
+        this._dots.delete(entityId);
+      }
     }
   }
 

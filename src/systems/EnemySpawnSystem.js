@@ -55,6 +55,9 @@ export class EnemySpawnSystem {
     /** Event emitter (set by GameEngine) */
     this.events = null;
 
+    /** Pending timers to clear on destroy */
+    this._pendingTimers = [];
+
     /** Enemy type templates */
     this.ENEMY_TYPES = {
       SCOUT: {
@@ -121,7 +124,15 @@ export class EnemySpawnSystem {
   init(engine) {
     this.events = engine.events;
     this._lastWaveTime = Date.now();
+    this._destroyed = false;
     console.log('[EnemySpawnSystem] Initialized.');
+  }
+
+  async destroy() {
+    this._destroyed = true;
+    for (const timer of this._pendingTimers) clearTimeout(timer);
+    this._pendingTimers.length = 0;
+    this._enemies.clear();
   }
 
   /**
@@ -289,21 +300,21 @@ export class EnemySpawnSystem {
     console.log(`[EnemySpawnSystem] WARNING: ${bossType} boss incoming! Prepare for battle!`);
 
     // Delay boss spawn for dramatic effect
-    setTimeout(() => {
-      if (this._bossSystem) {
-        const bossId = this._bossSystem.spawnBoss(bossType, spawnPos, this._currentDifficulty);
-        
-        // Emit boss spawned event
-        if (this.events) {
-          this.events.emit('boss:wave_spawned', {
-            bossId,
-            bossType,
-            wave: this._waveCount,
-            difficulty: this._currentDifficulty,
-          });
-        }
+    const timer = setTimeout(() => {
+      if (this._destroyed || !this._bossSystem) return;
+      const bossId = this._bossSystem.spawnBoss(bossType, spawnPos, this._currentDifficulty);
+      
+      // Emit boss spawned event
+      if (this.events) {
+        this.events.emit('boss:wave_spawned', {
+          bossId,
+          bossType,
+          wave: this._waveCount,
+          difficulty: this._currentDifficulty,
+        });
       }
     }, 5000);
+    this._pendingTimers.push(timer);
 
     // Increase difficulty significantly after boss wave
     this._currentDifficulty = Math.min(10, this._currentDifficulty + 0.5);
@@ -500,9 +511,10 @@ export class EnemySpawnSystem {
   _removeEnemy(enemyId) {
     this._enemies.delete(enemyId);
     
-    // Unregister from combat system
+    // Unregister shield and DoTs from combat system to prevent memory leaks
     if (this._combatSystem) {
-      // Shield is managed per entity in CombatSystem, no explicit unregister needed
+      this._combatSystem.removeShield(enemyId);
+      this._combatSystem.cleanseDots(enemyId);
     }
   }
 

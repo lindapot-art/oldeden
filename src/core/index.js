@@ -585,6 +585,8 @@ io.on('connection', (socket) => {
   socket.on('game:save', async (data) => {
     const player = players.get(socket.id);
     if (!player) return;
+    if (player._saving) return; // Prevent concurrent saves
+    player._saving = true;
     try {
       // Save server-authoritative state — ignore client wallet/currency data
       const econ = engine.getSystem('economy');
@@ -619,6 +621,8 @@ io.on('connection', (socket) => {
       socket.emit('game:saved', { ok: true, playerId: player.playerId });
     } catch (e) {
       socket.emit('game:saved', { ok: false, error: e.message });
+    } finally {
+      player._saving = false;
     }
   });
 
@@ -752,11 +756,12 @@ io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
     const player = players.get(socket.id);
     if (player) {
-      // Auto-save player state on disconnect
-      try {
-        const econ = engine.getSystem('economy');
-        const wallet = econ.getWallet(player.playerId);
-        await fileStore.save(player.playerId, {
+      // Skip auto-save if a save is already in flight to prevent race condition
+      if (!player._saving) {
+        try {
+          const econ = engine.getSystem('economy');
+          const wallet = econ.getWallet(player.playerId);
+          await fileStore.save(player.playerId, {
           playerId: player.playerId,
           name: player.name,
           faction: player.faction,
@@ -771,6 +776,7 @@ io.on('connection', (socket) => {
       } catch (e) {
         console.error(`[Socket.IO] Auto-save failed for ${player.playerId}:`, e.message);
       }
+      } // end !player._saving
     }
     // Clean up all system state to prevent memory leaks
     if (player) {
@@ -790,6 +796,12 @@ io.on('connection', (socket) => {
       if (cosmeticsSys?._playerInventory) cosmeticsSys._playerInventory.delete(pid);
       const cycleSys = engine.getSystem('cyclepass');
       if (cycleSys?._playerProgress) cycleSys._playerProgress.delete(pid);
+      const ascensionSys = engine.getSystem('ascension');
+      if (ascensionSys?._rebirthCounts) ascensionSys._rebirthCounts.delete(pid);
+      const fractureSys = engine.getSystem('fracture');
+      if (fractureSys?._activeShards) {
+        // Remove shards originated by this player (optional — keeps shards for others to find)
+      }
     }
     players.delete(socket.id);
     console.log(`[Socket.IO] Client disconnected: ${socket.id}`);

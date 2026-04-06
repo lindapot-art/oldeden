@@ -32,6 +32,9 @@ export class BossRenderer {
     /** Map<bossId, {group, parts, effects}> */
     this._renderObjects = new Map();
 
+    /** Track pending timers so we can cancel on dispose */
+    this._pendingTimers = new Set();
+
     /** Animation state */
     this._time = 0;
 
@@ -110,11 +113,14 @@ export class BossRenderer {
     // Play death animation/explosion
     this._playDeathEffect(renderObj.group, data.position);
 
-    // Remove after delay
-    setTimeout(() => {
+    // Remove and dispose after delay
+    const timer = setTimeout(() => {
+      this._pendingTimers.delete(timer);
       this._scene.remove(renderObj.group);
+      this._disposeGroup(renderObj.group);
       this._renderObjects.delete(data.bossId);
     }, 3000);
+    this._pendingTimers.add(timer);
   }
 
   /**
@@ -127,11 +133,19 @@ export class BossRenderer {
     if (!renderObj) return;
 
     // Flash effect for phase change
-    const flash = new this._THREE.PointLight(0xffaa00, 20, 500);
-    flash.position.set(0, 0, 0);
+    const flash = new this._THREE.Mesh(
+      new this._THREE.SphereGeometry(2, 8, 8),
+      new this._THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 })
+    );
     renderObj.group.add(flash);
 
-    setTimeout(() => renderObj.group.remove(flash), 300);
+    const timer = setTimeout(() => {
+      this._pendingTimers.delete(timer);
+      renderObj.group.remove(flash);
+      flash.geometry.dispose();
+      flash.material.dispose();
+    }, 300);
+    this._pendingTimers.add(timer);
   }
 
   /**
@@ -145,11 +159,19 @@ export class BossRenderer {
 
     // Visual feedback for ability
     const color = this._getAbilityColor(data.ability);
-    const pulse = new this._THREE.PointLight(color, 15, 400);
-    pulse.position.set(0, 0, 0);
+    const pulse = new this._THREE.Mesh(
+      new this._THREE.SphereGeometry(1.5, 8, 8),
+      new this._THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7 })
+    );
     renderObj.group.add(pulse);
 
-    setTimeout(() => renderObj.group.remove(pulse), 500);
+    const timer = setTimeout(() => {
+      this._pendingTimers.delete(timer);
+      renderObj.group.remove(pulse);
+      pulse.geometry.dispose();
+      pulse.material.dispose();
+    }, 500);
+    this._pendingTimers.add(timer);
   }
 
   /**
@@ -577,41 +599,55 @@ export class BossRenderer {
    * @param {object} position
    */
   _playDeathEffect(group, position) {
-    // Explosion flash
-    const flash = new this._THREE.PointLight(0xffaa00, 100, 500);
+    // Explosion flash — use emissive mesh instead of PointLight
+    const flashGeo = new this._THREE.SphereGeometry(5, 8, 8);
+    const flashMat = new this._THREE.MeshBasicMaterial({
+      color: 0xffaa00, transparent: true, opacity: 1.0,
+    });
+    const flash = new this._THREE.Mesh(flashGeo, flashMat);
     flash.position.set(position.x, position.y, position.z);
     this._scene.add(flash);
 
     // Fade out
-    let intensity = 100;
+    let opacity = 1.0;
     const fadeInterval = setInterval(() => {
-      intensity -= 5;
-      flash.intensity = intensity;
-      if (intensity <= 0) {
+      opacity -= 0.05;
+      flashMat.opacity = opacity;
+      flash.scale.setScalar(1 + (1.0 - opacity) * 3);
+      if (opacity <= 0) {
         this._scene.remove(flash);
+        flashGeo.dispose();
+        flashMat.dispose();
         clearInterval(fadeInterval);
+        this._pendingTimers.delete(fadeInterval);
       }
     }, 50);
+    this._pendingTimers.add(fadeInterval);
 
     // Make boss parts fly apart
-    for (const child of group.children) {
-      if (child.isMesh) {
-        const velocity = new this._THREE.Vector3(
-          (Math.random() - 0.5) * 20,
-          (Math.random() - 0.5) * 20,
-          (Math.random() - 0.5) * 20
-        );
-        
-        const animate = () => {
-          child.position.add(velocity.clone().multiplyScalar(0.1));
-          child.rotation.x += 0.1;
-          child.rotation.y += 0.1;
-        };
-        
-        const animInterval = setInterval(animate, 50);
-        setTimeout(() => clearInterval(animInterval), 2000);
-      }
+    const velocities = [];
+    const children = [...group.children].filter(c => c.isMesh);
+    for (const child of children) {
+      velocities.push(new this._THREE.Vector3(
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 2
+      ));
     }
+    const animInterval = setInterval(() => {
+      for (let i = 0; i < children.length; i++) {
+        children[i].position.add(velocities[i]);
+        children[i].rotation.x += 0.1;
+        children[i].rotation.y += 0.1;
+      }
+    }, 50);
+    this._pendingTimers.add(animInterval);
+    const stopTimer = setTimeout(() => {
+      clearInterval(animInterval);
+      this._pendingTimers.delete(animInterval);
+      this._pendingTimers.delete(stopTimer);
+    }, 2000);
+    this._pendingTimers.add(stopTimer);
   }
 
   /**
@@ -635,9 +671,34 @@ export class BossRenderer {
   /**
    * Cleanup all boss visuals.
    */
+  /**
+   * Dispose a group and all its geometries/materials.
+   * @param {THREE.Group} group
+   */
+  _disposeGroup(group) {
+    group.traverse((child) => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    });
+  }
+
   dispose() {
+    // Cancel all pending timers
+    for (const timer of this._pendingTimers) {
+      clearTimeout(timer);
+      clearInterval(timer);
+    }
+    this._pendingTimers.clear();
+
     for (const renderObj of this._renderObjects.values()) {
       this._scene.remove(renderObj.group);
+      this._disposeGroup(renderObj.group);
     }
     this._renderObjects.clear();
   }

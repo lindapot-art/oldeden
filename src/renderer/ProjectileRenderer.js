@@ -278,15 +278,22 @@ export class ProjectileRenderer {
         trailData.points.shift();
       }
 
-      // Update trail geometry
+      // Update trail geometry — reuse pre-allocated buffer
       if (trailData.points.length >= 2) {
-        const positions = new Float32Array(trailData.points.length * 3);
-        for (let i = 0; i < trailData.points.length; i++) {
-          positions[i * 3] = trailData.points[i].x;
-          positions[i * 3 + 1] = trailData.points[i].y;
-          positions[i * 3 + 2] = trailData.points[i].z;
+        if (!trailData.posBuffer || trailData.posBuffer.length < maxPoints * 3) {
+          trailData.posBuffer = new Float32Array(maxPoints * 3);
+          trailData.posAttr = new THREE.BufferAttribute(trailData.posBuffer, 3);
+          trailData.posAttr.setUsage(THREE.DynamicDrawUsage);
+          trailData.trail.geometry.setAttribute('position', trailData.posAttr);
         }
-        trailData.trail.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const buf = trailData.posBuffer;
+        for (let i = 0; i < trailData.points.length; i++) {
+          buf[i * 3]     = trailData.points[i].x;
+          buf[i * 3 + 1] = trailData.points[i].y;
+          buf[i * 3 + 2] = trailData.points[i].z;
+        }
+        trailData.posAttr.needsUpdate = true;
+        trailData.trail.geometry.setDrawRange(0, trailData.points.length);
         trailData.trail.geometry.computeBoundingSphere();
       }
     }

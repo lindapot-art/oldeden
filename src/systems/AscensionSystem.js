@@ -123,6 +123,12 @@ export class AscensionSystem {
     };
     this._trialHistory.set(trialId, record);
 
+    // Cap trial history to prevent unbounded growth
+    if (this._trialHistory.size > 500) {
+      const oldest = this._trialHistory.keys().next().value;
+      this._trialHistory.delete(oldest);
+    }
+
     if (success) {
       const systemId = targetSystemId || `system-${randomUUID().slice(0, 8)}`;
       const entity = this._createAscended(playerId, character, systemId);

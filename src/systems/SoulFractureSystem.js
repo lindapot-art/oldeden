@@ -131,6 +131,12 @@ export class SoulFractureSystem {
     };
     this._fractureHistory.set(fractureId, record);
 
+    // Cap history to prevent unbounded growth
+    if (this._fractureHistory.size > 500) {
+      const oldest = this._fractureHistory.keys().next().value;
+      this._fractureHistory.delete(oldest);
+    }
+
     // Emit events
     this._engine.events.emit('soul:fractured', {
       fractureId,

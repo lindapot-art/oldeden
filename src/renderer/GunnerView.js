@@ -62,6 +62,12 @@ export class GunnerView {
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onPointerLockChange = this._handlePointerLockChange.bind(this);
     this._onMouseDown = this._handleMouseDown.bind(this);
+
+    // Reusable temp objects (avoid per-frame allocation)
+    this._tmpVec3 = new THREE.Vector3();
+    this._tmpEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+    this._tmpQuatShip = new THREE.Quaternion();
+    this._tmpQuatLook = new THREE.Quaternion();
   }
 
   // ── Public API ──────────────────────────────────────────────────────────────
@@ -166,23 +172,17 @@ export class GunnerView {
     }
 
     // Position camera at turret mount world position
-    const worldPos = new this._THREE.Vector3();
-    this._turretMount.getWorldPosition(worldPos);
-    this._camera.position.copy(worldPos);
-
-    // Apply yaw/pitch from mouse look
-    const euler = new this._THREE.Euler(0, 0, 0, 'YXZ');
+    this._turretMount.getWorldPosition(this._tmpVec3);
+    this._camera.position.copy(this._tmpVec3);
 
     // Get ship's world quaternion for base orientation
-    const shipQuat = new this._THREE.Quaternion();
-    this._shipGroup.getWorldQuaternion(shipQuat);
+    this._shipGroup.getWorldQuaternion(this._tmpQuatShip);
 
     // Combine ship orientation with mouse look
-    const lookQuat = new this._THREE.Quaternion();
-    euler.set(-this._pitch, -this._yaw, 0, 'YXZ');
-    lookQuat.setFromEuler(euler);
+    this._tmpEuler.set(-this._pitch, -this._yaw, 0, 'YXZ');
+    this._tmpQuatLook.setFromEuler(this._tmpEuler);
 
-    this._camera.quaternion.copy(shipQuat).multiply(lookQuat);
+    this._camera.quaternion.copy(this._tmpQuatShip).multiply(this._tmpQuatLook);
   }
 
   /**

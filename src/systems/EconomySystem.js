@@ -79,6 +79,19 @@ export class EconomySystem {
     this._exchangeRateFactor = Math.max(0.7, Math.min(1.3,
       this._exchangeRateFactor * 0.9999 + 1.0 * 0.0001 + noise
     ));
+
+    // Prune expired premium items every ~10 seconds (100 ticks at 100ms)
+    this._tickCounter = (this._tickCounter || 0) + 1;
+    if (this._tickCounter % 100 === 0) {
+      const now = Date.now();
+      for (const [playerId, items] of this._activeItems) {
+        const before = items.length;
+        for (let i = items.length - 1; i >= 0; i--) {
+          if (items[i].expiresAt && now >= items[i].expiresAt) items.splice(i, 1);
+        }
+        if (items.length === 0) this._activeItems.delete(playerId);
+      }
+    }
   }
 
   async destroy() {}

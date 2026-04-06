@@ -368,7 +368,9 @@ export class BossSystem {
     console.log('[BossSystem] Initialised.');
   }
 
-  async destroy() {}
+  async destroy() {
+    this._bosses.clear();
+  }
 
   /**
    * Update boss AI and behaviors.
@@ -376,8 +378,20 @@ export class BossSystem {
    * @param {number} deltaMs
    */
   tick(deltaMs) {
-    for (const boss of this._bosses.values()) {
-      if (!boss.active) continue;
+    const now = Date.now();
+    for (const [bossId, boss] of this._bosses) {
+      if (!boss.active) {
+        // Prune dead bosses after 60 seconds
+        if (now - (boss.deathTime || boss.spawnTime) > 60_000) {
+          this._bosses.delete(bossId);
+          this._npcSystem.removeNPC(bossId);
+          if (this._combatSystem) {
+            this._combatSystem.removeShield(bossId);
+            this._combatSystem.cleanseDots(bossId);
+          }
+        }
+        continue;
+      }
 
       // Update timers
       boss.stateTimer += deltaMs;
@@ -699,6 +713,7 @@ export class BossSystem {
   _killBoss(boss) {
     boss.active = false;
     boss.state = BOSS_STATE.DEATH;
+    boss.deathTime = Date.now();
 
     // Drop loot
     const loot = this._generateLoot(boss);
