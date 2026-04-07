@@ -323,6 +323,33 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 .mining-progress{width:120px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:4px auto 0;overflow:hidden;}
 .mining-progress-fill{height:100%;background:linear-gradient(90deg,#ffaa00,#00ff88);border-radius:2px;transition:width 0.3s;}
 
+/* ── Captain's Quarters Screen ───────────── */
+#screen-quarters{background:radial-gradient(ellipse at bottom,#1a1510 0%,#0a0a0f 70%);z-index:80;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;}
+#screen-quarters h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:0.5rem;}
+.quarters-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
+@media(max-width:700px){.quarters-grid{grid-template-columns:1fr;}}
+.quarters-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;position:relative;}
+.quarters-panel h3{color:var(--blue);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;font-weight:400;}
+.quarters-stat{display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.quarters-stat .qs-val{color:var(--gold);font-weight:600;}
+.quarters-trophy{display:inline-flex;align-items:center;gap:4px;background:rgba(212,168,86,0.08);border:1px solid rgba(212,168,86,0.15);border-radius:20px;padding:3px 10px;font-size:0.7rem;color:var(--gold);margin:3px;}
+#quarters-3d-view{width:100%;height:200px;border-radius:6px;background:#060810;border:1px solid var(--border);margin-bottom:16px;}
+
+/* ── Target Info Box (HUD) ───────────────── */
+.target-info-box{position:absolute;top:80px;right:16px;padding:8px 12px;background:rgba(13,17,23,0.8);border:1px solid rgba(255,68,68,0.3);border-radius:4px;font-size:0.7rem;line-height:1.5;pointer-events:none;min-width:140px;backdrop-filter:blur(4px);}
+.target-info-box .tib-name{color:#ff6666;font-weight:600;margin-bottom:2px;}
+.target-info-box .tib-row{display:flex;justify-content:space-between;}
+.target-info-box .tib-label{color:var(--muted);}
+.target-info-box .tib-val{color:var(--text);}
+.tib-hp-bar{height:3px;background:#222;border-radius:2px;margin-top:4px;}
+.tib-hp-fill{height:100%;background:linear-gradient(90deg,#ff4444,#ff8844);border-radius:2px;transition:width 0.3s;}
+
+/* ── Comms HUD overlay ───────────────────── */
+.hud-comms{position:fixed;bottom:50px;left:16px;max-width:280px;pointer-events:none;z-index:16;}
+.hud-comm-msg{font-size:0.65rem;color:rgba(68,170,255,0.7);margin-bottom:3px;opacity:0.8;transition:opacity 0.5s;text-shadow:0 0 4px rgba(68,170,255,0.3);}
+.hud-comm-msg .hc-sender{color:var(--blue);font-weight:600;}
+
+
 
 /* ── Action Buttons (Gunner Mode) ────────── */
 #action-bar{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:56;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:90vw;}
@@ -910,6 +937,49 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!--  KARMA WHEEL — Reincarnation Lottery        -->
 <!-- ════════════════════════════════════════════ -->
 
+
+<div class="screen" id="screen-quarters">
+  <h2>CAPTAIN'S QUARTERS</h2>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Your personal space — achievements, stats, and ship overview</p>
+  <div id="quarters-3d-view"></div>
+  <div class="quarters-grid">
+    <div class="quarters-panel">
+      <h3>Pilot Profile</h3>
+      <div class="quarters-stat"><span>Name</span><span class="qs-val" id="q-name">—</span></div>
+      <div class="quarters-stat"><span>Faction</span><span class="qs-val" id="q-faction">—</span></div>
+      <div class="quarters-stat"><span>Credits</span><span class="qs-val" id="q-credits">—</span></div>
+      <div class="quarters-stat"><span>Stellar Marks</span><span class="qs-val" id="q-sm">—</span></div>
+      <div class="quarters-stat"><span>Rebirths</span><span class="qs-val" id="q-rebirths">—</span></div>
+      <div class="quarters-stat"><span>Karma</span><span class="qs-val" id="q-karma">—</span></div>
+    </div>
+    <div class="quarters-panel">
+      <h3>Combat Record</h3>
+      <div class="quarters-stat"><span>Total Kills</span><span class="qs-val" id="q-kills">0</span></div>
+      <div class="quarters-stat"><span>Boss Kills</span><span class="qs-val" id="q-boss-kills">0</span></div>
+      <div class="quarters-stat"><span>Best Streak</span><span class="qs-val" id="q-streak">0</span></div>
+      <div class="quarters-stat"><span>Deaths</span><span class="qs-val" id="q-deaths">0</span></div>
+      <div class="quarters-stat"><span>Systems Visited</span><span class="qs-val" id="q-systems">0</span></div>
+      <div class="quarters-stat"><span>Time Played</span><span class="qs-val" id="q-time">—</span></div>
+    </div>
+    <div class="quarters-panel" style="grid-column:1/-1;">
+      <h3>Trophies</h3>
+      <div id="q-trophies" style="display:flex;flex-wrap:wrap;gap:4px;">
+        <div class="quarters-trophy">No trophies yet — keep flying!</div>
+      </div>
+    </div>
+    <div class="quarters-panel" style="grid-column:1/-1;">
+      <h3>Ship Status</h3>
+      <div class="quarters-stat"><span>Hull</span><span class="qs-val" id="q-hull">—</span></div>
+      <div class="quarters-stat"><span>Shield</span><span class="qs-val" id="q-shield">—</span></div>
+      <div class="quarters-stat"><span>Fuel</span><span class="qs-val" id="q-fuel">—</span></div>
+      <div class="quarters-stat"><span>Cargo</span><span class="qs-val" id="q-cargo">—</span></div>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:1.5rem;">
+    <button class="btn" id="btn-quarters-back">&larr; Back to Bridge</button>
+  </div>
+</div>
+
 <div class="screen" id="screen-gunroom">
   <h2>ARMORY</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Ship weapon collection — inspect and equip</p>
@@ -1028,6 +1098,7 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
   <button class="nav-btn" data-screen="settings"><span class="nav-icon" aria-hidden="true">&#9881;</span>Settings</button>
 
+  <button class="nav-btn" data-screen="quarters"><span class="nav-icon">&#127968;</span>Quarters</button>
   <button class="nav-btn" onclick="showScreen('gunroom')"><span class="nav-icon">🔫</span>Armory</button>
 </nav>
 
@@ -1138,7 +1209,8 @@ const AudioSFX = {
       case 'loot_health': osc.type='sine'; osc.frequency.setValueAtTime(440,now); osc.frequency.linearRampToValueAtTime(880,now+0.2); gain.gain.setValueAtTime(0.07*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.25); osc.start(now); osc.stop(now+0.25); break;
       case 'loot_fuel': { osc.disconnect(); const dur2=0.15; const buf2=ctx.createBuffer(1,ctx.sampleRate*dur2,ctx.sampleRate); const d2=buf2.getChannelData(0); for(let i=0;i<d2.length;i++) d2[i]=(Math.random()*2-1)*(1-i/d2.length)*0.3; const src2=ctx.createBufferSource(); src2.buffer=buf2; const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2000; src2.connect(hp); hp.connect(gain); gain.gain.setValueAtTime(0.06*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur2); src2.start(now); return; }
       case 'dock': osc.type='sine'; osc.frequency.setValueAtTime(300,now); osc.frequency.setValueAtTime(400,now+0.1); osc.frequency.setValueAtTime(500,now+0.2); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.4); osc.start(now); osc.stop(now+0.4); break;
-      case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc.frequency.exponentialRampToValueAtTime(200,now+0.6); gain.gain.setValueAtTime(0.1*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
+            case 'warp_depart': osc.type='sawtooth'; osc.frequency.setValueAtTime(80,now); osc.frequency.exponentialRampToValueAtTime(2000,now+0.5); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.7); osc.start(now); osc.stop(now+0.7); break;
+case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc.frequency.exponentialRampToValueAtTime(200,now+0.6); gain.gain.setValueAtTime(0.1*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
       case 'laser_fire': osc.type='sawtooth'; osc.frequency.setValueAtTime(1200,now); osc.frequency.exponentialRampToValueAtTime(3000,now+0.06); gain.gain.setValueAtTime(0.07*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.08); osc.start(now); osc.stop(now+0.08); break;
       case 'reload': { osc.disconnect(); const dur3=0.15; const buf3=ctx.createBuffer(1,ctx.sampleRate*dur3,ctx.sampleRate); const d3=buf3.getChannelData(0); for(let i=0;i<d3.length;i++) d3[i]=(Math.random()*2-1)*(1-i/d3.length)*0.5; const src3=ctx.createBufferSource(); src3.buffer=buf3; const lp3=ctx.createBiquadFilter(); lp3.type='lowpass'; lp3.frequency.value=400; src3.connect(lp3); lp3.connect(gain); gain.gain.setValueAtTime(0.12*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur3); src3.start(now); return; }
     }
@@ -2328,6 +2400,10 @@ function updateServerStatus(online) {
 // ================================================================
 let _transitioning = false;
 function showScreen(name) {
+  // Highlight active nav button
+  document.querySelectorAll('#nav-bar .nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.screen === name);
+  });
   // Guard: block during active transition to prevent race conditions
   if (_transitioning) return;
   // Guard: don't enter gunner if 3D engine isn't ready — prevents dead-state trap
@@ -2364,6 +2440,7 @@ function _showScreenInner(name) {
   const _hasTarget = state.targetLock && state.targetLock.locked && state.targetLock.target;
   document.getElementById('warp-target-btn')?.classList.toggle('visible', _inGame && !!_hasTarget);
   if (name === 'gunroom') initGunRoom();
+  if (name === 'quarters') initQuarters();
 
   if (el) {
     el.classList.remove('fade-in');
@@ -3007,8 +3084,15 @@ function jumpToSystem(idx) {
   });
   addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
     if (typeof activateWarpTunnel === 'function') activateWarpTunnel(2000);
+  AudioSFX.play('warp_depart');
   setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
   if (typeof spawnSystemPlanets === "function") spawnSystemPlanets();
+  // System ambient color variation
+  const _sysColors = [0x667799, 0x996677, 0x669966, 0x887766, 0x776699, 0x668899, 0x998866, 0x669977];
+  const _sysCol = _sysColors[state.location.systemIndex % _sysColors.length];
+  scene.children.forEach(ch => {
+    if (ch.isAmbientLight) ch.color.setHex(_sysCol);
+  });
   if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
@@ -4084,9 +4168,13 @@ scene.add(ship);
 
 // ── Cockpit ────
 cockpit = new THREE.Group(); cockpit.name = 'gunner-cockpit';
-const cpCanopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
+const cpCanopyMat = new THREE.MeshStandardMaterial({ color: 0x66bbff, transparent: true, opacity: 0.10, roughness: 0.05, metalness: 0.9, side: THREE.FrontSide, depthWrite: false, envMapIntensity: 1.5 });
 const cpCanopy = new THREE.Mesh(new THREE.SphereGeometry(3.0,32,24,0,Math.PI*2,0,Math.PI*0.6), cpCanopyMat);
 cpCanopy.position.set(0,0,-2.5); cpCanopy.rotation.x = Math.PI; cockpit.add(cpCanopy);
+/* cockpit Fresnel glow rim */
+const cpGlowMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.04, side: THREE.BackSide, depthWrite: false });
+const cpGlow = new THREE.Mesh(new THREE.SphereGeometry(3.05,32,24,0,Math.PI*2,0,Math.PI*0.6), cpGlowMat);
+cpGlow.position.copy(cpCanopy.position); cpGlow.rotation.copy(cpCanopy.rotation); cockpit.add(cpGlow);
 const frameMat = new THREE.MeshStandardMaterial({ color: 0x334466, transparent: true, opacity: 0.5, roughness: 0.6, metalness: 0.8 });
 for (let i = 0; i < 6; i++) {
   const angle = (i/6)*Math.PI*2;
@@ -6375,6 +6463,89 @@ function initGunRoom() {
 }
 
 document.getElementById('btn-gunroom-back')?.addEventListener('click', () => showScreen('bridge'));
+
+// ── Captain's Quarters ──
+let _quartersScene = null, _quartersCamera = null, _quartersRenderer = null, _quartersAnimId = null;
+function initQuarters() {
+  // Populate stats
+  const s = state;
+  const _qSet = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  _qSet('q-name', s.player.name || 'Unknown');
+  _qSet('q-faction', s.player.faction || 'None');
+  _qSet('q-credits', (s.player.credits || 0).toLocaleString() + ' EC');
+  _qSet('q-sm', s.player.stellarMarks || 0);
+  _qSet('q-rebirths', s.player.rebirths || 0);
+  _qSet('q-karma', s.player.karma || 0);
+  _qSet('q-kills', s.player.lifetimeStats?.totalKills || 0);
+  _qSet('q-boss-kills', s.player.lifetimeStats?.bossKills || 0);
+  _qSet('q-streak', s.player.lifetimeStats?.bestStreak || 0);
+  _qSet('q-deaths', s.player.lifetimeStats?.deaths || 0);
+  _qSet('q-systems', s.player.lifetimeStats?.systemsVisited || 0);
+  const played = Math.floor((s.player.lifetimeStats?.playTimeMs || 0) / 60000);
+  _qSet('q-time', played > 60 ? Math.floor(played/60) + 'h ' + (played%60) + 'm' : played + ' min');
+  _qSet('q-hull', Math.round(s.ship.hull) + '/' + s.ship.maxHull);
+  _qSet('q-shield', Math.round(s.ship.shield) + '/' + s.ship.maxShield);
+  _qSet('q-fuel', Math.round(s.ship.fuel) + '/' + s.ship.maxFuel);
+  _qSet('q-cargo', (s.inventory?.length || 0) + ' items');
+
+  // Trophies
+  const trophyEl = document.getElementById('q-trophies');
+  if (trophyEl) {
+    const trophies = [];
+    if ((s.player.lifetimeStats?.totalKills || 0) >= 10) trophies.push('First Blood (' + s.player.lifetimeStats.totalKills + ' kills)');
+    if ((s.player.lifetimeStats?.bossKills || 0) >= 1) trophies.push('Boss Slayer');
+    if ((s.player.rebirths || 0) >= 1) trophies.push('Reborn');
+    if ((s.player.lifetimeStats?.systemsVisited || 0) >= 3) trophies.push('Explorer');
+    if ((s.player.lifetimeStats?.bestStreak || 0) >= 10) trophies.push('Unstoppable');
+    if ((s.player.credits || 0) >= 5000) trophies.push('Wealthy Pilot');
+    if (trophies.length > 0) {
+      trophyEl.innerHTML = trophies.map(t => '<div class="quarters-trophy">' + t + '</div>').join('');
+    }
+  }
+
+  // 3D Ship preview in quarters
+  const container = document.getElementById('quarters-3d-view');
+  if (container && !_quartersRenderer) {
+    _quartersScene = new THREE.Scene();
+    _quartersScene.background = new THREE.Color(0x060810);
+    _quartersCamera = new THREE.PerspectiveCamera(45, container.clientWidth / Math.max(1, container.clientHeight), 0.1, 100);
+    _quartersCamera.position.set(0, 1, 5);
+    _quartersRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    _quartersRenderer.setSize(container.clientWidth || 300, container.clientHeight || 200);
+    _quartersRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    container.appendChild(_quartersRenderer.domElement);
+    // Lighting
+    _quartersScene.add(new THREE.AmbientLight(0x404050, 1));
+    const qDL = new THREE.DirectionalLight(0xffffff, 1.5);
+    qDL.position.set(3, 4, 3);
+    _quartersScene.add(qDL);
+    const qRL = new THREE.DirectionalLight(0x4488ff, 0.5);
+    qRL.position.set(-2, -1, -2);
+    _quartersScene.add(qRL);
+    // Load player ship model
+    const shipModels = ['cruiser_blue', 'cockpit_shuttle', 'fighter_white'];
+    const shipKey = shipModels[Math.floor(Math.random() * shipModels.length)];
+    loadGLBModel(shipKey).then(model => {
+      const m = model.clone();
+      m.scale.setScalar(1.5);
+      _quartersScene.add(m);
+      _quartersCamera.lookAt(0, 0, 0);
+      let _qa = 0;
+      function animQ() {
+        if (!container.isConnected) { _quartersAnimId = null; return; }
+        _quartersAnimId = requestAnimationFrame(animQ);
+        _qa += 0.005;
+        m.rotation.y = _qa;
+        m.position.y = Math.sin(_qa * 2) * 0.1;
+        _quartersRenderer.render(_quartersScene, _quartersCamera);
+      }
+      animQ();
+    }).catch(() => {});
+  }
+}
+
+document.getElementById('btn-quarters-back')?.addEventListener('click', () => showScreen('bridge'));
+
 
 
 // ================================================================
@@ -9138,7 +9309,60 @@ function gameLoop() {
       hudCtx.globalAlpha = 1;
     }
 
+
+    // ── Target Info Box (HUD overlay) ──
+    if (state.targetLock.locked && state.targetLock.target) {
+      const tgt = state.targetLock.target;
+      const infoX = hudCanvas.width - 170, infoY = 80;
+      // Background panel
+      hudCtx.fillStyle = 'rgba(13,17,23,0.75)';
+      hudCtx.fillRect(infoX, infoY, 155, 68);
+      hudCtx.strokeStyle = 'rgba(255,68,68,0.4)';
+      hudCtx.lineWidth = 1;
+      hudCtx.strokeRect(infoX, infoY, 155, 68);
+      // Target name
+      hudCtx.font = 'bold 10px "Segoe UI"';
+      hudCtx.fillStyle = '#ff6666';
+      hudCtx.textAlign = 'left';
+      hudCtx.fillText((tgt.type || 'HOSTILE').toUpperCase(), infoX + 6, infoY + 14);
+      // HP bar
+      const hpPct = Math.max(0, tgt.hp / tgt.maxHp);
+      hudCtx.fillStyle = '#222';
+      hudCtx.fillRect(infoX + 6, infoY + 20, 143, 4);
+      hudCtx.fillStyle = hpPct > 0.5 ? '#44ff88' : hpPct > 0.25 ? '#ffaa00' : '#ff4444';
+      hudCtx.fillRect(infoX + 6, infoY + 20, 143 * hpPct, 4);
+      // Stats
+      hudCtx.font = '8px "Segoe UI"';
+      hudCtx.fillStyle = '#889';
+      const tDist = Math.round(tgt.group.position.distanceTo(ship.position));
+      hudCtx.fillText('Distance: ' + tDist + 'm', infoX + 6, infoY + 36);
+      hudCtx.fillText('HP: ' + Math.round(tgt.hp) + '/' + Math.round(tgt.maxHp), infoX + 6, infoY + 47);
+      hudCtx.fillText('Type: ' + (tgt.isBoss ? 'BOSS' : 'Standard'), infoX + 6, infoY + 58);
+      // Angular velocity indicator
+      const angToTarget = Math.atan2(tgt.group.position.z - ship.position.z, tgt.group.position.x - ship.position.x);
+      hudCtx.fillStyle = '#ff6666';
+      hudCtx.fillText('\u25B6 ' + (angToTarget * 180 / Math.PI).toFixed(0) + '\u00B0', infoX + 100, infoY + 58);
+    }
+
     // ── Speed readout on HUD ──
+    // ── Comms overlay (last 3 messages) ──
+    if (state.commsLog && state.commsLog.length > 0) {
+      const recentComms = state.commsLog.slice(0, 3);
+      hudCtx.font = '9px "Segoe UI"';
+      hudCtx.textAlign = 'left';
+      recentComms.forEach((msg, idx) => {
+        const oy = hudCanvas.height - 65 - idx * 14;
+        hudCtx.globalAlpha = 0.6 - idx * 0.15;
+        hudCtx.fillStyle = '#44aaff';
+        const senderText = (msg.sender || msg.from || 'SYS') + ': ';
+        hudCtx.fillText(senderText, 20, oy);
+        hudCtx.fillStyle = '#8899aa';
+        const msgText = (msg.text || msg.message || '').substring(0, 50);
+        hudCtx.fillText(msgText, 20 + hudCtx.measureText(senderText).width, oy);
+      });
+      hudCtx.globalAlpha = 1;
+    }
+
     {
       const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult();
       const speedPct = Math.min(100, Math.round((fl.speed / maxSpd3) * 100));
@@ -9146,6 +9370,8 @@ function gameLoop() {
       hudCtx.fillStyle = speedPct > 75 ? '#ff8844' : speedPct > 30 ? '#44aaff' : '#557799';
       hudCtx.textAlign = 'left';
       hudCtx.fillText('SPD ' + speedPct + '%  ' + Math.round(fl.speed) + ' m/s', 20, hudCanvas.height - 30);
+      hudCtx.fillStyle = '#557799';
+      hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), 20, hudCanvas.height - 44);
       // Target distance
       if (state.targetLock.locked && state.targetLock.target && state.targetLock.target.group) {
         const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
