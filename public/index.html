@@ -331,7 +331,15 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 .cockpit-warn.active { opacity:1; }
 #warn-hull { left:20px; color:#ff4444; background:rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); }
 #warn-fuel { left:150px; color:#ff8800; background:rgba(255,136,0,0.1); border:1px solid rgba(255,136,0,0.3); }
-#warn-lock { right:20px; color:#ff2222; background:rgba(255,0,0,0.15); border:1px solid rgba(255,0,0,0.4);
+#warn-lock { right:20px;
+/* ── Ship Interior Walk Mode ── */
+#screen-interior { background:radial-gradient(ellipse at center,#0a0f14 0%,#050508 70%); z-index:80; flex-direction:column; align-items:center; padding:20px; }
+#screen-interior h2 { color:var(--gold); font-size:1.4rem; font-weight:300; letter-spacing:0.12em; margin-bottom:6px; }
+#interior-3d-view { width:100%; max-width:900px; height:450px; border:1px solid rgba(68,170,255,0.15); border-radius:4px; background:#030308; position:relative; overflow:hidden; }
+#interior-controls-hint { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); color:rgba(136,170,204,0.5); font-size:10px; letter-spacing:1px; pointer-events:none; }
+.interior-room-btn { padding:6px 16px; margin:4px; background:rgba(68,170,255,0.08); border:1px solid rgba(68,170,255,0.2); color:var(--hud); border-radius:3px; cursor:pointer; font-size:11px; text-transform:uppercase; letter-spacing:1px; transition:all 0.2s; }
+.interior-room-btn:hover { background:rgba(68,170,255,0.15); border-color:var(--hud); }
+.interior-room-btn.active { background:rgba(68,170,255,0.2); border-color:var(--gold); color:var(--gold); } color:#ff2222; background:rgba(255,0,0,0.15); border:1px solid rgba(255,0,0,0.4);
   animation: lockFlash 0.5s ease infinite alternate; }
 @keyframes lockFlash { 0% { opacity:0.6; } 100% { opacity:1; } }
 
@@ -961,6 +969,19 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!-- ════════════════════════════════════════════ -->
 
 
+<div class="screen" id="screen-interior">
+  <h2>SHIP INTERIOR</h2>
+  <p style="color:#556677;font-size:11px;margin-bottom:10px;">Walk through your vessel — explore the bridge, engine room, and cargo bay</p>
+  <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;">
+    <button class="interior-room-btn active" data-room="bridge">Bridge</button>
+    <button class="interior-room-btn" data-room="engine">Engine Room</button>
+    <button class="interior-room-btn" data-room="cargo">Cargo Bay</button>
+    <button class="interior-room-btn" data-room="quarters">Crew Quarters</button>
+  </div>
+  <div id="interior-3d-view">
+    <div id="interior-controls-hint">WASD to walk &bull; Mouse to look &bull; ESC to exit</div>
+  </div>
+</div>
 <div class="screen" id="screen-quarters">
   <h2>CAPTAIN'S QUARTERS</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Your personal space — achievements, stats, and ship overview</p>
@@ -1126,6 +1147,7 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   <button class="nav-btn" data-screen="settings"><span class="nav-icon" aria-hidden="true">&#9881;</span>Settings</button>
 
   <button class="nav-btn" data-screen="quarters"><span class="nav-icon">&#127968;</span>Quarters</button>
+  <button class="nav-btn" data-screen="interior"><span class="nav-icon">&#128694;</span>Interior</button>
   <button class="nav-btn" onclick="showScreen('gunroom')"><span class="nav-icon">🔫</span>Armory</button>
 </nav>
 
@@ -2468,6 +2490,7 @@ function _showScreenInner(name) {
   document.getElementById('warp-target-btn')?.classList.toggle('visible', _inGame && !!_hasTarget);
   if (name === 'gunroom') initGunRoom();
   if (name === 'quarters') initQuarters();
+  if (name === 'interior') initInterior();
 
   if (el) {
     el.classList.remove('fade-in');
@@ -3122,6 +3145,7 @@ function jumpToSystem(idx) {
     if (ch.isAmbientLight) ch.color.setHex(_sysCol);
   });
   if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
+  if (typeof spawnSystemStar === "function") spawnSystemStar();
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
   }
@@ -4605,6 +4629,16 @@ function spawnAsteroids() {
     g.userData.rotSpeed = new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3);
     scene.add(g);
     c.asteroids.push(g);
+    // 20% chance of crystal vein asteroid (glowing cracks)
+    if (Math.random() < 0.2) {
+      const vein = new THREE.Mesh(
+        _astGeoPool[(i + 3) % 8],
+        _crystalMat
+      );
+      vein.scale.setScalar(size * 0.6);
+      vein.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+      g.add(vein);
+    }
   }
 }
 
@@ -4670,7 +4704,39 @@ async function spawnSystemPlanets() {
   }
 }
 
-function spawnSpaceDust() {
+function spawnSpaceDust() {}
+
+// ═══ SYSTEM STAR (distant sun) ═══
+let _systemStar = null;
+function spawnSystemStar() {
+  if (_systemStar) { scene.remove(_systemStar); disposeObject(_systemStar); _systemStar = null; }
+  const starGroup = new THREE.Group();
+  // Core sphere
+  const starColors = [0xfff4e0, 0xffe8c0, 0xffd090, 0xe0d0ff, 0xffd0d0, 0xd0e8ff];
+  const starCol = starColors[state.location.systemIndex % starColors.length];
+  const coreMat = new THREE.MeshBasicMaterial({ color: starCol });
+  const core = new THREE.Mesh(new THREE.SphereGeometry(30, 16, 16), coreMat);
+  starGroup.add(core);
+  // Glow
+  const glowMat = new THREE.MeshBasicMaterial({ color: starCol, transparent: true, opacity: 0.06, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(80, 16, 16), glowMat);
+  starGroup.add(glow);
+  // Corona ring
+  const coronaMat = new THREE.MeshBasicMaterial({ color: starCol, transparent: true, opacity: 0.03, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const corona = new THREE.Mesh(new THREE.RingGeometry(35, 120, 32), coronaMat);
+  corona.rotation.x = Math.PI * 0.5;
+  starGroup.add(corona);
+  // Point light from star
+  const starLight = new THREE.PointLight(starCol, 0.6, 3000);
+  starGroup.add(starLight);
+  // Place far away
+  const angle = state.location.systemIndex * 1.37;
+  starGroup.position.set(Math.cos(angle) * 2000, 300, Math.sin(angle) * 2000);
+  scene.add(starGroup);
+  _systemStar = starGroup;
+}
+
+function _notUsed_spawnSpaceDust_real() {
   for (let i = 0; i < 40; i++) {
     const m = new THREE.Mesh(_dustGeo, _dustMat);
     m.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*200, (Math.random()-0.5)*500);
@@ -4727,6 +4793,7 @@ function exitGunnerMode(skipScreenChange) {
   exhaustParticles.length = 0;
   // Clean up police patrols
   policeShips.forEach(p => { scene.remove(p); disposeObject(p); }); policeShips.length = 0;
+  if (_systemStar) { scene.remove(_systemStar); disposeObject(_systemStar); _systemStar = null; }
   _policeSpawnTimer = 0;
   // Clean up parade ship
   if (paradeShip) { scene.remove(paradeShip); disposeObject(paradeShip); paradeShip = null; }
@@ -5458,6 +5525,15 @@ function renderHUD(dtMs) {
     });
   }
 hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
+
+  // ── Vignette overlay (depth-of-field hint) ──
+  {
+    const vGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W,H)*0.35, cx, cy, Math.max(W,H)*0.7);
+    vGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    vGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
+    hudCtx.fillStyle = vGrad;
+    hudCtx.fillRect(0, 0, W, H);
+  }
 
   // ── Compass / Heading Indicator (top center) ──
   {
@@ -6515,7 +6591,228 @@ document.getElementById('btn-gunroom-back')?.addEventListener('click', () => sho
 
 // ── Captain's Quarters ──
 let _quartersScene = null, _quartersCamera = null, _quartersRenderer = null, _quartersAnimId = null;
-function initQuarters() {
+function initQuarters() {}
+
+// ════════════════════════════════════════════════════════════════
+//  SHIP INTERIOR — First-person walk mode
+// ════════════════════════════════════════════════════════════════
+let _intScene = null, _intCamera = null, _intRenderer = null, _intAnimId = null;
+let _intWalkState = { x: 0, z: 0, yaw: 0, pitch: 0 };
+const _intMoveKeys = { w: false, a: false, s: false, d: false };
+
+function initInterior() {
+  const container = document.getElementById('interior-3d-view');
+  if (!container) return;
+  // Clean up previous
+  if (_intAnimId) cancelAnimationFrame(_intAnimId);
+  if (_intRenderer) { _intRenderer.dispose(); container.innerHTML = '<div id="interior-controls-hint">WASD to walk &bull; Mouse to look &bull; ESC to exit</div>'; }
+  _intScene = new THREE.Scene();
+  _intScene.background = new THREE.Color(0x0a0f14);
+  _intScene.fog = new THREE.Fog(0x0a0f14, 15, 40);
+  _intCamera = new THREE.PerspectiveCamera(70, container.clientWidth / Math.max(1, container.clientHeight), 0.05, 80);
+  _intCamera.position.set(0, 1.7, 0); // Eye height
+  _intRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  _intRenderer.setSize(container.clientWidth || 800, container.clientHeight || 400);
+  _intRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  _intRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  _intRenderer.toneMappingExposure = 0.8;
+  container.appendChild(_intRenderer.domElement);
+
+  // Lighting
+  _intScene.add(new THREE.AmbientLight(0x334455, 0.8));
+  const ceilLight = new THREE.PointLight(0x88aacc, 1.5, 20);
+  ceilLight.position.set(0, 3, 0);
+  _intScene.add(ceilLight);
+  const redLight = new THREE.PointLight(0xff2200, 0.3, 12);
+  redLight.position.set(-3, 2.5, -4);
+  _intScene.add(redLight);
+  const blueLight = new THREE.PointLight(0x2244ff, 0.4, 12);
+  blueLight.position.set(3, 2.5, 4);
+  _intScene.add(blueLight);
+
+  // Build room
+  buildInteriorRoom('bridge');
+
+  // Walk controls
+  _intWalkState = { x: 0, z: 0, yaw: 0, pitch: 0 };
+  const canvas = _intRenderer.domElement;
+  canvas.addEventListener('click', () => canvas.requestPointerLock && canvas.requestPointerLock());
+  const onMM = (e) => {
+    if (document.pointerLockElement !== canvas) return;
+    _intWalkState.yaw -= e.movementX * 0.002;
+    _intWalkState.pitch = Math.max(-1.2, Math.min(1.2, _intWalkState.pitch - e.movementY * 0.002));
+  };
+  document.addEventListener('mousemove', onMM);
+  canvas._intCleanup = () => {
+    document.removeEventListener('mousemove', onMM);
+    if (document.pointerLockElement === canvas) document.exitPointerLock();
+  };
+
+  // Room buttons
+  container.parentElement.querySelectorAll('.interior-room-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.parentElement.querySelectorAll('.interior-room-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      buildInteriorRoom(btn.dataset.room);
+      _intWalkState = { x: 0, z: 0, yaw: 0, pitch: 0 };
+      _intCamera.position.set(0, 1.7, 0);
+    });
+  });
+
+  // Animate
+  function intLoop() {
+    _intAnimId = requestAnimationFrame(intLoop);
+    // Movement
+    const speed = 0.06;
+    const fwd = new THREE.Vector3(-Math.sin(_intWalkState.yaw), 0, -Math.cos(_intWalkState.yaw));
+    const right = new THREE.Vector3(fwd.z, 0, -fwd.x);
+    if (_intMoveKeys.w) _intCamera.position.addScaledVector(fwd, speed);
+    if (_intMoveKeys.s) _intCamera.position.addScaledVector(fwd, -speed);
+    if (_intMoveKeys.a) _intCamera.position.addScaledVector(right, -speed);
+    if (_intMoveKeys.d) _intCamera.position.addScaledVector(right, speed);
+    // Clamp to room bounds
+    _intCamera.position.x = Math.max(-5, Math.min(5, _intCamera.position.x));
+    _intCamera.position.z = Math.max(-8, Math.min(8, _intCamera.position.z));
+    _intCamera.position.y = 1.7;
+    // Look
+    _intCamera.rotation.order = 'YXZ';
+    _intCamera.rotation.y = _intWalkState.yaw;
+    _intCamera.rotation.x = _intWalkState.pitch;
+    _intRenderer.render(_intScene, _intCamera);
+  }
+  intLoop();
+}
+
+function buildInteriorRoom(room) {
+  // Clear existing room objects (not lights)
+  const toRemove = [];
+  _intScene.traverse(ch => { if (ch.userData._room) toRemove.push(ch); });
+  toRemove.forEach(ch => { _intScene.remove(ch); if (ch.geometry) ch.geometry.dispose(); });
+
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.8, metalness: 0.3 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.7, metalness: 0.4 });
+  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x181822, roughness: 0.9, metalness: 0.2 });
+  const pipeMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.3, metalness: 0.8 });
+  const screenMat = new THREE.MeshBasicMaterial({ color: 0x113322, emissive: 0x113322 });
+
+  // Floor
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 18), floorMat);
+  floor.rotation.x = -Math.PI / 2; floor.userData._room = true;
+  _intScene.add(floor);
+
+  // Ceiling
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(12, 18), ceilMat);
+  ceil.rotation.x = Math.PI / 2; ceil.position.y = 3.5; ceil.userData._room = true;
+  _intScene.add(ceil);
+
+  // Walls
+  const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(12, 3.5), wallMat);
+  wallBack.position.set(0, 1.75, -9); wallBack.userData._room = true;
+  _intScene.add(wallBack);
+  const wallFront = new THREE.Mesh(new THREE.PlaneGeometry(12, 3.5), wallMat);
+  wallFront.position.set(0, 1.75, 9); wallFront.rotation.y = Math.PI; wallFront.userData._room = true;
+  _intScene.add(wallFront);
+  const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(18, 3.5), wallMat);
+  wallLeft.position.set(-6, 1.75, 0); wallLeft.rotation.y = Math.PI / 2; wallLeft.userData._room = true;
+  _intScene.add(wallLeft);
+  const wallRight = new THREE.Mesh(new THREE.PlaneGeometry(18, 3.5), wallMat);
+  wallRight.position.set(6, 1.75, 0); wallRight.rotation.y = -Math.PI / 2; wallRight.userData._room = true;
+  _intScene.add(wallRight);
+
+  // Room-specific furniture
+  if (room === 'bridge') {
+    // Console desk
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 1.5), pipeMat);
+    desk.position.set(0, 0.9, -7); desk.userData._room = true;
+    _intScene.add(desk);
+    // Holographic screens
+    for (let i = 0; i < 3; i++) {
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1), screenMat);
+      screen.position.set(-2 + i * 2, 1.8, -7.2); screen.userData._room = true;
+      _intScene.add(screen);
+    }
+    // Captain chair
+    const chair = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.9, metalness: 0.1 }));
+    chair.position.set(0, 0.6, -5); chair.userData._room = true;
+    _intScene.add(chair);
+    // Window (viewport to space)
+    const viewport = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.5),
+      new THREE.MeshBasicMaterial({ color: 0x000005, transparent: true, opacity: 0.9 }));
+    viewport.position.set(0, 2, -8.9); viewport.userData._room = true;
+    _intScene.add(viewport);
+    // Stars through viewport
+    for (let s = 0; s < 30; s++) {
+      const star = new THREE.Mesh(new THREE.SphereGeometry(0.02, 4, 4),
+        new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      star.position.set((Math.random() - 0.5) * 7, 1 + Math.random() * 2, -8.85);
+      star.userData._room = true;
+      _intScene.add(star);
+    }
+  } else if (room === 'engine') {
+    // Engine core
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 3, 12), 
+      new THREE.MeshBasicMaterial({ color: 0x2244ff, transparent: true, opacity: 0.4 }));
+    core.position.set(0, 1.5, -3); core.userData._room = true;
+    _intScene.add(core);
+    // Pipes along walls
+    for (let i = 0; i < 6; i++) {
+      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 16, 6), pipeMat);
+      pipe.position.set(-5 + i * 2, 2.8, 0); pipe.rotation.x = Math.PI / 2; pipe.userData._room = true;
+      _intScene.add(pipe);
+    }
+    // Warning stripe
+    const stripe = new THREE.Mesh(new THREE.PlaneGeometry(10, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.6 }));
+    stripe.position.set(0, 0.01, -1); stripe.rotation.x = -Math.PI / 2; stripe.userData._room = true;
+    _intScene.add(stripe);
+  } else if (room === 'cargo') {
+    // Cargo crates
+    const crateMat = new THREE.MeshStandardMaterial({ color: 0x445533, roughness: 0.8, metalness: 0.2 });
+    for (let i = 0; i < 8; i++) {
+      const crate = new THREE.Mesh(new THREE.BoxGeometry(1 + Math.random() * 0.5, 1, 1 + Math.random() * 0.5), crateMat);
+      crate.position.set(-3 + Math.random() * 6, 0.5 + (i > 4 ? 1 : 0), -4 + Math.random() * 8);
+      crate.rotation.y = Math.random() * 0.3; crate.userData._room = true;
+      _intScene.add(crate);
+    }
+    // Forklift placeholder
+    const fork = new THREE.Mesh(new THREE.BoxGeometry(1, 0.8, 2), new THREE.MeshStandardMaterial({ color: 0x886622, roughness: 0.5, metalness: 0.5 }));
+    fork.position.set(4, 0.4, 3); fork.userData._room = true;
+    _intScene.add(fork);
+  } else if (room === 'quarters') {
+    // Bunk beds
+    const bunkMat = new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.8, metalness: 0.3 });
+    for (let i = 0; i < 3; i++) {
+      const bunk = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, 3), bunkMat);
+      bunk.position.set(-4, 0.8 + i * 0, -6 + i * 3); bunk.userData._room = true;
+      _intScene.add(bunk);
+      const bunkTop = bunk.clone(); bunkTop.position.y = 2.2; bunkTop.userData._room = true;
+      _intScene.add(bunkTop);
+    }
+    // Personal locker
+    for (let i = 0; i < 4; i++) {
+      const locker = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x3a3a4a, roughness: 0.5, metalness: 0.7 }));
+      locker.position.set(4.5, 1, -4 + i * 2); locker.userData._room = true;
+      _intScene.add(locker);
+    }
+  }
+}
+
+// Keyboard handlers for interior walk
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'w' || e.key === 'W') _intMoveKeys.w = true;
+  if (e.key === 'a' || e.key === 'A') _intMoveKeys.a = true;
+  if (e.key === 's' || e.key === 'S') _intMoveKeys.s = true;
+  if (e.key === 'd' || e.key === 'D') _intMoveKeys.d = true;
+});
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'w' || e.key === 'W') _intMoveKeys.w = false;
+  if (e.key === 'a' || e.key === 'A') _intMoveKeys.a = false;
+  if (e.key === 's' || e.key === 'S') _intMoveKeys.s = false;
+  if (e.key === 'd' || e.key === 'D') _intMoveKeys.d = false;
+});
+
+function _notUsed_initQuarters_real() {
   // Populate stats
   const s = state;
   const _qSet = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -7148,6 +7445,25 @@ function updateCriminalFleet(dt, dtMs) {
   if (!state._convoyTimer) state._convoyTimer = 0;
   state._convoyTimer += dtMs;
   if (state._convoyTimer > 60000 && Math.random() < 0.01) {
+  // Ambient radio chatter (every ~45s)
+  if (!state._chatterTimer) state._chatterTimer = 0;
+  state._chatterTimer += dtMs;
+  if (state._chatterTimer > 45000) {
+    state._chatterTimer = 0;
+    const _chatter = [
+      'Unknown Pilot: "Anyone got spare fuel cells? Stranded near the belt."',
+      'Station Comms: "Docking bay 7 is offline for maintenance."',
+      'Patrol Lead: "Sector clear. All units resume patrol routes."',
+      'Trader: "Price of titanite is up 30% in the next system."',
+      'Smuggler: "Keep your scanners off channel 7, friend."',
+      'Distress Call: "Mayday mayday — pirates in sector. Requesting backup!"',
+      'AI Director: "Solar activity increasing. Shields recommended."',
+      'Mining Corp: "Ore yields dropping. Moving operations to outer ring."',
+      'Navigator: "Warp gate alignment nominal. Safe travels."',
+      'Unknown: "Did you see that? Something moved near the stargate..."',
+    ];
+    addComms('Radio', _chatter[Math.floor(Math.random() * _chatter.length)]);
+  }
     state._convoyTimer = 0;
     // Spawn 3-ship convoy at distance, fly past
     const convoyModels = ['cargo_cruiser', 'freighter', 'cargo_small'];
@@ -7646,7 +7962,8 @@ async function spawnStationModel() {
   const sys = state.starSystems[state.location.systemIndex];
   if (!sys || !sys.hasStation) return;
   // Try GLB station model first, procedural fallback
-  const stationKey = Math.random() > 0.5 ? 'station_a' : 'station_b';
+  const _stationPool = ['station_a','station_b','station_massive','station_sphere','station_light','station_facility','station_zorgus'];
+  const stationKey = _stationPool[state.location.systemIndex % _stationPool.length];
   try {
     const model = await loadGLBModel(stationKey);
     if (!c.active) return; // Guard: player exited during async load
@@ -7696,6 +8013,7 @@ async function spawnStationModel() {
   }
   g.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
   scene.add(g);
+  if (typeof addStationBeacons === 'function') addStationBeacons(g);
   stationModels.push(g);
 }
 
