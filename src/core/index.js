@@ -18,6 +18,7 @@ import { QuestSystem } from '../systems/QuestSystem.js';
 import { EnemySpawnSystem } from '../systems/EnemySpawnSystem.js';
 import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { BossSystem } from '../systems/BossSystem.js';
+import { BountySystem } from '../systems/BountySystem.js';
 import { createHttpServer } from '../server/HttpServer.js';
 import { FileStore } from '../persistence/FileStore.js';
 import { MongoStore } from '../persistence/MongoStore.js';
@@ -65,6 +66,7 @@ const quests = new QuestSystem();
 const enemies = new EnemySpawnSystem(npc, combat);
 const projectiles = new ProjectileSystem(combat);
 const bosses = new BossSystem(npc, combat, enemies);
+const bounties = new BountySystem(engine);
 
 engine
   .registerSystem('genetics', genetics)
@@ -85,6 +87,7 @@ engine
   .registerSystem('enemies', enemies)
   .registerSystem('projectiles', projectiles)
   .registerSystem('bosses', bosses)
+  .registerSystem('bounties', bounties)
   .registerSystem('director', director);
 
 // ── Persistence ──────────────────────────────────────────────────────────────
@@ -575,6 +578,49 @@ io.on('connection', (socket) => {
       }
     }
     } catch (err) { console.error('[Socket] system:visit error:', err.message); }
+  });
+
+  // ── Bounty Board ──────────────────────────────────────────────────────────
+  socket.on('bounty:board', () => {
+    try {
+      const bountySys = engine.getSystem('bounties');
+      if (!bountySys) return;
+      socket.emit('bounty:board', { bounties: bountySys.getBoardList() });
+    } catch (err) { console.error('[Socket] bounty:board error:', err.message); }
+  });
+
+  socket.on('bounty:accept', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const bountySys = engine.getSystem('bounties');
+      if (!bountySys) return;
+      const bountyId = typeof data?.bountyId === 'string' ? data.bountyId : '';
+      const result = bountySys.acceptBounty(player.playerId, bountyId);
+      socket.emit('bounty:acceptResult', result);
+    } catch (err) { console.error('[Socket] bounty:accept error:', err.message); }
+  });
+
+  socket.on('bounty:active', () => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const bountySys = engine.getSystem('bounties');
+      if (!bountySys) return;
+      socket.emit('bounty:active', { bounties: bountySys.getPlayerBounties(player.playerId) });
+    } catch (err) { console.error('[Socket] bounty:active error:', err.message); }
+  });
+
+  socket.on('bounty:abandon', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const bountySys = engine.getSystem('bounties');
+      if (!bountySys) return;
+      const bountyId = typeof data?.bountyId === 'string' ? data.bountyId : '';
+      const result = bountySys.abandonBounty(player.playerId, bountyId);
+      socket.emit('bounty:abandonResult', result);
+    } catch (err) { console.error('[Socket] bounty:abandon error:', err.message); }
   });
 
   // ── Station: Get Prices ───────────────────────────────────────────────────
