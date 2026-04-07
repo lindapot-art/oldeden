@@ -22,7 +22,7 @@ const fs = require('fs');
     
     // Step 1: Load page
     console.log('Step 1: Loading page...');
-    const response = await page.goto('http://localhost:3000', { waitUntil: 'networkidle0', timeout: 30000 });
+    const response = await page.goto('http://localhost:3847', { waitUntil: 'networkidle0', timeout: 30000 });
     console.log('Page status:', response.status());
     await page.screenshot({ path: 'test_screenshots/01_title.png' });
     console.log('Screenshot: 01_title.png');

@@ -37,6 +37,7 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize, corsOrigi
 
   // ── CORS for REST API ─────────────────────────────────────────────────────
   const allowedOrigins = corsOrigins || [
+    'http://localhost:3847',
     'http://localhost:3000',
     'https://oldeden.onrender.com',
   ];

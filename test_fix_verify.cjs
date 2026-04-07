@@ -13,7 +13,7 @@ const puppeteer = require('puppeteer');
     });
     page.on('pageerror', err => errors.push('PAGE_ERROR: ' + err.message));
     
-    await page.goto('http://localhost:3000', { waitUntil: 'networkidle0', timeout: 30000 });
+    await page.goto('http://localhost:3847', { waitUntil: 'networkidle0', timeout: 30000 });
     
     const moduleLoaded = await page.evaluate(() => window.__oldEdenLoaded);
     console.log('TEST 1 - Module loaded flag:', moduleLoaded === true ? 'PASS' : 'FAIL (' + moduleLoaded + ')');

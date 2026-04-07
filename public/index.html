@@ -101,6 +101,48 @@ canvas{display:block;}
 #proximity-warning.active{opacity:1;animation:proxPulse 0.5s ease-in-out infinite alternate;}
 @keyframes proxPulse{0%{opacity:0.7;}100%{opacity:1;}}
 
+/* ── EVE-Style Speed Control Panel ───────────── */
+#speed-control-panel{position:fixed;left:16px;bottom:120px;z-index:20;pointer-events:auto;background:rgba(13,17,23,0.85);border:1px solid var(--border);border-radius:6px;padding:8px 12px;backdrop-filter:blur(6px);display:none;width:180px;}
+#speed-control-panel.visible{display:block;}
+#speed-control-panel .speed-bar{height:80px;width:12px;background:#111;border-radius:4px;position:relative;margin:0 auto;cursor:pointer;}
+#speed-control-panel .speed-fill{position:absolute;bottom:0;width:100%;background:linear-gradient(to top,#44aaff,#00ff88);border-radius:4px;transition:height 0.2s;}
+.speed-preset{display:flex;gap:4px;margin-top:6px;justify-content:center;}
+.speed-preset button{padding:2px 6px;font-size:0.65rem;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:3px;font-family:inherit;}
+.speed-preset button:hover{border-color:var(--blue);color:var(--blue);}
+.speed-preset button.active-speed{border-color:var(--green);color:var(--green);}
+
+/* ── Drone Bay Panel ─────────────────────────── */
+#drone-bay{position:fixed;right:16px;bottom:120px;z-index:20;pointer-events:auto;background:rgba(13,17,23,0.85);border:1px solid var(--border);border-radius:6px;padding:10px 14px;backdrop-filter:blur(6px);display:none;width:200px;}
+#drone-bay.visible{display:block;}
+.drone-slot{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.75rem;border-bottom:1px solid rgba(255,255,255,0.05);}
+.drone-slot:last-child{border-bottom:none;}
+.drone-btn{padding:3px 8px;font-size:0.65rem;border:1px solid var(--blue);border-radius:3px;background:transparent;color:var(--blue);cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.drone-btn:hover{background:rgba(68,170,255,0.1);}
+.drone-btn.deployed{border-color:var(--green);color:var(--green);}
+.drone-btn.recalled{border-color:var(--warn);color:var(--warn);}
+
+/* ── Warp Button ─────────────────────────────── */
+#warp-target-btn{position:fixed;right:220px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 16px;background:rgba(204,68,255,0.1);border:1px solid rgba(204,68,255,0.4);border-radius:6px;color:#cc44ff;font-size:0.8rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
+#warp-target-btn.visible{display:block;}
+#warp-target-btn:hover{background:rgba(204,68,255,0.2);border-color:#cc44ff;box-shadow:0 0 20px rgba(204,68,255,0.2);}
+
+/* ── Auto-Target Toggle ──────────────────────── */
+#auto-target-btn{position:fixed;right:16px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:6px;color:#ff6666;font-size:0.75rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
+#auto-target-btn.visible{display:block;}
+#auto-target-btn.engaged{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff4444;box-shadow:0 0 15px rgba(255,68,68,0.15);}
+
+/* ── Gun Room ────────────────────────────────── */
+#screen-gunroom{background:radial-gradient(ellipse at center,#0d1117 0%,#080810 70%);z-index:80;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;}
+#screen-gunroom h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1rem;}
+.gun-display-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;width:100%;max-width:900px;}
+.gun-card{background:var(--panel-solid);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;}
+.gun-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 8px 24px rgba(212,168,86,0.1);}
+.gun-card .gun-canvas{width:100%;height:160px;border-radius:4px;background:#080810;margin-bottom:8px;}
+.gun-card .gun-name{color:var(--gold);font-size:0.9rem;font-weight:600;margin-bottom:4px;}
+.gun-card .gun-stats{font-size:0.7rem;color:var(--muted);line-height:1.6;}
+.gun-card .gun-id{position:absolute;top:6px;right:8px;font-size:0.6rem;color:var(--muted);opacity:0.6;}
+
+
 /* ── Loot Magnet Indicator ───────────────────── */
 #loot-magnet-indicator{position:fixed;bottom:100px;right:20px;pointer-events:none;z-index:16;font-size:0.75rem;color:#00ff88;opacity:0;transition:opacity 0.3s;}
 #loot-magnet-indicator.active{opacity:1;}
@@ -463,6 +505,35 @@ canvas{display:block;}
 <div id="proximity-warning">⚠ COLLISION WARNING</div>
 <div id="loot-magnet-indicator">◉ MAGNET ACTIVE</div>
 <div id="hazard-overlay"></div>
+<!-- EVE Speed Control -->
+<div id="speed-control-panel">
+  <div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-bottom:4px;">SPEED</div>
+  <div class="speed-bar" id="speed-bar-track">
+    <div class="speed-fill" id="speed-bar-fill" style="height:0%"></div>
+  </div>
+  <div class="speed-preset">
+    <button data-sp="0" title="Full stop">0</button>
+    <button data-sp="25">25</button>
+    <button data-sp="50">50</button>
+    <button data-sp="75">75</button>
+    <button data-sp="100" title="Full speed">MAX</button>
+  </div>
+</div>
+
+<!-- Drone Bay -->
+<div id="drone-bay">
+  <div style="font-size:0.65rem;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em;">DRONE BAY</div>
+  <div class="drone-slot"><span style="color:var(--blue)">◉ Battle Drone</span><button class="drone-btn" id="btn-battle-drone">DEPLOY</button></div>
+  <div class="drone-slot"><span style="color:var(--warn)">◉ Mining Drone</span><button class="drone-btn" id="btn-mining-drone">DEPLOY</button></div>
+  <div style="font-size:0.6rem;color:var(--muted);margin-top:6px;text-align:center;" id="drone-status">2 drones available</div>
+</div>
+
+<!-- Warp Button -->
+<button id="warp-target-btn">✦ WARP TO TARGET</button>
+
+<!-- Auto-Target -->
+<button id="auto-target-btn">◎ AUTO-TARGET</button>
+
 
 
 <!-- Controls overlay — shown on first gunner entry -->
@@ -805,6 +876,14 @@ canvas{display:block;}
 <!-- ════════════════════════════════════════════ -->
 <!--  KARMA WHEEL — Reincarnation Lottery        -->
 <!-- ════════════════════════════════════════════ -->
+
+<div class="screen" id="screen-gunroom">
+  <h2>ARMORY</h2>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Ship weapon collection — inspect and equip</p>
+  <div class="gun-display-grid" id="gun-display-grid"></div>
+  <div class="btn-row" style="margin-top:2rem;"><button class="btn" id="btn-gunroom-back">&larr; Back to Bridge</button></div>
+</div>
+
 <div class="screen" id="screen-karma">
   <div class="karma-spin-fx" id="karma-particles"></div>
   <div class="karma-aura" id="karma-aura"></div>
@@ -915,6 +994,8 @@ canvas{display:block;}
   <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
   <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
   <button class="nav-btn" data-screen="settings"><span class="nav-icon" aria-hidden="true">&#9881;</span>Settings</button>
+
+  <button class="nav-btn" onclick="showScreen('gunroom')"><span class="nav-icon">🔫</span>Armory</button>
 </nav>
 
 <div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
@@ -1231,6 +1312,19 @@ const state = {
   lootMagnet: { active: false, range: 80, cooldown: 0 },
   // ── Proximity Warning ──
   proximityAlert: false,
+  // ── Drones ──
+  drones: {
+    battle: { deployed: false, hp: 100, kills: 0, model: null },
+    mining: { deployed: false, target: null, progress: 0, model: null },
+    maxDrones: 2,
+    activeDrones: [],
+  },
+  // ── EVE Speed Control ──
+  speedTarget: 0,  // 0-100 percent of max speed
+  autoTarget: false,
+  // ── Gun Room ──
+  gunRoomInit: false,
+
 
   // EVE Online-style ship flight
   flight: {
@@ -2217,6 +2311,15 @@ function _showScreenInner(name) {
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
+  // Show/hide gameplay panels based on screen
+  const _inGame = (name === 'bridge');
+  document.getElementById('speed-control-panel')?.classList.toggle('visible', _inGame);
+  document.getElementById('drone-bay')?.classList.toggle('visible', _inGame);
+  document.getElementById('auto-target-btn')?.classList.toggle('visible', _inGame);
+  const _hasTarget = state.targetLock && state.targetLock.locked && state.targetLock.target;
+  document.getElementById('warp-target-btn')?.classList.toggle('visible', _inGame && !!_hasTarget);
+  if (name === 'gunroom') initGunRoom();
+
   if (el) {
     el.classList.remove('fade-in');
     el.classList.add('active');
@@ -2449,6 +2552,29 @@ function formatTimeAgo(ts) {
 }
 
 function generateQuests() {
+  // ── Tutorial Starter Missions (always active) ──
+  state.quests.push({
+    id: 'mission-1', title: 'First Blood', name: 'First Blood',
+    summary: 'Destroy 3 hostile ships to prove your combat readiness.',
+    active: true, completed: false,
+    objectives: [{ type: 'kill', target: '*', required: 3, current: 0 }],
+    rewards: { credits: 500 }, reward: 500,
+  });
+  state.quests.push({
+    id: 'mission-2', title: 'Mineral Survey', name: 'Mineral Survey',
+    summary: 'Mine an asteroid to collect resources for the station.',
+    active: true, completed: false,
+    objectives: [{ type: 'mine', target: '*', required: 1, current: 0 }],
+    rewards: { credits: 250 }, reward: 250,
+  });
+  state.quests.push({
+    id: 'mission-3', title: 'Jump Gate', name: 'Jump Gate',
+    summary: 'Travel through a stargate to explore a new system.',
+    active: true, completed: false,
+    objectives: [{ type: 'visit', target: '*', required: 1, current: 0 }],
+    rewards: { credits: 750 }, reward: 750,
+  });
+
   const objectives = ['Retrieve','Protect','Eliminate','Escort','Investigate','Sabotage','Explore','Deliver'];
   const resources = ['Titanite Ore','Dark Matter Crystals','Hydrogen Fuel','Rare Earth Compounds','Bio-organic Materials','Ancient Artefacts','Quantum Processors'];
   const hazards = ['Radiation Belt','Asteroid Field','Pirate Territory','Temporal Anomaly','Electromagnetic Storm'];
@@ -2836,6 +2962,7 @@ function jumpToSystem(idx) {
   });
   addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
   setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
+  if (typeof spawnSystemPlanets === "function") spawnSystemPlanets();
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
   }
@@ -3810,8 +3937,8 @@ for (let i = 0; i < 4; i++) {
 
 // ── Ship ────
 ship = new THREE.Group(); ship.name = 'player-ship';
-const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
-const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.3, metalness: 0.6, emissive: 0x44aaff, emissiveIntensity: 0.3 });
+const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.55, metalness: 0.5, envMapIntensity: 1.2 });
+const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.2, metalness: 0.75, emissive: 0x44aaff, emissiveIntensity: 0.4, envMapIntensity: 1.5 });
 const shipCanopyMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35 });
 const gunMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4, metalness: 0.7 });
 
@@ -3885,6 +4012,79 @@ const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.08,0.8), new THRE
 consoleMesh.position.set(0,-0.6,-0.8); consoleMesh.rotation.x = -0.3; cockpit.add(consoleMesh);
 const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6), new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.15 }));
 screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; cockpit.add(screenMesh);
+
+
+// ── Dashboard Gun Model (from GLB) ──
+let dashboardGunModel = null;
+loadGLBModel('pistol_chrome').then(model => {
+  dashboardGunModel = model.clone();
+  dashboardGunModel.scale.setScalar(0.15);
+  dashboardGunModel.position.set(0.6, -0.65, -1.0);
+  dashboardGunModel.rotation.set(0, -0.3, -0.1);
+  cockpit.add(dashboardGunModel);
+}).catch(() => {});
+
+// ── Dashboard Display Screen (holographic) ──
+const holoScreenGeo = new THREE.PlaneGeometry(0.5, 0.3);
+const holoScreenMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+const holoScreen = new THREE.Mesh(holoScreenGeo, holoScreenMat);
+holoScreen.position.set(-0.5, -0.4, -1.1);
+holoScreen.rotation.set(-0.2, 0.3, 0);
+cockpit.add(holoScreen);
+
+// ── Procedural cockpit interior walls (vector-style) ──
+const interiorMat = new THREE.MeshStandardMaterial({
+  color: 0x1a2030, roughness: 0.85, metalness: 0.4,
+  // Procedural bump via normal scale
+  normalScale: new THREE.Vector2(0.3, 0.3),
+});
+// Floor
+const floorGeo = new THREE.PlaneGeometry(3, 3);
+const floorMesh = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({
+  color: 0x0d1117, roughness: 0.9, metalness: 0.2
+}));
+floorMesh.rotation.x = -Math.PI / 2;
+floorMesh.position.set(0, -1.0, -0.5);
+cockpit.add(floorMesh);
+
+// Side walls
+const wallGeo = new THREE.PlaneGeometry(3, 2);
+const wallMatL = new THREE.MeshStandardMaterial({ color: 0x151d2a, roughness: 0.8, metalness: 0.5 });
+const wallL = new THREE.Mesh(wallGeo, wallMatL);
+wallL.position.set(-1.5, 0, -0.5);
+wallL.rotation.y = Math.PI / 2;
+cockpit.add(wallL);
+const wallR = new THREE.Mesh(wallGeo, wallMatL);
+wallR.position.set(1.5, 0, -0.5);
+wallR.rotation.y = -Math.PI / 2;
+cockpit.add(wallR);
+
+// Ceiling with subtle lighting strip
+const ceilGeo = new THREE.PlaneGeometry(3, 3);
+const ceilMat = new THREE.MeshStandardMaterial({ color: 0x0a0f18, roughness: 0.95, metalness: 0.3 });
+const ceilMesh = new THREE.Mesh(ceilGeo, ceilMat);
+ceilMesh.rotation.x = Math.PI / 2;
+ceilMesh.position.set(0, 1.5, -0.5);
+cockpit.add(ceilMesh);
+
+// LED strip on ceiling
+const ledGeo = new THREE.BoxGeometry(2, 0.02, 0.05);
+const ledMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
+const ledStrip = new THREE.Mesh(ledGeo, ledMat);
+ledStrip.position.set(0, 1.48, -0.5);
+cockpit.add(ledStrip);
+
+// Control buttons on console (3D interactive elements)
+const btnGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.015, 8);
+const btnColors = [0x00ff88, 0xff4444, 0xffaa00, 0x44aaff, 0xcc44ff];
+for (let bi = 0; bi < 5; bi++) {
+  const btnMat = new THREE.MeshBasicMaterial({ color: btnColors[bi], transparent: true, opacity: 0.6 });
+  const btn = new THREE.Mesh(btnGeo, btnMat);
+  btn.position.set(-0.5 + bi * 0.25, -0.555, -0.95);
+  btn.rotation.x = -0.3;
+  btn.name = 'console-btn-' + bi;
+  cockpit.add(btn);
+}
 
 camera.add(cockpit);
 scene.add(camera);
@@ -4085,7 +4285,9 @@ function spawnAsteroids() {
   scene.fog = new THREE.FogExp2(fogColor, 0.00025);
   scene.background = new THREE.Color(fogColor);
   // Shared asteroid material for this system (disposed on exit via disposeObject)
-  const _astMat = new THREE.MeshStandardMaterial({ color: resTint, roughness: 0.9, metalness: 0.2, flatShading: true });
+  const _astMat = new THREE.MeshStandardMaterial({ color: resTint, roughness: 0.8, metalness: 0.25, flatShading: true, envMapIntensity: 1.0 });
+  // Crystal vein accent material for rare asteroids
+  const _crystalMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.2, metalness: 0.8, emissive: 0x224488, emissiveIntensity: 0.15, transparent: true, opacity: 0.7 });
   // Pre-generate 8 deformed asteroid geos — pool for batching
   const _astGeoPool = [];
   for (let gi = 0; gi < 8; gi++) {
@@ -4116,6 +4318,53 @@ function spawnAsteroids() {
 
 const _dustGeo = new THREE.SphereGeometry(0.08, 4, 4); _dustGeo._pooled = true;
 const _dustMat = new THREE.MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.45 }); _dustMat._pooled = true;
+
+// ═══ PLANET SPAWNING ═══
+const PLANET_MODELS = ['planet_earth', 'planet_earthlike', 'planet_purple', 'planet_green', 'planet_yellow', 'planet_moon'];
+let systemPlanets = [];
+async function spawnSystemPlanets() {
+  // Clean up old planets
+  systemPlanets.forEach(p => { if (p) { scene.remove(p); disposeObject(p); } });
+  systemPlanets = [];
+  const sys = state.starSystems[state.location.systemIndex];
+  if (!sys) return;
+  // 1-3 planets per system based on seed
+  const planetCount = 1 + (state.location.systemIndex % 3);
+  for (let pi = 0; pi < planetCount; pi++) {
+    const modelKey = PLANET_MODELS[(state.location.systemIndex * 7 + pi * 3) % PLANET_MODELS.length];
+    try {
+      const model = await loadGLBModel(modelKey);
+      const planet = model.clone();
+      const asset = GLB_ASSETS[modelKey];
+      const baseScale = asset ? asset.scale : 30;
+      planet.scale.setScalar(baseScale * (0.5 + Math.random() * 0.8));
+      // Place far away in different directions
+      const angle = (pi / planetCount) * Math.PI * 2 + state.location.systemIndex * 0.7;
+      const dist = 800 + pi * 400 + Math.random() * 300;
+      planet.position.set(
+        Math.cos(angle) * dist,
+        (Math.random() - 0.5) * 200,
+        Math.sin(angle) * dist
+      );
+      // Atmospheric glow
+      const glowGeo = new THREE.SphereGeometry(baseScale * 1.05, 32, 32);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: [0x4488ff, 0x44ff88, 0xcc44ff, 0xffaa44, 0xff4488][pi % 5],
+        transparent: true, opacity: 0.04, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
+      });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      planet.add(glow);
+      planet.userData.rotSpeed = 0.01 + Math.random() * 0.02;
+      planet.userData.assetId = modelKey;
+      planet.userData.label = modelKey.replace(/_/g, ' ').toUpperCase();
+      scene.add(planet);
+      systemPlanets.push(planet);
+    } catch (e) {
+      console.warn('[Planet] Failed:', modelKey, e);
+    }
+  }
+}
+
 function spawnSpaceDust() {
   for (let i = 0; i < 40; i++) {
     const m = new THREE.Mesh(_dustGeo, _dustMat);
@@ -4837,7 +5086,65 @@ function renderHUD(dtMs) {
     }
   });
   hudCtx.globalAlpha = 1;
-  hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
+  hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; 
+  // Loot drops on radar (green pulsing dots)
+  if (c.lootDrops) {
+    c.lootDrops.forEach(ld => {
+      if (!ld || !ld.group) return;
+      const dx = ld.group.position.x - ship.position.x;
+      const dz = ld.group.position.z - ship.position.z;
+      const mapScale = mapR / (SPAWN_RADIUS + 200);
+      const mx = mapCx + dx * mapScale;
+      const my = mapCy + dz * mapScale;
+      if (Math.abs(mx - mapCx) < mapR && Math.abs(my - mapCy) < mapR) {
+        hudCtx.fillStyle = '#00ff88';
+        hudCtx.globalAlpha = 0.5 + 0.3 * Math.sin(state.gameTime * 0.005);
+        hudCtx.beginPath(); hudCtx.arc(mx, my, 2, 0, Math.PI * 2); hudCtx.fill();
+        hudCtx.globalAlpha = 1;
+      }
+    });
+  }
+  // Criminal ships on radar (orange-red)
+  if (typeof criminalShips !== 'undefined') {
+    const mapScale = mapR / (SPAWN_RADIUS + 200);
+    criminalShips.forEach(cr => {
+      const dx = cr.position.x - ship.position.x;
+      const dz = cr.position.z - ship.position.z;
+      const mx = mapCx + dx * mapScale;
+      const my = mapCy + dz * mapScale;
+      if (Math.abs(mx - mapCx) < mapR && Math.abs(my - mapCy) < mapR) {
+        hudCtx.fillStyle = '#ff6600';
+        hudCtx.globalAlpha = 0.7;
+        hudCtx.beginPath(); hudCtx.arc(mx, my, 3, 0, Math.PI * 2); hudCtx.fill();
+        hudCtx.font = '6px "Segoe UI"'; hudCtx.fillText('PIR', mx - 6, my - 5);
+        hudCtx.globalAlpha = 1;
+      }
+    });
+  }
+  // Planet dots on radar (large, dim circles)
+  if (typeof systemPlanets !== 'undefined') {
+    const mapScale = mapR / (SPAWN_RADIUS + 200);
+    systemPlanets.forEach(pl => {
+      if (!pl) return;
+      const dx = pl.position.x - ship.position.x;
+      const dz = pl.position.z - ship.position.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      // Scale down to fit on radar
+      const radarScale = mapR / Math.max(1500, dist * 1.2);
+      const mx = mapCx + dx * radarScale;
+      const my = mapCy + dz * radarScale;
+      if (Math.abs(mx - mapCx) < mapR && Math.abs(my - mapCy) < mapR) {
+        hudCtx.strokeStyle = '#557799';
+        hudCtx.globalAlpha = 0.4;
+        hudCtx.lineWidth = 1;
+        hudCtx.beginPath(); hudCtx.arc(mx, my, 6, 0, Math.PI * 2); hudCtx.stroke();
+        hudCtx.font = '6px "Segoe UI"'; hudCtx.fillStyle = '#557799';
+        hudCtx.fillText('PLN', mx - 7, my - 8);
+        hudCtx.globalAlpha = 1;
+      }
+    });
+  }
+hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
 
   // ── Compass / Heading Indicator (top center) ──
   {
@@ -5632,6 +5939,186 @@ document.getElementById('starmap-canvas').addEventListener('dblclick', onStarMap
 // Market back
 document.getElementById('btn-market-back').addEventListener('click', () => showScreen('bridge'));
 
+// ── Drone Deployment ──
+document.getElementById('btn-battle-drone')?.addEventListener('click', function() {
+  const bd = state.drones.battle;
+  if (!bd.deployed) {
+    // Deploy battle drone
+    const droneGeo = new THREE.OctahedronGeometry(1.2, 0);
+    const droneMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, roughness: 0.3, metalness: 0.8, emissive: 0x224488, emissiveIntensity: 0.3 });
+    const droneM = new THREE.Mesh(droneGeo, droneMat);
+    droneM.position.copy(ship.position).add(new THREE.Vector3(10, 5, 0));
+    scene.add(droneM);
+    bd.model = droneM;
+    bd.deployed = true;
+    bd.hp = 100;
+    this.textContent = 'RECALL';
+    this.classList.add('deployed');
+    addComms('Drone Bay', 'Battle Drone deployed — engaging hostiles.');
+    AudioSFX.play('dock');
+  } else {
+    // Recall
+    if (bd.model) { scene.remove(bd.model); disposeObject(bd.model); }
+    bd.model = null;
+    bd.deployed = false;
+    this.textContent = 'DEPLOY';
+    this.classList.remove('deployed');
+    addComms('Drone Bay', 'Battle Drone recalled.');
+  }
+  updateDroneStatus();
+});
+
+document.getElementById('btn-mining-drone')?.addEventListener('click', function() {
+  const md = state.drones.mining;
+  if (!md.deployed) {
+    const droneGeo = new THREE.OctahedronGeometry(0.8, 0);
+    const droneMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.4, metalness: 0.7, emissive: 0x664400, emissiveIntensity: 0.2 });
+    const droneM = new THREE.Mesh(droneGeo, droneMat);
+    droneM.position.copy(ship.position).add(new THREE.Vector3(-10, 5, 0));
+    scene.add(droneM);
+    md.model = droneM;
+    md.deployed = true;
+    md.progress = 0;
+    this.textContent = 'RECALL';
+    this.classList.add('deployed');
+    addComms('Drone Bay', 'Mining Drone deployed — seeking asteroids.');
+    AudioSFX.play('dock');
+  } else {
+    if (md.model) { scene.remove(md.model); disposeObject(md.model); }
+    md.model = null;
+    md.deployed = false;
+    md.progress = 0;
+    this.textContent = 'DEPLOY';
+    this.classList.remove('deployed');
+    addComms('Drone Bay', 'Mining Drone recalled.');
+  }
+  updateDroneStatus();
+});
+
+function updateDroneStatus() {
+  const el = document.getElementById('drone-status');
+  if (!el) return;
+  const active = (state.drones.battle.deployed ? 1 : 0) + (state.drones.mining.deployed ? 1 : 0);
+  el.textContent = (2 - active) + ' drones available, ' + active + ' deployed';
+}
+
+// ── Speed Preset Buttons ──
+document.querySelectorAll('.speed-preset button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sp = parseInt(btn.dataset.sp);
+    state.speedTarget = sp;
+    document.querySelectorAll('.speed-preset button').forEach(b => b.classList.remove('active-speed'));
+    btn.classList.add('active-speed');
+    addComms('Navigation', 'Speed set to ' + sp + '%');
+  });
+});
+
+// ── Auto-Target Toggle ──
+document.getElementById('auto-target-btn')?.addEventListener('click', function() {
+  state.autoTarget = !state.autoTarget;
+  this.classList.toggle('engaged', state.autoTarget);
+  this.textContent = state.autoTarget ? '◎ AUTO-TGT ON' : '◎ AUTO-TARGET';
+  addComms('Targeting', state.autoTarget ? 'Auto-targeting engaged.' : 'Auto-targeting disengaged.');
+});
+
+// ── Warp to Target Button ──
+document.getElementById('warp-target-btn')?.addEventListener('click', () => {
+  if (state.targetLock.locked && state.targetLock.target) {
+    const tgt = state.targetLock.target;
+    // Warp to target position (short-range microwarp)
+    const warpDist = tgt.group.position.distanceTo(ship.position);
+    if (warpDist < 20) {
+      addComms('Navigation', 'Already in weapons range.');
+      return;
+    }
+    _tmpV3a.copy(tgt.group.position).sub(ship.position).normalize();
+    const warpTo = tgt.group.position.clone().sub(_tmpV3a.multiplyScalar(20));
+    ship.position.copy(warpTo);
+    state.flight.velocity.x = 0; state.flight.velocity.y = 0; state.flight.velocity.z = 0;
+    state.flight.speed = 0;
+    addComms('Navigation', 'Micro-warp complete — target in range.');
+    AudioSFX.play('warp_arrive');
+  } else {
+    addComms('Navigation', 'No target locked for warp.');
+  }
+});
+
+
+// ── Gun Room ──
+const GUN_ROOM_WEAPONS = [
+  { key: 'pistol_chrome', name: 'Chrome Pistol', damage: 25, rof: '3/s', range: '50m', rarity: 'Uncommon' },
+  { key: 'gun_futuristic', name: 'Futuristic Blaster', damage: 40, rof: '2/s', range: '80m', rarity: 'Rare' },
+  { key: 'blaster_white', name: 'White Blaster', damage: 35, rof: '2.5/s', range: '65m', rarity: 'Uncommon' },
+  { key: 'railgun_turret', name: 'Railgun Turret', damage: 100, rof: '0.5/s', range: '200m', rarity: 'Epic' },
+  { key: 'blaster_turret', name: 'Blaster Turret', damage: 50, rof: '4/s', range: '60m', rarity: 'Rare' },
+];
+
+function initGunRoom() {
+  const grid = document.getElementById('gun-display-grid');
+  if (!grid || state.gunRoomInit) return;
+  state.gunRoomInit = true;
+  grid.innerHTML = '';
+  GUN_ROOM_WEAPONS.forEach((w, idx) => {
+    const card = document.createElement('div');
+    card.className = 'gun-card';
+    const rarityColor = { Common: '#888', Uncommon: '#44aaff', Rare: '#00ff88', Epic: '#cc44ff', Legendary: '#ffaa00' }[w.rarity] || '#888';
+    card.innerHTML = '<div class="gun-id">#' + (idx + 1) + ' ' + w.key + '</div>' +
+      '<div class="gun-canvas" id="gun-view-' + idx + '"></div>' +
+      '<div class="gun-name" style="color:' + rarityColor + '">' + w.name + '</div>' +
+      '<div class="gun-stats">' +
+        'Damage: <span style="color:var(--gold)">' + w.damage + '</span><br>' +
+        'Fire Rate: <span style="color:var(--blue)">' + w.rof + '</span><br>' +
+        'Range: <span style="color:var(--green)">' + w.range + '</span><br>' +
+        '<span style="color:' + rarityColor + '">' + w.rarity + '</span>' +
+      '</div>';
+    grid.appendChild(card);
+    // Load 3D model into each card using a mini Three.js renderer
+    const container = card.querySelector('.gun-canvas');
+    try {
+      const miniScene = new THREE.Scene();
+      miniScene.background = new THREE.Color(0x080810);
+      const miniCam = new THREE.PerspectiveCamera(45, container.clientWidth / Math.max(1, container.clientHeight), 0.1, 100);
+      miniCam.position.set(0, 0.3, 1.5);
+      const miniRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      miniRenderer.setSize(container.clientWidth || 200, container.clientHeight || 160);
+      miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      container.appendChild(miniRenderer.domElement);
+      // Lighting
+      miniScene.add(new THREE.AmbientLight(0x404040, 1));
+      const dLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      dLight.position.set(2, 3, 2);
+      miniScene.add(dLight);
+      const rimLight = new THREE.DirectionalLight(0x4488ff, 0.5);
+      rimLight.position.set(-2, -1, -2);
+      miniScene.add(rimLight);
+      loadGLBModel(w.key).then(model => {
+        const m = model.clone();
+        m.scale.setScalar(0.8);
+        miniScene.add(m);
+        miniCam.lookAt(0, 0, 0);
+        // Animate rotation
+        let _gunAngle = 0;
+        function animateGun() {
+          if (!container.isConnected) return;
+          requestAnimationFrame(animateGun);
+          _gunAngle += 0.01;
+          m.rotation.y = _gunAngle;
+          miniRenderer.render(miniScene, miniCam);
+        }
+        animateGun();
+      }).catch(() => {
+        container.style.background = '#1a1a2a';
+        container.innerHTML = '<div style="color:var(--muted);font-size:0.7rem;padding-top:70px;">Model unavailable</div>';
+      });
+    } catch (e) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:0.7rem;padding-top:70px;">WebGL error</div>';
+    }
+  });
+}
+
+document.getElementById('btn-gunroom-back')?.addEventListener('click', () => showScreen('bridge'));
+
+
 // ================================================================
 //  GLB MODEL LOADER — Asset Registry
 // ================================================================
@@ -5903,6 +6390,76 @@ function updateShipParade(dt, dtMs) {
 }
 
 // Render parade labels on HUD
+
+// ── Render Asset ID Labels ──
+function renderAssetLabels() {
+  if (!c.active) return;
+  const W = hudCanvas.width, H = hudCanvas.height;
+  // Label police ships
+  policeShips.forEach(p => {
+    _tmpV3a.copy(p.position); _tmpV3a.y += 4; _tmpV3a.project(camera);
+    if (_tmpV3a.z > 1) return;
+    const sx = (_tmpV3a.x * 0.5 + 0.5) * W;
+    const sy = (-_tmpV3a.y * 0.5 + 0.5) * H;
+    if (sx < 0 || sx > W || sy < 0 || sy > H) return;
+    hudCtx.font = '8px "Segoe UI"'; hudCtx.fillStyle = '#4488ff'; hudCtx.globalAlpha = 0.6;
+    hudCtx.textAlign = 'center';
+    hudCtx.fillText('POLICE ' + (p.userData.patrolId || ''), sx, sy - 3);
+    hudCtx.fillText('[patrol]', sx, sy + 7);
+    hudCtx.textAlign = 'left'; hudCtx.globalAlpha = 1;
+  });
+  // Label criminal ships
+  if (typeof criminalShips !== 'undefined') {
+    criminalShips.forEach(cr => {
+      _tmpV3a.copy(cr.position); _tmpV3a.y += 4; _tmpV3a.project(camera);
+      if (_tmpV3a.z > 1) return;
+      const sx = (_tmpV3a.x * 0.5 + 0.5) * W;
+      const sy = (-_tmpV3a.y * 0.5 + 0.5) * H;
+      if (sx < 0 || sx > W || sy < 0 || sy > H) return;
+      hudCtx.font = '8px "Segoe UI"'; hudCtx.fillStyle = '#ff6600'; hudCtx.globalAlpha = 0.6;
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('PIRATE ' + (cr.userData.pirateId || ''), sx, sy - 3);
+      hudCtx.fillText('[criminal]', sx, sy + 7);
+      hudCtx.textAlign = 'left'; hudCtx.globalAlpha = 1;
+    });
+  }
+  // Label planets
+  if (typeof systemPlanets !== 'undefined') {
+    systemPlanets.forEach(pl => {
+      if (!pl) return;
+      _tmpV3a.copy(pl.position); _tmpV3a.y += pl.scale.x * 1.2; _tmpV3a.project(camera);
+      if (_tmpV3a.z > 1) return;
+      const sx = (_tmpV3a.x * 0.5 + 0.5) * W;
+      const sy = (-_tmpV3a.y * 0.5 + 0.5) * H;
+      if (sx < 0 || sx > W || sy < 0 || sy > H) return;
+      hudCtx.font = '10px "Segoe UI"'; hudCtx.fillStyle = '#88aacc'; hudCtx.globalAlpha = 0.7;
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText(pl.userData.label || 'PLANET', sx, sy - 5);
+      if (pl.userData.assetId) {
+        hudCtx.font = '7px "Segoe UI"'; hudCtx.fillStyle = '#556677';
+        hudCtx.fillText('[' + pl.userData.assetId + ']', sx, sy + 6);
+      }
+      hudCtx.textAlign = 'left'; hudCtx.globalAlpha = 1;
+    });
+  }
+  // Label NPC ships
+  if (state.npcShips) {
+    state.npcShips.forEach(n => {
+      if (!n.group) return;
+      _tmpV3a.copy(n.group.position); _tmpV3a.y += 4; _tmpV3a.project(camera);
+      if (_tmpV3a.z > 1) return;
+      const sx = (_tmpV3a.x * 0.5 + 0.5) * W;
+      const sy = (-_tmpV3a.y * 0.5 + 0.5) * H;
+      if (sx < 0 || sx > W || sy < 0 || sy > H) return;
+      const dist = n.group.position.distanceTo(ship.position);
+      if (dist > 300) return;
+      hudCtx.font = '7px "Segoe UI"'; hudCtx.fillStyle = n.friendly ? '#44ccff' : '#ff8800'; hudCtx.globalAlpha = 0.5;
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText((n.type || 'NPC').toUpperCase(), sx, sy);
+      hudCtx.textAlign = 'left'; hudCtx.globalAlpha = 1;
+    });
+  }
+}
 function renderLibraryLabels() {
   renderPoliceLabels();
   if (!c.active || paradeLabels.length === 0) return;
@@ -5950,6 +6507,16 @@ function updateLibraryRotation(dt) {
 const policeShips = [];        // active police ship objects
 const MAX_POLICE = 3;          // max simultaneous patrol ships
 const POLICE_MODELS = ["patrol_alpha", "patrol_beta", "patrol_gamma"];
+// ── Criminal Fleet ──
+const criminalShips = [];
+const MAX_CRIMINALS = 2;
+const CRIMINAL_MODELS = ["red_fighter", "red_cruiser", "demon_cruiser", "red_battleship"];
+let _criminalSpawnTimer = 0;
+const CRIMINAL_SPAWN_INTERVAL = 25000;
+const CRIMINAL_PATROL_RADIUS = 250;
+const CRIMINAL_SPEED = 30;
+const CRIMINAL_LIFETIME = 50000;
+
 let _policeSpawnTimer = 0;
 const POLICE_SPAWN_INTERVAL = 15000; // ms between spawns
 const POLICE_PATROL_RADIUS = 200;    // patrol orbit radius
@@ -6050,6 +6617,88 @@ function updatePolicePatrol(dt, dtMs) {
   }
 }
 
+
+// ══ CRIMINAL FLEET — hostile pirate NPCs ══
+async function spawnCriminalShip() {
+  if (criminalShips.length >= MAX_CRIMINALS) return;
+  const modelKey = CRIMINAL_MODELS[Math.floor(Math.random() * CRIMINAL_MODELS.length)];
+  try {
+    const model = await loadGLBModel(modelKey);
+    if (!c.active) return;
+    const criminal = model.clone();
+    const asset = GLB_ASSETS[modelKey];
+    criminal.scale.setScalar((asset ? asset.scale : 0.7) * 2.0);
+    const spawnAngle = Math.random() * Math.PI * 2;
+    const spawnDist = CRIMINAL_PATROL_RADIUS + Math.random() * 60;
+    criminal.position.set(
+      ship.position.x + Math.cos(spawnAngle) * spawnDist,
+      ship.position.y + (Math.random() - 0.5) * 40,
+      ship.position.z + Math.sin(spawnAngle) * spawnDist
+    );
+    criminal.userData.isCriminal = true;
+    criminal.userData.orbitAngle = spawnAngle;
+    criminal.userData.orbitSpeed = 0.2 + Math.random() * 0.15;
+    criminal.userData.orbitRadius = CRIMINAL_PATROL_RADIUS + (Math.random() - 0.5) * 50;
+    criminal.userData.age = 0;
+    criminal.userData.pirateId = "PIR-" + Math.floor(Math.random() * 999).toString().padStart(3, "0");
+    criminal.userData.hp = 200;
+    criminal.userData.maxHp = 200;
+    // Red engine glow
+    const _crEngGeo = new THREE.SphereGeometry(0.5, 6, 6);
+    const _crEngMat = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+    const crGlow = new THREE.Mesh(_crEngGeo, _crEngMat);
+    crGlow.position.set(0, 0, 2);
+    criminal.add(crGlow);
+    // Red flashing light
+    const _crLightGeo = new THREE.SphereGeometry(0.4, 6, 6);
+    const _crLightMat = new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+    const crLight = new THREE.Mesh(_crLightGeo, _crLightMat);
+    crLight.position.set(0, 1.5, 0);
+    criminal.add(crLight);
+    criminal.userData.crLight = crLight;
+    criminal.userData.lightTimer = 0;
+    scene.add(criminal);
+    criminalShips.push(criminal);
+    addComms("Warning", "Pirate " + criminal.userData.pirateId + " detected — hostile!");
+  } catch (e) {
+    console.warn("[Criminal] Failed to spawn:", e);
+  }
+}
+
+function updateCriminalFleet(dt, dtMs) {
+  _criminalSpawnTimer += dtMs;
+  if (_criminalSpawnTimer >= CRIMINAL_SPAWN_INTERVAL && criminalShips.length < MAX_CRIMINALS) {
+    _criminalSpawnTimer = 0;
+    spawnCriminalShip();
+  }
+  for (let i = criminalShips.length - 1; i >= 0; i--) {
+    const cr = criminalShips[i];
+    cr.userData.age += dtMs;
+    cr.userData.orbitAngle += cr.userData.orbitSpeed * dt;
+    const a = cr.userData.orbitAngle;
+    const r = cr.userData.orbitRadius;
+    // Aggressive: orbit closer when player is near
+    const dToPlayer = cr.position.distanceTo(ship.position);
+    const aggroR = dToPlayer < 100 ? r * 0.5 : r;
+    const tx = ship.position.x + Math.cos(a) * aggroR;
+    const tz = ship.position.z + Math.sin(a) * aggroR;
+    const ty = ship.position.y + Math.sin(a * 2) * 10;
+    cr.position.x += (tx - cr.position.x) * Math.min(1, 3 * dt);
+    cr.position.y += (ty - cr.position.y) * Math.min(1, 3 * dt);
+    cr.position.z += (tz - cr.position.z) * Math.min(1, 3 * dt);
+    cr.lookAt(ship.position);
+    // Red flashing
+    cr.userData.lightTimer += dtMs;
+    if (cr.userData.crLight) {
+      cr.userData.crLight.material.opacity = 0.3 + 0.4 * Math.abs(Math.sin(cr.userData.lightTimer * 0.006));
+    }
+    if (cr.userData.age >= CRIMINAL_LIFETIME) {
+      scene.remove(cr); disposeObject(cr);
+      criminalShips.splice(i, 1);
+    }
+  }
+}
+
 // Render police labels on HUD
 function renderPoliceLabels() {
   if (!c.active || policeShips.length === 0) return;
@@ -6087,6 +6736,14 @@ let stargateGroup = null;
 let stargatePortalMat = null;
 
 function createStargate() {
+  // Try to load GLB stargate model and add it to the group
+  loadGLBModel('stargate').then(model => {
+    const glbGate = model.clone();
+    glbGate.scale.setScalar(5.0);
+    glbGate.position.set(0, 0, 0);
+    stargateGroup.add(glbGate);
+  }).catch(() => {}); // Fall back to procedural ring
+
   if (stargateGroup) return;
   stargateGroup = new THREE.Group();
   stargateGroup.name = 'stargate';
@@ -7468,6 +8125,103 @@ function gameLoop() {
       }
     }
 
+
+    // ── EVE Speed Control ──
+    if (state.speedTarget > 0 && !keysDown.has('w') && !keysDown.has('s')) {
+      const targetSpeed = (state.speedTarget / 100) * fl.maxSpeed * state.upgrades.engineSpeed * getPlayerSpeedMult();
+      if (fl.speed < targetSpeed - 1) {
+        // Accelerate toward target
+        _tmpV3b.set(0, 0, -1).applyQuaternion(camera.quaternion);
+        fl.velocity.x += _tmpV3b.x * fl.accel * 0.8 * dt;
+        fl.velocity.y += _tmpV3b.y * fl.accel * 0.8 * dt;
+        fl.velocity.z += _tmpV3b.z * fl.accel * 0.8 * dt;
+      }
+    }
+    // Update speed bar UI
+    const speedBarFill = document.getElementById('speed-bar-fill');
+    if (speedBarFill) {
+      const maxSpd2 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult();
+      speedBarFill.style.height = Math.min(100, (fl.speed / maxSpd2) * 100) + '%';
+    }
+
+    // ── Battle Drone AI ──
+    if (state.drones.battle.deployed && state.drones.battle.model) {
+      const bd = state.drones.battle;
+      const bdM = bd.model;
+      // Orbit near player
+      const bdAngle = state.gameTime * 0.002;
+      const bdTargetX = ship.position.x + Math.cos(bdAngle) * 15;
+      const bdTargetZ = ship.position.z + Math.sin(bdAngle) * 15;
+      bdM.position.x += (bdTargetX - bdM.position.x) * Math.min(1, 3 * dt);
+      bdM.position.y += (ship.position.y + 5 - bdM.position.y) * Math.min(1, 2 * dt);
+      bdM.position.z += (bdTargetZ - bdM.position.z) * Math.min(1, 3 * dt);
+      // Attack nearest enemy
+      if (c.enemies.length > 0) {
+        let closestE = null, closestD = 999;
+        c.enemies.forEach(e => {
+          const d = e.group.position.distanceTo(bdM.position);
+          if (d < closestD) { closestD = d; closestE = e; }
+        });
+        if (closestE && closestD < 150) {
+          bdM.lookAt(closestE.group.position);
+          // Fire every 2 seconds
+          if (!bd._lastShot || state.gameTime - bd._lastShot > 2000) {
+            bd._lastShot = state.gameTime;
+            closestE.hp -= 0.5;
+            closestE.hitFlash = 100;
+            c.dmgNumbers.push({ text: '-0.5', px: closestE.group.position.x, py: closestE.group.position.y + 3, pz: closestE.group.position.z, age: 0, color: '#44aaff' });
+          }
+        }
+      }
+      bdM.rotation.y += dt * 0.5;
+    }
+
+    // ── Mining Drone AI ──
+    if (state.drones.mining.deployed && state.drones.mining.model) {
+      const md = state.drones.mining;
+      const mdM = md.model;
+      // Find nearest asteroid to mine
+      let nearestAst = null, nearestDist = 999;
+      c.asteroids.forEach(a => {
+        if (!a || !a.position) return;
+        const d = a.position.distanceTo(ship.position);
+        if (d < nearestDist) { nearestDist = d; nearestAst = a; }
+      });
+      if (nearestAst && nearestDist < 200) {
+        mdM.position.x += (nearestAst.position.x - mdM.position.x) * Math.min(1, 2 * dt);
+        mdM.position.y += (nearestAst.position.y + 3 - mdM.position.y) * Math.min(1, 2 * dt);
+        mdM.position.z += (nearestAst.position.z - mdM.position.z) * Math.min(1, 2 * dt);
+        mdM.lookAt(nearestAst.position);
+        // Auto-mine
+        if (mdM.position.distanceTo(nearestAst.position) < 10) {
+          md.progress = (md.progress || 0) + dt * 15;
+          if (md.progress >= 100) {
+            md.progress = 0;
+            state.player.credits += 10;
+            gainSkillXP('mining', 0.05);
+            showToast('+10 EC (drone mining)');
+          }
+        }
+      } else {
+        // Orbit player if no asteroids nearby
+        const mdAngle = state.gameTime * 0.0015 + Math.PI;
+        mdM.position.x += (ship.position.x + Math.cos(mdAngle) * 12 - mdM.position.x) * Math.min(1, 2 * dt);
+        mdM.position.y += (ship.position.y + 3 - mdM.position.y) * Math.min(1, 2 * dt);
+        mdM.position.z += (ship.position.z + Math.sin(mdAngle) * 12 - mdM.position.z) * Math.min(1, 2 * dt);
+      }
+      mdM.rotation.y += dt * 0.3;
+    }
+
+    // ── Rotate planets ──
+    if (typeof systemPlanets !== 'undefined') {
+      systemPlanets.forEach(p => {
+        if (p && p.userData.rotSpeed) p.rotation.y += p.userData.rotSpeed * dt;
+      });
+    }
+
+    // ── Update criminal fleet ──
+    if (typeof updateCriminalFleet === 'function') updateCriminalFleet(dt, dtMs);
+
 // Rotate asteroids
     c.asteroids.forEach(a => {
       a.rotation.x += a.userData.rotSpeed.x * dt;
@@ -7968,7 +8722,8 @@ function gameLoop() {
     }
 
     renderHUD(dtMs);
-    if (showLibraryLabelsFlag) renderLibraryLabels();
+    if (showLibraryLabelsFlag)     renderAssetLabels();
+renderLibraryLabels();
   } else {
     // Bridge — gentle idle camera
     const time = state.gameTime * 0.0001;

@@ -154,7 +154,7 @@ const STARTER_QUESTS = [
 STARTER_QUESTS.forEach(q => quests.registerQuest(q));
 
 // ── HTTP Server ──────────────────────────────────────────────────────────────
-const httpPort = parseInt(process.env.PORT ?? '3000', 10);
+const httpPort = parseInt(process.env.PORT ?? '3847', 10);
 const uploadDir = path.resolve(PROJECT_ROOT, process.env.UPLOAD_DIR ?? 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE ?? '157286400', 10); // 150 MB default

@@ -8,8 +8,8 @@
     const errors = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
     page.on('pageerror', err => errors.push('PAGE ERROR: ' + err.message));
-    console.log('Navigating to http://localhost:3000...');
-    await page.goto('http://localhost:3000', { waitUntil: 'networkidle0', timeout: 30000 });
+    console.log('Navigating to http://localhost:3847...');
+    await page.goto('http://localhost:3847', { waitUntil: 'networkidle0', timeout: 30000 });
     console.log('Page loaded.');
     const titleVisible = await page.$eval('#screen-title', el => { const style = window.getComputedStyle(el); return style.display !== 'none'; });
     console.log('Title screen visible:', titleVisible);

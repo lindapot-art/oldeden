@@ -18,7 +18,7 @@ const crypto = require('crypto');
 const http = require('http');
 const path = require('path');
 
-const URL = process.env.QA_PORT ? `http://localhost:${process.env.QA_PORT}` : 'http://localhost:3000';
+const URL = process.env.QA_PORT ? `http://localhost:${process.env.QA_PORT}` : 'http://localhost:3847';
 const HTML_PATH = path.join(__dirname, 'public', 'index.html');
 const LOG_PATH = path.join(__dirname, 'qa_proxy_log.txt');
 const HASH_PATH = path.join(__dirname, 'qa_proxy_hash.txt');
