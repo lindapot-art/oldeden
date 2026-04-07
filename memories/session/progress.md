@@ -1,16 +1,14 @@
-# Audit 17 Progress
+# Session Progress — April 7, 2026 (batch 2)
 
-## Plan (10 changes, HIGH-IMPACT)
-1. [x] Performance: Pre-allocate temp vector for enemy AI (eliminate per-frame new THREE.Vector3)
-2. [x] Karma Wheel: Add suspenseful tick sounds during 2s spin phase
-3. [x] Skill level-up: Visual toast + distinct SFX
-4. [x] Station undock: SFX + flash on leaving station
-5. [x] Save indicator: Brief "Saved" toast on auto-save
-6. [x] Faction HUD: Show controlling faction in combat HUD
-7. [x] Upgrade purchase: Distinct visual flash feedback
-8. [x] Reduced motion CSS: prefers-reduced-motion media query
-9. [x] Boss warning: Reuse persistent DOM element instead of createElement
-10. [x] Stargate proximity: HUD distance indicator when near gate
+## Phase 1 (DONE — commit e2b9bf4)
+- Compass HUD, target lock-on, cockpit damage, proximity warnings
+- Loot magnet, hazard effects, dynamic crosshair, shot tracking
+- BountySystem.js server-side + Socket.IO handlers
 
-## File: public/index.html (~7120 lines)
-## Status: COMPLETE — QA PASSED
+## Phase 2 (IN PROGRESS)
+- Police/criminal NPC forces, stargates, drones
+- EVE-style warp/speed UI, auto-target, gun room
+- Enhanced 3D visuals, planets, asteroids
+- Ship interior, cockpit dashboard, first mission
+
+## Key: ~8089 lines CRLF, 20 systems, 69 GLB models
