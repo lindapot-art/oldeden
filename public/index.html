@@ -302,6 +302,28 @@ canvas{display:block;}
 /* ── Mining laser beam ───────────────────── */
 @keyframes miningPulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
 
+/* ── Warp Tunnel VFX ─────────────────────── */
+#warp-tunnel-overlay{position:fixed;inset:0;pointer-events:none;z-index:13;opacity:0;transition:opacity 0.3s;}
+#warp-tunnel-overlay.active{opacity:1;}
+#warp-tunnel-overlay .warp-streak{position:absolute;left:50%;top:50%;width:2px;background:linear-gradient(to bottom,transparent,rgba(100,150,255,0.8),rgba(200,100,255,0.5),transparent);transform-origin:center top;opacity:0;animation:warpStreak 0.6s linear infinite;}
+@keyframes warpStreak{0%{opacity:0;height:0;}30%{opacity:1;}100%{opacity:0;height:40vh;}}
+
+/* ── Screen Shake ────────────────────────── */
+@keyframes screenShake{0%,100%{transform:translate(0,0);}10%{transform:translate(-3px,2px);}20%{transform:translate(4px,-2px);}30%{transform:translate(-2px,3px);}40%{transform:translate(3px,-1px);}50%{transform:translate(-1px,2px);}60%{transform:translate(2px,-3px);}70%{transform:translate(-4px,1px);}80%{transform:translate(1px,-2px);}90%{transform:translate(-2px,3px);}}
+body.screen-shake{animation:screenShake 0.3s ease;}
+
+/* ── Shield Hit Flash ────────────────────── */
+#shield-flash{position:fixed;inset:0;pointer-events:none;z-index:14;border:3px solid rgba(68,170,255,0);border-radius:50%;opacity:0;transition:opacity 0.15s,border-color 0.15s;}
+#shield-flash.active{opacity:1;border-color:rgba(68,170,255,0.4);box-shadow:inset 0 0 60px rgba(68,170,255,0.1),0 0 40px rgba(68,170,255,0.15);}
+#shield-flash.hull-hit{border-color:rgba(255,68,68,0.5);box-shadow:inset 0 0 60px rgba(255,68,68,0.15),0 0 40px rgba(255,68,68,0.2);}
+
+/* ── Mining Beam Visual ──────────────────── */
+#mining-beam-indicator{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:16;display:none;text-align:center;}
+#mining-beam-indicator.active{display:block;}
+.mining-progress{width:120px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:4px auto 0;overflow:hidden;}
+.mining-progress-fill{height:100%;background:linear-gradient(90deg,#ffaa00,#00ff88);border-radius:2px;transition:width 0.3s;}
+
+
 /* ── Action Buttons (Gunner Mode) ────────── */
 #action-bar{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:56;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:90vw;}
 #action-bar.active{display:flex;}
@@ -532,6 +554,17 @@ canvas{display:block;}
 <button id="warp-target-btn">✦ WARP TO TARGET</button>
 
 <!-- Auto-Target -->
+
+<!-- Warp Tunnel VFX -->
+<div id="warp-tunnel-overlay"></div>
+<!-- Shield Hit Flash -->
+<div id="shield-flash"></div>
+<!-- Mining Beam Indicator -->
+<div id="mining-beam-indicator">
+  <div style="font-size:0.65rem;color:var(--warn);letter-spacing:0.1em;">MINING</div>
+  <div class="mining-progress"><div class="mining-progress-fill" id="mining-progress-fill" style="width:0%"></div></div>
+</div>
+
 <button id="auto-target-btn">◎ AUTO-TARGET</button>
 
 
@@ -1324,6 +1357,18 @@ const state = {
   autoTarget: false,
   // ── Gun Room ──
   gunRoomInit: false,
+  // ── Warp VFX ──
+  isWarping: false,
+  warpTimer: 0,
+  // ── Shield hit flash ──
+  shieldFlashTimer: 0,
+  // ── Mining beam ──
+  miningBeamActive: false,
+  miningBeamProgress: 0,
+  miningTarget: null,
+  // ── Screen shake ──
+  screenShakeTimer: 0,
+
 
 
   // EVE Online-style ship flight
@@ -2961,8 +3006,10 @@ function jumpToSystem(idx) {
     }
   });
   addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
+    if (typeof activateWarpTunnel === 'function') activateWarpTunnel(2000);
   setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
   if (typeof spawnSystemPlanets === "function") spawnSystemPlanets();
+  if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
   }
@@ -3852,7 +3899,73 @@ rimLight.position.set(0, -200, 500);
 scene.add(rimLight);
 // Hemisphere light for natural sky/ground ambient
 const hemiLight = new THREE.HemisphereLight(0x88bbff, 0x224466, 1.2);
+
+// ── Cockpit interior spot light (warm glow) ──
+const cockpitSpot = new THREE.SpotLight(0xffddaa, 0.6, 10, Math.PI / 4, 0.5, 1);
+cockpitSpot.position.set(0, 2, 0);
+cockpitSpot.target.position.set(0, -1, -1);
+camera.add(cockpitSpot);
+camera.add(cockpitSpot.target);
+
+// ── Enhanced scene fog for depth ──
+scene.fog = new THREE.FogExp2(0x020408, 0.0004);
+
 scene.add(hemiLight);
+
+// ═══ NEBULA SKYBOX (giant sphere with procedural gradient) ═══
+(function createNebulaSkybox() {
+  const nebulaGeo = new THREE.SphereGeometry(3000, 32, 16);
+  // Procedural vertex colors for nebula gradient
+  const colors = [];
+  const posAttr = nebulaGeo.attributes.position;
+  for (let i = 0; i < posAttr.count; i++) {
+    const y = posAttr.getY(i);
+    const ny = (y / 3000 + 1) * 0.5; // 0 = bottom, 1 = top
+    // Deep space gradient: dark blue bottom -> purple mid -> dark top
+    const r = 0.01 + ny * 0.02 + Math.random() * 0.005;
+    const g = 0.01 + (1 - Math.abs(ny - 0.5) * 2) * 0.015;
+    const b = 0.03 + ny * 0.04 + Math.random() * 0.01;
+    colors.push(r, g, b);
+  }
+  nebulaGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  const nebulaMat = new THREE.MeshBasicMaterial({
+    vertexColors: true, side: THREE.BackSide,
+    transparent: true, opacity: 0.6, depthWrite: false,
+  });
+  const nebula = new THREE.Mesh(nebulaGeo, nebulaMat);
+  nebula.renderOrder = -100;
+  scene.add(nebula);
+})();
+
+// ═══ STARFIELD PARALLAX LAYERS ═══
+(function createStarLayers() {
+  const starLayers = [
+    { count: 800, size: 0.8, radius: 2500, color: 0xffffff, opacity: 0.3 },
+    { count: 400, size: 1.2, radius: 2000, color: 0xaaccff, opacity: 0.5 },
+    { count: 150, size: 2.0, radius: 1500, color: 0xffeedd, opacity: 0.7 },
+  ];
+  starLayers.forEach(cfg => {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(cfg.count * 3);
+    for (let i = 0; i < cfg.count * 3; i += 3) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = cfg.radius * (0.8 + Math.random() * 0.2);
+      pos[i] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i+1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i+2] = r * Math.cos(phi);
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({
+      color: cfg.color, size: cfg.size, transparent: true, opacity: cfg.opacity,
+      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: false,
+    });
+    const stars = new THREE.Points(geo, mat);
+    stars.renderOrder = -99;
+    scene.add(stars);
+  });
+})();
+
 
 composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -4128,6 +4241,66 @@ function spawnExhaust() {
 // ================================================================
 //  GUNNER MODE — COMBAT
 // ================================================================
+
+// ═══ LOOT DROP 3D OBJECTS ═══
+const LOOT_TYPES = [
+  { name: 'Scrap Metal', value: 25, color: 0x888888, size: 0.6 },
+  { name: 'Energy Cell', value: 50, color: 0x44aaff, size: 0.5 },
+  { name: 'Rare Mineral', value: 100, color: 0x00ff88, size: 0.7 },
+  { name: 'Data Core', value: 150, color: 0xcc44ff, size: 0.4 },
+  { name: 'Gold Alloy', value: 250, color: 0xffaa00, size: 0.5 },
+];
+
+function spawnLootDrop(pos) {
+  const type = LOOT_TYPES[Math.floor(Math.random() * LOOT_TYPES.length)];
+  const geo = new THREE.OctahedronGeometry(type.size, 0);
+  const mat = new THREE.MeshStandardMaterial({
+    color: type.color, roughness: 0.3, metalness: 0.8,
+    emissive: type.color, emissiveIntensity: 0.3,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  // Glow aura
+  const glowGeo = new THREE.SphereGeometry(type.size * 2, 8, 8);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: type.color, transparent: true, opacity: 0.08,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  const group = new THREE.Group();
+  group.add(mesh);
+  group.add(glow);
+  group.position.copy(pos || new THREE.Vector3(
+    ship.position.x + (Math.random() - 0.5) * SPAWN_RADIUS * 0.8,
+    ship.position.y + (Math.random() - 0.5) * 40,
+    ship.position.z + (Math.random() - 0.5) * SPAWN_RADIUS * 0.8
+  ));
+  group.userData.lootType = type;
+  group.userData.collected = false;
+  group.userData.age = 0;
+  scene.add(group);
+  c.lootDrops = c.lootDrops || [];
+  c.lootDrops.push({ group, type, age: 0 });
+  return group;
+}
+
+// Drop loot when enemy dies
+function dropLootFromEnemy(pos) {
+  if (Math.random() < 0.4) { // 40% drop chance
+    spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)));
+  }
+}
+
+// Scatter some initial loot in the system
+function spawnSystemLoot() {
+  if (!c.lootDrops) c.lootDrops = [];
+  // Clean old loot
+  c.lootDrops.forEach(ld => { if (ld.group) { scene.remove(ld.group); disposeObject(ld.group); } });
+  c.lootDrops = [];
+  // Spawn 3-6 loot drops
+  const count = 3 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < count; i++) spawnLootDrop();
+}
+
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
 const CHARGE_TIME = 350, COOLDOWN_TIME = 200, MOUSE_SENS = 0.002;
 
@@ -4224,6 +4397,9 @@ function enterGunnerMode() {
   createStargate();
   spawnSystemNPCs();
   spawnStationModel();
+  // Spawn planets + loot for current system
+  if (typeof spawnSystemPlanets === 'function') spawnSystemPlanets();
+  if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   // GLB loading with progress tracking
   const _glbTasks = ['enemy','railgun_turret','cockpit','dashboard_gun','ship_library','player_ship'];
   let _glbDone = 0;
@@ -5995,6 +6171,87 @@ document.getElementById('btn-mining-drone')?.addEventListener('click', function(
   updateDroneStatus();
 });
 
+
+// ══ WARP TUNNEL VFX ══
+function activateWarpTunnel(durationMs) {
+  const el = document.getElementById('warp-tunnel-overlay');
+  if (!el) return;
+  // Generate streaks
+  el.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const streak = document.createElement('div');
+    streak.className = 'warp-streak';
+    const angle = Math.random() * 360;
+    const dist = 20 + Math.random() * 30;
+    streak.style.cssText = 'transform:rotate(' + angle + 'deg) translateY(-' + dist + 'vh);' +
+      'animation-delay:' + (Math.random() * 0.4).toFixed(2) + 's;' +
+      'animation-duration:' + (0.3 + Math.random() * 0.5).toFixed(2) + 's;' +
+      'height:' + (5 + Math.random() * 15) + 'vh;';
+    el.appendChild(streak);
+  }
+  el.classList.add('active');
+  state.isWarping = true;
+  state.warpTimer = durationMs || 1500;
+}
+
+function deactivateWarpTunnel() {
+  const el = document.getElementById('warp-tunnel-overlay');
+  if (el) { el.classList.remove('active'); el.innerHTML = ''; }
+  state.isWarping = false;
+  state.warpTimer = 0;
+}
+
+// ══ SHIELD HIT FLASH ══
+function triggerShieldFlash(isHull) {
+  const el = document.getElementById('shield-flash');
+  if (!el) return;
+  el.classList.remove('active', 'hull-hit');
+  void el.offsetWidth; // Force reflow
+  el.classList.add('active');
+  if (isHull) el.classList.add('hull-hit');
+  state.shieldFlashTimer = 200;
+}
+
+// ══ SCREEN SHAKE ══
+function triggerScreenShake() {
+  document.body.classList.remove('screen-shake');
+  void document.body.offsetWidth;
+  document.body.classList.add('screen-shake');
+  state.screenShakeTimer = 300;
+}
+
+// ══ 3D EXPLOSION PARTICLES ══
+const _explosionPool = [];
+function spawnExplosionAt(pos, color, count) {
+  color = color || 0xff6600;
+  count = count || 12;
+  for (let i = 0; i < count; i++) {
+    let mesh;
+    if (_explosionPool.length > 0) {
+      mesh = _explosionPool.pop();
+      mesh.material.color.setHex(color);
+      mesh.material.opacity = 1;
+      mesh.visible = true;
+    } else {
+      const geo = new THREE.SphereGeometry(0.15, 4, 4);
+      const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+      mesh = new THREE.Mesh(geo, mat);
+    }
+    mesh.position.copy(pos);
+    const speed = 15 + Math.random() * 30;
+    mesh.userData.vel = new THREE.Vector3(
+      (Math.random() - 0.5) * speed,
+      (Math.random() - 0.5) * speed,
+      (Math.random() - 0.5) * speed
+    );
+    mesh.userData.age = 0;
+    mesh.userData.maxAge = 600 + Math.random() * 400;
+    scene.add(mesh);
+    c.explosionParticles = c.explosionParticles || [];
+    c.explosionParticles.push(mesh);
+  }
+}
+
 function updateDroneStatus() {
   const el = document.getElementById('drone-status');
   if (!el) return;
@@ -6036,6 +6293,7 @@ document.getElementById('warp-target-btn')?.addEventListener('click', () => {
     ship.position.copy(warpTo);
     state.flight.velocity.x = 0; state.flight.velocity.y = 0; state.flight.velocity.z = 0;
     state.flight.speed = 0;
+        if (typeof activateWarpTunnel === 'function') activateWarpTunnel(800);
     addComms('Navigation', 'Micro-warp complete — target in range.');
     AudioSFX.play('warp_arrive');
   } else {
@@ -8126,6 +8384,28 @@ function gameLoop() {
     }
 
 
+
+    // ── AUTO-TARGET: lock nearest hostile ──
+    if (state.autoTarget && c.enemies.length > 0) {
+      let closest = null, closestD = 999;
+      c.enemies.forEach(e => {
+        if (e.hp <= 0) return;
+        const d = e.group.position.distanceTo(ship.position);
+        if (d < closestD && d < SPAWN_RADIUS) { closestD = d; closest = e; }
+      });
+      if (closest && (!state.targetLock.locked || !state.targetLock.target || state.targetLock.target.hp <= 0)) {
+        state.targetLock.locked = true;
+        state.targetLock.target = closest;
+        state.targetLock.lockTimer = 0;
+      }
+      // Also show warp button when target is far
+      const warpBtn = document.getElementById('warp-target-btn');
+      if (warpBtn && state.targetLock.locked && state.targetLock.target) {
+        const tDist = state.targetLock.target.group.position.distanceTo(ship.position);
+        warpBtn.classList.toggle('visible', tDist > 50);
+      }
+    }
+
     // ── EVE Speed Control ──
     if (state.speedTarget > 0 && !keysDown.has('w') && !keysDown.has('s')) {
       const targetSpeed = (state.speedTarget / 100) * fl.maxSpeed * state.upgrades.engineSpeed * getPlayerSpeedMult();
@@ -8195,6 +8475,8 @@ function gameLoop() {
         // Auto-mine
         if (mdM.position.distanceTo(nearestAst.position) < 10) {
           md.progress = (md.progress || 0) + dt * 15;
+          state.miningBeamActive = true;
+          state.miningBeamProgress = md.progress;
           if (md.progress >= 100) {
             md.progress = 0;
             state.player.credits += 10;
@@ -8203,6 +8485,8 @@ function gameLoop() {
           }
         }
       } else {
+        state.miningBeamActive = false;
+        state.miningBeamProgress = 0;
         // Orbit player if no asteroids nearby
         const mdAngle = state.gameTime * 0.0015 + Math.PI;
         mdM.position.x += (ship.position.x + Math.cos(mdAngle) * 12 - mdM.position.x) * Math.min(1, 2 * dt);
@@ -8210,6 +8494,116 @@ function gameLoop() {
         mdM.position.z += (ship.position.z + Math.sin(mdAngle) * 12 - mdM.position.z) * Math.min(1, 2 * dt);
       }
       mdM.rotation.y += dt * 0.3;
+    }
+
+
+
+    // ── Update loot drops (rotate, collect if near) ──
+    if (c.lootDrops) {
+      for (let i = c.lootDrops.length - 1; i >= 0; i--) {
+        const ld = c.lootDrops[i];
+        if (!ld.group) { c.lootDrops.splice(i, 1); continue; }
+        ld.age += dtMs;
+        ld.group.children[0].rotation.y += dt * 1.5;
+        ld.group.children[0].rotation.x += dt * 0.5;
+        // Bob up and down
+        ld.group.position.y += Math.sin(state.gameTime * 0.002 + i) * 0.02;
+        // Glow pulse
+        if (ld.group.children[1]) {
+          ld.group.children[1].material.opacity = 0.05 + 0.04 * Math.sin(state.gameTime * 0.003 + i);
+        }
+        // Check collection distance
+        const dist = ld.group.position.distanceTo(ship.position);
+        const collectRange = state.lootMagnet ? 30 : 8;
+        if (dist < collectRange) {
+          // Magnet pull
+          if (dist > 3) {
+            const pullDir = ship.position.clone().sub(ld.group.position).normalize();
+            ld.group.position.add(pullDir.multiplyScalar(Math.min(1, 50 * dt)));
+          } else {
+            // Collect!
+            state.player.credits += ld.type.value;
+            showToast('+' + ld.type.value + ' EC: ' + ld.type.name);
+            AudioSFX.play('powerup');
+            // Collect quest objectives
+            state.quests.forEach(q => {
+              if (!q.active || q.completed) return;
+              q.objectives.forEach(o => {
+                if (o.type === 'collect' && (o.current || 0) < o.required) o.current = (o.current || 0) + 1;
+              });
+            });
+            scene.remove(ld.group); disposeObject(ld.group);
+            c.lootDrops.splice(i, 1);
+          }
+        }
+        // Despawn after 2 minutes
+        if (ld.age > 120000) {
+          scene.remove(ld.group); disposeObject(ld.group);
+          c.lootDrops.splice(i, 1);
+        }
+      }
+    }
+
+    // ── Update explosion particles ──
+    if (c.explosionParticles) {
+      for (let i = c.explosionParticles.length - 1; i >= 0; i--) {
+        const p = c.explosionParticles[i];
+        p.userData.age += dtMs;
+        if (p.userData.age >= p.userData.maxAge) {
+          p.visible = false;
+          scene.remove(p);
+          _explosionPool.push(p);
+          c.explosionParticles.splice(i, 1);
+          continue;
+        }
+        const t = p.userData.age / p.userData.maxAge;
+        p.position.x += p.userData.vel.x * dt;
+        p.position.y += p.userData.vel.y * dt;
+        p.position.z += p.userData.vel.z * dt;
+        p.userData.vel.multiplyScalar(0.96); // drag
+        p.material.opacity = 1 - t;
+        p.scale.setScalar(1 + t * 2);
+      }
+    }
+
+    // ── Shield flash timer ──
+    if (state.shieldFlashTimer > 0) {
+      state.shieldFlashTimer -= dtMs;
+      if (state.shieldFlashTimer <= 0) {
+        const sfe = document.getElementById('shield-flash');
+        if (sfe) sfe.classList.remove('active', 'hull-hit');
+      }
+    }
+
+    // ── Warp tunnel timer ──
+    if (state.isWarping) {
+      state.warpTimer -= dtMs;
+      if (state.warpTimer <= 0) deactivateWarpTunnel();
+    }
+
+    // ── Screen shake ──
+    if (state.screenShakeTimer > 0) {
+      state.screenShakeTimer -= dtMs;
+      if (state.screenShakeTimer <= 0) document.body.classList.remove('screen-shake');
+    }
+
+    // ── Mining beam visual ──
+    if (state.miningBeamActive) {
+      const mFill = document.getElementById('mining-progress-fill');
+      if (mFill) mFill.style.width = state.miningBeamProgress + '%';
+      document.getElementById('mining-beam-indicator')?.classList.toggle('active', state.miningBeamActive);
+    }
+
+    // ── Engine trail color varies with speed ──
+    if (exhaustMat) {
+      const sp = fl.speed / (fl.maxSpeed * state.upgrades.engineSpeed * getPlayerSpeedMult());
+      if (sp > 0.7) {
+        exhaustMat.color.setHex(0xff8844); // Afterburner orange
+      } else if (sp > 0.3) {
+        exhaustMat.color.setHex(0x44aaff); // Normal blue
+      } else {
+        exhaustMat.color.setHex(0x226688); // Idle dim
+      }
     }
 
     // ── Rotate planets ──
@@ -8392,6 +8786,7 @@ function gameLoop() {
             });
             AudioSFX.play('explode');
             spawnExplosion(e.group.position, e.cfg.scale);
+            if (typeof spawnExplosionAt === 'function') spawnExplosionAt(e.group.position, 0xff6622, 12);
             // Loot drop chance (hacking skill improves drop rate)
             const lootChance = Math.min(0.7, 0.4 * getSkillBonus('hacking'));
             if (e.isBoss || Math.random() < lootChance) {
@@ -8521,6 +8916,8 @@ function gameLoop() {
         } else { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); AudioSFX.play('hull_hit'); }
         if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
         c.damageFlash = 200;
+        if (typeof triggerShieldFlash === 'function') triggerShieldFlash(state.ship.shield <= 0);
+        if (typeof triggerScreenShake === 'function') triggerScreenShake();
         if (state.ship.hull <= 0 && !c.dead) {
           state.soulMemory.combatInstinct = Math.min(10, state.soulMemory.combatInstinct + Math.min(2, 0.5 + c.kills * 0.005));
           playerDeathSequence('Rammed by hostile ' + e.type);
@@ -8723,6 +9120,40 @@ function gameLoop() {
 
     renderHUD(dtMs);
     if (showLibraryLabelsFlag)     renderAssetLabels();
+    // ── Warp speed lines (radial streaks from center) ──
+    if (state.isWarping) {
+      const cx = hudCanvas.width / 2, cy = hudCanvas.height / 2;
+      hudCtx.strokeStyle = 'rgba(130,180,255,0.3)';
+      hudCtx.lineWidth = 1;
+      for (let i = 0; i < 20; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r1 = 30 + Math.random() * 50;
+        const r2 = r1 + 60 + Math.random() * 100;
+        hudCtx.globalAlpha = 0.2 + Math.random() * 0.3;
+        hudCtx.beginPath();
+        hudCtx.moveTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
+        hudCtx.lineTo(cx + Math.cos(angle) * r2, cy + Math.sin(angle) * r2);
+        hudCtx.stroke();
+      }
+      hudCtx.globalAlpha = 1;
+    }
+
+    // ── Speed readout on HUD ──
+    {
+      const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult();
+      const speedPct = Math.min(100, Math.round((fl.speed / maxSpd3) * 100));
+      hudCtx.font = '10px "Segoe UI"';
+      hudCtx.fillStyle = speedPct > 75 ? '#ff8844' : speedPct > 30 ? '#44aaff' : '#557799';
+      hudCtx.textAlign = 'left';
+      hudCtx.fillText('SPD ' + speedPct + '%  ' + Math.round(fl.speed) + ' m/s', 20, hudCanvas.height - 30);
+      // Target distance
+      if (state.targetLock.locked && state.targetLock.target && state.targetLock.target.group) {
+        const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
+        hudCtx.fillStyle = '#ff6666';
+        hudCtx.fillText('TGT ' + tDist + 'm', 20, hudCanvas.height - 16);
+      }
+    }
+
 renderLibraryLabels();
   } else {
     // Bridge — gentle idle camera
