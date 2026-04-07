@@ -211,6 +211,11 @@ export function createAssetUploadRouter({ uploadDir = 'uploads', maxFileSize = 1
    * Remove an uploaded asset by type (models|textures) and filename.
    */
   router.delete('/:type/:filename', (req, res) => {
+    // Require admin API key for destructive operations
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { type, filename } = req.params;
 
     if (type !== 'models' && type !== 'textures') {

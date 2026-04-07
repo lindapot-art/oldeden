@@ -10,6 +10,8 @@
  */
 
 import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAssetUploadRouter } from './AssetUploadRouter.js';
@@ -26,18 +28,70 @@ const publicDir = path.resolve(__dirname, '..', '..', 'public');
  * @param {number} [options.maxFileSize]           Max upload size in bytes
  * @returns {{ app: express.Application, start: (port: number) => Promise<import('http').Server> }}
  */
-export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
+export function createHttpServer({ uploadDir = 'uploads', maxFileSize, corsOrigins } = {}) {
   const app = express();
+  app.disable('x-powered-by');
 
-  // JSON body parsing for non-upload routes
-  app.use(express.json());
+  // JSON body parsing for non-upload routes (capped at 512 KB)
+  app.use(express.json({ limit: '512kb' }));
+
+  // ── CORS for REST API ─────────────────────────────────────────────────────
+  const allowedOrigins = corsOrigins || [
+    'http://localhost:3000',
+    'https://oldeden.onrender.com',
+  ];
+  app.use(cors({
+    origin(origin, cb) {
+      // Allow requests with no origin (same-origin, curl, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error('CORS blocked'));
+    },
+    methods: ['GET', 'POST', 'DELETE'],
+    credentials: true,
+  }));
+
+  // ── Security headers ──────────────────────────────────────────────────────
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-XSS-Protection', '0'); // Deprecated but harmless
+    // HSTS — only in production (breaks localhost HTTP)
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    // Content Security Policy — game uses inline scripts/styles so we need 'unsafe-inline'
+    res.setHeader('Content-Security-Policy', [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "connect-src 'self' ws: wss:",
+      "font-src 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; '));
+    next();
+  });
+
+  // ── REST API rate limiting ────────────────────────────────────────────────
+  const apiLimiter = rateLimit({
+    windowMs: 60_000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later' },
+  });
+  app.use('/api/game', apiLimiter);
 
   // ── Serve frontend static files ───────────────────────────────────────────
   app.use(express.static(publicDir));
 
   // ── Health check ──────────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime() });
+    res.json({ status: 'ok' });
   });
 
   // ── Static serving of uploaded assets ─────────────────────────────────────
@@ -48,10 +102,21 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
 
   /**
    * Add the SPA fallback — call AFTER registering game API routes in index.js.
+   * Excludes /api/* routes so they properly return 404 instead of index.html.
    */
   function addFallback() {
-    app.get('*', (_req, res) => {
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) return next();
       res.sendFile(path.join(publicDir, 'index.html'));
+    });
+    // Catch-all for unmatched API routes
+    app.use('/api', (_req, res) => {
+      res.status(404).json({ error: 'Not found' });
+    });
+    // Global error handler — catches unhandled Express errors
+    app.use((err, _req, res, _next) => {
+      console.error('[Express] Unhandled error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
     });
   }
 
@@ -79,6 +144,7 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize } = {}) {
         });
 
         server.once('error', (err) => {
+          server.close(); // Ensure handle is freed before retry
           if (err.code === 'EADDRINUSE' && attempt < maxRetries) {
             attempt++;
             const next = port + attempt;

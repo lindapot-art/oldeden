@@ -50,11 +50,24 @@ export class MongoStore {
    */
   async save(playerId, data) {
     if (!VALID_ID.test(playerId)) throw new Error('Invalid player ID');
+    // Recursively reject keys starting with $ to prevent NoSQL operator injection
+    const sanitized = MongoStore._sanitize(data);
     await Player.findByIdAndUpdate(
       playerId,
-      { $set: { ...data, _id: playerId } },
+      { $set: { ...sanitized, _id: playerId } },
       { upsert: true, setDefaultsOnInsert: true }
     );
+  }
+
+  static _sanitize(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(v => MongoStore._sanitize(v));
+    const out = {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (key.startsWith('$')) continue;
+      out[key] = MongoStore._sanitize(val);
+    }
+    return out;
   }
 
   /**

@@ -249,8 +249,8 @@ export class NPCSystem {
     npc.ageYears += inGameYearsPassed;
 
     // Check natural death
-    const genetics = this._engine.getSystem('genetics');
-    const maxLifespan = genetics.getLifespan(npc.genome);
+    if (!this._genetics) this._genetics = this._engine.getSystem('genetics');
+    const maxLifespan = this._genetics.getLifespan(npc.genome);
     if (npc.ageYears >= maxLifespan) {
       this.killNPC(npc.id, 'old_age');
       return;

@@ -15,6 +15,8 @@ describe('EnemySpawnSystem', () => {
     mockNpcSystem = {};
     mockCombatSystem = {
       registerShield: jest.fn(),
+      removeShield: jest.fn(),
+      cleanseDots: jest.fn(),
     };
     mockEngine = {
       events: { on: jest.fn(), emit: jest.fn() },

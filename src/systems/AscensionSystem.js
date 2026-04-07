@@ -18,7 +18,7 @@ import { randomUUID } from 'crypto';
  */
 
 const MAX_ASCENDED_PER_SERVER = 100;
-const ASCENSION_TRIAL_COST_SM = 500;
+const ASCENSION_TRIAL_COST_SM = 200;
 const PASSIVE_INCOME_RATE = 0.0001; // 0.01%
 const MIN_REBIRTHS_REQUIRED = 3;
 const TRIAL_BASE_DIFFICULTY = 5;      // scales with lifetime stats

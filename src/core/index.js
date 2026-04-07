@@ -123,24 +123,30 @@ const COMMODITIES = [
   { name: 'Anti-matter Reserves', base: 2000 },
 ];
 
+// Station prices are deterministic (seed-based) — cache per systemIdx
+const _stationPriceCache = new Map();
 function getStationPrices(systemIdx) {
+  let cached = _stationPriceCache.get(systemIdx);
+  if (cached) return cached;
   const seed = systemIdx * 7 + 13;
-  return COMMODITIES.map((c, i) => {
-    const variance = 0.8 + ((Math.sin(seed + i * 3.7) + 1) / 2) * 0.4;
+  const prices = COMMODITIES.map((c, i) => {
+    const variance = 0.9 + ((Math.sin(seed + i * 3.7) + 1) / 2) * 0.2;
     const buy = Math.round(c.base * variance);
-    const sell = Math.round(buy * 0.78);
+    const sell = Math.round(buy * 0.72);
     return { name: c.name, buy, sell };
   });
+  _stationPriceCache.set(systemIdx, prices);
+  return prices;
 }
 
 // Register starter quests in QuestSystem
 const STARTER_QUESTS = [
-  { id: 'q-kill-scouts',  name: 'Thin the Ranks',   objectives: [{ type: 'kill', target: 'scout', required: 5 }],  rewards: { credits: 250 } },
-  { id: 'q-kill-fighters', name: 'Dogfight Ace',     objectives: [{ type: 'kill', target: 'fighter', required: 3 }], rewards: { credits: 400 } },
-  { id: 'q-kill-bombers', name: 'Bomber Buster',     objectives: [{ type: 'kill', target: 'bomber', required: 2 }],  rewards: { credits: 500 } },
-  { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 600, reputation: { hegemony_vanguard: 50 } } },
-  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 300, reputation: { void_cult: 50 } } },
-  { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 350, reputation: { iron_syndicate: 50 } } },
+  { id: 'q-kill-scouts',  name: 'Thin the Ranks',   objectives: [{ type: 'kill', target: 'scout', required: 5 }],  rewards: { credits: 750 } },
+  { id: 'q-kill-fighters', name: 'Dogfight Ace',     objectives: [{ type: 'kill', target: 'fighter', required: 3 }], rewards: { credits: 1200 } },
+  { id: 'q-kill-bombers', name: 'Bomber Buster',     objectives: [{ type: 'kill', target: 'bomber', required: 2 }],  rewards: { credits: 1500 } },
+  { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 1800, reputation: { hegemony_vanguard: 50 } } },
+  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 900, reputation: { void_cult: 50 } } },
+  { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 1050, reputation: { iron_syndicate: 50 } } },
 ];
 STARTER_QUESTS.forEach(q => quests.registerQuest(q));
 
@@ -150,7 +156,13 @@ const uploadDir = path.resolve(PROJECT_ROOT, process.env.UPLOAD_DIR ?? 'uploads'
 fs.mkdirSync(uploadDir, { recursive: true });
 const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE ?? '157286400', 10); // 150 MB default
 
-const { app, start: startHttp, addFallback } = createHttpServer({ uploadDir, maxFileSize });
+const { app, start: startHttp, addFallback } = createHttpServer({
+  uploadDir,
+  maxFileSize,
+  corsOrigins: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : undefined,
+});
 
 // ── Game API Routes ──────────────────────────────────────────────────────────
 app.get('/api/game/factions', (_req, res) => {
@@ -185,9 +197,7 @@ app.get('/api/game/economy/rates', (_req, res) => {
   res.json(econ.getExchangeRates());
 });
 
-app.get('/api/game/systems', (_req, res) => {
-  res.json({ systems: [...engine._systems.keys()], count: engine._systems.size });
-});
+// /api/game/systems intentionally removed — exposed internal engine details
 
 // ── Save / Load API ──────────────────────────────────────────────────────────
 app.post('/api/game/save', async (req, res) => {
@@ -204,7 +214,22 @@ app.post('/api/game/save', async (req, res) => {
     if (!authorised) {
       return res.status(403).json({ error: 'No active session for this player' });
     }
-    await fileStore.save(playerId, data);
+    // Payload size guard — reject excessively large saves (> 512 KB)
+    const payloadSize = JSON.stringify(data).length;
+    if (payloadSize > 524288) {
+      return res.status(413).json({ error: 'Payload too large' });
+    }
+    // Allowlist filter — same keys permitted via Socket save
+    const ALLOWED_SAVE_KEYS = ['playerId', 'name', 'faction', 'genome', 'wallet', 'trades',
+      'position', 'rotation', 'currentSystem', 'settings', 'combat', 'inventory',
+      'quests', 'upgrades', 'flight', 'pastLives', 'skills', 'soulMemory',
+      'activeWeapon', 'persistentItems', 'currentSkin', 'market', 'insuredItemId',
+      'chatbot', 'factionRep', 'ship', 'location', 'savedAt'];
+    const filtered = {};
+    for (const key of ALLOWED_SAVE_KEYS) {
+      if (data[key] !== undefined) filtered[key] = data[key];
+    }
+    await fileStore.save(playerId, filtered);
     res.json({ ok: true });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -284,9 +309,30 @@ const allowedOrigins = process.env.CORS_ORIGINS
 
 io = new SocketServer(httpServer, {
   cors: { origin: allowedOrigins },
+  maxHttpBufferSize: 65536, // 64KB — prevents message-flood DoS
 });
 
-// ── Rate Limiter ─────────────────────────────────────────────────────────────
+// ── Socket.IO connection limit per IP ────────────────────────────────────────
+const IP_CONNECTION_LIMIT = 5;
+const ipConnectionCounts = new Map();
+
+io.use((socket, next) => {
+  const ip = socket.handshake.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || socket.handshake.address || 'unknown';
+  const count = ipConnectionCounts.get(ip) || 0;
+  if (count >= IP_CONNECTION_LIMIT) {
+    return next(new Error('Too many connections from this IP'));
+  }
+  ipConnectionCounts.set(ip, count + 1);
+  socket.once('disconnect', () => {
+    const c = ipConnectionCounts.get(ip) || 1;
+    if (c <= 1) ipConnectionCounts.delete(ip);
+    else ipConnectionCounts.set(ip, c - 1);
+  });
+  next();
+});
+
+// ── Rate Limiter (IP-based, shared across reconnections) ─────────────────────
 const RATE_LIMITS = {
   'combat:kill':     { max: 10, windowMs: 1000 },
   'station:buy':     { max: 5,  windowMs: 1000 },
@@ -303,30 +349,73 @@ const RATE_LIMITS = {
   'player:sync':     { max: 3,  windowMs: 1000 },
 };
 
-function createRateLimiter() {
-  const counters = new Map();
-  return function checkRate(eventName) {
-    const limit = RATE_LIMITS[eventName];
-    if (!limit) return true;
-    const now = Date.now();
-    let entry = counters.get(eventName);
-    if (!entry || now > entry.resetAt) {
-      entry = { count: 0, resetAt: now + limit.windowMs };
-      counters.set(eventName, entry);
-    }
-    entry.count++;
-    return entry.count <= limit.max;
-  };
+/** IP-based rate limiter map — shared across all sockets from the same IP */
+const ipRateLimiters = new Map();
+
+function getOrCreateIPLimiter(ip) {
+  let limiter = ipRateLimiters.get(ip);
+  if (!limiter) {
+    limiter = { counters: new Map(), lastActive: Date.now() };
+    ipRateLimiters.set(ip, limiter);
+  }
+  limiter.lastActive = Date.now();
+  return limiter;
 }
+
+function checkRate(limiter, eventName) {
+  const limit = RATE_LIMITS[eventName];
+  if (!limit) return true;
+  const now = Date.now();
+  let entry = limiter.counters.get(eventName);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + limit.windowMs };
+    limiter.counters.set(eventName, entry);
+  }
+  entry.count++;
+  return entry.count <= limit.max;
+}
+
+// Prune stale IP limiter entries every 60 seconds
+setInterval(() => {
+  const cutoff = Date.now() - 120_000;
+  for (const [ip, limiter] of ipRateLimiters) {
+    if (limiter.lastActive < cutoff) ipRateLimiters.delete(ip);
+  }
+}, 60_000).unref();
 
 io.on('connection', (socket) => {
   console.log(`[Socket.IO] Client connected: ${socket.id}`);
 
-  // Per-socket rate limiter — drops packets exceeding thresholds
-  const rateLimiter = createRateLimiter();
+  // IP-based rate limiter — persists across reconnections from same IP
+  const clientIP = socket.handshake.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || socket.handshake.address
+    || 'unknown';
+  const ipLimiter = getOrCreateIPLimiter(clientIP);
+  let rateViolations = 0;
+  const MAX_RATE_VIOLATIONS = 50;
+  // Known event names — deny-by-default for unknown events
+  const KNOWN_EVENTS = new Set([
+    ...Object.keys(RATE_LIMITS),
+    'player:create', 'player:sync', 'economy:sync',
+    'station:repair', 'station:refuel', 'station:upgrade',
+    'station:enter', 'station:buy', 'station:sell',
+    'quest:list', 'quest:accept',
+    'rebirth:sync', 'cargo:deposit',
+    'disconnect', 'disconnecting',
+  ]);
   socket.use(([eventName], next) => {
-    if (!rateLimiter(eventName)) {
-      console.warn(`[RateLimit] ${socket.id} exceeded limit for ${eventName}`);
+    if (!KNOWN_EVENTS.has(eventName)) {
+      console.warn(`[Security] ${clientIP} (${socket.id}) unknown event: ${eventName}`);
+      return; // Silently drop unknown events
+    }
+    if (!checkRate(ipLimiter, eventName)) {
+      rateViolations++;
+      if (rateViolations > MAX_RATE_VIOLATIONS) {
+        console.warn(`[RateLimit] ${clientIP} (${socket.id}) exceeded max violations, disconnecting`);
+        socket.disconnect(true);
+        return;
+      }
+      console.warn(`[RateLimit] ${clientIP} (${socket.id}) exceeded limit for ${eventName}`);
       socket.emit('rate:limited', { event: eventName });
       return;
     }
@@ -334,13 +423,13 @@ io.on('connection', (socket) => {
   });
 
   socket.emit('game:init', {
-    systems: [...engine._systems.keys()],
-    uptime: process.uptime(),
     tickRate: engine.tickRateMs,
   });
 
   socket.on('player:create', (data) => {
     try {
+    // Prevent duplicate session on same socket
+    if (players.has(socket.id)) return;
     // Input validation
     const name = typeof data?.name === 'string' ? data.name.slice(0, 32).replace(/[<>"'&]/g, '') : 'Unknown Pilot';
     const faction = typeof data?.faction === 'string' && FACTIONS.some(f => f.id === data.faction)
@@ -401,6 +490,7 @@ io.on('connection', (socket) => {
         if (rew.credits) econ.credit(player.playerId, 'ec', rew.credits);
         const updatedWallet = econ.getWallet(player.playerId);
         socket.emit('quest:complete', { questId: qid, rewards: rew, wallet: { ec: updatedWallet.ec, sm: updatedWallet.sm } });
+        player.activeQuests.delete(qid);
       }
     }
 
@@ -481,6 +571,7 @@ io.on('connection', (socket) => {
         if (rew.credits) econ.credit(player.playerId, 'ec', rew.credits);
         const wallet = econ.getWallet(player.playerId);
         socket.emit('quest:complete', { questId: qid, rewards: rew, wallet: { ec: wallet.ec, sm: wallet.sm } });
+        player.activeQuests.delete(qid);
       }
     }
     } catch (err) { console.error('[Socket] system:visit error:', err.message); }
@@ -503,7 +594,7 @@ io.on('connection', (socket) => {
     try {
     const player = players.get(socket.id);
     if (!player || player.currentStation < 0) return;
-    const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
+    const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64).trim() : '';
     if (!itemName) return;
     // Server-authoritative price lookup
     const stationPrices = getStationPrices(player.currentStation);
@@ -525,6 +616,7 @@ io.on('connection', (socket) => {
           if (rew.credits) econ.credit(player.playerId, 'ec', rew.credits);
           const wallet = econ.getWallet(player.playerId);
           socket.emit('quest:complete', { questId: qid, rewards: rew, wallet: { ec: wallet.ec, sm: wallet.sm } });
+          player.activeQuests.delete(qid);
         }
       }
       const wallet = econ.getWallet(player.playerId);
@@ -539,7 +631,7 @@ io.on('connection', (socket) => {
     try {
     const player = players.get(socket.id);
     if (!player || player.currentStation < 0) return;
-    const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64) : '';
+    const itemName = typeof data?.name === 'string' ? data.name.slice(0, 64).trim() : '';
     if (!itemName) return;
     // Verify player has this item in cargo
     const held = player.cargo.get(itemName) || 0;
@@ -612,9 +704,25 @@ io.on('connection', (socket) => {
           'combat', 'inventory', 'quests', 'upgrades', 'flight', 'pastLives',
           'skills', 'soulMemory', 'activeWeapon', 'persistentItems',
           'currentSkin', 'market', 'insuredItemId', 'chatbot', 'factionRep',
-          'ship', 'location'];
+          'ship', 'location', 'purchasedUpgrades'];
         for (const key of allowedKeys) {
           if (data[key] !== undefined) serverState[key] = data[key];
+        }
+        // Range-clamp upgrade values to prevent cheat injection
+        if (serverState.upgrades && typeof serverState.upgrades === 'object') {
+          const u = serverState.upgrades;
+          const clampKeys = ['railgunDmg','laserDmg','maxHull','maxShield','maxFuel',
+            'maxAmmo','miningYield','engineSpeed','cargoSize','regenRate'];
+          for (const k of clampKeys) {
+            if (typeof u[k] === 'number') u[k] = Math.max(0, Math.min(u[k], 9999));
+          }
+        }
+        // Clamp combat stats to sane ranges
+        if (serverState.combat && typeof serverState.combat === 'object') {
+          const cb = serverState.combat;
+          for (const k of Object.keys(cb)) {
+            if (typeof cb[k] === 'number') cb[k] = Math.max(0, Math.min(cb[k], 1e9));
+          }
         }
       }
       await fileStore.save(player.playerId, serverState);
@@ -744,12 +852,17 @@ io.on('connection', (socket) => {
 
   socket.on('quests:request', () => {
     try {
-    const proc = engine.getSystem('procedural');
-    const questHooks = [];
-    for (let i = 0; i < 5; i++) {
-      questHooks.push(proc.generateQuestHook());
+    // Cache procedural quest hooks — refresh every 60 seconds
+    if (!engine._questCache || Date.now() - engine._questCacheTime > 60_000) {
+      const proc = engine.getSystem('procedural');
+      const questHooks = [];
+      for (let i = 0; i < 5; i++) {
+        questHooks.push(proc.generateQuestHook());
+      }
+      engine._questCache = { quests: questHooks };
+      engine._questCacheTime = Date.now();
     }
-    socket.emit('quests:data', { quests: questHooks });
+    socket.emit('quests:data', engine._questCache);
     } catch (err) { console.error('[Socket] quests:request error:', err.message); }
   });
 
@@ -798,6 +911,9 @@ io.on('connection', (socket) => {
       if (cycleSys?._playerProgress) cycleSys._playerProgress.delete(pid);
       const ascensionSys = engine.getSystem('ascension');
       if (ascensionSys?._rebirthCounts) ascensionSys._rebirthCounts.delete(pid);
+      const combatSys = engine.getSystem('combat');
+      combatSys?.removeShield?.(pid);
+      combatSys?.cleanseDots?.(pid);
       const fractureSys = engine.getSystem('fracture');
       if (fractureSys?._activeShards) {
         // Remove shards originated by this player (optional — keeps shards for others to find)

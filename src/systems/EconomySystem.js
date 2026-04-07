@@ -31,9 +31,9 @@ export const SUBSCRIPTION_TIER = Object.freeze({
 
 const TIER_CONFIG = {
   [SUBSCRIPTION_TIER.FREE]:      { ecMultiplier: 1.0,  monthlySmAllowance: 0,    priceUsd: 0     },
-  [SUBSCRIPTION_TIER.PIONEER]:   { ecMultiplier: 2.0,  monthlySmAllowance: 500,  priceUsd: 7.99  },
-  [SUBSCRIPTION_TIER.VANGUARD]:  { ecMultiplier: 3.0,  monthlySmAllowance: 750,  priceUsd: 14.99 },
-  [SUBSCRIPTION_TIER.OVERLORD]:  { ecMultiplier: 5.0,  monthlySmAllowance: 1500, priceUsd: 29.99 },
+  [SUBSCRIPTION_TIER.PIONEER]:   { ecMultiplier: 1.5,  monthlySmAllowance: 500,  priceUsd: 7.99  },
+  [SUBSCRIPTION_TIER.VANGUARD]:  { ecMultiplier: 2.0,  monthlySmAllowance: 750,  priceUsd: 14.99 },
+  [SUBSCRIPTION_TIER.OVERLORD]:  { ecMultiplier: 2.5,  monthlySmAllowance: 1500, priceUsd: 29.99 },
 };
 
 // Base exchange rates (EC per 1 SM)

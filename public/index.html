@@ -1291,6 +1291,9 @@ function getGenomeMult(geneIndex, soulBonus = 0) {
 function getPlayerDamageMult() {
   return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * state.upgrades.railgunDmg * getSkillBonus('gunnery');
 }
+function getPlayerLaserDamageMult() {
+  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * (state.upgrades.laserDmg || 1) * getSkillBonus('gunnery');
+}
 function getPlayerSpeedMult() {
   return getGenomeMult(33) * getSkillBonus('piloting');
 }
@@ -1795,7 +1798,7 @@ function presentKarmaCard(roll) {
   
   _karmaTimeouts.push(setTimeout(() => {
     // Step 4: Faction (visible reveal)
-    factionEl.innerHTML = 'Faction: <span style="color:' + roll.factionColor + '">' + _escHtml(roll.factionName) + '</span>';
+    factionEl.innerHTML = 'Faction: <span style="color:' + _escHtml(roll.factionColor) + '">' + _escHtml(roll.factionName) + '</span>';
     AudioSFX.play('karma_step');
   }, t4));
   
@@ -1851,7 +1854,7 @@ function updateDeathTicker() {
 //  LASER WEAPON — Secondary weapon system
 // ================================================================
 const LASER_FIRE_RATE = 100;   // ms between shots
-const LASER_DAMAGE = 0.5;     // per hit (railgun is 1.0) — genome-multiplied
+const LASER_DAMAGE = 0.65;    // per hit — laser has faster fire rate for higher DPS
 const LASER_SPEED = 600;      // faster than railgun
 const LASER_AMMO_COST = 0;    // lasers use heat, not ammo
 const LASER_HEAT_PER_SHOT = 0.03;
@@ -1873,7 +1876,9 @@ function fireLaser() {
   const origin = _laserOrigin;
   
   const g = new THREE.Group();
-  const beamMat = _laserBeamTpl.clone();
+  const beamMat = _laserBeamMatPool[_laserMatPoolIdx];
+  _laserMatPoolIdx = (_laserMatPoolIdx + 1) % _LASER_MAT_POOL_SIZE;
+  beamMat.opacity = 0.7; beamMat.color.setHex(0x44ffaa);
   const beam = new THREE.Mesh(_laserBeamGeo, beamMat);
   beam.quaternion.copy(camera.quaternion); beam.rotateX(Math.PI / 2);
   g.add(beam);
@@ -2113,6 +2118,7 @@ function loadFromServerData(data) {
   if (data.currentSkin) { state.currentSkin = data.currentSkin; }
   if (data.market) state.market = data.market;
   if (data.insuredItemId) state.insuredItemId = data.insuredItemId;
+  if (data.purchasedUpgrades && Array.isArray(data.purchasedUpgrades)) state.purchasedUpgrades = data.purchasedUpgrades;
   if (data.flight && data.flight.maxSpeed) state.flight.maxSpeed = data.flight.maxSpeed;
   // Soul Fracture migration for old saves
   if (!state.player.soulFragments) state.player.soulFragments = [];
@@ -2157,6 +2163,8 @@ function showScreen(name) {
     _transitioning = true;
     _overlay.classList.add('active');
     setTimeout(() => { try { _showScreenInner(name); } finally { _overlay.classList.remove('active'); _transitioning = false; } }, dur);
+    // Safety backstop — force unlock after 2s if something goes wrong
+    setTimeout(() => { if (_transitioning) { _overlay.classList.remove('active'); _transitioning = false; } }, 2000);
     return;
   }
   _showScreenInner(name);
@@ -2243,9 +2251,9 @@ function initCreateScreen() {
     const card = document.createElement('div');
     card.className = 'faction-card';
     card.style.borderTopColor = f.color;
-    card.innerHTML = `<div class="fname" style="color:${f.color}">${f.name}</div>
-      <div class="fdetail">${f.ideology} &mdash; ${f.home}</div>
-      <div class="fdetail" style="margin-top:4px;">${f.desc}</div>`;
+    card.innerHTML = `<div class="fname" style="color:${_escHtml(f.color)}">${_escHtml(f.name)}</div>
+      <div class="fdetail">${_escHtml(f.ideology)} &mdash; ${_escHtml(f.home)}</div>
+      <div class="fdetail" style="margin-top:4px;">${_escHtml(f.desc)}</div>`;
     card.setAttribute('tabindex', '0');
     card.setAttribute('role', 'button');
     card.setAttribute('aria-label', f.name + ' faction');
@@ -2634,8 +2642,8 @@ function renderMapLegend() {
   const el = document.getElementById('map-legend');
   el.innerHTML = FACTIONS.map(f =>
     `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;">
-      <div style="width:10px;height:10px;border-radius:50%;background:${f.color}"></div>
-      <span style="color:var(--muted)">${f.name}</span>
+      <div style="width:10px;height:10px;border-radius:50%;background:${_escHtml(f.color)}"></div>
+      <span style="color:var(--muted)">${_escHtml(f.name)}</span>
     </div>`
   ).join('');
 }
@@ -2765,7 +2773,7 @@ function jumpToSystem(idx) {
     state.ship.hull = Math.max(1, state.ship.hull - 10);
     addComms('Engineering', 'Emergency jump — hull integrity compromised! Earn credits for safer travel.');
   }
-  gainSkillXP('piloting', 0.2);
+  gainSkillXP('piloting', 0.04);
   state.selectedSystem = null;
   const sys = state.starSystems[idx];
   // Report visit to server for quest progress
@@ -2799,13 +2807,15 @@ function jumpToSystem(idx) {
 //  STATION
 // ================================================================
 const COMMODITIES = [
-  { name: 'Salvage Scrap', buy: 25, sell: 15 },
-  { name: 'Titanite Ore', buy: 120, sell: 95 },
-  { name: 'Hydrogen Fuel', buy: 45, sell: 35 },
-  { name: 'Dark Matter Crystals', buy: 850, sell: 680 },
-  { name: 'Bio-organic Materials', buy: 200, sell: 160 },
-  { name: 'Quantum Processors', buy: 1200, sell: 950 },
-  { name: 'Anti-matter Reserves', buy: 2000, sell: 1600 },
+  { name: 'Salvage Scrap', buy: 22, sell: 18 },
+  { name: 'Titanite Ore', buy: 115, sell: 100 },
+  { name: 'Hydrogen Fuel', buy: 42, sell: 38 },
+  { name: 'Dark Matter Crystals', buy: 820, sell: 720 },
+  { name: 'Bio-organic Materials', buy: 190, sell: 170 },
+  { name: 'Quantum Processors', buy: 1150, sell: 1020 },
+  { name: 'Anti-matter Reserves', buy: 1900, sell: 1700 },
+  { name: 'Void Crystal', buy: 3200, sell: 2850 },
+  { name: 'Rare Earth Compounds', buy: 280, sell: 250 },
 ];
 
 // Mirror of server starter quests (for UI)
@@ -2829,16 +2839,24 @@ function renderStation() {
   const market = document.getElementById('trade-market');
   market.innerHTML = prices.map(c => {
     const safeName = _escHtml(c.name);
-    const jsName = c.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     return `
     <div class="trade-row">
       <span>${safeName}</span>
       <span>
-        <button class="trade-buy" onclick="window._buy('${jsName}',${c.buy})">Buy ${c.buy} EC</button>
-        <button class="trade-sell" onclick="window._sell('${jsName}',${c.sell})">Sell ${c.sell} EC</button>
+        <button class="trade-buy" data-item="${safeName}" data-price="${c.buy}">Buy ${c.buy} EC</button>
+        <button class="trade-sell" data-item="${safeName}" data-price="${c.sell}">Sell ${c.sell} EC</button>
       </span>
     </div>`;
   }).join('');
+  // Event delegation for trade buttons (avoids inline onclick injection)
+  market.onclick = (e) => {
+    const btn = e.target.closest('.trade-buy, .trade-sell');
+    if (!btn) return;
+    const itemName = btn.dataset.item;
+    const price = parseInt(btn.dataset.price, 10);
+    if (btn.classList.contains('trade-buy')) window._buy(itemName, price);
+    else window._sell(itemName, price);
+  };
 
   // Inventory display
   const invHtml = state.inventory.length
@@ -2861,10 +2879,13 @@ function renderStation() {
   // Available upgrades at station
   const upgradesHtml = SHIP_UPGRADES.filter(u => {
     // Only show if not already purchased (check if stat already at upgrade value)
-    return state.upgrades[u.stat] < u.value;
+    if (state.upgrades[u.stat] >= u.value) return false;
+    // Tiered: require prerequisite to be purchased first
+    if (u.requires && !state.purchasedUpgrades?.includes(u.requires)) return false;
+    return true;
   }).map(u => `
     <div class="trade-row">
-      <span>${u.name} <span style="color:var(--muted);font-size:0.7rem">${u.desc}</span></span>
+      <span>${u.name} <span style="color:var(--muted);font-size:0.7rem">${u.desc}</span>${u.tier > 1 ? ' <span style="color:var(--hud-green);font-size:0.6rem">T'+u.tier+'</span>' : ''}</span>
       <button class="trade-buy" onclick="window._buyUpgrade('${u.id}')">${u.cost} EC</button>
     </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">All upgrades purchased!</p>';
 
@@ -2939,7 +2960,7 @@ function renderStation() {
         <div style="flex:1;min-width:0">
           <div style="color:var(--gold);font-size:0.95rem">${_escHtml(life.name)} <span style="color:var(--muted);font-size:0.7rem">— ${_escHtml(life.occupation)}</span></div>
           <div style="font-size:0.75rem;color:var(--muted)">Life #${life.rebirthNum + 1} · ${life.kills} kills · ${life.score} pts</div>
-          <div style="font-size:0.7rem;color:${fac?.color || '#888'}">${_escHtml(fac?.name || 'Independent')} · Died: ${_escHtml(life.deathCause)}</div>
+          <div style="font-size:0.7rem;color:${_escHtml(fac?.color || '#888')}">${_escHtml(fac?.name || 'Independent')} · Died: ${_escHtml(life.deathCause)}</div>
         </div>
         <div style="font-size:1.2rem;opacity:0.3">▸</div>
       </div>`;
@@ -3085,8 +3106,11 @@ window._buyUpgrade = (id) => {
   if (!u) return;
   if (state.player.credits < u.cost) { addComms('Station', 'Insufficient credits.'); return; }
   if (state.upgrades[u.stat] >= u.value) { addComms('Station', 'Already purchased.'); return; }
+  if (u.requires && !state.purchasedUpgrades?.includes(u.requires)) { addComms('Station', 'Prerequisite not met.'); return; }
   state.player.credits -= u.cost;
   state.upgrades[u.stat] = u.value;
+  if (!state.purchasedUpgrades) state.purchasedUpgrades = [];
+  if (!state.purchasedUpgrades.includes(id)) state.purchasedUpgrades.push(id);
   applyUpgrades();
   addComms('Station', `Installed ${u.name}!`);
   AudioSFX.play('quest_complete');
@@ -3309,9 +3333,9 @@ function renderFragmentGallery() {
     const col = affinityColors[f.resonanceAffinity] || '#a855f7';
     const selected = (sfSelectedSlots.a === i || sfSelectedSlots.b === i) ? ' selected' : '';
     return `<div class="sf-fragment-card${selected}" onclick="window._sfSelectFrag(${i})" style="border-color:${selected ? col : 'var(--border)'}">
-      <div class="frag-id">${f.id}</div>
+      <div class="frag-id">${_escHtml(f.id)}</div>
       <div class="frag-power" style="color:${col}">${f.powerLevel}</div>
-      <div style="font-size:0.7rem;color:${col};text-transform:uppercase;">${f.resonanceAffinity}</div>
+      <div style="font-size:0.7rem;color:${col};text-transform:uppercase;">${_escHtml(f.resonanceAffinity)}</div>
       <div class="frag-stats">K:${f.kills} S:${f.score} ☆${f.bestStreak}</div>
       <div class="frag-stats">Life #${f.rebirthNum}</div>
     </div>`;
@@ -3338,11 +3362,11 @@ function updateFuseSlots() {
   const frags = state.player.soulFragments;
   if (sfSelectedSlots.a !== null && frags[sfSelectedSlots.a]) {
     const f = frags[sfSelectedSlots.a];
-    slotA.innerHTML = `<div style="font-size:0.7rem;color:#a855f7;">${f.id.slice(0,8)}<br>⚡${f.powerLevel}</div>`;
+    slotA.innerHTML = `<div style="font-size:0.7rem;color:#a855f7;">${_escHtml(f.id.slice(0,8))}<br>⚡${f.powerLevel}</div>`;
   } else { slotA.innerHTML = 'Slot A'; }
   if (sfSelectedSlots.b !== null && frags[sfSelectedSlots.b]) {
     const f = frags[sfSelectedSlots.b];
-    slotB.innerHTML = `<div style="font-size:0.7rem;color:#a855f7;">${f.id.slice(0,8)}<br>⚡${f.powerLevel}</div>`;
+    slotB.innerHTML = `<div style="font-size:0.7rem;color:#a855f7;">${_escHtml(f.id.slice(0,8))}<br>⚡${f.powerLevel}</div>`;
   } else { slotB.innerHTML = 'Slot B'; }
 }
 
@@ -3490,12 +3514,24 @@ function initSettingsScreen() {
 //  SHIP UPGRADES
 // ================================================================
 const SHIP_UPGRADES = [
-  { id: 'railgun_mk3',  name: 'Railgun Mk-III',      cost: 800,  stat: 'railgunDmg',  value: 1.5, desc: '+50% railgun damage' },
-  { id: 'shield_boost',  name: 'Shield Capacitor',    cost: 600,  stat: 'maxShield',   value: 150, desc: '+50 max shield' },
-  { id: 'hull_plating',  name: 'Reinforced Hull',     cost: 500,  stat: 'maxHull',     value: 150, desc: '+50 max hull' },
-  { id: 'ammo_expand',   name: 'Expanded Magazine',   cost: 400,  stat: 'maxAmmo',     value: 36,  desc: '+12 max ammo (24→36)' },
-  { id: 'shield_gen',    name: 'Shield Generator II',  cost: 1000, stat: 'shieldRegen', value: 5,   desc: '+2/sec shield regen' },
-  { id: 'engine_boost',  name: 'Engine Overcharge',   cost: 700,  stat: 'engineSpeed', value: 1.3, desc: '+30% engine speed' },
+  // Tier 1
+  { id: 'railgun_mk2',  name: 'Railgun Mk-II',       cost: 500,  stat: 'railgunDmg',  value: 1.3, desc: '+30% railgun damage', tier: 1 },
+  { id: 'railgun_mk3',  name: 'Railgun Mk-III',      cost: 1500, stat: 'railgunDmg',  value: 1.7, desc: '+70% railgun damage', tier: 2, requires: 'railgun_mk2' },
+  { id: 'railgun_mk4',  name: 'Railgun Mk-IV',       cost: 4000, stat: 'railgunDmg',  value: 2.2, desc: '+120% railgun damage', tier: 3, requires: 'railgun_mk3' },
+  { id: 'laser_mk2',    name: 'Laser Focusing Lens',  cost: 400,  stat: 'laserDmg',    value: 1.3, desc: '+30% laser damage', tier: 1 },
+  { id: 'laser_mk3',    name: 'Laser Amplifier',      cost: 1200, stat: 'laserDmg',    value: 1.7, desc: '+70% laser damage', tier: 2, requires: 'laser_mk2' },
+  { id: 'shield_boost',  name: 'Shield Capacitor',    cost: 600,  stat: 'maxShield',   value: 150, desc: '+50 max shield', tier: 1 },
+  { id: 'shield_boost2', name: 'Phase Shield Array',  cost: 2500, stat: 'maxShield',   value: 250, desc: '+150 max shield', tier: 2, requires: 'shield_boost' },
+  { id: 'hull_plating',  name: 'Reinforced Hull',     cost: 500,  stat: 'maxHull',     value: 150, desc: '+50 max hull', tier: 1 },
+  { id: 'hull_plating2', name: 'Ablative Armor',      cost: 2000, stat: 'maxHull',     value: 250, desc: '+150 max hull', tier: 2, requires: 'hull_plating' },
+  { id: 'ammo_expand',   name: 'Expanded Magazine',   cost: 400,  stat: 'maxAmmo',     value: 36,  desc: '+12 max ammo (24→36)', tier: 1 },
+  { id: 'ammo_expand2',  name: 'Ammo Fabricator',     cost: 1500, stat: 'maxAmmo',     value: 60,  desc: '+36 max ammo (24→60)', tier: 2, requires: 'ammo_expand' },
+  { id: 'shield_gen',    name: 'Shield Generator II',  cost: 1000, stat: 'shieldRegen', value: 5,   desc: '+2/sec shield regen', tier: 1 },
+  { id: 'shield_gen2',   name: 'Shield Generator III', cost: 3500, stat: 'shieldRegen', value: 8,   desc: '+5/sec shield regen', tier: 2, requires: 'shield_gen' },
+  { id: 'engine_boost',  name: 'Engine Overcharge',   cost: 700,  stat: 'engineSpeed', value: 1.3, desc: '+30% engine speed', tier: 1 },
+  { id: 'engine_boost2', name: 'Fusion Drive',        cost: 2800, stat: 'engineSpeed', value: 1.6, desc: '+60% engine speed', tier: 2, requires: 'engine_boost' },
+  { id: 'mining_boost',  name: 'Laser Drill',         cost: 600,  stat: 'miningYield', value: 1.5, desc: '+50% mining yield', tier: 1 },
+  { id: 'mining_boost2', name: 'Deep Core Scanner',   cost: 2200, stat: 'miningYield', value: 2.0, desc: '+100% mining yield', tier: 2, requires: 'mining_boost' },
 ];
 
 function applyUpgrades() {
@@ -3503,6 +3539,8 @@ function applyUpgrades() {
   state.upgrades.maxShield = Math.max(100, Math.min(500, state.upgrades.maxShield || 100));
   state.upgrades.maxAmmo = Math.max(24, Math.min(100, state.upgrades.maxAmmo || 24));
   state.upgrades.railgunDmg = Math.max(1, Math.min(5, state.upgrades.railgunDmg || 1));
+  state.upgrades.laserDmg = Math.max(1, Math.min(3, state.upgrades.laserDmg || 1));
+  state.upgrades.miningYield = Math.max(1, Math.min(3, state.upgrades.miningYield || 1));
   state.upgrades.shieldRegen = Math.max(3, Math.min(20, state.upgrades.shieldRegen || 3));
   state.upgrades.engineSpeed = Math.max(1, Math.min(3, state.upgrades.engineSpeed || 1));
   state.ship.maxHull = state.upgrades.maxHull;
@@ -3542,6 +3580,7 @@ function saveGame() {
     market: state.market,
     insuredItemId: state.insuredItemId,
     chatbot: { autoTarget: state.chatbot.autoTarget, autoMine: state.chatbot.autoMine },
+    purchasedUpgrades: state.purchasedUpgrades || [],
   };
   try { localStorage.setItem('oe-save', JSON.stringify(data)); }
   catch (e) { addComms('System', 'Save failed — storage full.'); }
@@ -3563,6 +3602,7 @@ function loadGame() {
     if (!state.pastLives) state.pastLives = [];
     if (!state.soulMemory) state.soulMemory = { tradeInsight:0, combatInstinct:0, shieldMemory:0 };
     if (state.soulMemory.fuelConservation !== undefined) { state.soulMemory.tradeInsight = state.soulMemory.tradeInsight || 0; delete state.soulMemory.fuelConservation; delete state.soulMemory.lootSense; delete state.soulMemory.spatialAwareness; }
+    if (!state.purchasedUpgrades) state.purchasedUpgrades = [];
     return true;
   } catch(e) { return false; }
 }
@@ -3623,7 +3663,7 @@ canvas3d.addEventListener('webglcontextrestored', () => {
 scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050510, 0.00012);
 
-camera = new THREE.PerspectiveCamera(75, 1, 0.1, 50000);
+camera = new THREE.PerspectiveCamera(75, 1, 1.0, 50000);
 
 // Lighting — bright space sunlight for visibility
 scene.add(new THREE.AmbientLight(0x667799, 2.0));
@@ -3650,14 +3690,18 @@ composer.addPass(new RenderPass(scene, camera));
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
 composer.addPass(bloomPass);
 
+const _hudDPR = Math.min(window.devicePixelRatio || 1, 2);
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h);
   if (composer) composer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  hudCanvas.width = w;
-  hudCanvas.height = h;
+  hudCanvas.width = w * _hudDPR;
+  hudCanvas.height = h * _hudDPR;
+  hudCanvas.style.width = w + 'px';
+  hudCanvas.style.height = h + 'px';
+  hudCtx.setTransform(_hudDPR, 0, 0, _hudDPR, 0, 0);
 }
 window.addEventListener('resize', resize);
 resize();
@@ -4000,17 +4044,22 @@ function spawnAsteroids() {
   scene.background = new THREE.Color(fogColor);
   // Shared asteroid material for this system (disposed on exit via disposeObject)
   const _astMat = new THREE.MeshStandardMaterial({ color: resTint, roughness: 0.9, metalness: 0.2, flatShading: true });
+  // Pre-generate 8 deformed asteroid geos — pool for batching
+  const _astGeoPool = [];
+  for (let gi = 0; gi < 8; gi++) {
+    const geo = new THREE.IcosahedronGeometry(1, 0);
+    const pos = geo.attributes.position;
+    for (let v = 0; v < pos.count; v++) {
+      pos.setXYZ(v, pos.getX(v)*(0.7+Math.random()*0.6), pos.getY(v)*(0.7+Math.random()*0.6), pos.getZ(v)*(0.7+Math.random()*0.6));
+    }
+    geo.computeVertexNormals();
+    _astGeoPool.push(geo);
+  }
   for (let i = 0; i < baseCount; i++) {
     const g = new THREE.Group();
     const size = 2 + Math.random() * 6;
-    const geo = new THREE.IcosahedronGeometry(size, 0);
-    // Deform vertices for rocky look
-    const pos = geo.attributes.position;
-    for (let v = 0; v < pos.count; v++) {
-      pos.setXYZ(v, pos.getX(v) * (0.7 + Math.random()*0.6), pos.getY(v) * (0.7 + Math.random()*0.6), pos.getZ(v) * (0.7 + Math.random()*0.6));
-    }
-    geo.computeVertexNormals();
-    const mesh = new THREE.Mesh(geo, _astMat);
+    const mesh = new THREE.Mesh(_astGeoPool[i % 8], _astMat);
+    mesh.scale.setScalar(size);
     g.add(mesh);
     const angle = Math.random() * Math.PI * 2;
     const dist = 80 + Math.random() * 350;
@@ -4047,12 +4096,12 @@ for (const [lt, lc] of Object.entries(_lootColors)) {
 }
 function spawnLootDrop(pos, type, creditValue) {
   const g = new THREE.Group();
-  const mesh = new THREE.Mesh(_lootOctGeo, (_lootMatPool[type] || _lootMatPool.credits).clone());
+  const mesh = new THREE.Mesh(_lootOctGeo, _lootMatPool[type] || _lootMatPool.credits);
   g.add(mesh);
-  // Glow ring
-  const ring = new THREE.Mesh(_lootRingGeo, (_lootRingMatPool[type] || _lootRingMatPool.credits).clone());
+  // Glow ring — shared material, not modified per-frame
+  const ring = new THREE.Mesh(_lootRingGeo, _lootRingMatPool[type] || _lootRingMatPool.credits);
   g.add(ring);
-  // Emissive glow sphere — cheaper than PointLight
+  // Emissive glow sphere — needs own material because opacity changes per-drop
   const lootGlow = new THREE.Mesh(_lootSphereGeo, (_lootGlowMatPool[type] || _lootGlowMatPool.credits).clone());
   g.add(lootGlow);
   g.userData.lootLight = lootGlow;
@@ -4122,10 +4171,10 @@ function exitGunnerMode(skipScreenChange) {
 
 // Enemy type configs — each type uses a distinct GLB model
 const ENEMY_CONFIGS = {
-  scout:       { scale: 0.4, hp: 2, points: 10, speed: 1.3, shootRate: 5000, model: 'fighter_alpha',    tint: 0xff2200 },
-  fighter:     { scale: 0.6, hp: 4, points: 25, speed: 1.0, shootRate: 3000, model: 'iron_sentinel',    tint: 0xff2200 },
-  bomber:      { scale: 0.9, hp: 8, points: 50, speed: 0.7, shootRate: 2500, model: 'alien_battleship', tint: 0xff4400 },
-  interceptor: { scale: 0.5, hp: 3, points: 15, speed: 1.6, shootRate: 4000, model: 'fighter_beta', tint: 0xff8844 },
+  scout:       { scale: 0.4, hp: 6, points: 10, speed: 1.3, shootRate: 5000, model: 'fighter_alpha',    tint: 0xff2200 },
+  fighter:     { scale: 0.6, hp: 12, points: 25, speed: 1.0, shootRate: 3000, model: 'iron_sentinel',    tint: 0xff2200 },
+  bomber:      { scale: 0.9, hp: 24, points: 50, speed: 0.7, shootRate: 2500, model: 'alien_battleship', tint: 0xff4400 },
+  interceptor: { scale: 0.5, hp: 9, points: 15, speed: 1.6, shootRate: 4000, model: 'fighter_beta', tint: 0xff8844 },
 };
 
 const _materialCache = new Map();
@@ -4183,7 +4232,7 @@ function createEnemy(type) {
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-    const diffScale = Math.min(5, 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08);
+    const diffScale = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
   c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)) });
 }
 
@@ -4279,9 +4328,21 @@ function _getSparkTintTpl(color) {
   const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
   m._pooled = true;
   _sparkTintTpls.set(color, m);
-  if (_sparkTintTpls.size > 20) { const first = _sparkTintTpls.keys().next().value; _sparkTintTpls.get(first).dispose(); _sparkTintTpls.delete(first); }
+  if (_sparkTintTpls.size > 30) { const first = _sparkTintTpls.keys().next().value; _sparkTintTpls.get(first).dispose(); _sparkTintTpls.delete(first); }
   return m;
 }
+
+// Pre-allocated Vector3 pool for spark/explosion directions (avoids GC pressure)
+const _v3Pool = [];
+const _V3_POOL_SIZE = 64;
+for (let i = 0; i < _V3_POOL_SIZE; i++) _v3Pool.push(new THREE.Vector3());
+let _v3PoolIdx = 0;
+function _poolV3(x, y, z) {
+  const v = _v3Pool[_v3PoolIdx % _V3_POOL_SIZE];
+  _v3PoolIdx++;
+  return v.set(x, y, z);
+}
+
 const _sparkFlashGeo = new THREE.SphereGeometry(0.8, 6, 6); _sparkFlashGeo._pooled = true;
 function spawnImpactSparks(position, color) {
   color = color || 0xffaa44;
@@ -4292,10 +4353,11 @@ function spawnImpactSparks(position, color) {
     const sz = 0.04 + Math.random() * 0.06;
     const spark = new THREE.Mesh(_sparkUnitGeo, i < 3 ? _sparkWhiteTpl : tintMat);
     spark.scale.setScalar(sz);
+    // Use pre-allocated direction vector — copied into userData (spark needs its own direction)
+    const dx = (Math.random()-0.5)*2, dy = (Math.random()-0.5)*2, dz = (Math.random()-0.5)*2;
+    const len = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
     spark.userData = {
-      dir: new THREE.Vector3(
-        (Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2
-      ).normalize(),
+      dirX: dx/len, dirY: dy/len, dirZ: dz/len,
       speed: 15 + Math.random() * 25,
     };
     g.add(spark);
@@ -4346,8 +4408,8 @@ function createBossEnemy() {
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
-  const bDiff = Math.min(5, 1 + (state.player.rebirths || 0) * 0.15 + (c.cycle - 1) * 0.08);
-  const bossHp = Math.ceil((bossKey.startsWith('titan') ? 40 : 30) * bDiff);
+  const bDiff = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
+  const bossHp = Math.ceil((bossKey.startsWith('titan') ? 80 : 60) * bDiff);
   c.enemies.push({ group: g, hp: bossHp, maxHp: bossHp, speed: ENEMY_SPEED * 0.4, type: 'boss', points: 500, cfg: { scale: bossScale, color: bossTint.tint }, hitFlash: 0, isBoss: true, bossName: bossTint.name });
   addComms('THREAT', `⚠ ${bossTint.name} detected! Massive hostile signature incoming!`);
 }
@@ -4366,6 +4428,10 @@ const _lootSphereGeo = new THREE.SphereGeometry(2.5, 8, 8); _lootSphereGeo._pool
 const _laserBeamGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 4); _laserBeamGeo._pooled = true;
 const _laserGlowGeo = new THREE.CylinderGeometry(0.04, 0.01, 2.0, 4); _laserGlowGeo._pooled = true;
 const _laserBeamTpl = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }); _laserBeamTpl._pooled = true;
+// Laser beam material pool — avoids .clone() per shot
+const _LASER_MAT_POOL_SIZE = 30;
+const _laserBeamMatPool = []; let _laserMatPoolIdx = 0;
+for (let i = 0; i < _LASER_MAT_POOL_SIZE; i++) { const m = _laserBeamTpl.clone(); m._pooled = true; _laserBeamMatPool.push(m); }
 const _laserGlowMat = new THREE.MeshBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }); _laserGlowMat._pooled = true;
 const _explCoreGeo = new THREE.SphereGeometry(0.5, 8, 8); _explCoreGeo._pooled = true;
 const _explFragGeos = [0.15, 0.25, 0.35, 0.45].map(r => { const g = new THREE.SphereGeometry(r, 4, 4); g._pooled = true; return g; });
@@ -4385,10 +4451,10 @@ function spawnExplosion(pos, scale) {
   const s = scale || 1;
   const core = new THREE.Mesh(_explCoreGeo, _explCoreTpl);
   core.scale.setScalar(s);
-  core.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isCore: true };
+  core.userData = { isCore: true };
   g.add(core);
   const ring = new THREE.Mesh(_explRingGeo, _explRingTpl);
-  ring.userData = { dir: new THREE.Vector3(0,0,0), speed: 0, isRing: true };
+  ring.userData = { isRing: true };
   ring.lookAt(camera.position);
   g.add(ring);
   for (let i = 0; i < 18; i++) {
@@ -4399,7 +4465,9 @@ function spawnExplosion(pos, scale) {
     const geoIdx = Math.min(3, Math.floor(Math.random() * 4));
     const m = new THREE.Mesh(_explFragGeos[geoIdx], mat2);
     m.scale.setScalar(sz / [0.15, 0.25, 0.35, 0.45][geoIdx]);
-    m.userData = { dir: new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), speed: 12+Math.random()*30, lifeVariance: 0.7 + Math.random() * 0.6 };
+    const dx = Math.random()-0.5, dy = Math.random()-0.5, dz = Math.random()-0.5;
+    const len = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
+    m.userData = { dirX: dx/len, dirY: dy/len, dirZ: dz/len, speed: 12+Math.random()*30, lifeVariance: 0.7 + Math.random() * 0.6 };
     g.add(m);
   }
   // Emissive flash mesh instead of PointLight
@@ -4828,7 +4896,8 @@ function renderHUD(dtMs) {
   for (let i = c.dmgNumbers.length - 1; i >= 0; i--) {
     const dn = c.dmgNumbers[i];
     dn.age += dtMs || 16;
-    _tmpV3b.copy(dn.pos).project(camera);
+    if (dn.pos) _tmpV3b.copy(dn.pos).project(camera);
+    else _tmpV3b.set(dn.px, dn.py, dn.pz).project(camera);
     const sx = (_tmpV3b.x * 0.5 + 0.5) * W;
     const sy = (-_tmpV3b.y * 0.5 + 0.5) * H - dn.age * 0.08;
     if (_tmpV3b.z < 1) {
@@ -6013,10 +6082,12 @@ function updateMining(dt) {
     const existing = state.inventory.find(i => i.name === ore);
     if (existing) existing.quantity += qty;
     else state.inventory.push({ name: ore, quantity: qty });
-    const credits = 20 + Math.floor(Math.random() * 80);
+    const _miningScale = Math.max(1, 1 + (state.player.rebirths || 0) * 0.15 + ((c.cycle || 1) - 1) * 0.08);
+    const _miningUpgradeMult = state.upgrades.miningYield || 1;
+    const credits = Math.floor((20 + Math.floor(Math.random() * 40)) * _miningScale * _miningUpgradeMult);
     state.player.credits += credits;
-    gainSkillXP('mining', 0.3);
-    c.dmgNumbers.push({ text: '+' + ore, pos: asteroid.position.clone(), age: 0, color: '#00ff88' });
+    gainSkillXP('mining', 0.06);
+    c.dmgNumbers.push({ text: '+' + ore, px: asteroid.position.x, py: asteroid.position.y, pz: asteroid.position.z, age: 0, color: '#00ff88' });
     addComms('Mining', `Extracted ${qty}x ${ore} (+${credits} EC)`);
     AudioSFX.play('quest_complete');
     // Offline collect quest progress
@@ -7219,17 +7290,18 @@ function gameLoop() {
       let hit = false;
       for (let j = c.enemies.length - 1; j >= 0; j--) {
         const e = c.enemies[j];
-        if (p.group.position.distanceTo(e.group.position) < 3 * (e.cfg.scale || 1)) {
+        const hitThreshSq = (3 * (e.cfg.scale || 1)) ** 2;
+        if (p.group.position.distanceToSquared(e.group.position) < hitThreshSq) {
           // Apply genome damage multiplier + weapon-specific damage
-          const baseDmg = p.isLaser ? (p.damage || 0.5) : 1.0;
-          const genomeDmg = baseDmg * getPlayerDamageMult();
+          const baseDmg = p.isLaser ? (p.damage || 0.65) : 1.0;
+          const genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
           e.hp -= genomeDmg;
           e.hitFlash = 150;
           AudioSFX.play('hit');
           AudioSFX.play('hit_marker');
-          spawnImpactSparks(p.group.position.clone(), p.isLaser ? 0x44ffaa : 0xffaa44);
+          spawnImpactSparks(p.group.position, p.isLaser ? 0x44ffaa : 0xffaa44);
           c.hitMarkerTimer = 150;
-          c.dmgNumbers.push({ text: '-' + genomeDmg.toFixed(1), pos: p.group.position.clone(), age: 0, color: '#ff6644' });
+          c.dmgNumbers.push({ text: '-' + genomeDmg.toFixed(1), px: p.group.position.x, py: p.group.position.y, pz: p.group.position.z, age: 0, color: '#ff6644' });
           if (e.hp <= 0) {
             // Kill streak
             c.streak++; c.streakTimer = 5000;
@@ -7239,25 +7311,29 @@ function gameLoop() {
             if (_milestones[c.streak]) { c._streakMilestoneText = _milestones[c.streak]; c._streakMilestoneTimer = 1500; AudioSFX.play('quest_complete'); }
             if (c.streak > c.bestStreak) c.bestStreak = c.streak;
             const pts = Math.floor(e.points * c.streakMultiplier);
+            // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
+            const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
-            state.player.credits += Math.floor(pts * 0.4);
+            state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
             // Kill confirmation feedback
             c.killConfirmTimer = 400;
             AudioSFX.play('kill_confirm');
-            // Earn Stellar Marks (1 per kill, +5 for bosses — offline & online)
-            state.player.stellarMarks += e.isBoss ? 6 : 1;
+            // Earn Stellar Marks: +1 per 10 kills, +5 for bosses
+            const _smKillAward = e.isBoss ? 5 : (c.kills % 10 === 0 ? 1 : 0);
+            state.player.stellarMarks += _smKillAward;
             // Skill XP: combat actions level gunnery + piloting
-            gainSkillXP('gunnery', 0.15);
-            gainSkillXP('piloting', 0.05);
+            gainSkillXP('gunnery', 0.03);
+            gainSkillXP('piloting', 0.01);
             // Floating damage number
-            c.dmgNumbers.push({ text: '+' + pts, pos: e.group.position.clone(), age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
+            c.dmgNumbers.push({ text: '+' + pts, px: e.group.position.x, py: e.group.position.y, pz: e.group.position.z, age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
             if (e.isBoss) {
               c.bossActive = false; state.player.lifetimeStats.bossKills++; c.bossKills = (c.bossKills || 0) + 1;
               addComms('AI Director', 'Boss destroyed! +500 points');
               // Multi-stage boss explosion — 3 staggered blasts (tracked for cleanup)
-              const bossPos = e.group.position.clone();
-              const _bossT1 = setTimeout(() => { if (c.active) spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*6-3,Math.random()*6-3,Math.random()*6-3)), (e.cfg.scale||1)*1.5); }, 200);
-              const _bossT2 = setTimeout(() => { if (c.active) { spawnExplosion(bossPos.clone().add(new THREE.Vector3(Math.random()*8-4,Math.random()*8-4,Math.random()*8-4)), (e.cfg.scale||1)*2); AudioSFX.play('explode'); } }, 500);
+              const bpx = e.group.position.x, bpy = e.group.position.y, bpz = e.group.position.z;
+              const bossScale = (e.cfg.scale||1);
+              const _bossT1 = setTimeout(() => { if (c.active) { _poolV3(bpx+Math.random()*6-3, bpy+Math.random()*6-3, bpz+Math.random()*6-3); spawnExplosion(_v3Pool[(_v3PoolIdx-1)%_V3_POOL_SIZE], bossScale*1.5); } }, 200);
+              const _bossT2 = setTimeout(() => { if (c.active) { _poolV3(bpx+Math.random()*8-4, bpy+Math.random()*8-4, bpz+Math.random()*8-4); spawnExplosion(_v3Pool[(_v3PoolIdx-1)%_V3_POOL_SIZE], bossScale*2); AudioSFX.play('explode'); } }, 500);
               _deathTimeouts.push(_bossT1, _bossT2);
               c.damageFlash = 500;
             }
@@ -7291,14 +7367,14 @@ function gameLoop() {
               }
             });
             AudioSFX.play('explode');
-            spawnExplosion(e.group.position.clone(), e.cfg.scale);
+            spawnExplosion(e.group.position, e.cfg.scale);
             // Loot drop chance (hacking skill improves drop rate)
             const lootChance = Math.min(0.7, 0.4 * getSkillBonus('hacking'));
             if (e.isBoss || Math.random() < lootChance) {
               gainSkillXP('hacking', 0.1);
               const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel';
               const _lootCreditVal = e.isBoss ? Math.ceil(e.points * 0.6) : Math.ceil((e.points || 50) * 0.4);
-              spawnLootDrop(e.group.position.clone(), lootType, _lootCreditVal);
+              spawnLootDrop(e.group.position, lootType, _lootCreditVal);
             }
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
           }
@@ -7427,7 +7503,7 @@ function gameLoop() {
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
-          const dmg = isFirstLife ? (2 + Math.random() * 2) : (3 + Math.random() * 4);
+          const dmg = isFirstLife ? (4 + Math.random() * 4) : (6 + Math.random() * 8);
           const hadShield = state.ship.shield > 0;
           if (state.ship.shield > 0) {
             const _absorbed = Math.min(state.ship.shield, dmg);
@@ -7468,9 +7544,12 @@ function gameLoop() {
           ch.scale.setScalar(1 + progress * 8);
           ch.material.opacity = Math.max(0, 0.6 * (1 - progress));
           ch.lookAt(camera.position);
-        } else if (ch.userData && ch.userData.dir) {
+        } else if (ch.userData && ch.userData.dirX !== undefined) {
           const lv = ch.userData.lifeVariance || 1;
-          ch.position.addScaledVector(ch.userData.dir, ch.userData.speed * dt);
+          const spd = ch.userData.speed * dt;
+          ch.position.x += ch.userData.dirX * spd;
+          ch.position.y += ch.userData.dirY * spd;
+          ch.position.z += ch.userData.dirZ * spd;
           ch.material.opacity = Math.max(0, 1 - (progress / lv));
           ch.scale.multiplyScalar(Math.pow(0.98, dt * 60));
         }
@@ -7528,11 +7607,11 @@ function gameLoop() {
       }
       if (l.group.userData.lootMesh) l.group.userData.lootMesh.scale.setScalar(0.9 + _lootPulse * 0.3);
       // Player collect
-      if (l.group.position.distanceTo(ship.position) < 12) {
-        if (l.type === 'credits') { const lootAmt = l.creditValue || 50; state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC', pos: l.group.position.clone(), age: 0, color: '#ffd700' }); }
-        else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', pos: l.group.position.clone(), age: 0, color: '#44aaff' }); }
-        else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', pos: l.group.position.clone(), age: 0, color: '#44ff44' }); }
-        else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', pos: l.group.position.clone(), age: 0, color: '#ff8844' }); }
+      if (l.group.position.distanceToSquared(ship.position) < 144) {
+        if (l.type === 'credits') { const lootAmt = l.creditValue || 50; state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ffd700' }); }
+        else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44aaff' }); }
+        else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); }
+        else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ff8844' }); }
         AudioSFX.play('loot_' + l.type);
         scene.remove(l.group); disposeObject(l.group); c.lootDrops.splice(i, 1); continue;
       }
@@ -7618,7 +7697,10 @@ function gameLoop() {
     camera.quaternion.copy(_tmpQuat).multiply(_tmpQuatB.setFromEuler(_tmpEuler));
   }
 
-  if (composer) composer.render(); else if (renderer) renderer.render(scene, camera);
+  // Skip expensive bloom on non-gameplay screens
+  if (c.active || state.screen === 'gunner' || state.screen === 'bridge') {
+    if (composer) composer.render(); else if (renderer) renderer.render(scene, camera);
+  }
   } catch (_loopErr) {
     if (!gameLoop._errCount) gameLoop._errCount = 0;
     gameLoop._errCount++;
@@ -7637,7 +7719,7 @@ async function init() {
       AudioSFX.uiClick();
     }
   });
-  document.addEventListener('mouseenter', (e) => {
+  document.addEventListener('pointerenter', (e) => {
     if (e.target.matches && e.target.matches('.menu-btn,.btn,.nav-btn,.action-btn')) {
       AudioSFX.uiHover();
     }

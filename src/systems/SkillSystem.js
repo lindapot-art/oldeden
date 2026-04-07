@@ -29,6 +29,16 @@ const BASE_XP = 100;
 /** Maximum achievable skill level. */
 const MAX_LEVEL = 100;
 
+/** Pre-computed cumulative XP table for fast level lookup. */
+const _xpTable = new Float64Array(MAX_LEVEL + 1);
+{
+  let cum = 0;
+  for (let n = 1; n <= MAX_LEVEL; n++) {
+    cum += BASE_XP * Math.pow(n, 1.5);
+    _xpTable[n] = Math.floor(cum);
+  }
+}
+
 /** Grace period before decay begins (ms). */
 const DECAY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -147,12 +157,13 @@ export class SkillSystem {
    */
   levelFromXp(xp) {
     if (xp <= 0) return 1;
-    let cumulative = 0;
-    for (let n = 1; n <= MAX_LEVEL; n++) {
-      cumulative += BASE_XP * Math.pow(n, 1.5);
-      if (Math.floor(cumulative) > xp) return Math.max(1, n - 1);
+    // Binary search on pre-computed table
+    let lo = 1, hi = MAX_LEVEL;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (_xpTable[mid] <= xp) lo = mid; else hi = mid - 1;
     }
-    return MAX_LEVEL;
+    return lo;
   }
 
   /**

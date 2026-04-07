@@ -7,6 +7,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const MAX_SAVE_SIZE = 102_400; // 100 KB max
 const VALID_ID = /^[a-zA-Z0-9_-]{1,64}$/;
@@ -34,7 +35,7 @@ export class FileStore {
     if (json.length > MAX_SAVE_SIZE) throw new Error('Save data too large');
     const filePath = path.join(this._saveDir, `${playerId}.json`);
     // Atomic write: temp file + rename prevents corruption from concurrent writes
-    const tmpPath = filePath + '.tmp';
+    const tmpPath = filePath + '.tmp.' + randomUUID();
     await fs.writeFile(tmpPath, json, 'utf-8');
     await fs.rename(tmpPath, filePath);
   }

@@ -1,0 +1,657 @@
+
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:2:> old-eden@0.1.0 test
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:12:    + FullyQualifiedErrorId : NativeCommandError
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:15:PASS tests/PlaceholderShip.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:19:PASS tests/SkillSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:23:PASS tests/ProjectileSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:136:PASS tests/EnemySpawnSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:259:PASS tests/SoulFractureSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:260:PASS tests/CombatSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:261:PASS tests/FactionSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:266:PASS tests/MutationSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:267:PASS tests/GeneticSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:268:PASS tests/QuestSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:269:PASS tests/BossSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:439:PASS tests/GlbProcessor.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:440:PASS tests/CyclePassAndCosmetics.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:443:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:444:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:446:      [CyclePass] Season "Fracture Wars" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:447:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:449:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:450:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:452:      [CyclePass] Season "Season 1" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:453:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:455:      [CyclePass] Season "Season 1" ended.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:456:      at CyclePass._endSeason 
+(src/systems/CyclePass.js:188:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:458:      [CyclePass] Season "Season 2" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:459:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:461:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:462:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:464:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:465:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:467:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:468:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:470:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:471:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:473:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:474:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:476:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:477:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:479:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:480:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:482:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:483:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:485:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:486:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:488:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:489:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:491:      [CyclePass] Season "Premium Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:492:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:494:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:495:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:497:      [CyclePass] Season "Premium Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:498:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:500:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:501:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:503:      [CyclePass] Season "S" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:504:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:506:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:507:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:509:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:510:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:512:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:513:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:547:PASS tests/NPCSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:644:      at Object.<anonymous> (tests/NPCSystem.test.js:243:11)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:724:PASS tests/GlbMLProcessor.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:725:PASS tests/RebirthSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:726:PASS tests/ProceduralGenerator.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:727:PASS tests/AscensionSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:774:PASS tests/InventorySystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:782:PASS tests/EconomySystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:783:PASS tests/GunnerView.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:796:      at Object.<anonymous> (tests/GunnerView.test.js:194:8)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:821:PASS tests/AssetUpload.test.js (5.132 s)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:822:A worker process has failed to exit gracefully and has been 
+force exited. This 
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:823:is likely caused by tests leaking due to improper teardown. 
+Try running with 
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:826:Test Suites: 22 passed, 22 total
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:827:Tests:       573 passed, 573 total
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:830:Ran all test suites.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:832:> old-eden@0.1.0 test
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:833:PASS tests/PlaceholderShip.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:834:PASS tests/SkillSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:835:PASS tests/ProjectileSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:836:PASS tests/EnemySpawnSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:837:PASS tests/SoulFractureSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:838:PASS tests/CombatSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:839:PASS tests/FactionSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:840:PASS tests/MutationSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:841:PASS tests/GeneticSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:842:PASS tests/QuestSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:843:PASS tests/BossSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:844:PASS tests/GlbProcessor.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:845:PASS tests/CyclePassAndCosmetics.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:846:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:847:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:848:      [CyclePass] Season "Fracture Wars" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:849:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:850:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:851:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:852:      [CyclePass] Season "Season 1" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:853:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:854:      [CyclePass] Season "Season 1" ended.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:855:      at CyclePass._endSeason 
+(src/systems/CyclePass.js:188:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:856:      [CyclePass] Season "Season 2" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:857:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:858:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:859:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:860:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:861:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:862:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:863:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:864:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:865:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:866:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:867:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:868:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:869:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:870:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:871:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:872:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:873:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:874:      [CyclePass] Season "Test Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:875:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:876:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:877:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:878:      [CyclePass] Season "Premium Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:879:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:880:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:881:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:882:      [CyclePass] Season "Premium Season" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:883:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:884:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:885:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:886:      [CyclePass] Season "S" started.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:887:      at CyclePass.startSeason 
+(src/systems/CyclePass.js:79:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:888:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:889:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:890:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:891:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:892:      [CyclePass] Initialised.
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:893:      at CyclePass.init (src/systems/CyclePass.js:32:13)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:894:PASS tests/NPCSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:895:      at Object.<anonymous> (tests/NPCSystem.test.js:243:11)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:896:PASS tests/GlbMLProcessor.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:897:PASS tests/RebirthSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:898:PASS tests/ProceduralGenerator.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:899:PASS tests/AscensionSystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:900:PASS tests/InventorySystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:901:PASS tests/EconomySystem.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:902:PASS tests/GunnerView.test.js
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:903:      at Object.<anonymous> (tests/GunnerView.test.js:194:8)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:904:PASS tests/AssetUpload.test.js (5.132 s)
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:905:A worker process has failed to exit gracefully and has been 
+force exited. This 
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:906:is likely caused by tests leaking due to improper teardown. 
+Try running with 
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:909:Test Suites: 22 passed, 22 total
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:910:Tests:       573 passed, 573 total
+C:\Users\fucktrumpandrednecks\AppData\Roaming\Code\User\workspaceStorage\cf0222
+73394d6693fe1ba95217ef1eae\GitHub.copilot-chat\chat-session-resources\0c1c8e3c-
+7a59-49e6-9720-f3c25a5d1cb4\call_NdMXHfleoQ4909lSjndZRaWb__vscode-1775484506505
+\content.txt:911:Ran all test suites.
+
+

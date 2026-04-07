@@ -216,18 +216,17 @@ describe('SkillSystem', () => {
       expect(lossRatio).toBeCloseTo(0.01, 2);
     });
 
-    it('emits skill:decay event', () => {
+    it('applies XP loss when decay is active (no skill:decay event — throttled in audit 61)', () => {
       skill.addXp('p1', 'physics', 5000);
-      stubEngine.events.emit.mockClear();
+      const before = skill.getSkillState('p1', 'physics').xp;
 
       const internal = skill._getSkillState('p1', 'physics');
       internal.lastUsedAt = Date.now() - 31 * 24 * 60 * 60 * 1000;
 
       skill.tick(7 * 24 * 60 * 60 * 1000);
-      expect(stubEngine.events.emit).toHaveBeenCalledWith(
-        'skill:decay',
-        expect.objectContaining({ playerId: 'p1', skillId: 'physics' }),
-      );
+      const after = skill.getSkillState('p1', 'physics').xp;
+      // XP should have decreased due to decay
+      expect(after).toBeLessThan(before);
     });
 
     it('emits skill:level_down when decay crosses a level boundary', () => {

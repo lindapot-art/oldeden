@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch src/core/index.js",
     "start": "node src/core/index.js",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.json",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.json --forceExit",
     "lint": "eslint src/ --ext .js",
     "build:contracts": "npx hardhat compile --config hardhat.config.cjs",
     "test:contracts": "npx hardhat test --config hardhat.config.cjs",

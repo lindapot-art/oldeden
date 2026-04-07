@@ -21,13 +21,16 @@ beforeAll(async () => {
 describe('Asset Upload API', () => {
   let app;
   let uploadDir;
+  const TEST_API_KEY = 'test-admin-key-12345';
 
   beforeEach(() => {
+    process.env.ADMIN_API_KEY = TEST_API_KEY;
     uploadDir = fs.mkdtempSync(path.join(os.tmpdir(), 'oldeden-upload-'));
     ({ app } = createHttpServer({ uploadDir, maxFileSize: 10_000_000 }));
   });
 
   afterEach(() => {
+    delete process.env.ADMIN_API_KEY;
     fs.rmSync(uploadDir, { recursive: true, force: true });
   });
 
@@ -37,7 +40,6 @@ describe('Asset Upload API', () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
-    expect(typeof res.body.uptime).toBe('number');
   });
 
   // ── Model uploads ─────────────────────────────────────────────────────────
@@ -146,7 +148,7 @@ describe('Asset Upload API', () => {
 
     const filename = uploadRes.body.uploaded[0].filename;
 
-    const delRes = await request(app).delete(`/api/assets/models/${filename}`);
+    const delRes = await request(app).delete(`/api/assets/models/${filename}`).set('x-api-key', TEST_API_KEY);
     expect(delRes.status).toBe(200);
     expect(delRes.body.deleted).toBe(filename);
 
@@ -156,20 +158,25 @@ describe('Asset Upload API', () => {
   });
 
   test('DELETE /api/assets/:type/:filename returns 404 for missing file', async () => {
-    const res = await request(app).delete('/api/assets/models/nonexistent.glb');
+    const res = await request(app).delete('/api/assets/models/nonexistent.glb').set('x-api-key', TEST_API_KEY);
     expect(res.status).toBe(404);
   });
 
   test('DELETE /api/assets/:type/:filename rejects invalid type', async () => {
-    const res = await request(app).delete('/api/assets/scripts/evil.js');
+    const res = await request(app).delete('/api/assets/scripts/evil.js').set('x-api-key', TEST_API_KEY);
     expect(res.status).toBe(400);
   });
 
   // ── Directory traversal prevention ────────────────────────────────────────
 
   test('DELETE /api/assets/:type/:filename prevents directory traversal', async () => {
-    const res = await request(app).delete('/api/assets/models/..%2F..%2Fpackage.json');
+    const res = await request(app).delete('/api/assets/models/..%2F..%2Fpackage.json').set('x-api-key', TEST_API_KEY);
     expect(res.status).toBe(404); // path.basename strips traversal
+  });
+
+  test('DELETE /api/assets/:type/:filename rejects without API key', async () => {
+    const res = await request(app).delete('/api/assets/models/anything.glb');
+    expect(res.status).toBe(401);
   });
 
   // ── Static file serving ───────────────────────────────────────────────────

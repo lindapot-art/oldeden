@@ -1,0 +1,59 @@
+
+qa_board_output.txt:25:  [31mG??[0m  [36m[QA-API][0m [31mResponse body 
+missing expected HTML structure[0m
+qa_board_output.txt:29:  [1m[36mG??G?? QA-Visual (Screenshots & Visual 
+Structure) G??G??[0m
+qa_board_output.txt:30:  [32mG??[0m  [36m[QA-Visual][0m Title screen 
+screenshot: title_2026-04-06T15-55-38-974Z.png
+qa_board_output.txt:32:  [31mG??[0m  [36m[QA-Visual][0m [31mCSS variables 
+missing[0m
+qa_board_output.txt:34:  [31mG??[0m  [36m[QA-Visual][0m [31mTitle heading 
+not visible or missing[0m
+qa_board_output.txt:36:  [1m[36mG??G?? QA-Runtime (WebGL & JS Errors) 
+G??G??[0m
+qa_board_output.txt:38:  [32mG??[0m  [36m[QA-Runtime][0m No 3D engine 
+error banner in DOM
+qa_board_output.txt:39:  [32mG??[0m  [36m[QA-Runtime][0m Runtime 
+screenshot: runtime_2026-04-06T15-55-38-974Z.png
+qa_board_output.txt:42:  [31mG??[0m  [36m[QA-UX][0m [31mTitle Screen 
+(#screen-title) G?? MISSING[0m
+qa_board_output.txt:43:  [31mG??[0m  [36m[QA-UX][0m [31mBridge Screen 
+(#screen-bridge) G?? MISSING[0m
+qa_board_output.txt:44:  [31mG??[0m  [36m[QA-UX][0m [31mCharacter 
+Creation (#screen-create) G?? MISSING[0m
+qa_board_output.txt:45:  [31mG??[0m  [36m[QA-UX][0m [31mSettings Screen 
+(#screen-settings) G?? MISSING[0m
+qa_board_output.txt:46:  [31mG??[0m  [36m[QA-UX][0m [31mRebirth Screen 
+(#screen-rebirth) G?? MISSING[0m
+qa_board_output.txt:47:  [31mG??[0m  [36m[QA-UX][0m [31mKarma Wheel 
+(#screen-karma) G?? MISSING[0m
+qa_board_output.txt:48:  [31mG??[0m  [36m[QA-UX][0m [31mEulogy Screen 
+(#screen-eulogy) G?? MISSING[0m
+qa_board_output.txt:49:  [31mG??[0m  [36m[QA-UX][0m [31mMarket Screen 
+(#screen-market) G?? MISSING[0m
+qa_board_output.txt:50:  [31mG??[0m  [36m[QA-UX][0m [31mNew Game Button 
+(#btn-new) G?? MISSING[0m
+qa_board_output.txt:51:  [31mG??[0m  [36m[QA-UX][0m [31mSettings Button 
+(#btn-settings) G?? MISSING[0m
+qa_board_output.txt:52:  [31mG??[0m  [36m[QA-UX][0m [31mGame Canvas 
+(#game-canvas) G?? MISSING[0m
+qa_board_output.txt:53:  [31mG??[0m  [36m[QA-UX][0m [31mHUD Canvas 
+(#hud-canvas) G?? MISSING[0m
+qa_board_output.txt:54:  [31mG??[0m  [36m[QA-UX][0m [31mQA Banner 
+(#qa-unverified-banner) G?? MISSING[0m
+qa_board_output.txt:55:  [31mG??[0m  [36m[QA-UX][0m [31mNew Game button 
+not clickable or missing[0m
+qa_board_output.txt:56:  [33mG??[0m  [36m[QA-UX][0m [33mClick test 
+failed: No element found for selector: #btn-new[0m
+qa_board_output.txt:58:  [1m[36mG??G?? JS Errors Summary G??G??[0m
+qa_board_output.txt:59:  [32mG??[0m  [36m[QA-Runtime][0m Zero JS errors
+qa_board_output.txt:62:  [32mG?? APPROVED[0m  [1mQA-Code[0m
+qa_board_output.txt:65:  [32mG?? APPROVED[0m  [1mQA-Runtime[0m
+qa_board_output.txt:70:[1mG??  [31mFix failures and re-run: node 
+qa_board.cjs[0m[1m          G??[0m
+qa_board_output.txt:73:  Report: 
+D:\antiruscist\oldeden\qa_reports\report_2026-04-06T15-55-38-974Z.txt
+qa_board_output.txt:74:  Screenshots: 
+D:\antiruscist\oldeden\qa_reports\screenshots
+
+

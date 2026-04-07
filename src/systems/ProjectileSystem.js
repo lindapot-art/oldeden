@@ -123,10 +123,14 @@ export class ProjectileSystem {
         }
       }
 
-      // Advance position
-      const displacement = proj.velocity.clone().multiplyScalar(deltaSec);
-      proj.position.add(displacement);
-      proj.traveledDistance += displacement.length();
+      // Advance position (zero-allocation — no .clone())
+      const dx = proj.velocity.x * deltaSec;
+      const dy = proj.velocity.y * deltaSec;
+      const dz = proj.velocity.z * deltaSec;
+      proj.position.x += dx;
+      proj.position.y += dy;
+      proj.position.z += dz;
+      proj.traveledDistance += Math.sqrt(dx * dx + dy * dy + dz * dz);
 
       // Update lifetime
       proj.age += deltaMs;
