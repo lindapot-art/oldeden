@@ -343,6 +343,34 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   animation: lockFlash 0.5s ease infinite alternate; }
 @keyframes lockFlash { 0% { opacity:0.6; } 100% { opacity:1; } }
 
+/* ── Achievement popup ── */
+@keyframes achieveSlide { 0%{transform:translateX(120%);opacity:0;} 10%{transform:translateX(0);opacity:1;} 90%{transform:translateX(0);opacity:1;} 100%{transform:translateX(120%);opacity:0;} }
+#achieve-popup { position:fixed; top:120px; right:20px; background:rgba(10,20,30,0.85); border:1px solid var(--gold);
+  border-radius:4px; padding:10px 18px; z-index:600; pointer-events:none; display:none;
+  font-size:12px; color:var(--gold); font-weight:600; letter-spacing:1px; text-transform:uppercase;
+  box-shadow: 0 0 20px rgba(212,168,86,0.2); }
+#achieve-popup.show { display:block; animation: achieveSlide 3.5s ease forwards; }
+#achieve-popup .ach-icon { font-size:18px; margin-right:8px; }
+#achieve-popup .ach-title { color:#fff; font-weight:400; display:block; font-size:10px; margin-top:2px; }
+
+/* ── Hull damage overlay ── */
+#hull-damage-overlay { position:fixed; inset:0; pointer-events:none; z-index:350; opacity:0; transition:opacity 0.5s;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(255,0,0,0.08) 100%);
+  border:3px solid transparent; }
+#hull-damage-overlay.critical { opacity:1; border-color:rgba(255,0,0,0.15); }
+
+/* ── EMP flash ── */
+@keyframes empFlash { 0%{opacity:0.7;} 100%{opacity:0;} }
+#emp-flash { position:fixed; inset:0; background:rgba(100,150,255,0.3); pointer-events:none; z-index:400; opacity:0; }
+#emp-flash.active { animation: empFlash 0.4s ease-out forwards; }
+
+/* ── Docking sequence overlay ── */
+@keyframes dockSlide { 0%{opacity:0;transform:scale(0.95);} 50%{opacity:1;transform:scale(1);} 100%{opacity:0;transform:scale(1.05);} }
+#dock-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:700;
+  background:rgba(0,0,0,0.8); pointer-events:none; opacity:0; }
+#dock-overlay.active { animation: dockSlide 2s ease-in-out forwards; }
+#dock-overlay span { color:var(--hud); font-size:22px; letter-spacing:6px; text-transform:uppercase; font-weight:300; }
+
 /* ── Shield Hit Flash ────────────────────── */
 #shield-flash{position:fixed;inset:0;pointer-events:none;z-index:14;border:3px solid rgba(68,170,255,0);border-radius:50%;opacity:0;transition:opacity 0.15s,border-color 0.15s;}
 #shield-flash.active{opacity:1;border-color:rgba(68,170,255,0.4);box-shadow:inset 0 0 60px rgba(68,170,255,0.1),0 0 40px rgba(68,170,255,0.15);}
@@ -1066,6 +1094,10 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   <div id="warn-hull" class="cockpit-warn">⚠ HULL CRITICAL</div>
   <div id="warn-fuel" class="cockpit-warn">⚠ FUEL LOW</div>
   <div id="warn-lock" class="cockpit-warn">⚠ ENEMY LOCK</div>
+<div id="achieve-popup"><span class="ach-icon">🏆</span><span id="achieve-text">Achievement</span><span class="ach-title" id="achieve-desc"></span></div>
+  <div id="hull-damage-overlay"></div>
+  <div id="emp-flash"></div>
+  <div id="dock-overlay"><span>DOCKING SEQUENCE</span></div>
 <canvas id="game-canvas"></canvas>
 <canvas id="hud-canvas"></canvas>
 <div id="lock-prompt"><span>Click to resume control</span></div>
@@ -3146,6 +3178,18 @@ function jumpToSystem(idx) {
   });
   if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   if (typeof spawnSystemStar === "function") spawnSystemStar();
+  // Rare: Dyson sphere landmark in every 5th system
+  if (state.location.systemIndex % 5 === 3) {
+    loadGLBModel('dyson_sphere').then(model => {
+      if (!c.active) return;
+      const ds = model.clone();
+      ds.scale.setScalar(GLB_ASSETS.dyson_sphere?.scale || 5);
+      ds.position.set(ship.position.x + 600, ship.position.y + 100, ship.position.z + 600);
+      ds.userData._landmark = true;
+      scene.add(ds);
+      addComms('Scanner', 'Dyson sphere detected at long range. Ancient civilization relic?');
+    }).catch(() => {});
+  }
   if (sys.hazards && sys.hazards.length) {
     addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
   }
@@ -6154,7 +6198,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -6423,10 +6467,52 @@ function triggerShieldFlash(isHull) {
   el.classList.add('active');
   if (isHull) el.classList.add('hull-hit');
   state.shieldFlashTimer = 200;
+  // EMP flash when shields fully break
+  if (isHull && state.ship.shield <= 0) {
+    const _empEl = document.getElementById('emp-flash');
+    if (_empEl) { _empEl.classList.remove('active'); void _empEl.offsetWidth; _empEl.classList.add('active'); }
+  }
 }
 
 // ══ SCREEN SHAKE ══
-function triggerScreenShake() {
+function triggerScreenShake() {}
+
+// ════════════════════════════════════════════════════════════════
+//  ACHIEVEMENT POPUP SYSTEM
+// ════════════════════════════════════════════════════════════════
+const _achievements = {};
+function unlockAchievement(id, title, desc) {
+  if (_achievements[id]) return;
+  _achievements[id] = true;
+  const popup = document.getElementById('achieve-popup');
+  const textEl = document.getElementById('achieve-text');
+  const descEl = document.getElementById('achieve-desc');
+  if (!popup || !textEl) return;
+  textEl.textContent = title;
+  if (descEl) descEl.textContent = desc || '';
+  popup.classList.remove('show');
+  void popup.offsetWidth;
+  popup.classList.add('show');
+  AudioSFX.play('quest_complete');
+  addComms('Achievement', title + (desc ? ' — ' + desc : ''));
+  setTimeout(() => popup.classList.remove('show'), 3600);
+}
+
+// Achievement checks (called from game loop)
+function checkAchievements() {
+  if (c.kills >= 1 && !_achievements.first_blood) unlockAchievement('first_blood', 'FIRST BLOOD', 'Destroy your first enemy');
+  if (c.kills >= 50 && !_achievements.hunter) unlockAchievement('hunter', 'HUNTER', '50 enemies destroyed');
+  if (c.kills >= 200 && !_achievements.reaper) unlockAchievement('reaper', 'GRIM REAPER', '200 enemies destroyed');
+  if ((c.bossKills || 0) >= 1 && !_achievements.boss_kill) unlockAchievement('boss_kill', 'BOSS SLAYER', 'Defeat your first boss');
+  if (c.streak >= 10 && !_achievements.streak10) unlockAchievement('streak10', 'UNSTOPPABLE', '10-kill streak');
+  if (c.streak >= 20 && !_achievements.streak20) unlockAchievement('streak20', 'LEGENDARY', '20-kill streak');
+  if (state.player.credits >= 10000 && !_achievements.rich) unlockAchievement('rich', 'WEALTHY PILOT', 'Earn 10,000 credits');
+  if ((state.player.rebirths || 0) >= 1 && !_achievements.reborn) unlockAchievement('reborn', 'REBORN', 'Complete your first rebirth');
+  if (state.location.systemIndex >= 3 && !_achievements.explorer) unlockAchievement('explorer', 'EXPLORER', 'Visit 4 different systems');
+  if (state.player.stellarMarks >= 10 && !_achievements.stellar) unlockAchievement('stellar', 'STELLAR', 'Earn 10 Stellar Marks');
+}
+
+function _notUsed_triggerScreenShake_real() {
   document.body.classList.remove('screen-shake');
   void document.body.offsetWidth;
   document.body.classList.add('screen-shake');
@@ -6732,6 +6818,16 @@ function buildInteriorRoom(room) {
       _intScene.add(screen);
     }
     // Captain chair
+    // Load space suit model (crew member standing near bridge)
+    loadGLBModel('space_suit').then(model => {
+      if (!_intScene) return;
+      const suit = model.clone();
+      suit.scale.setScalar(GLB_ASSETS.space_suit?.scale || 0.5);
+      suit.position.set(3, 0, -4);
+      suit.rotation.y = -0.5;
+      suit.userData._room = true;
+      _intScene.add(suit);
+    }).catch(() => {});
     const chair = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.9, metalness: 0.1 }));
     chair.position.set(0, 0.6, -5); chair.userData._room = true;
     _intScene.add(chair);
@@ -7493,6 +7589,31 @@ function updateCriminalFleet(dt, dtMs) {
       setTimeout(() => { if (cShip.parent) { scene.remove(cShip); disposeObject(cShip); } }, 30000);
     });
     addComms('Comms', 'Cargo convoy detected on long-range scanners.');
+  }
+  // ── Rare space creature encounter (every ~90s, 5% chance) ──
+  if (!state._creatureTimer) state._creatureTimer = 0;
+  state._creatureTimer += dtMs;
+  if (state._creatureTimer > 90000 && Math.random() < 0.05) {
+    state._creatureTimer = 0;
+    const creatureModels = ['alien_insect', 'space_insect'];
+    const ck = creatureModels[Math.floor(Math.random() * creatureModels.length)];
+    loadGLBModel(ck).then(model => {
+      if (!c.active) return;
+      const creature = model.clone();
+      creature.scale.setScalar(GLB_ASSETS[ck]?.scale || 1);
+      const ang = Math.random() * Math.PI * 2;
+      creature.position.set(
+        ship.position.x + Math.cos(ang) * 150,
+        ship.position.y + (Math.random() - 0.5) * 60,
+        ship.position.z + Math.sin(ang) * 150
+      );
+      scene.add(creature);
+      creature.userData._creature = true;
+      creature.userData._wander = new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.1, (Math.random()-0.5)*0.3);
+      addComms('Scanner', 'Unidentified biological entity detected on sensors!');
+      // Auto-remove after 45s
+      setTimeout(() => { if (creature.parent) { scene.remove(creature); disposeObject(creature); } }, 45000);
+    }).catch(() => {});
   }
 
   _criminalSpawnTimer += dtMs;
@@ -8965,6 +9086,8 @@ function gameLoop() {
 
     // Combat feedback timers
     if (c.hitMarkerTimer > 0) c.hitMarkerTimer = Math.max(0, c.hitMarkerTimer - dtMs);
+    // Achievement checks (every 60 frames to reduce overhead)
+    if (state._frameCount % 60 === 0 && typeof checkAchievements === 'function') checkAchievements();
 
     // ── Cockpit warning lights ──
     const _warnHull = document.getElementById('warn-hull');
@@ -8972,6 +9095,9 @@ function gameLoop() {
     const _warnLock = document.getElementById('warn-lock');
     if (_warnHull) _warnHull.classList.toggle('active', state.ship.hull < state.ship.maxHull * 0.25);
     if (_warnFuel) _warnFuel.classList.toggle('active', state.ship.fuel < 20);
+    // Hull damage overlay — red border when critically damaged
+    const _hullOverlay = document.getElementById('hull-damage-overlay');
+    if (_hullOverlay) _hullOverlay.classList.toggle('critical', state.ship.hull < state.ship.maxHull * 0.3);
     // Enemy lock warning — any enemy within 50m
     const _enemyClose = c.enemies.some(e => e.group.position.distanceToSquared(ship.position) < 2500);
     if (_warnLock) _warnLock.classList.toggle('active', _enemyClose);
@@ -9249,6 +9375,14 @@ function gameLoop() {
 
     // ── Update criminal fleet ──
     // ── Update convoy ships ──
+    // ── Update space creatures ──
+    scene.children.forEach(ch => {
+      if (ch.userData._creature && ch.userData._wander) {
+        ch.position.addScaledVector(ch.userData._wander, dt * 8);
+        ch.rotation.y += dt * 0.5;
+      }
+    });
+
     scene.children.forEach(ch => {
       if (ch.userData._convoy && ch.userData._target) {
         const dir = ch.userData._target.clone().sub(ch.position).normalize();
