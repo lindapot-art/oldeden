@@ -312,6 +312,29 @@ canvas{display:block;}
 @keyframes screenShake{0%,100%{transform:translate(0,0);}10%{transform:translate(-3px,2px);}20%{transform:translate(4px,-2px);}30%{transform:translate(-2px,3px);}40%{transform:translate(3px,-1px);}50%{transform:translate(-1px,2px);}60%{transform:translate(2px,-3px);}70%{transform:translate(-4px,1px);}80%{transform:translate(1px,-2px);}90%{transform:translate(-2px,3px);}}
 body.screen-shake{animation:screenShake 0.3s ease;}
 
+/* ── Kill streak banner ── */
+@keyframes streakPulse {
+  0%,100% { transform: scale(1); opacity:0.9; }
+  50% { transform: scale(1.05); opacity:1; }
+}
+#streak-banner { position:fixed; top:80px; left:50%; transform:translateX(-50%); font-size:28px; font-weight:900;
+  color:#ffd700; text-shadow:0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,165,0,0.3); z-index:500;
+  pointer-events:none; opacity:0; transition:opacity 0.3s; font-family:'Orbitron','Segoe UI',monospace; letter-spacing:4px;
+}
+#streak-banner.active { opacity:1; animation: streakPulse 1s ease infinite; }
+
+/* ── Cockpit warning lights ── */
+.cockpit-warn { position:fixed; bottom:20px; padding:4px 14px; border-radius:2px; font-size:10px;
+  font-weight:700; text-transform:uppercase; letter-spacing:2px; z-index:450; pointer-events:none;
+  opacity:0; transition:opacity 0.3s; font-family:'Segoe UI',monospace;
+}
+.cockpit-warn.active { opacity:1; }
+#warn-hull { left:20px; color:#ff4444; background:rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); }
+#warn-fuel { left:150px; color:#ff8800; background:rgba(255,136,0,0.1); border:1px solid rgba(255,136,0,0.3); }
+#warn-lock { right:20px; color:#ff2222; background:rgba(255,0,0,0.15); border:1px solid rgba(255,0,0,0.4);
+  animation: lockFlash 0.5s ease infinite alternate; }
+@keyframes lockFlash { 0% { opacity:0.6; } 100% { opacity:1; } }
+
 /* ── Shield Hit Flash ────────────────────── */
 #shield-flash{position:fixed;inset:0;pointer-events:none;z-index:14;border:3px solid rgba(68,170,255,0);border-radius:50%;opacity:0;transition:opacity 0.15s,border-color 0.15s;}
 #shield-flash.active{opacity:1;border-color:rgba(68,170,255,0.4);box-shadow:inset 0 0 60px rgba(68,170,255,0.1),0 0 40px rgba(68,170,255,0.15);}
@@ -1018,6 +1041,10 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!-- ════════════════════════════════════════════ -->
 <!--  GAME CANVASES                               -->
 <!-- ════════════════════════════════════════════ -->
+<div id="streak-banner"></div>
+  <div id="warn-hull" class="cockpit-warn">⚠ HULL CRITICAL</div>
+  <div id="warn-fuel" class="cockpit-warn">⚠ FUEL LOW</div>
+  <div id="warn-lock" class="cockpit-warn">⚠ ENEMY LOCK</div>
 <canvas id="game-canvas"></canvas>
 <canvas id="hud-canvas"></canvas>
 <div id="lock-prompt"><span>Click to resume control</span></div>
@@ -3086,6 +3113,7 @@ function jumpToSystem(idx) {
     if (typeof activateWarpTunnel === 'function') activateWarpTunnel(2000);
   AudioSFX.play('warp_depart');
   setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
+  setTimeout(() => triggerScreenShake(), 1300);
   if (typeof spawnSystemPlanets === "function") spawnSystemPlanets();
   // System ambient color variation
   const _sysColors = [0x667799, 0x996677, 0x669966, 0x887766, 0x776699, 0x668899, 0x998866, 0x669977];
@@ -4620,7 +4648,20 @@ async function spawnSystemPlanets() {
       planet.add(glow);
       planet.userData.rotSpeed = 0.01 + Math.random() * 0.02;
       planet.userData.assetId = modelKey;
-      planet.userData.label = modelKey.replace(/_/g, ' ').toUpperCase();
+      planet.userData.label = modelKey.replace(/_/g
+      // ── Planetary ring (50% chance, not for moons) ──
+      if (modelKey !== 'planet_moon' && Math.random() > 0.5) {
+        const ringInner = baseScale * 1.3;
+        const ringOuter = baseScale * 2.0;
+        const ringGeo = new THREE.RingGeometry(ringInner, ringOuter, 64);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: [0x889988, 0x998877, 0x887799, 0xaa9977][pi % 4],
+          side: THREE.DoubleSide, transparent: true, opacity: 0.15, depthWrite: false,
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI * 0.5 + (Math.random() - 0.5) * 0.3;
+        planet.add(ringMesh);
+      }, ' ').toUpperCase();
       scene.add(planet);
       systemPlanets.push(planet);
     } catch (e) {
@@ -5192,6 +5233,14 @@ function renderHUD(dtMs) {
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+6, 180, 8);
   hudCtx.fillStyle = state.ship.shield > 30 ? '#44aaff' : danger;
   hudCtx.fillRect(slx, sly+6, 180*(state.ship.shield/state.ship.maxShield), 8);
+  // Shield recharge glow when regenerating
+  if (state.ship.shield < state.ship.maxShield && state.ship.shield > 0) {
+    hudCtx.save();
+    hudCtx.globalAlpha = 0.2 + 0.15 * Math.sin(state.gameTime * 0.004);
+    hudCtx.fillStyle = '#44ccff';
+    hudCtx.fillRect(slx, sly+4, 180*(state.ship.shield/state.ship.maxShield), 12);
+    hudCtx.restore();
+  }
   hudCtx.fillStyle = '#445566'; hudCtx.fillText('HULL', slx, sly+32);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+38, 180, 8);
   hudCtx.fillStyle = state.ship.hull > 30 ? '#cc4444' : danger;
@@ -7095,6 +7144,41 @@ async function spawnCriminalShip() {
 }
 
 function updateCriminalFleet(dt, dtMs) {
+  // ── Ambient cargo convoy pass-through (visual only — every 60s) ──
+  if (!state._convoyTimer) state._convoyTimer = 0;
+  state._convoyTimer += dtMs;
+  if (state._convoyTimer > 60000 && Math.random() < 0.01) {
+    state._convoyTimer = 0;
+    // Spawn 3-ship convoy at distance, fly past
+    const convoyModels = ['cargo_cruiser', 'freighter', 'cargo_small'];
+    const startAngle = Math.random() * Math.PI * 2;
+    const convoyPos = new THREE.Vector3(
+      ship.position.x + Math.cos(startAngle) * 300,
+      ship.position.y + (Math.random() - 0.5) * 40,
+      ship.position.z + Math.sin(startAngle) * 300
+    );
+    const convoyEnd = new THREE.Vector3(
+      ship.position.x + Math.cos(startAngle + Math.PI) * 400,
+      ship.position.y + (Math.random() - 0.5) * 40,
+      ship.position.z + Math.sin(startAngle + Math.PI) * 400
+    );
+    convoyModels.forEach((mk, ci) => {
+      const src = state.loadedModels[mk];
+      if (!src) return;
+      const cShip = src.clone();
+      cShip.position.copy(convoyPos).add(new THREE.Vector3(ci * 8, ci * 2, ci * 5));
+      cShip.lookAt(convoyEnd);
+      scene.add(cShip);
+      cShip.userData._convoy = true;
+      cShip.userData._target = convoyEnd.clone();
+      cShip.userData._speed = 15 + Math.random() * 5;
+      cShip.userData._life = 0;
+      // Auto-cleanup after 30s
+      setTimeout(() => { if (cShip.parent) { scene.remove(cShip); disposeObject(cShip); } }, 30000);
+    });
+    addComms('Comms', 'Cargo convoy detected on long-range scanners.');
+  }
+
   _criminalSpawnTimer += dtMs;
   if (_criminalSpawnTimer >= CRIMINAL_SPAWN_INTERVAL && criminalShips.length < MAX_CRIMINALS) {
     _criminalSpawnTimer = 0;
@@ -7571,6 +7655,7 @@ async function spawnStationModel() {
     scene.add(inst);
     stationModels.push(inst);
     addComms('System', `${stationKey.replace(/_/g,' ')} deployed.`);
+    addStationBeacons(inst);
     return;
   } catch(e) { /* fallback to procedural */ }
   const g = new THREE.Group();
@@ -7612,6 +7697,28 @@ async function spawnStationModel() {
   g.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
   scene.add(g);
   stationModels.push(g);
+}
+
+// ═══ STATION APPROACH NAV BEACONS ═══
+function addStationBeacons(stGroup) {
+  const beaconGeo = new THREE.SphereGeometry(0.4, 8, 8);
+  const beaconMatG = new THREE.MeshBasicMaterial({ color: 0x44ff44, transparent: true, opacity: 0.8 });
+  const beaconMatR = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.8 });
+  beaconGeo._pooled = true; beaconMatG._pooled = true; beaconMatR._pooled = true;
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2;
+    const b = new THREE.Mesh(beaconGeo, i < 2 ? beaconMatG : beaconMatR);
+    b.position.set(Math.cos(angle) * 35, 0, Math.sin(angle) * 35);
+    b.userData._beacon = true;
+    stGroup.add(b);
+  }
+  const guideMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+  guideMat._pooled = true;
+  const guide = new THREE.Mesh(beaconGeo, guideMat);
+  guide.position.set(0, -8, 0);
+  guide.userData._beacon = true;
+  guide.userData._pulse = true;
+  stGroup.add(guide);
 }
 
 // ================================================================
@@ -8201,9 +8308,28 @@ function setAutopilot(targetPos) {
   autopilotTarget = targetPos.clone();
   autopilotActive = true;
   addComms('NAV', `Autopilot engaged. Distance: ${Math.floor(ship.position.distanceTo(targetPos))}m`);
+  // Create 3D waypoint marker
+  if (state._waypointMarker) { scene.remove(state._waypointMarker); disposeObject(state._waypointMarker); }
+  const wpG = new THREE.Group();
+  const wpRing = new THREE.Mesh(
+    new THREE.TorusGeometry(3, 0.15, 8, 24),
+    new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.5, depthWrite: false })
+  );
+  wpRing.rotation.x = Math.PI / 2;
+  wpG.add(wpRing);
+  const wpBeam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, 20, 4),
+    new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.25 })
+  );
+  wpG.add(wpBeam);
+  wpG.position.copy(targetPos);
+  scene.add(wpG);
+  state._waypointMarker = wpG;
 }
 
 function disengageAutopilot() {
+  // Remove waypoint marker from scene
+  if (state._waypointMarker) { scene.remove(state._waypointMarker); disposeObject(state._waypointMarker); state._waypointMarker = null; }
   autopilotActive = false;
   autopilotTarget = null;
   addComms('NAV', 'Autopilot disengaged.');
@@ -8521,6 +8647,16 @@ function gameLoop() {
 
     // Combat feedback timers
     if (c.hitMarkerTimer > 0) c.hitMarkerTimer = Math.max(0, c.hitMarkerTimer - dtMs);
+
+    // ── Cockpit warning lights ──
+    const _warnHull = document.getElementById('warn-hull');
+    const _warnFuel = document.getElementById('warn-fuel');
+    const _warnLock = document.getElementById('warn-lock');
+    if (_warnHull) _warnHull.classList.toggle('active', state.ship.hull < state.ship.maxHull * 0.25);
+    if (_warnFuel) _warnFuel.classList.toggle('active', state.ship.fuel < 20);
+    // Enemy lock warning — any enemy within 50m
+    const _enemyClose = c.enemies.some(e => e.group.position.distanceToSquared(ship.position) < 2500);
+    if (_warnLock) _warnLock.classList.toggle('active', _enemyClose);
     if (c.killConfirmTimer > 0) c.killConfirmTimer = Math.max(0, c.killConfirmTimer - dtMs);
     if (c.shieldBreakTimer > 0) c.shieldBreakTimer = Math.max(0, c.shieldBreakTimer - dtMs);
     // Fire recoil kick (recovers over time — framerate-independent)
@@ -8784,7 +8920,26 @@ function gameLoop() {
       });
     }
 
+    // ── Pulse station nav beacons ──
+    stationModels.forEach(sm => {
+      sm.traverse(ch => {
+        if (ch.userData._beacon && ch.userData._pulse && ch.material) {
+          ch.material.opacity = 0.3 + 0.5 * Math.abs(Math.sin(state.gameTime * 0.003));
+        }
+      });
+    });
+
     // ── Update criminal fleet ──
+    // ── Update convoy ships ──
+    scene.children.forEach(ch => {
+      if (ch.userData._convoy && ch.userData._target) {
+        const dir = ch.userData._target.clone().sub(ch.position).normalize();
+        ch.position.addScaledVector(dir, ch.userData._speed * dt);
+        ch.lookAt(ch.userData._target);
+        ch.userData._life += dtMs;
+      }
+    });
+
     if (typeof updateCriminalFleet === 'function') updateCriminalFleet(dt, dtMs);
 
 // Rotate asteroids
@@ -8794,9 +8949,14 @@ function gameLoop() {
       a.rotation.z += a.userData.rotSpeed.z * dt;
     });
 
-    // ── Loot Magnet — auto-pull nearby loot drops ──
+    // ── Tractor Beam Visual (green line from ship to pulled loot) ──
+    if (!c._tractorLines) c._tractorLines = [];
+    c._tractorLines.forEach(tl => { if (tl.parent) tl.parent.remove(tl); tl.geometry.dispose(); });
+    c._tractorLines.length = 0;
+// ── Loot Magnet — auto-pull nearby loot drops ──
     if (c.lootDrops && c.lootDrops.length > 0) {
       const magnetRange = state.lootMagnet.range || 80;
+      const _tractorMat = new THREE.LineBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
       for (let li = c.lootDrops.length - 1; li >= 0; li--) {
         const ld = c.lootDrops[li];
         if (!ld || !ld.group) continue;
@@ -8898,6 +9058,14 @@ function gameLoop() {
             // Streak milestone announcements
             const _milestones = {5:'RAMPAGE!',10:'UNSTOPPABLE!',15:'GODLIKE!',20:'LEGENDARY!'};
             if (_milestones[c.streak]) { c._streakMilestoneText = _milestones[c.streak]; c._streakMilestoneTimer = 1500; AudioSFX.play('quest_complete'); }
+            // Show streak banner DOM element
+            const _streakBanner = document.getElementById('streak-banner');
+            if (_streakBanner && _milestones[c.streak]) {
+              _streakBanner.textContent = _milestones[c.streak] + ' x' + c.streak;
+              _streakBanner.classList.add('active');
+              clearTimeout(c._streakBannerTimeout);
+              c._streakBannerTimeout = setTimeout(() => _streakBanner.classList.remove('active'), 2500);
+            }
             if (c.streak > c.bestStreak) c.bestStreak = c.streak;
             const pts = Math.floor(e.points * c.streakMultiplier);
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
