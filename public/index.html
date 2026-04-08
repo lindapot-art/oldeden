@@ -9230,48 +9230,20 @@ function gameLoop() {
 
 
 
-    // ── Update loot drops (rotate, collect if near) ──
+    // ── Update loot drops (visual: rotate, bob, glow) ──
+    // NOTE: Collection is handled by the second loot loop below (type-specific rewards)
     if (c.lootDrops) {
       for (let i = c.lootDrops.length - 1; i >= 0; i--) {
         const ld = c.lootDrops[i];
         if (!ld.group) { c.lootDrops.splice(i, 1); continue; }
-        ld.age += dtMs;
-        ld.group.children[0].rotation.y += dt * 1.5;
-        ld.group.children[0].rotation.x += dt * 0.5;
-        // Bob up and down
-        ld.group.position.y += Math.sin(state.gameTime * 0.002 + i) * 0.02;
-        // Glow pulse
-        if (ld.group.children[1]) {
-          ld.group.children[1].material.opacity = 0.05 + 0.04 * Math.sin(state.gameTime * 0.003 + i);
+        if (ld.group.children[0]) {
+          ld.group.children[0].rotation.y += dt * 1.5;
+          ld.group.children[0].rotation.x += dt * 0.5;
         }
-        // Check collection distance
-        const dist = ld.group.position.distanceTo(ship.position);
-        const collectRange = state.lootMagnet ? 30 : 8;
-        if (dist < collectRange) {
-          // Magnet pull
-          if (dist > 3) {
-            const pullDir = ship.position.clone().sub(ld.group.position).normalize();
-            ld.group.position.add(pullDir.multiplyScalar(Math.min(1, 50 * dt)));
-          } else {
-            // Collect!
-            state.player.credits += ld.type.value;
-            showToast('+' + ld.type.value + ' EC: ' + ld.type.name);
-            AudioSFX.play('powerup');
-            // Collect quest objectives
-            state.quests.forEach(q => {
-              if (!q.active || q.completed) return;
-              q.objectives.forEach(o => {
-                if (o.type === 'collect' && (o.current || 0) < o.required) o.current = (o.current || 0) + 1;
-              });
-            });
-            scene.remove(ld.group); disposeObject(ld.group);
-            c.lootDrops.splice(i, 1);
-          }
-        }
-        // Despawn after 2 minutes
-        if (ld.age > 120000) {
-          scene.remove(ld.group); disposeObject(ld.group);
-          c.lootDrops.splice(i, 1);
+        // Glow pulse (use lootLight if available, otherwise children[2] or [1])
+        const _lootGlow = ld.group.userData.lootLight || ld.group.children[2] || ld.group.children[1];
+        if (_lootGlow && _lootGlow.material && !_lootGlow.material._pooled) {
+          _lootGlow.material.opacity = 0.05 + 0.04 * Math.sin(state.gameTime * 0.003 + i);
         }
       }
     }
@@ -9389,7 +9361,6 @@ function gameLoop() {
 // ── Loot Magnet — auto-pull nearby loot drops ──
     if (c.lootDrops && c.lootDrops.length > 0) {
       const magnetRange = state.lootMagnet.range || 80;
-      const _tractorMat = new THREE.LineBasicMaterial({ color: 0x44ffaa, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
       for (let li = c.lootDrops.length - 1; li >= 0; li--) {
         const ld = c.lootDrops[li];
         if (!ld || !ld.group) continue;
@@ -9809,17 +9780,32 @@ function gameLoop() {
         else if (l.group.userData.lootLight.material) l.group.userData.lootLight.material.opacity = 0.15 + _lootPulse * 0.2;
       }
       if (l.group.userData.lootMesh) l.group.userData.lootMesh.scale.setScalar(0.9 + _lootPulse * 0.3);
-      // Player collect
-      if (l.group.position.distanceToSquared(ship.position) < 144) {
+      // Player collect (magnet-aware range)
+      const _collectRange = state.lootMagnet.active ? 30 : 12;
+      const _collectDistSq = l.group.position.distanceToSquared(ship.position);
+      if (_collectDistSq < _collectRange * _collectRange) {
+        // Magnet pull toward player if not yet close enough to pick up
+        if (_collectDistSq > 144) {
+          _tmpV3b.copy(ship.position).sub(l.group.position).normalize().multiplyScalar(Math.min(1, 50 * dt));
+          l.group.position.add(_tmpV3b);
+        } else {
         if (l.type === 'credits') { const lootAmt = l.creditValue || 50; state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ffd700' }); }
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ff8844' }); }
         AudioSFX.play('loot_' + l.type);
+        // Quest collect objectives
+        state.quests.forEach(q => {
+          if (!q.active || q.completed) return;
+          q.objectives.forEach(o => {
+            if (o.type === 'collect' && (o.current || 0) < o.required) o.current = (o.current || 0) + 1;
+          });
+        });
         scene.remove(l.group); disposeObject(l.group); c.lootDrops.splice(i, 1); continue;
+        }
       }
-      // Despawn after 15s
-      if (l.age > 15000) { scene.remove(l.group); disposeObject(l.group); c.lootDrops.splice(i, 1); }
+      // Despawn after 2 minutes
+      if (l.age > 120000) { scene.remove(l.group); disposeObject(l.group); c.lootDrops.splice(i, 1); }
     }
 
     // Space dust drift
