@@ -3392,7 +3392,7 @@ function renderStation() {
         dlg.innerHTML = '<div style="color:var(--gold);font-size:0.9rem;margin-bottom:6px">' + _escHtml(life.name) + ' speaks:</div>' +
           '<div style="font-style:italic;color:#ccc;font-size:0.85rem">"' + _escHtml(quote) + '"</div>' +
           '<div style="font-size:0.7rem;color:var(--muted);margin-top:8px">A memory from Life #' + (life.rebirthNum+1) + '</div>';
-        AudioSFX.play('click');
+        AudioSFX.uiClick();
       });
     });
     pastPanel.style.display = '';
@@ -4732,7 +4732,15 @@ async function spawnSystemPlanets() {
   }
 }
 
-function spawnSpaceDust() {}
+function spawnSpaceDust() {
+  for (let i = 0; i < 40; i++) {
+    const m = new THREE.Mesh(_dustGeo, _dustMat);
+    m.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*200, (Math.random()-0.5)*500);
+    m.userData.drift = new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*0.5, (Math.random()-0.5)*2);
+    scene.add(m);
+    c.spaceDust.push(m);
+  }
+}
 
 // ═══ SYSTEM STAR (distant sun) ═══
 let _systemStar = null;
@@ -4764,15 +4772,7 @@ function spawnSystemStar() {
   _systemStar = starGroup;
 }
 
-function _notUsed_spawnSpaceDust_real() {
-  for (let i = 0; i < 40; i++) {
-    const m = new THREE.Mesh(_dustGeo, _dustMat);
-    m.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*200, (Math.random()-0.5)*500);
-    m.userData.drift = new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*0.5, (Math.random()-0.5)*2);
-    scene.add(m);
-    c.spaceDust.push(m);
-  }
-}
+// spawnSpaceDust implementation restored above
 
 // Pooled loot materials (one set per type — reused across drops)
 const _lootColors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
@@ -6459,7 +6459,13 @@ function triggerShieldFlash(isHull) {
 }
 
 // ══ SCREEN SHAKE ══
-function triggerScreenShake() {}
+function triggerScreenShake() {
+  if (state.settings.screenShake === false) return;
+  document.body.classList.remove('screen-shake');
+  void document.body.offsetWidth;
+  document.body.classList.add('screen-shake');
+  state.screenShakeTimer = 300;
+}
 
 // ════════════════════════════════════════════════════════════════
 //  ACHIEVEMENT POPUP SYSTEM
@@ -6496,12 +6502,7 @@ function checkAchievements() {
   if (state.player.stellarMarks >= 10 && !_achievements.stellar) unlockAchievement('stellar', 'STELLAR', 'Earn 10 Stellar Marks');
 }
 
-function _notUsed_triggerScreenShake_real() {
-  document.body.classList.remove('screen-shake');
-  void document.body.offsetWidth;
-  document.body.classList.add('screen-shake');
-  state.screenShakeTimer = 300;
-}
+// triggerScreenShake implementation restored above
 
 // ══ 3D EXPLOSION PARTICLES ══
 const _explosionPool = [];
