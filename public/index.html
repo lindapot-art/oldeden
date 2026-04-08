@@ -1180,7 +1180,7 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 
   <button class="nav-btn" data-screen="quarters"><span class="nav-icon">&#127968;</span>Quarters</button>
   <button class="nav-btn" data-screen="interior"><span class="nav-icon">&#128694;</span>Interior</button>
-  <button class="nav-btn" onclick="showScreen('gunroom')"><span class="nav-icon">🔫</span>Armory</button>
+  <button class="nav-btn" data-screen="gunroom"><span class="nav-icon">🔫</span>Armory</button>
 </nav>
 
 <div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
@@ -2538,7 +2538,7 @@ function _showScreenInner(name) {
 
   state.screen = name;
   const navBar = document.getElementById('nav-bar');
-  const showNav = ['bridge','starmap','station','character','rebirth','market'].includes(name);
+  const showNav = !['title','create','eulogy','karma','gunner'].includes(name);
   navBar.classList.toggle('visible', showNav);
 
   // Show death ticker on bridge and title
@@ -6662,7 +6662,50 @@ document.getElementById('btn-gunroom-back')?.addEventListener('click', () => sho
 
 // ── Captain's Quarters ──
 let _quartersScene = null, _quartersCamera = null, _quartersRenderer = null, _quartersAnimId = null;
-function initQuarters() {}
+function initQuarters() {
+  const p = state.player;
+  const c = state.combat;
+  const s = state.ship;
+  const ls = p.lifetimeStats;
+  // Pilot Profile
+  const _qSet = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  _qSet('q-name', p.name || '—');
+  const fObj = FACTIONS.find(f => f.id === p.faction);
+  const fEl = document.getElementById('q-faction');
+  if (fEl) { fEl.textContent = fObj ? fObj.name : '—'; fEl.style.color = fObj ? fObj.color : ''; }
+  _qSet('q-credits', (p.credits || 0).toLocaleString());
+  _qSet('q-sm', (p.stellarMarks || 0).toLocaleString());
+  _qSet('q-rebirths', p.rebirths || 0);
+  _qSet('q-karma', p.soulFragments ? p.soulFragments.length + ' fragments' : '0 fragments');
+  // Combat Record
+  _qSet('q-kills', ((ls.totalKills || 0) + (c.kills || 0)).toLocaleString());
+  _qSet('q-boss-kills', ((ls.bossKills || 0) + (c.bossKills || 0)).toLocaleString());
+  _qSet('q-streak', Math.max(ls.peakStreak || 0, c.bestStreak || 0));
+  _qSet('q-deaths', (ls.totalDeaths || 0).toLocaleString());
+  const visited = new Set();
+  if (state.starSystems) state.starSystems.forEach((sys, i) => { if (state.factionRep && state.factionRep[sys.controllingFaction] > 0) visited.add(i); });
+  if (state.location) visited.add(state.location.systemIndex || 0);
+  _qSet('q-systems', visited.size);
+  const secs = Math.floor(state.gameTime || 0);
+  const hrs = Math.floor(secs / 3600); const mins = Math.floor((secs % 3600) / 60);
+  _qSet('q-time', hrs > 0 ? hrs + 'h ' + mins + 'm' : mins + 'm ' + (secs % 60) + 's');
+  // Ship Status
+  _qSet('q-hull', Math.round(s.hull) + ' / ' + s.maxHull);
+  _qSet('q-shield', Math.round(s.shield) + ' / ' + s.maxShield);
+  _qSet('q-fuel', Math.round(s.fuel) + ' / ' + s.maxFuel);
+  _qSet('q-cargo', (state.inventory ? state.inventory.length : 0) + ' items');
+  // Trophies
+  const tropEl = document.getElementById('q-trophies');
+  if (tropEl) {
+    const mergedStats = { totalKills: (ls.totalKills || 0) + (c.kills || 0), totalScore: (ls.totalScore || 0) + (c.score || 0), bossKills: (ls.bossKills || 0) + (c.bossKills || 0), totalDeaths: ls.totalDeaths || 0, peakStreak: Math.max(ls.peakStreak || 0, c.bestStreak || 0), totalCredits: (ls.totalCredits || 0) + (p.credits || 0) };
+    const earned = SOUL_MILESTONES.filter(m => { try { return m.check(mergedStats, p); } catch { return false; } });
+    if (earned.length > 0) {
+      tropEl.innerHTML = earned.map(m => '<div class="quarters-trophy" title="' + m.desc + '" style="color:var(--gold);">' + m.icon + ' ' + m.name + '</div>').join('');
+    } else {
+      tropEl.innerHTML = '<div class="quarters-trophy">No trophies yet — keep flying!</div>';
+    }
+  }
+}
 
 // ════════════════════════════════════════════════════════════════
 //  SHIP INTERIOR — First-person walk mode
