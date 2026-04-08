@@ -2274,7 +2274,8 @@ async function connectSocket() {
           saveGame(); // Emergency save to localStorage (socket emit will silently fail)
         });
         s.on('game:init', (data) => {
-          addComms('AI Director', `${data.systems.length} systems online. Tick rate: ${data.tickRate}ms`);
+          if (data.systems) addComms('AI Director', `${data.systems.length} systems online. Tick rate: ${data.tickRate}ms`);
+          else addComms('AI Director', `Engine online. Tick rate: ${data.tickRate}ms`);
         });
         s.on('character:created', (data) => {
           state.player.serverId = data.id;
@@ -4435,42 +4436,13 @@ const LOOT_TYPES = [
   { name: 'Gold Alloy', value: 250, color: 0xffaa00, size: 0.5 },
 ];
 
-function spawnLootDrop(pos) {
-  const type = LOOT_TYPES[Math.floor(Math.random() * LOOT_TYPES.length)];
-  const geo = new THREE.OctahedronGeometry(type.size, 0);
-  const mat = new THREE.MeshStandardMaterial({
-    color: type.color, roughness: 0.3, metalness: 0.8,
-    emissive: type.color, emissiveIntensity: 0.3,
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  // Glow aura
-  const glowGeo = new THREE.SphereGeometry(type.size * 2, 8, 8);
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: type.color, transparent: true, opacity: 0.08,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  const glow = new THREE.Mesh(glowGeo, glowMat);
-  const group = new THREE.Group();
-  group.add(mesh);
-  group.add(glow);
-  group.position.copy(pos || new THREE.Vector3(
-    ship.position.x + (Math.random() - 0.5) * SPAWN_RADIUS * 0.8,
-    ship.position.y + (Math.random() - 0.5) * 40,
-    ship.position.z + (Math.random() - 0.5) * SPAWN_RADIUS * 0.8
-  ));
-  group.userData.lootType = type;
-  group.userData.collected = false;
-  group.userData.age = 0;
-  scene.add(group);
-  c.lootDrops = c.lootDrops || [];
-  c.lootDrops.push({ group, type, age: 0 });
-  return group;
-}
-
 // Drop loot when enemy dies
 function dropLootFromEnemy(pos) {
   if (Math.random() < 0.4) { // 40% drop chance
-    spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)));
+    const types = ['credits', 'ammo', 'health', 'fuel'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const vals = { credits: 50, ammo: 25, health: 25, fuel: 25 };
+    spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)), type, vals[type] || 50);
   }
 }
 
@@ -4481,8 +4453,17 @@ function spawnSystemLoot() {
   c.lootDrops.forEach(ld => { if (ld.group) { scene.remove(ld.group); disposeObject(ld.group); } });
   c.lootDrops = [];
   // Spawn 3-6 loot drops
+  const types = ['credits', 'ammo', 'health', 'fuel'];
   const count = 3 + Math.floor(Math.random() * 4);
-  for (let i = 0; i < count; i++) spawnLootDrop();
+  for (let i = 0; i < count; i++) {
+    const type = types[Math.floor(Math.random() * types.length)];
+    const pos = new THREE.Vector3(
+      ship.position.x + (Math.random() - 0.5) * SPAWN_RADIUS * 0.8,
+      ship.position.y + (Math.random() - 0.5) * 40,
+      ship.position.z + (Math.random() - 0.5) * SPAWN_RADIUS * 0.8
+    );
+    spawnLootDrop(pos, type, 50);
+  }
 }
 
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
@@ -4726,7 +4707,7 @@ async function spawnSystemPlanets() {
       planet.add(glow);
       planet.userData.rotSpeed = 0.01 + Math.random() * 0.02;
       planet.userData.assetId = modelKey;
-      planet.userData.label = modelKey.replace(/_/g
+      planet.userData.label = modelKey.replace(/_/g, ' ').toUpperCase();
       // ── Planetary ring (50% chance, not for moons) ──
       if (modelKey !== 'planet_moon' && Math.random() > 0.5) {
         const ringInner = baseScale * 1.3;
@@ -4739,7 +4720,7 @@ async function spawnSystemPlanets() {
         const ringMesh = new THREE.Mesh(ringGeo, ringMat);
         ringMesh.rotation.x = Math.PI * 0.5 + (Math.random() - 0.5) * 0.3;
         planet.add(ringMesh);
-      }, ' ').toUpperCase();
+      }
       scene.add(planet);
       systemPlanets.push(planet);
     } catch (e) {

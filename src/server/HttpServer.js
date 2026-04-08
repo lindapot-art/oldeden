@@ -64,7 +64,7 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize, corsOrigi
     // Content Security Policy — game uses inline scripts/styles so we need 'unsafe-inline'
     res.setHeader('Content-Security-Policy', [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "connect-src 'self' ws: wss:",
