@@ -4014,6 +4014,9 @@ const c = state.combat;
 let renderer, scene, camera, ship, turretMount, cockpit, composer;
 let railGlowMatL, railGlowMatR, muzzleMat, railL, railR;
 let threeReady = false;
+let shieldShimmerMat, shieldShimmerGeo, shieldShimmer;
+let shieldShimmerTimer = 0;
+let starLayers = [];
 
 try {
 
@@ -4170,7 +4173,7 @@ window.addEventListener('resize', resize);
 resize();
 
 // ── Multi-layer Parallax Starfield ────
-const starLayers = [];
+starLayers = [];
 const STAR_LAYER_CFG = [
   { count: 1500, minR: 400, maxR: 2000, size: 3.5, opacity: 0.95, parallax: 0.04, color: 0xffeedd },
   { count: 3000, minR: 2000, maxR: 6000, size: 2.0, opacity: 0.7, parallax: 0.015, color: 0xccbbaa },
@@ -4200,23 +4203,16 @@ STAR_LAYER_CFG.forEach(cfg => {
 
 
 // ── Shield shimmer (additive flash on shield hit) ────
-const shieldShimmerMat = new THREE.MeshBasicMaterial({
+shieldShimmerMat = new THREE.MeshBasicMaterial({
   color: 0x44aaff, transparent: true, opacity: 0, 
   side: THREE.FrontSide, depthWrite: false, blending: THREE.AdditiveBlending,
 });
-const shieldShimmerGeo = new THREE.IcosahedronGeometry(4.5, 1);
-const shieldShimmer = new THREE.Mesh(shieldShimmerGeo, shieldShimmerMat);
+shieldShimmerGeo = new THREE.IcosahedronGeometry(4.5, 1);
+shieldShimmer = new THREE.Mesh(shieldShimmerGeo, shieldShimmerMat);
 shieldShimmer.name = 'shield-shimmer';
 camera.add(shieldShimmer);
-let shieldShimmerTimer = 0;
-
-function triggerShieldShimmer() {
-  shieldShimmerTimer = 300;
-  shieldShimmerMat.opacity = 0.35;
-  shieldShimmerMat.color.setHex(0x44aaff);
-  shieldShimmer.visible = true;
-}
-// Nebulae — shared geometry
+shieldShimmerTimer = 0;
+ // Nebulae — shared geometry
 const _nebGeo = new THREE.PlaneGeometry(3000, 3000); _nebGeo._pooled = true;
 for (let i = 0; i < 4; i++) {
   const nebMat = new THREE.MeshBasicMaterial({
@@ -4394,6 +4390,14 @@ threeReady = true;
   errBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#cc0000;color:#fff;font:13px monospace;z-index:99999;';
   errBanner.textContent = '3D engine error: ' + err.message + ' — game menus still work';
   document.body.appendChild(errBanner);
+}
+
+function triggerShieldShimmer() {
+  if (!shieldShimmerMat) return;
+  shieldShimmerTimer = 300;
+  shieldShimmerMat.opacity = 0.35;
+  shieldShimmerMat.color.setHex(0x44aaff);
+  shieldShimmer.visible = true;
 }
 
 // ── Engine exhaust particles ────
@@ -7075,22 +7079,75 @@ function loadGLBModel(key) {
       (gltf) => {
         const model = gltf.scene;
         model.scale.setScalar(asset.scale);
-        // Optimise — reduce draw calls by merging small meshes
         model.traverse(child => {
           if (child.isMesh) {
             child.frustumCulled = true;
-            if (child.material) {
-              child.material.precision = 'mediump';
-            }
+            if (child.material) child.material.precision = 'mediump';
           }
         });
         state.loadedModels[key] = model;
         resolve(model);
       },
       undefined,
-      (err) => { console.warn('[GLB] Failed to load', key, err); reject(err); }
+      (err) => {
+        console.warn('[GLB] Failed to load', key, '— using vector fallback:', err);
+        const model = _buildVectorModel(key, asset);
+        model.scale.setScalar(asset.scale);
+        state.loadedModels[key] = model;
+        resolve(model);
+      }
     );
   });
+}
+
+function _buildVectorModel(key, asset) {
+  const g = new THREE.Group();
+  g.name = 'vec_' + key;
+  const role = asset.role || 'npc';
+  const COLORS = { enemy: 0xff3333, boss: 0xff0066, npc: 0x44aaff, police: 0x3366ff, station: 0x888888, planet: 0x44aa66, weapon: 0xffaa00, cockpit: 0x556677, prop: 0x999999, creature: 0xaa44ff };
+  const baseColor = COLORS[role] || 0x888888;
+  const mat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.4, metalness: 0.6, flatShading: true });
+  const glowMat = new THREE.MeshBasicMaterial({ color: baseColor, transparent: true, opacity: 0.25 });
+  if (role === 'planet') {
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.0, 2), mat));
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.08, 2), new THREE.MeshBasicMaterial({ color: baseColor, transparent: true, opacity: 0.06, side: THREE.BackSide, depthWrite: false })));
+  } else if (role === 'station') {
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 2.5, 8), mat));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.15, 6, 16), mat); ring.rotation.x = Math.PI / 2; g.add(ring);
+    for (let i = 0; i < 4; i++) { const spar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 2.0), glowMat); spar.position.set(Math.cos(i*Math.PI/2)*0.8, 1.4, Math.sin(i*Math.PI/2)*0.8); g.add(spar); }
+  } else if (role === 'boss') {
+    g.add(new THREE.Mesh(new THREE.DodecahedronGeometry(1.2, 0), mat));
+    for (let i = 0; i < 6; i++) { const spike = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.0, 4), mat); const a = (i/6)*Math.PI*2; spike.position.set(Math.cos(a)*1.0, 0, Math.sin(a)*1.0); spike.lookAt(spike.position.clone().multiplyScalar(2)); g.add(spike); }
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.6 })));
+  } else if (role === 'enemy') {
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.3, 2.0, 4), mat); body.rotation.x = Math.PI / 2; g.add(body);
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.6), mat));
+    const eng = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.7 })); eng.position.z = 1.0; g.add(eng);
+  } else if (role === 'police') {
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.8, 6), mat); body.rotation.x = Math.PI / 2; g.add(body);
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.5), mat));
+    const lr = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), new THREE.MeshBasicMaterial({ color: 0xff0000 })); lr.position.set(-0.3, 0.2, 0); g.add(lr);
+    const lb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), new THREE.MeshBasicMaterial({ color: 0x0044ff })); lb.position.set(0.3, 0.2, 0); g.add(lb);
+  } else if (role === 'weapon') {
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.0, 6), mat); barrel.rotation.x = Math.PI / 2; g.add(barrel);
+    const housing = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.6), mat); housing.position.z = 0.8; g.add(housing);
+  } else if (role === 'cockpit') {
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, 0.1), mat); dash.position.set(0, -0.5, -1.2); g.add(dash);
+    const strut = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.04), mat); strut.position.set(0, 0.6, -1.0); g.add(strut);
+    for (const xSign of [-1, 1]) { const side = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.2, 0.04), mat); side.position.set(xSign * 1.0, 0, -1.1); g.add(side); }
+    for (let i = 0; i < 5; i++) { const led = new THREE.Mesh(new THREE.SphereGeometry(0.02, 4, 4), new THREE.MeshBasicMaterial({ color: [0x44ff44, 0xff4444, 0x4444ff, 0xffaa00, 0x44ffff][i] })); led.position.set(-0.6 + i * 0.3, -0.3, -1.25); g.add(led); }
+  } else if (role === 'creature') {
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), mat));
+    for (let i = 0; i < 5; i++) { const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.08, 0.8, 4), mat); const a = (i/5)*Math.PI*2; seg.position.set(Math.cos(a)*0.5, -0.5, Math.sin(a)*0.5); seg.rotation.x = 0.5; g.add(seg); }
+  } else if (role === 'prop') {
+    g.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.8, 0), mat));
+    g.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), glowMat));
+  } else {
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.0, 4, 8), mat); body.rotation.x = Math.PI / 2; g.add(body);
+    const eng = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.6 })); eng.position.z = 0.8; g.add(eng);
+    for (const xSign of [-1, 1]) { const fin = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.3), mat); fin.position.set(xSign * 0.5, 0, 0.2); g.add(fin); }
+  }
+  return g;
 }
 
 // ================================================================
@@ -9742,7 +9799,7 @@ function gameLoop() {
     }
 
     // Shield shimmer decay
-    if (shieldShimmerTimer > 0) {
+    if (shieldShimmerTimer > 0 && shieldShimmerMat && shieldShimmer) {
       shieldShimmerTimer -= dtMs;
       shieldShimmerMat.opacity = Math.max(0, (shieldShimmerTimer / 300) * 0.35);
       shieldShimmer.rotation.y += dt * 3;
@@ -9983,7 +10040,7 @@ renderLibraryLabels();
   } catch (_loopErr) {
     if (!gameLoop._errCount) gameLoop._errCount = 0;
     gameLoop._errCount++;
-    if (gameLoop._errCount <= 3) console.error('[GameLoop] Frame error:', _loopErr);
+    if (gameLoop._errCount <= 10) console.error('[GameLoop] Frame error:', _loopErr.message || _loopErr, _loopErr.stack ? _loopErr.stack.split('\n').slice(0,3).join(' <- ') : '');
   }
 }
 
