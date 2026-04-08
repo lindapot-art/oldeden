@@ -9,6 +9,9 @@ REM    3. Sets up environment configuration
 REM    4. Launches the game server
 REM ========================================================================
 
+REM Change to the directory where this script lives
+cd /d "%~dp0"
+
 echo.
 echo ========================================
 echo   OLD EDEN - Game Launcher
@@ -65,7 +68,7 @@ if not exist ".env" (
         echo [INFO] You may want to edit .env file to configure:
         echo   - Database connections ^(MongoDB, Redis^)
         echo   - Blockchain settings ^(Polygon^)
-        echo   - Server port ^(default: 3000^)
+        echo   - Server port ^(default: 3847^)
         echo.
     ) else (
         echo [WARNING] .env.example not found
@@ -77,14 +80,14 @@ if not exist ".env" (
     echo.
 )
 
-REM Check if port 3000 is busy (don't kill — other apps may be using it)
-echo [CHECK] Checking port 3000 availability...
-netstat -aon | findstr ":3000 " | findstr "LISTENING" >nul 2>nul
+REM Check if port 3847 is busy (don't kill — other apps may be using it)
+echo [CHECK] Checking port 3847 availability...
+netstat -aon | findstr ":3847 " | findstr "LISTENING" >nul 2>nul
 if %ERRORLEVEL% EQU 0 (
-    echo [INFO] Port 3000 is busy — server will auto-rotate to next available port
+    echo [INFO] Port 3847 is busy — server will auto-rotate to next available port
     echo.
 ) else (
-    echo [OK] Port 3000 is available
+    echo [OK] Port 3847 is available
     echo.
 )
 
@@ -93,8 +96,8 @@ echo ========================================
 echo   STARTING OLD EDEN SERVER
 echo ========================================
 echo.
-echo The game server will start on http://localhost:3000
-echo ^(If port 3000 is busy, it will auto-rotate to the next available port^)
+echo The game server will start on http://localhost:3847
+echo ^(If port 3847 is busy, it will auto-rotate to the next available port^)
 echo Press Ctrl+C to stop the server
 echo.
 echo ----------------------------------------

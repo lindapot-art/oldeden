@@ -9,6 +9,9 @@
 #    4. Launches the game server
 # ========================================================================
 
+# Change to script directory (works even when launched from elsewhere)
+cd "$(dirname "$0")"
+
 echo ""
 echo "========================================"
 echo "   OLD EDEN - Game Launcher"
@@ -62,7 +65,7 @@ if [ ! -f ".env" ]; then
         echo "[INFO] You may want to edit .env file to configure:"
         echo "  - Database connections (MongoDB, Redis)"
         echo "  - Blockchain settings (Polygon)"
-        echo "  - Server port (default: 3000)"
+        echo "  - Server port (default: 3847)"
         echo ""
     else
         echo "[WARNING] .env.example not found"
@@ -79,7 +82,7 @@ echo "========================================"
 echo "   STARTING OLD EDEN SERVER"
 echo "========================================"
 echo ""
-echo "The game server will start on http://localhost:3000"
+echo "The game server will start on http://localhost:3847"
 echo "Press Ctrl+C to stop the server"
 echo ""
 echo "----------------------------------------"
