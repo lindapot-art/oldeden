@@ -263,6 +263,15 @@ canvas{display:block;}
 #btn-launch:hover{background:rgba(212,168,86,0.15);box-shadow:0 0 40px rgba(212,168,86,0.2);transform:scale(1.05);}
 .launch-hint{color:var(--muted);font-size:0.72rem;margin-top:8px;letter-spacing:0.05em;}
 .launch-hint span{color:var(--blue);}
+#combat-summary{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);background:rgba(10,15,25,0.95);border:1px solid var(--gold);border-radius:8px;padding:28px 36px;z-index:9990;pointer-events:auto;opacity:0;transition:all 0.4s ease;min-width:280px;text-align:center;cursor:pointer;}
+#combat-summary.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+#combat-summary h3{color:var(--gold);font-size:1.1rem;margin:0 0 16px;letter-spacing:0.12em;text-transform:uppercase;}
+.cs-row{display:flex;justify-content:space-between;padding:5px 0;font-size:0.85rem;border-bottom:1px solid rgba(26,37,53,0.6);}
+.cs-row:last-of-type{border-bottom:none;}
+.cs-label{color:var(--muted);}
+.cs-val{color:var(--text);font-weight:600;}
+.cs-val.positive{color:var(--green);}
+.cs-dismiss{color:var(--muted);font-size:0.68rem;margin-top:14px;opacity:0.6;}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
@@ -2408,6 +2417,31 @@ function showToast(msg) {
   setTimeout(() => { const idx = _activeToasts.indexOf(t); if (idx !== -1) _activeToasts.splice(idx, 1); t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => { if (t.parentNode) t.remove(); }, 500); }, 2000);
 }
 
+function showCombatSummary(kills, score, credits, streak, timeSecs) {
+  if (kills === 0 && score === 0 && credits === 0) return;
+  let el = document.getElementById('combat-summary');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'combat-summary';
+    el.addEventListener('click', () => { el.classList.remove('show'); setTimeout(() => { if (el.parentNode) el.remove(); }, 400); });
+    document.body.appendChild(el);
+  }
+  const mins = Math.floor(timeSecs / 60);
+  const secs = Math.floor(timeSecs % 60);
+  const timeStr = mins > 0 ? mins + 'm ' + secs + 's' : secs + 's';
+  el.innerHTML = '<h3>\u2694 Combat Report</h3>' +
+    '<div class="cs-row"><span class="cs-label">Kills</span><span class="cs-val">' + kills + '</span></div>' +
+    '<div class="cs-row"><span class="cs-label">Score</span><span class="cs-val">+' + score.toLocaleString() + '</span></div>' +
+    (credits > 0 ? '<div class="cs-row"><span class="cs-label">Credits</span><span class="cs-val positive">+' + credits.toLocaleString() + ' EC</span></div>' : '') +
+    (streak >= 3 ? '<div class="cs-row"><span class="cs-label">Best Streak</span><span class="cs-val" style="color:var(--warn);">\u00d7' + streak + '</span></div>' : '') +
+    '<div class="cs-row"><span class="cs-label">Time</span><span class="cs-val">' + timeStr + '</span></div>' +
+    '<div class="cs-dismiss">click to dismiss</div>';
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => { if (el.classList.contains('show')) { el.classList.remove('show'); setTimeout(() => { if (el.parentNode) el.remove(); }, 400); } }, 5000);
+}
+
 function loadFromServerData(data) {
   if (data.player) Object.assign(state.player, data.player);
   if (data.ship) Object.assign(state.ship, data.ship);
@@ -3977,6 +4011,7 @@ function saveGame() {
     insuredItemId: state.insuredItemId,
     chatbot: { autoTarget: state.chatbot.autoTarget, autoMine: state.chatbot.autoMine },
     purchasedUpgrades: state.purchasedUpgrades || [],
+    achievements: Object.keys(_achievements),
   };
   try { localStorage.setItem('oe-save', JSON.stringify(data)); }
   catch (e) { addComms('System', 'Save failed — storage full.'); }
@@ -3999,6 +4034,7 @@ function loadGame() {
     if (!state.soulMemory) state.soulMemory = { tradeInsight:0, combatInstinct:0, shieldMemory:0 };
     if (state.soulMemory.fuelConservation !== undefined) { state.soulMemory.tradeInsight = state.soulMemory.tradeInsight || 0; delete state.soulMemory.fuelConservation; delete state.soulMemory.lootSense; delete state.soulMemory.spatialAwareness; }
     if (!state.purchasedUpgrades) state.purchasedUpgrades = [];
+    if (data.achievements && Array.isArray(data.achievements)) { data.achievements.forEach(id => { _achievements[id] = true; }); }
     return true;
   } catch(e) { return false; }
 }
@@ -4544,6 +4580,9 @@ function enterGunnerMode() {
   c.playerHasAttacked = false;
   c.weaponReady = true; c.charging = false; c.cooling = false; c.chargeLevel = 0; c._reloading = false;
   c.sessionStartTime = state.gameTime; // Track when this combat session began
+  c._sessionKillsStart = c.kills;
+  c._sessionScoreStart = c.score;
+  c._sessionCreditsStart = state.player.credits;
   // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
   c.deathImmunityUntil = performance.now() + 5000;
   AudioSFX.startAmbience();
@@ -4857,7 +4896,12 @@ function exitGunnerMode(skipScreenChange) {
   AudioSFX.stopBGM();
   AudioSFX.stopEngineHum();
   AudioSFX.stopAmbience();
-  if (!skipScreenChange) showScreen('bridge');
+  // Show combat summary for voluntary exits (not death)
+  const _csKills = c.kills - (c._sessionKillsStart || 0);
+  const _csScore = c.score - (c._sessionScoreStart || 0);
+  const _csCredits = Math.max(0, state.player.credits - (c._sessionCreditsStart || 0));
+  const _csTime = state.gameTime - (c.sessionStartTime || 0);
+  if (!skipScreenChange) { showScreen('bridge'); showCombatSummary(_csKills, _csScore, _csCredits, c.bestStreak, _csTime); }
 }
 
 // Enemy type configs — each type uses a distinct GLB model
@@ -6471,6 +6515,18 @@ function triggerScreenShake() {
 //  ACHIEVEMENT POPUP SYSTEM
 // ════════════════════════════════════════════════════════════════
 const _achievements = {};
+const ACHIEVEMENT_DEFS = {
+  first_blood: { icon: '\u2694', title: 'FIRST BLOOD', desc: 'Destroy your first enemy' },
+  hunter: { icon: '\uD83C\uDFAF', title: 'HUNTER', desc: '50 enemies destroyed' },
+  reaper: { icon: '\u2620', title: 'GRIM REAPER', desc: '200 enemies destroyed' },
+  boss_kill: { icon: '\uD83D\uDC51', title: 'BOSS SLAYER', desc: 'Defeat your first boss' },
+  streak10: { icon: '\uD83D\uDD25', title: 'UNSTOPPABLE', desc: '10-kill streak' },
+  streak20: { icon: '\u26A1', title: 'LEGENDARY', desc: '20-kill streak' },
+  rich: { icon: '\uD83D\uDCB0', title: 'WEALTHY PILOT', desc: 'Earn 10,000 credits' },
+  reborn: { icon: '\uD83D\uDC26', title: 'REBORN', desc: 'Complete your first rebirth' },
+  explorer: { icon: '\uD83D\uDDFA', title: 'EXPLORER', desc: 'Visit 4 different systems' },
+  stellar: { icon: '\u2727', title: 'STELLAR', desc: 'Earn 10 Stellar Marks' },
+};
 function unlockAchievement(id, title, desc) {
   if (_achievements[id]) return;
   _achievements[id] = true;
@@ -6703,6 +6759,12 @@ function initQuarters() {
       tropEl.innerHTML = earned.map(m => '<div class="quarters-trophy" title="' + m.desc + '" style="color:var(--gold);">' + m.icon + ' ' + m.name + '</div>').join('');
     } else {
       tropEl.innerHTML = '<div class="quarters-trophy">No trophies yet — keep flying!</div>';
+    }
+    // Show earned achievements below trophies
+    const achKeys = Object.keys(_achievements);
+    if (achKeys.length > 0) {
+      tropEl.innerHTML += '<div style="width:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:0.72rem;color:var(--muted);">Achievements</div>';
+      tropEl.innerHTML += achKeys.map(id => { const d = ACHIEVEMENT_DEFS[id]; return d ? '<div class="quarters-trophy" title="' + d.desc + '" style="color:var(--blue);">' + d.icon + ' ' + d.title + '</div>' : ''; }).join('');
     }
   }
 }
