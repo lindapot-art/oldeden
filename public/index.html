@@ -4583,6 +4583,8 @@ function enterGunnerMode() {
   c._sessionKillsStart = c.kills;
   c._sessionScoreStart = c.score;
   c._sessionCreditsStart = state.player.credits;
+  _nextEventTime = state.gameTime + 20000 + Math.random() * 15000;
+  state._bountyTimer = 0; state._bountyBonus = 0;
   // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
   c.deathImmunityUntil = performance.now() + 5000;
   AudioSFX.startAmbience();
@@ -9084,6 +9086,33 @@ function playerDeathSequence(cause) {
 }
 
 // ================================================================
+//  RANDOM SPACE EVENTS — triggered during combat for variety
+// ================================================================
+let _nextEventTime = 0;
+const SPACE_EVENTS = [
+  { id: 'distress', weight: 3, msg: ['Distress Signal', 'Civilian transport under fire — hostiles closing in!'], effect: null },
+  { id: 'supply', weight: 2, msg: ['Station Logistics', 'Emergency supply drone deployed to your sector.'], effect: (s,c) => { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); s.ship.shield = Math.min(s.ship.maxShield, s.ship.shield + 15); showToast('+6 ammo, +15 shield'); } },
+  { id: 'bounty', weight: 2, msg: ['Bounty Board', 'High-value target in sector — bonus credits for kills!'], effect: (s) => { s._bountyTimer = 30000; s._bountyBonus = 2; } },
+  { id: 'salvage', weight: 3, msg: ['Scan Result', 'Wreckage detected — salvageable components recovered.'], effect: (s) => { const amt = 50 + Math.floor(Math.random() * 150); s.player.credits += amt; showToast('+' + amt + ' EC from salvage'); } },
+  { id: 'anomaly', weight: 2, msg: ['Sensor Array', 'Anomalous energy readings detected — proceed with caution.'], effect: null },
+  { id: 'intel', weight: 2, msg: ['Station Command', 'Enemy patrol spotted in adjacent sector — reinforcements inbound.'], effect: null },
+  { id: 'nanobots', weight: 1, msg: ['Engineering', 'Nanobots activated — emergency hull repairs underway.'], effect: (s) => { s.ship.hull = Math.min(s.ship.maxHull, s.ship.hull + 12); showToast('+12 hull repaired'); } },
+  { id: 'fuelcell', weight: 2, msg: ['Logistics', 'Fuel cell cache recovered from debris field.'], effect: (s) => { s.ship.fuel = Math.min(s.ship.maxFuel, s.ship.fuel + 20); showToast('+20 fuel recovered'); } },
+];
+function triggerRandomEvent() {
+  const totalWeight = SPACE_EVENTS.reduce((sum, e) => sum + e.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const ev of SPACE_EVENTS) {
+    roll -= ev.weight;
+    if (roll <= 0) {
+      addComms(ev.msg[0], ev.msg[1]);
+      if (ev.effect) ev.effect(state, state.combat);
+      return;
+    }
+  }
+}
+
+// ================================================================
 //  GAME LOOP
 // ================================================================
 const clock = new THREE.Clock();
@@ -9595,6 +9624,18 @@ function gameLoop() {
       }
     }
 
+    // Random space events — trigger every 25-45 seconds during combat
+    if (state.gameTime > _nextEventTime && c.kills >= 2) {
+      _nextEventTime = state.gameTime + 25000 + Math.random() * 20000;
+      triggerRandomEvent();
+    }
+
+    // Bounty bonus expiry
+    if (state._bountyTimer > 0) {
+      state._bountyTimer -= dtMs;
+      if (state._bountyTimer <= 0) { state._bountyBonus = 0; addComms('Bounty Board', 'Bounty contract expired.'); }
+    }
+
     // Update projectiles
     for (let i = c.projectiles.length - 1; i >= 0; i--) {
       const p = c.projectiles[i];
@@ -9637,7 +9678,8 @@ function gameLoop() {
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
-            state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
+            const _bountyMult = 1 + (state._bountyBonus || 0);
+            state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4 * _bountyMult);
             // Kill confirmation feedback
             c.killConfirmTimer = 400;
             AudioSFX.play('kill_confirm');
