@@ -5448,6 +5448,16 @@ function renderHUD(dtMs) {
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
   // Age & Lives display
   hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
+  // Active bounty indicator
+  if (state._bountyTimer > 0) {
+    const bPulse = 0.7 + 0.3 * Math.sin(state.gameTime * 0.008);
+    hudCtx.save();
+    hudCtx.globalAlpha = bPulse;
+    hudCtx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+    hudCtx.fillStyle = '#00ff88'; hudCtx.shadowColor = '#00ff88'; hudCtx.shadowBlur = 6;
+    hudCtx.fillText('\u25B2 BOUNTY +50% EC (' + Math.ceil(state._bountyTimer / 1000) + 's)', srx, sry-10);
+    hudCtx.restore();
+  }
   // Kill streak — escalating visual drama
   if (c.streak >= 3) {
     const streakColor = c.streak >= 20 ? '#ff0000' : c.streak >= 15 ? '#ff2200' : c.streak >= 10 ? '#ff4400' : c.streak >= 5 ? '#ffcc00' : '#ff8800';
