@@ -272,6 +272,10 @@ canvas{display:block;}
 .cs-val{color:var(--text);font-weight:600;}
 .cs-val.positive{color:var(--green);}
 .cs-dismiss{color:var(--muted);font-size:0.68rem;margin-top:14px;opacity:0.6;}
+.bridge-warn{display:inline-block;padding:4px 12px;margin:2px 4px;border-radius:4px;font-size:0.72rem;font-weight:600;letter-spacing:0.05em;animation:pulse 2s infinite;}
+.bridge-warn.danger{background:rgba(255,60,60,0.15);color:var(--danger);border:1px solid rgba(255,60,60,0.3);}
+.bridge-warn.caution{background:rgba(255,170,50,0.12);color:var(--warn);border:1px solid rgba(255,170,50,0.25);}
+.bridge-warn.info{background:rgba(100,180,255,0.1);color:var(--blue);border:1px solid rgba(100,180,255,0.2);}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
@@ -763,6 +767,7 @@ body.screen-shake{animation:screenShake 0.3s ease;}
     <div id="quest-tracker"></div>
   </div>
   <div id="bridge-launch">
+    <div id="bridge-warnings" style="margin-bottom:12px;"></div>
     <button id="btn-launch">&#9876; ENTER SPACE</button>
     <div class="launch-hint">or click <span>Gunner</span> in nav bar</div>
   </div>
@@ -2859,6 +2864,22 @@ function updateBridgeUI() {
   document.getElementById('bridge-location').textContent = sys ? sys.name : 'Unknown Sector';
   document.getElementById('bridge-conn').textContent = state.connected ? '\u25CF Online' : '\u25CB Offline';
   document.getElementById('bridge-conn').style.color = state.connected ? 'var(--green)' : 'var(--warn)';
+
+  // Contextual warnings
+  const warns = [];
+  const hullPct = state.ship.hull / state.ship.maxHull;
+  const fuelPct = state.ship.fuel / state.ship.maxFuel;
+  const shieldPct = state.ship.shield / state.ship.maxShield;
+  if (hullPct < 0.3) warns.push('<span class="bridge-warn danger">\u26A0 HULL CRITICAL</span>');
+  else if (hullPct < 0.7) warns.push('<span class="bridge-warn caution">\u26A0 Hull Damaged</span>');
+  if (fuelPct < 0.2) warns.push('<span class="bridge-warn danger">\u26A0 FUEL LOW</span>');
+  else if (fuelPct < 0.4) warns.push('<span class="bridge-warn caution">Fuel Below 40%</span>');
+  if (shieldPct < 0.1) warns.push('<span class="bridge-warn danger">Shield Down</span>');
+  if (state.combat.ammo < 6) warns.push('<span class="bridge-warn caution">Low Ammo</span>');
+  const activeQ = state.quests.filter(q => q.active && !q.completed).length;
+  if (activeQ === 0) warns.push('<span class="bridge-warn info">No Active Missions \u2014 dock at station</span>');
+  const wEl = document.getElementById('bridge-warnings');
+  if (wEl) wEl.innerHTML = warns.join('');
 
   // Inventory on bridge
   const invEl = document.getElementById('bridge-inventory');
