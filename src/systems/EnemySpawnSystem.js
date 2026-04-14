@@ -473,18 +473,18 @@ export class EnemySpawnSystem {
       enemy.position.z += enemy.velocity.z * deltaSec;
     }
 
-    // Fire at player periodically
-    const now = Date.now();
-    if (now - enemy.lastFireTime >= enemy.fireRateMs && dist < 200) {
-      enemy.lastFireTime = now;
-      this._emitEvent('enemy:fired', {
-        enemyId: enemy.id,
-        targetId: enemy.targetId,
-        weaponType: enemy.weaponType,
-        damage: enemy.damage,
-        position: { ...enemy.position },
-      });
-    }
+    // Fire at player periodically (DISABLED: enemies never attack)
+    // const now = Date.now();
+    // if (now - enemy.lastFireTime >= enemy.fireRateMs && dist < 200) {
+    //   enemy.lastFireTime = now;
+    //   this._emitEvent('enemy:fired', {
+    //     enemyId: enemy.id,
+    //     targetId: enemy.targetId,
+    //     weaponType: enemy.weaponType,
+    //     damage: enemy.damage,
+    //     position: { ...enemy.position },
+    //   });
+    // }
   }
 
   /**

@@ -136,6 +136,9 @@ export class GunnerModeIntegration {
     /** Player position (updated externally or from ship) */
     this._playerPosition = new this._THREE.Vector3(0, 0, 0);
 
+    /** Player spawn offset from ship (default: 8 units right of ship) */
+    this._playerSpawnOffset = config.playerSpawnOffset || new this._THREE.Vector3(8, 0, 0);
+
     // Reusable temp objects for targeting (avoid per-frame allocation)
     this._tmpCamDir = new this._THREE.Vector3();
     this._tmpTargetPos = new this._THREE.Vector3();
@@ -221,11 +224,23 @@ export class GunnerModeIntegration {
   enter() {
     this._gunnerView.enter();
     this._hudCanvas.style.display = 'block';
-    
+
+    // Set player position next to ship (apply offset in ship's local space)
+    if (this._shipGroup) {
+      // Get ship world position and orientation
+      const shipWorldPos = new this._THREE.Vector3();
+      const shipWorldQuat = new this._THREE.Quaternion();
+      this._shipGroup.getWorldPosition(shipWorldPos);
+      this._shipGroup.getWorldQuaternion(shipWorldQuat);
+      // Offset in ship's local X (right) direction
+      const offsetWorld = this._playerSpawnOffset.clone().applyQuaternion(shipWorldQuat);
+      this._playerPosition.copy(shipWorldPos).add(offsetWorld);
+    }
+
     // Spawn initial enemy wave
     this._enemySpawnSystem.setPlayerPosition(this._playerPosition);
     this._enemySpawnSystem.spawnWave(this._playerPosition, 2, 5);
-    
+
     console.log('[GunnerModeIntegration] Entered gunner mode.');
   }
 
@@ -243,9 +258,14 @@ export class GunnerModeIntegration {
    * @param {number} deltaMs  Milliseconds since last frame.
    */
   update(deltaMs) {
-    // Update player position from ship
+    // Update player position from ship (apply offset)
     if (this._shipGroup) {
-      this._shipGroup.getWorldPosition(this._playerPosition);
+      const shipWorldPos = new this._THREE.Vector3();
+      const shipWorldQuat = new this._THREE.Quaternion();
+      this._shipGroup.getWorldPosition(shipWorldPos);
+      this._shipGroup.getWorldQuaternion(shipWorldQuat);
+      const offsetWorld = this._playerSpawnOffset.clone().applyQuaternion(shipWorldQuat);
+      this._playerPosition.copy(shipWorldPos).add(offsetWorld);
       this._enemySpawnSystem.setPlayerPosition(this._playerPosition);
     }
 

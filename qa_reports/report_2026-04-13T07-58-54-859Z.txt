@@ -1,0 +1,89 @@
+QA BOARD REPORT
+Timestamp: 2026-04-13T07:58:54.862Z
+URL: http://localhost:3847
+Source: D:\antiruscist\oldeden\public\index.html
+
+──────────────────────────────────────────────────
+  QA-Code (Source Integrity)
+──────────────────────────────────────────────────
+[QA-Code] ✔ PASS: public/index.html exists
+[QA-Code] ✘ FAIL: Braces MISMATCH: 2943 open vs 2941 close
+[QA-Code] ✘ FAIL: Parens MISMATCH: 8389 open vs 8388 close
+[QA-Code] ✔ PASS: Brackets balanced: 590/590
+[QA-Code] ✔ PASS: Marker found: DOCTYPE
+[QA-Code] ✔ PASS: Marker found: Three.js import
+[QA-Code] ✔ PASS: Marker found: GLTFLoader import
+[QA-Code] ✔ PASS: Marker found: Socket.IO
+[QA-Code] ✔ PASS: Marker found: Karma Wheel
+[QA-Code] ✔ PASS: Marker found: Rebirth system
+[QA-Code] ✔ PASS: Marker found: Game canvas
+[QA-Code] ✔ PASS: Marker found: HUD canvas
+[QA-Code] ✔ PASS: Line count: 11113 (healthy)
+[QA-Code] ✔ PASS: SHA-256 hash: f8713079b5418f14
+
+──────────────────────────────────────────────────
+  QA-API (Server Health & Endpoints)
+──────────────────────────────────────────────────
+[QA-API] ✔ PASS: GET / — HTTP 200
+[QA-API] ✔ PASS: Content-Type: text/html; charset=UTF-8
+[QA-API] ✔ PASS: Response body contains DOCTYPE and title
+[QA-API] ⚠ WARN: Socket.IO polling — HTTP 400 (may need session)
+[QA-API] ✔ PASS: Static /3d/glb/ responds — HTTP 200
+
+──────────────────────────────────────────────────
+  QA-Visual (Screenshots & Visual Structure)
+──────────────────────────────────────────────────
+[QA-Visual] ✔ PASS: Title screen screenshot: title_2026-04-13T07-58-54-859Z.png
+[QA-Visual] ✔ PASS: Viewport OK: 1280x900
+[QA-Visual] ✔ PASS: CSS vars loaded — bg:#0a0a0f gold:#d4a856
+[QA-Visual] ✔ PASS: QA UNVERIFIED banner is visible (as expected for fresh build)
+[QA-Visual] ✔ PASS: Title "OLD EDEN" heading visible
+
+──────────────────────────────────────────────────
+  QA-Runtime (WebGL & JS Errors)
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: WebGL context healthy
+[QA-Runtime] ✔ PASS: No 3D engine error banner in DOM
+[QA-Runtime] ✔ PASS: Runtime screenshot: runtime_2026-04-13T07-58-54-859Z.png
+
+──────────────────────────────────────────────────
+  QA-UX (DOM & Interactivity)
+──────────────────────────────────────────────────
+[QA-UX] ✔ PASS: Title Screen (#screen-title) — found, visible
+[QA-UX] ✔ PASS: Bridge Screen (#screen-bridge) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Character Creation (#screen-create) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Settings Screen (#screen-settings) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Rebirth Screen (#screen-rebirth) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Karma Wheel (#screen-karma) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Eulogy Screen (#screen-eulogy) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Market Screen (#screen-market) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: New Game Button (#btn-new) — found, visible
+[QA-UX] ✔ PASS: Settings Button (#btn-settings) — found, visible
+[QA-UX] ✔ PASS: Game Canvas (#game-canvas) — found, visible
+[QA-UX] ✔ PASS: HUD Canvas (#hud-canvas) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: QA Banner (#qa-unverified-banner) — found, visible
+[QA-UX] ✔ PASS: New Game button is clickable
+[QA-UX] ✔ PASS: Post-click screenshot: create_screen_2026-04-13T07-58-54-859Z.png
+[QA-UX] ⚠ WARN: Character creation automation failed: Node is either not clickable or not an Element
+[QA-UX] ✔ PASS: Gameplay/overlay screenshot: gameplay_screen_2026-04-13T07-58-54-859Z.png
+[QA-UX] ✔ PASS: Mission/quest overlay is visible in gameplay
+
+──────────────────────────────────────────────────
+  JS Errors Summary
+──────────────────────────────────────────────────
+[QA-Runtime] ⚠ WARN: 3 non-fatal console errors (acceptable)
+
+──────────────────────────────────────────────────
+  FINAL VERDICTS
+──────────────────────────────────────────────────
+✘ REJECTED  QA-Code
+✔ APPROVED  QA-API
+✔ APPROVED  QA-Visual
+✔ APPROVED  QA-Runtime
+✔ APPROVED  QA-UX
+
+══════════════════════════════════════════════════
+OVERALL: REJECTED — FIX AND RE-RUN
+Hash: f8713079b5418f14
+Screenshots: D:\antiruscist\oldeden\qa_reports\screenshots
+Timestamp: 2026-04-13T07:59:05.486Z

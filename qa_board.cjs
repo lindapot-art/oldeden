@@ -385,25 +385,77 @@ async function qaUX(page) {
     results.passed = false;
   }
 
+
   // Click New Game and verify screen transition
   try {
     await page.click('#btn-new');
+    await page.waitForSelector('#screen-create.active, #screen-create', { timeout: 5000 });
     await new Promise(r => setTimeout(r, 1000));
-    const ssPath = path.join(SCREENSHOT_DIR, `create_screen_${ts}.png`);
-    await page.screenshot({ path: ssPath });
-    rpass('QA-UX', `Post-click screenshot: ${path.basename(ssPath)}`);
+    const ssPathCreate = path.join(SCREENSHOT_DIR, `create_screen_${ts}.png`);
+    await page.screenshot({ path: ssPathCreate });
+    rpass('QA-UX', `Post-click screenshot: ${path.basename(ssPathCreate)}`);
 
-    const createVisible = await page.evaluate(() => {
-      const el = document.getElementById('screen-create');
-      return el && (el.classList.contains('active') || getComputedStyle(el).display !== 'none');
-    });
-    if (createVisible) {
-      rpass('QA-UX', 'Screen transition: Title → Create works');
+    // Attempt to auto-complete character creation (fill name, click confirm/start)
+    // Try common selectors for confirm/start button
+    let created = false;
+    try {
+      // Fill name if input exists
+      const nameInput = await page.$('input[name], input[type="text"]');
+      if (nameInput) {
+        await nameInput.click({ clickCount: 3 });
+        await nameInput.type('QA_BOT', { delay: 50 });
+      }
+      // Try confirm/start buttons
+      const btnSelectors = ['#btn-create', '#btn-confirm', '#btn-start', 'button[type="submit"]', '.btn-primary'];
+      for (const sel of btnSelectors) {
+        const btn = await page.$(sel);
+        if (btn) {
+          await btn.click();
+          created = true;
+          break;
+        }
+      }
+      if (!created) {
+        // Try pressing Enter if no button found
+        await page.keyboard.press('Enter');
+      }
+    } catch (e) {
+      rwarn('QA-UX', `Character creation automation failed: ${e.message}`);
+    }
+
+    // Wait for gameplay/bridge screen or mission overlay
+    let gameplayLoaded = false;
+    try {
+      await page.waitForSelector('#screen-bridge.active, #mission-progress-overlay, #hud-canvas', { timeout: 10000 });
+      gameplayLoaded = true;
+    } catch (e) {
+      rwarn('QA-UX', 'Gameplay/overlay not detected after character creation');
+    }
+
+    // Screenshot gameplay/overlay
+    if (gameplayLoaded) {
+      await new Promise(r => setTimeout(r, 1500));
+      const ssPathGame = path.join(SCREENSHOT_DIR, `gameplay_screen_${ts}.png`);
+      await page.screenshot({ path: ssPathGame });
+      rpass('QA-UX', `Gameplay/overlay screenshot: ${path.basename(ssPathGame)}`);
+      // Check overlay is present in DOM
+      const overlayVisible = await page.evaluate(() => {
+        const el = document.getElementById('mission-progress-overlay');
+        return el && (el.offsetWidth > 0 || el.offsetHeight > 0 || getComputedStyle(el).display !== 'none');
+      });
+      if (overlayVisible) {
+        rpass('QA-UX', 'Mission/quest overlay is visible in gameplay');
+      } else {
+        rfail('QA-UX', 'Mission/quest overlay NOT visible in gameplay');
+        results.passed = false;
+      }
     } else {
-      rwarn('QA-UX', 'Create screen not visible after clicking New Game');
+      rfail('QA-UX', 'Failed to reach gameplay/overlay screen');
+      results.passed = false;
     }
   } catch (e) {
-    rwarn('QA-UX', `Click test failed: ${e.message}`);
+    rwarn('QA-UX', `Click/transition test failed: ${e.message}`);
+    results.passed = false;
   }
 
   return results;
