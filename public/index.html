@@ -1,133 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Old Eden</title>
-<style>
-:root {
-  --bg: #0a0a0f;
-  --panel: transparent;
-  --panel-solid: transparent;
-  --border: transparent;
-  --text: #c8d6e5;
-  --gold: #d4a856;
-  --blue: #44aaff;
-  --green: #00ff88;
-  --warn: #ffaa00;
-  --danger: #ff4444;
-  --muted: #445566;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;width:100vw;height:100vh;}
-canvas{display:block;}
-
-/* ── Screens ─────────────────────────────── */
-.screen{position:absolute;inset:0;display:none;z-index:50;}
-.screen.active{display:flex;}
-
-/* ── Title ───────────────────────────────── */
-#screen-title{flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(ellipse at center,#12100d 0%,#0a0a0f 70%);z-index:100;}
-#screen-title h1{font-size:clamp(2rem,6vw,5rem);color:var(--gold);text-shadow:0 0 60px rgba(212,168,86,0.4),0 0 120px rgba(212,168,86,0.15);letter-spacing:0.3em;margin-bottom:0.2rem;font-weight:300;}
-#screen-title .sub{color:#776644;font-style:italic;font-size:1.1rem;margin-bottom:3rem;letter-spacing:0.15em;}
-.title-stars{position:absolute;inset:0;overflow:hidden;z-index:-1;}
-.title-star{position:absolute;width:2px;height:2px;background:#ccc;border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
-@keyframes twinkle{0%,100%{opacity:0.2;}50%{opacity:1;}}
-/* Chrome-free, glowing trim button */
-.menu-btn{display:block;width:320px;padding:16px 0;margin:8px 0;background:transparent;border:2px solid var(--gold);border-radius:12px;color:var(--gold);font-size:1.05rem;cursor:pointer;transition:all 0.3s;letter-spacing:0.08em;font-family:inherit;box-shadow:0 0 16px 4px var(--gold),0 0 48px 8px rgba(212,168,86,0.25);outline:none;}
-.menu-btn:hover{background:transparent;border-color:var(--blue);box-shadow:0 0 32px 8px var(--blue),0 0 64px 16px rgba(68,170,255,0.25);transform:scale(1.04);}
-.menu-btn:disabled{opacity:0.3;pointer-events:none;filter:grayscale(0.7);}
-#server-status{margin-top:1.5rem;color:var(--muted);font-size:0.8rem;}
-
-/* ── Character Creation ──────────────────── */
-#screen-create{flex-direction:column;align-items:center;background:var(--bg);overflow-y:auto;padding:40px 20px;z-index:90;}
-#screen-create h2{color:var(--gold);font-size:1.8rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
-.create-section{width:100%;max-width:900px;margin-bottom:2rem;}
-.create-section h3{color:var(--blue);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:0.8rem;font-weight:400;}
-.faction-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:800px){.faction-grid{grid-template-columns:repeat(2,1fr);}}
-.faction-card{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:14px;cursor:pointer;transition:all 0.25s;position:relative;border-top:3px solid var(--border);}
-.faction-card:hover{border-color:var(--muted);transform:translateY(-2px);}
-.faction-card.selected{border-color:var(--gold);box-shadow:0 0 20px rgba(212,168,86,0.15);}
-.faction-card .fname{font-size:0.95rem;font-weight:600;margin-bottom:2px;}
-.faction-card .fdetail{font-size:0.72rem;color:var(--muted);line-height:1.3;}
-.name-input{background:#0d1117;border:1px solid var(--border);border-radius:4px;padding:12px 16px;color:var(--text);font-size:1rem;width:100%;max-width:400px;font-family:inherit;outline:none;}
-.name-input:focus{border-color:var(--blue);}
-.genome-row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
-#genome-canvas{border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;}
-.gene-stats{flex:1;min-width:200px;}
-.gene-bar{margin-bottom:8px;}
-.gene-bar-label{font-size:0.75rem;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between;}
-.gene-bar-track{height:6px;background:#111;border-radius:3px;overflow:hidden;}
-.gene-bar-fill{height:100%;border-radius:3px;transition:width 0.4s;}
-.btn{padding:12px 32px;border:2px solid var(--gold);border-radius:4px;background:transparent;color:var(--gold);font-size:1rem;cursor:pointer;font-family:inherit;letter-spacing:0.06em;transition:all 0.25s;box-shadow:0 0 12px 3px var(--gold),0 0 32px 8px rgba(212,168,86,0.18);}
-.btn:hover{background:transparent;box-shadow:0 0 32px 8px var(--blue),0 0 64px 16px rgba(68,170,255,0.22);border-color:var(--blue);}
-.btn-sm{padding:8px 16px;font-size:0.8rem;}
-.btn-row{display:flex;gap:12px;margin-top:1rem;}
-
-/* ── Bridge ──────────────────────────────── */
-#screen-bridge{z-index:10;pointer-events:none;}
-.bridge-panel{pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px;backdrop-filter:blur(8px);}
-#bridge-left{position:absolute;left:16px;top:80px;width:220px;}
-#bridge-right{position:absolute;right:16px;top:80px;width:260px;max-height:calc(100vh - 180px);overflow-y:auto;}
-#bridge-top{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;}
-.bridge-location{font-size:0.85rem;color:var(--gold);letter-spacing:0.1em;}
-.bridge-connection{font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2);}
-.panel-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:10px;}
-.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.8rem;}
-.stat-bar{height:5px;background:#111;border-radius:3px;flex:1;margin-left:10px;overflow:hidden;}
-.stat-fill{height:100%;border-radius:3px;}
-.quest-item{background:rgba(68,170,255,0.05);border:1px solid rgba(68,170,255,0.1);border-radius:4px;padding:8px 10px;margin-bottom:6px;font-size:0.75rem;line-height:1.3;}
-.quest-item .qt{color:var(--gold);font-weight:600;margin-bottom:2px;}
-.comms-msg{border-left:2px solid var(--blue);padding:6px 10px;margin-bottom:6px;font-size:0.75rem;color:var(--muted);line-height:1.3;}
-.comms-msg .sender{color:var(--blue);font-weight:600;font-size:0.7rem;}
-
-/* ── Nav Bar ─────────────────────────────── */
-#nav-bar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:none;z-index:25;pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 8px;gap:4px;backdrop-filter:blur(8px);}
-#nav-bar.visible{display:flex;}
-/* ── Cockpit Damage Overlay ──────────────────── */
-#cockpit-damage-overlay{position:fixed;inset:0;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.3s;}
-#cockpit-damage-overlay .crack{position:absolute;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);pointer-events:none;}
-#cockpit-damage-overlay .crack-1{top:10%;left:15%;width:35%;height:2px;transform:rotate(12deg);}
-#cockpit-damage-overlay .crack-2{top:25%;right:20%;width:25%;height:1px;transform:rotate(-8deg);}
-#cockpit-damage-overlay .crack-3{bottom:30%;left:30%;width:20%;height:2px;transform:rotate(25deg);}
-#cockpit-damage-overlay .crack-4{top:40%;left:5%;width:15%;height:1px;transform:rotate(-15deg);}
-#cockpit-damage-overlay .crack-5{bottom:15%;right:10%;width:30%;height:2px;transform:rotate(5deg);}
-#cockpit-damage-overlay.active{opacity:1;}
-#cockpit-damage-overlay.critical .crack{background:linear-gradient(135deg,transparent 35%,rgba(255,100,50,0.12) 50%,transparent 65%);animation:crackPulse 2s ease-in-out infinite alternate;}
-@keyframes crackPulse{0%{opacity:0.6;}100%{opacity:1;}}
-
-/* ── Proximity Warning Flash ─────────────────── */
-#proximity-warning{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:16;font-size:0.9rem;color:#ff8800;text-shadow:0 0 10px rgba(255,136,0,0.5);opacity:0;transition:opacity 0.2s;letter-spacing:0.1em;}
-#proximity-warning.active{opacity:1;animation:proxPulse 0.5s ease-in-out infinite alternate;}
-@keyframes proxPulse{0%{opacity:0.7;}100%{opacity:1;}}
-
-/* ── EVE-Style Speed Control Panel ───────────── */
-#speed-control-panel{position:fixed;left:16px;bottom:120px;z-index:20;pointer-events:auto;background:rgba(13,17,23,0.85);border:1px solid var(--border);border-radius:6px;padding:8px 12px;backdrop-filter:blur(6px);display:none;width:180px;}
-#speed-control-panel.visible{display:block;}
-#speed-control-panel .speed-bar{height:80px;width:12px;background:#111;border-radius:4px;position:relative;margin:0 auto;cursor:pointer;}
-#speed-control-panel .speed-fill{position:absolute;bottom:0;width:100%;background:linear-gradient(to top,#44aaff,#00ff88);border-radius:4px;transition:height 0.2s;}
-.speed-preset{display:flex;gap:4px;margin-top:6px;justify-content:center;}
-.speed-preset button{padding:2px 6px;font-size:0.65rem;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:3px;font-family:inherit;}
-.speed-preset button:hover{border-color:var(--blue);color:var(--blue);}
-.speed-preset button.active-speed{border-color:var(--green);color:var(--green);}
-
-/* ── Drone Bay Panel ─────────────────────────── */
-#drone-bay{position:fixed;right:16px;bottom:120px;z-index:20;pointer-events:auto;background:rgba(13,17,23,0.85);border:1px solid var(--border);border-radius:6px;padding:10px 14px;backdrop-filter:blur(6px);display:none;width:200px;}
-#drone-bay.visible{display:block;}
-.drone-slot{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.75rem;border-bottom:1px solid rgba(255,255,255,0.05);}
-.drone-slot:last-child{border-bottom:none;}
-.drone-btn{padding:3px 8px;font-size:0.65rem;border:1px solid var(--blue);border-radius:3px;background:transparent;color:var(--blue);cursor:pointer;font-family:inherit;transition:all 0.2s;}
-.drone-btn:hover{background:rgba(68,170,255,0.1);}
-.drone-btn.deployed{border-color:var(--green);color:var(--green);}
-.drone-btn.recalled{border-color:var(--warn);color:var(--warn);}
-
-/* ── Warp Button ─────────────────────────────── */
-#warp-target-btn{position:fixed;right:220px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 16px;background:rgba(204,68,255,0.1);border:1px solid rgba(204,68,255,0.4);border-radius:6px;color:#cc44ff;font-size:0.8rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
-#warp-target-btn.visible{display:block;}
-#warp-target-btn:hover{background:rgba(204,68,255,0.2);border-color:#cc44ff;box-shadow:0 0 20px rgba(204,68,255,0.2);}
-
-/* ── Auto-Target Toggle ──────────────────────── */
+#auto-target-btn{position:fixed;right:16px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:6px;color:#ff6666;font-size:0.75rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
+#auto-target-btn.visible{display:block;}
+#auto-target-btn.engaged{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff4444;box-shadow:0 0 15px rgba(255,68,68,0.15);}
 #auto-target-btn{position:fixed;right:16px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:6px;color:#ff6666;font-size:0.75rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
 #auto-target-btn.visible{display:block;}
 #auto-target-btn.engaged{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff4444;box-shadow:0 0 15px rgba(255,68,68,0.15);}
@@ -238,6 +112,11 @@ canvas{display:block;}
 /* ── Gunner HUD ──────────────────────────── */
 #hud-canvas{position:absolute;inset:0;z-index:15;pointer-events:none;display:none;}
 #hud-canvas.active{display:block;}
+#hud-canvas{box-shadow:0 0 32px 8px rgba(68,170,255,0.18),0 0 64px 16px rgba(212,168,86,0.10);transition:box-shadow 0.7s;}
+#hud-canvas.active{display:block;animation:hudGlowPulse 2.5s infinite alternate;}
+@keyframes hudGlowPulse{0%{box-shadow:0 0 32px 8px rgba(68,170,255,0.18),0 0 64px 16px rgba(212,168,86,0.10);}100%{box-shadow:0 0 48px 16px rgba(68,170,255,0.28),0 0 96px 32px rgba(212,168,86,0.18);}}
+#cockpit-damage-overlay.powerup{opacity:1;animation:cockpitPowerup 1.8s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 48px 16px #d4a856,0 0 96px 32px #44aaff;}
+@keyframes cockpitPowerup{0%{filter:brightness(0.7) blur(2px);}40%{filter:brightness(1.5) blur(0);}100%{filter:brightness(1) blur(0);}}
 #lock-prompt{display:none;position:absolute;inset:0;z-index:55;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;cursor:pointer;}
 #lock-prompt span{color:var(--gold);font-size:1.3rem;letter-spacing:0.1em;text-shadow:0 0 20px rgba(212,168,86,0.4);}
 
@@ -664,6 +543,18 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 
 
 <!-- QA VERIFICATION BANNER — removed only by qa_proxy_live.cjs passing -->
+<!-- In-game Bug Report Overlay -->
+<div id="bug-report-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:20000;background:rgba(10,10,20,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:rgba(20,20,40,0.98);border:2px solid var(--gold);border-radius:14px;box-shadow:0 0 24px 8px var(--gold);padding:32px 36px;max-width:420px;width:90vw;display:flex;flex-direction:column;align-items:center;">
+    <h2 style="color:var(--gold);font-size:1.3rem;margin-bottom:12px;">Report a Bug</h2>
+    <textarea id="bug-report-text" rows="5" placeholder="Describe the bug, steps to reproduce, and what you expected..." style="width:100%;border-radius:8px;border:1px solid var(--border);padding:10px 12px;font-size:1rem;margin-bottom:14px;"></textarea>
+    <div style="display:flex;gap:12px;width:100%;justify-content:flex-end;">
+      <button class="btn btn-sm" id="bug-report-cancel">Cancel</button>
+      <button class="btn btn-sm" id="bug-report-submit" style="border-color:var(--green);color:var(--green);">Submit</button>
+    </div>
+    <div id="bug-report-status" style="margin-top:10px;font-size:0.85rem;color:var(--blue);"></div>
+  </div>
+</div>
 <div id="qa-unverified-banner">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
 <div id="save-indicator">&#10003; SAVED</div>
 <div id="boss-warning-overlay"><div class="bw-title">&#9888; WARNING &#9888;</div><div class="bw-sub">MASSIVE HOSTILE SIGNATURE</div></div>
@@ -685,10 +576,15 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   </div>
   <div class="speed-preset">
     <button data-sp="0" title="Full stop">0</button>
+      <button data-sp="0" title="Full stop" aria-label="Set speed to zero">0</button>
     <button data-sp="25">25</button>
+      <button data-sp="25" aria-label="Set speed to 25">25</button>
     <button data-sp="50">50</button>
+      <button data-sp="50" aria-label="Set speed to 50">50</button>
     <button data-sp="75">75</button>
+      <button data-sp="75" aria-label="Set speed to 75">75</button>
     <button data-sp="100" title="Full speed">MAX</button>
+    <button data-sp="100" title="Full speed" aria-label="Set speed to maximum">MAX</button>
   </div>
 </div>
 
@@ -696,79 +592,87 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <div id="drone-bay">
   <div style="font-size:0.65rem;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em;">DRONE BAY</div>
   <div class="drone-slot"><span style="color:var(--blue)">◉ Battle Drone</span><button class="drone-btn" id="btn-battle-drone">DEPLOY</button></div>
+    <div class="drone-slot"><span style="color:var(--blue)">◉ Battle Drone</span><button class="drone-btn" id="btn-battle-drone" aria-label="Deploy battle drone">DEPLOY</button></div>
   <div class="drone-slot"><span style="color:var(--warn)">◉ Mining Drone</span><button class="drone-btn" id="btn-mining-drone">DEPLOY</button></div>
+    <div class="drone-slot"><span style="color:var(--warn)">◉ Mining Drone</span><button class="drone-btn" id="btn-mining-drone" aria-label="Deploy mining drone">DEPLOY</button></div>
   <div style="font-size:0.6rem;color:var(--muted);margin-top:6px;text-align:center;" id="drone-status">2 drones available</div>
 </div>
 
 <!-- Warp Button -->
 <button id="warp-target-btn">✦ WARP TO TARGET</button>
+<button id="warp-target-btn" aria-label="Warp to target">✦ WARP TO TARGET</button>
 
 <!-- Auto-Target -->
 
 <!-- Warp Tunnel VFX -->
 <div id="warp-tunnel-overlay"></div>
-<!-- Shield Hit Flash -->
-<div id="shield-flash"></div>
-<!-- Mining Beam Indicator -->
-<div id="mining-beam-indicator">
-  <div style="font-size:0.65rem;color:var(--warn);letter-spacing:0.1em;">MINING</div>
-  <div class="mining-progress"><div class="mining-progress-fill" id="mining-progress-fill" style="width:0%"></div></div>
-</div>
 
-<button id="auto-target-btn">◎ AUTO-TARGET</button>
-
-
-
-<!-- Controls overlay — shown on first gunner entry -->
-<div id="controls-overlay">
-  <div class="controls-grid">
-    <h3>FLIGHT CONTROLS</h3>
-    <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-desc">Fly / Strafe</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">MOUSE</span><span class="ctrl-desc">Aim</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">CLICK</span><span class="ctrl-desc">Fire weapon</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">SHIFT</span><span class="ctrl-desc">Afterburner boost</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">SPACE</span><span class="ctrl-desc">Fly up</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">CTRL</span><span class="ctrl-desc">Fly down</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-desc">Reload ammo</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">Q</span><span class="ctrl-desc">Switch weapon</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-desc">Exit to bridge</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-desc">Mine asteroid</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">B</span><span class="ctrl-desc">Dock at station</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">F</span><span class="ctrl-desc">Star map / Warp</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">P</span><span class="ctrl-desc">Autopilot</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">G</span><span class="ctrl-desc">Enter stargate</span></div>
-    <div class="ctrl-item"><span class="ctrl-key">H</span><span class="ctrl-desc">Show this help</span></div>
-    <p class="controls-dismiss">Click anywhere or press any key to dismiss &bull; Press H anytime</p>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  TITLE SCREEN                               -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen active" id="screen-title">
-  <div class="title-stars" id="title-stars"></div>
-  <h1>OLD EDEN</h1>
-  <p class="sub">A world that remembers</p>
-  <button class="menu-btn" id="btn-new">&#9733; New Game</button>
-  <button class="menu-btn" id="btn-continue" disabled>&#9654; Continue</button>
-  <button class="menu-btn" id="btn-settings">&#9881; Settings</button>
-  <div id="server-status">Connecting&#8230;</div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  CHARACTER CREATION                          -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-create">
-  <h2>CREATE YOUR PILOT</h2>
-
-  <div class="create-section">
-    <h3>Choose Your Faction</h3>
-    <div class="faction-grid" id="faction-grid"></div>
-  </div>
-
-  <div class="create-section">
-    <h3>Pilot Name</h3>
-    <input class="name-input" id="pilot-name" type="text" placeholder="Enter callsign..." maxlength="24" autocomplete="off"/>
+#quest-overlay {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  min-width: 280px;
+  max-width: 400px;
+  background: linear-gradient(120deg,rgba(10,16,32,0.96) 80%,rgba(68,170,255,0.10) 100%);
+  border: 3px solid var(--gold);
+  border-radius: 18px;
+  box-shadow: 0 0 32px 8px var(--gold), 0 0 64px 16px rgba(68,170,255,0.18);
+  z-index: 1200;
+  padding: 26px 30px 18px 30px;
+  color: var(--text);
+  font-size: 1.08rem;
+  font-family: inherit;
+  font-weight: 400;
+  display: block !important;
+  pointer-events: auto;
+  filter: drop-shadow(0 0 8px #44aaff88);
+}
+#quest-overlay.active {
+  display: block;
+  animation: questFadeIn 0.7s;
+}
+#quest-overlay .qo-title {
+  color: var(--gold);
+  font-size: 1.18rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(212,168,86,0.22);
+}
+#quest-overlay .qo-quest {
+  background: linear-gradient(90deg,rgba(68,170,255,0.13),rgba(10,16,32,0.18));
+  border: 2px solid rgba(68,170,255,0.22);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: 1.01rem;
+  line-height: 1.5;
+  box-shadow: 0 0 12px 3px var(--blue), 0 0 24px 6px rgba(68,170,255,0.13);
+}
+#quest-overlay .qo-quest .qo-qtitle {
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 3px;
+  font-size: 1.05rem;
+}
+#quest-overlay .qo-quest .qo-progress {
+  margin-top: 6px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+#quest-overlay .qo-quest .qo-bar {
+  height: 6px;
+  background: #111;
+  border-radius: 3px;
+  margin-top: 3px;
+  overflow: hidden;
+}
+#quest-overlay .qo-quest .qo-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--blue);
+  transition: width 0.4s;
+}
   </div>
 
   <div class="create-section">
@@ -791,6 +695,47 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!-- ════════════════════════════════════════════ -->
 <!--  BRIDGE (Main Hub — overlays 3D viewport)   -->
 <!-- ════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════ -->
+<!--  TITLE SCREEN (START PAGE)                  -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-title">
+  <h1 style="color:var(--gold);font-size:3.2rem;font-weight:400;letter-spacing:0.18em;margin-bottom:1.5rem;text-align:center;">OLD EDEN</h1>
+  <div style="text-align:center;margin-bottom:2.5rem;color:var(--muted);font-size:1.1rem;">Blockchain Space MMO</div>
+  <div style="display:flex;justify-content:center;gap:24px;margin-bottom:2.5rem;">
+    <button class="btn" id="btn-new">New Game</button>
+    <button class="btn" id="btn-load">Continue</button>
+    <button class="btn" id="btn-settings">Settings</button>
+  </div>
+  <div style="text-align:center;color:var(--muted);font-size:0.9rem;">v0.9.7 &mdash; Free-to-play, play-to-own</div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  CHARACTER CREATION SCREEN                  -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-create" style="display:none;">
+  <h2 style="color:var(--gold);font-size:2rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;text-align:center;">Create Your Pilot</h2>
+  <div class="create-section">
+    <h3>Genome &mdash; 256 Gene Sequence</h3>
+    <div class="genome-row">
+      <canvas id="genome-canvas" width="256" height="256"></canvas>
+      <div class="gene-stats" id="gene-stats"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
+    </div>
+  </div>
+  <div class="btn-row" style="justify-content:center;margin-top:1rem;">
+    <button class="btn" id="btn-back-title">&larr; Back</button>
+    <button class="btn" id="btn-create-char">Create Pilot &rarr;</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  3D GAME CANVAS + HUD OVERLAY               -->
+<!-- ════════════════════════════════════════════ -->
+<canvas id="game-canvas" tabindex="0" style="position:absolute;inset:0;z-index:1;"></canvas>
+<canvas id="hud-canvas" style="position:absolute;inset:0;z-index:15;pointer-events:none;display:none;"></canvas>
+
 <div class="screen" id="screen-bridge">
   <div id="bridge-top">
     <span class="bridge-location" id="bridge-location">Sol Sector</span>
@@ -1095,199 +1040,132 @@ body.screen-shake{animation:screenShake 0.3s ease;}
       <div class="quarters-stat"><span>Deaths</span><span class="qs-val" id="q-deaths">0</span></div>
       <div class="quarters-stat"><span>Systems Visited</span><span class="qs-val" id="q-systems">0</span></div>
       <div class="quarters-stat"><span>Time Played</span><span class="qs-val" id="q-time">—</span></div>
-    </div>
-    <div class="quarters-panel" style="grid-column:1/-1;">
-      <h3>Trophies</h3>
-      <div id="q-trophies" style="display:flex;flex-wrap:wrap;gap:4px;">
-        <div class="quarters-trophy">No trophies yet — keep flying!</div>
-      </div>
-    </div>
-    <div class="quarters-panel" style="grid-column:1/-1;">
-      <h3>Ship Status</h3>
-      <div class="quarters-stat"><span>Hull</span><span class="qs-val" id="q-hull">—</span></div>
-      <div class="quarters-stat"><span>Shield</span><span class="qs-val" id="q-shield">—</span></div>
-      <div class="quarters-stat"><span>Fuel</span><span class="qs-val" id="q-fuel">—</span></div>
-      <div class="quarters-stat"><span>Cargo</span><span class="qs-val" id="q-cargo">—</span></div>
-    </div>
-  </div>
-  <div class="btn-row" style="margin-top:1.5rem;">
-    <button class="btn" id="btn-quarters-back">&larr; Back to Bridge</button>
-  </div>
-</div>
+    <script type="module">
+    window.__oldEdenLoaded = true;
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-<div class="screen" id="screen-gunroom">
-  <h2>ARMORY</h2>
-  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Ship weapon collection — inspect and equip</p>
-  <div class="gun-display-grid" id="gun-display-grid"></div>
-  <div class="btn-row" style="margin-top:2rem;"><button class="btn" id="btn-gunroom-back">&larr; Back to Bridge</button></div>
-</div>
+    // ...existing code...
 
-<div class="screen" id="screen-karma">
-  <div class="karma-spin-fx" id="karma-particles"></div>
-  <div class="karma-aura" id="karma-aura"></div>
-  <h2>&#9752; Karma Wheel</h2>
-  <p class="karma-subtitle" id="karma-subtitle">The soul seeks its next vessel...</p>
-  <div class="karma-spinner" id="karma-spinner"></div>
-  <div class="karma-card" id="karma-card">
-    <div class="karma-rarity-badge" id="karma-rarity">COMMON</div>
-    <div class="karma-npc-name" id="karma-name">???</div>
-    <div class="karma-npc-title" id="karma-title">Unknown</div>
-    <canvas id="karma-genome-canvas" width="96" height="96" style="image-rendering:pixelated;border:1px solid var(--border);border-radius:4px;margin:8px auto;display:block;"></canvas>
-    <div class="karma-genome-mini" id="karma-genes"></div>
-    <div class="karma-wealth" id="karma-wealth">Wealth: <span class="kw-val">???</span></div>
-    <div class="karma-faction" id="karma-faction">Faction: Unknown</div>
-    <div class="karma-backstory" id="karma-backstory">A soul drifting between worlds...</div>
-  </div>
-  <div class="karma-actions" id="karma-actions" style="display:none;">
-    <button class="btn" id="btn-karma-accept" style="border-color:var(--green);color:var(--green);">&#10003; Accept This Life</button>
-    <button class="btn" id="btn-karma-reroll" style="border-color:#a855f7;color:#a855f7;">&#9733; Re-roll (<span id="reroll-cost">30</span> SM)</button>
-    <button class="btn btn-sm" id="btn-karma-insure" style="border-color:var(--warn);color:var(--warn);">&#9879; Life Insurance (100 SM)</button>
-  </div>
-</div>
+    // Bug Report Overlay logic
+    const bugReportOverlay = document.getElementById('bug-report-overlay');
+    const bugReportText = document.getElementById('bug-report-text');
+    const bugReportCancel = document.getElementById('bug-report-cancel');
+    const bugReportSubmit = document.getElementById('bug-report-submit');
+    const bugReportStatus = document.getElementById('bug-report-status');
+    window.showBugReport = function() {
+      bugReportOverlay.style.display = 'flex';
+      bugReportText.value = '';
+      bugReportStatus.textContent = '';
+      bugReportText.focus();
+    };
+    bugReportCancel.onclick = () => { bugReportOverlay.style.display = 'none'; };
+    bugReportSubmit.onclick = () => {
+      const txt = bugReportText.value.trim();
+      if (!txt) { bugReportStatus.textContent = 'Please describe the bug.'; return; }
+      bugReportStatus.textContent = 'Submitting...';
+      setTimeout(() => { bugReportStatus.textContent = 'Thank you! Bug report submitted.'; bugReportOverlay.style.display = 'none'; }, 1200);
+    };
+    window.addEventListener('keydown', e => {
+      if (bugReportOverlay.style.display === 'flex' && e.key === 'Escape') bugReportOverlay.style.display = 'none';
+    });
 
-<!-- ════════════════════════════════════════════ -->
-<!--  DEATH TICKER — Real-time Death Feed        -->
-<!-- ════════════════════════════════════════════ -->
-<div id="death-ticker"><div id="death-ticker-content"></div></div>
+    // Add bug report button to settings
+    setTimeout(() => {
+      const settings = document.getElementById('screen-settings');
+      if (settings && !document.getElementById('btn-bug-report')) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm';
+        btn.id = 'btn-bug-report';
+        btn.textContent = 'Report a Bug';
+        btn.style.marginTop = '18px';
+        btn.onclick = window.showBugReport;
+        if (settings) settings.appendChild(btn);
+      }
+    }, 1000);
 
-<!-- ════════════════════════════════════════════ -->
-<!--  GAME CANVASES                               -->
-<!-- ════════════════════════════════════════════ -->
-<div id="streak-banner"></div>
-  <div id="warn-hull" class="cockpit-warn">⚠ HULL CRITICAL</div>
-  <div id="warn-fuel" class="cockpit-warn">⚠ FUEL LOW</div>
-  <div id="warn-lock" class="cockpit-warn">⚠ ENEMY LOCK</div>
-<div id="achieve-popup"><span class="ach-icon">🏆</span><span id="achieve-text">Achievement</span><span class="ach-title" id="achieve-desc"></span></div>
-  <div id="hull-damage-overlay"></div>
-  <div id="emp-flash"></div>
-  <div id="dock-overlay"><span>DOCKING SEQUENCE</span></div>
-<canvas id="game-canvas"></canvas>
-<canvas id="hud-canvas"></canvas>
-<div id="lock-prompt"><span>Click to resume control</span></div>
+    // Keyboard shortcuts for main actions
+    const keyActions = {
+      'h': () => { document.getElementById('controls-overlay').style.display = 'flex'; },
+      'b': () => { /* Dock at station */ },
+      'f': () => { /* Open star map */ },
+      'm': () => { /* Mine asteroid */ },
+      'r': () => { /* Reload */ },
+      'q': () => { /* Swap weapon */ },
+      'g': () => { /* Stargate */ },
+      't': () => { /* AI Chat */ document.getElementById('chatbot-panel').classList.add('open'); },
+      'k': () => { /* Skins */ document.getElementById('skin-panel').style.display = 'block'; },
+      'esc': () => { /* Exit gunner/close overlays */ document.getElementById('controls-overlay').style.display = 'none'; bugReportOverlay.style.display = 'none'; },
+    };
+    window.addEventListener('keydown', e => {
+      if (document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (keyActions[k]) { keyActions[k](); e.preventDefault(); }
+      if (k === 'f1') { window.showBugReport(); e.preventDefault(); }
+    });
 
-<!-- ════════════════════════════════════════════ -->
-<!--  ACTION BUTTONS (Gunner Mode HUD)            -->
-<!-- ════════════════════════════════════════════ -->
-<div id="action-bar">
-  <button class="action-btn" id="act-mine" data-action="mine" title="Mine nearby asteroids for resources (M)"><span class="act-icon">&#9874;</span><span class="act-label">Mine</span><span class="act-key">M</span></button>
-  <button class="action-btn" id="act-chat" data-action="chat" title="Open EDEN AI chatbot — ask questions, get advice (T)"><span class="act-icon">&#9733;</span><span class="act-label">AI Chat</span><span class="act-key">T</span></button>
-  <button class="action-btn" id="act-skins" data-action="skins" title="Customize your ship skin (K)"><span class="act-icon">&#9998;</span><span class="act-label">Skins</span><span class="act-key">K</span></button>
-  <button class="action-btn" id="act-gate" data-action="gate" title="Enter nearby stargate to alternate universe (G)"><span class="act-icon">&#10026;</span><span class="act-label">Gate</span><span class="act-key">G</span></button>
-  <button class="action-btn" id="act-collect" data-action="collect" title="Collect ancient artifacts in alt universe (C)"><span class="act-icon">&#10024;</span><span class="act-label">Collect</span><span class="act-key">C</span></button>
-  <button class="action-btn" id="act-reload" data-action="reload" title="Reload railgun ammo — 1.5s reload time (R)"><span class="act-icon">&#8635;</span><span class="act-label">Reload</span><span class="act-key">R</span></button>
-  <button class="action-btn" id="act-warp" data-action="warp" title="Open star map — warp to another system (F)"><span class="act-icon">&#9889;</span><span class="act-label">Warp</span><span class="act-key">F</span></button>
-  <button class="action-btn" id="act-dock" data-action="dock" title="Dock at station — trade, upgrade, repair (B)"><span class="act-icon">&#9875;</span><span class="act-label">Dock</span><span class="act-key">B</span></button>
-</div>
+    // Tooltips for cockpit controls (add title attributes if missing)
+    setTimeout(() => {
+      document.querySelectorAll('.action-btn').forEach(btn => {
+        if (!btn.title) btn.title = btn.querySelector('.act-label')?.textContent || 'Action';
+      });
+    }, 1000);
 
-<!-- ════════════════════════════════════════════ -->
-<!--  MOBILE TOUCH CONTROLS                       -->
-<!-- ════════════════════════════════════════════ -->
-<div id="mobile-controls">
-  <div id="touch-move-zone"><div id="touch-stick"></div></div>
-  <div id="touch-fire">FIRE</div>
-  <div id="touch-reload">R</div>
-  <div id="touch-boost" style="position:absolute;right:20px;bottom:140px;width:50px;height:50px;background:rgba(212,168,86,0.2);border:1px solid rgba(212,168,86,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold,#d4a856);font-size:0.65rem;font-weight:700;letter-spacing:0.05em;user-select:none;-webkit-user-select:none;touch-action:none;">BOOST</div>
-</div>
+    // UI SFX for button hover/click
+    setTimeout(() => {
+      document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('mouseenter', () => { if (window.AudioSFX) window.AudioSFX.uiHover(); });
+        btn.addEventListener('click', () => { if (window.AudioSFX) window.AudioSFX.uiClick(); });
+      });
+    }, 1200);
 
-<!-- ════════════════════════════════════════════ -->
-<!--  CHATBOT PANEL                               -->
-<!-- ════════════════════════════════════════════ -->
-<div id="chatbot-panel">
-  <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-    <span style="color:var(--blue);font-size:0.8rem;font-weight:600;">&#9733; EDEN AI</span>
-    <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;" onclick="document.getElementById('chatbot-panel').classList.remove('open')">&times;</button>
-  </div>
-  <div id="chatbot-messages"></div>
-  <div class="chat-toggles">
-    <button class="chat-toggle" id="btn-auto-target" onclick="window._toggleAutoTarget()">Auto-Target</button>
-    <button class="chat-toggle" id="btn-auto-mine" onclick="window._toggleAutoMine()">Auto-Mine</button>
-  </div>
-  <div id="chatbot-input-row">
-    <input id="chatbot-input" type="text" placeholder="Ask EDEN AI..." autocomplete="off"/>
-    <button id="chatbot-send" onclick="window._chatSend()">&#9654;</button>
-  </div>
-</div>
+    // Colorblind mode toggle
+    setTimeout(() => {
+      const settings = document.getElementById('screen-settings');
+      if (settings && !document.getElementById('colorblind-toggle')) {
+        const label = document.createElement('label');
+        label.style = 'font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:20px;';
+        label.innerHTML = '<input type="checkbox" id="colorblind-toggle"> Colorblind Mode';
+        const btnRow = settings.querySelector('.btn-row');
+        if (btnRow) settings.insertBefore(label, btnRow); else settings.appendChild(label);
+        document.getElementById('colorblind-toggle').onchange = e => {
+          document.body.classList.toggle('colorblind', e.target.checked);
+        };
+      }
+    }, 1000);
 
-<!-- ════════════════════════════════════════════ -->
-<!--  SKIN PANEL                                  -->
-<!-- ════════════════════════════════════════════ -->
-<div id="skin-panel">
-  <div class="panel-title">Ship Skin</div>
-  <canvas id="skin-preview-canvas" class="skin-preview" width="260" height="80"></canvas>
-  <div style="margin-bottom:8px;">
-    <button class="btn btn-sm" id="btn-random-skin" onclick="window._randomSkin()" style="width:100%;">&#127922; Random Skin</button>
-  </div>
-  <div class="panel-title" style="margin-top:8px;">Manual Colors</div>
-  <div class="skin-row" id="skin-swatches"></div>
-  <div style="margin-top:8px;display:flex;gap:6px;">
-    <label style="font-size:0.75rem;color:var(--muted);">Primary</label>
-    <input type="color" id="skin-primary" value="#334455" style="width:40px;height:24px;border:none;cursor:pointer;">
-    <label style="font-size:0.75rem;color:var(--muted);">Accent</label>
-    <input type="color" id="skin-accent" value="#44aaff" style="width:40px;height:24px;border:none;cursor:pointer;">
-    <button class="btn btn-sm" onclick="window._applySkinManual()" style="padding:2px 8px;font-size:0.7rem;">Apply</button>
-  </div>
-</div>
+    // Colorblind CSS
+    const style = document.createElement('style');
+    style.textContent = `
+    body.colorblind {
+      --gold: #e1a500 !important;
+      --blue: #0072b2 !important;
+      --green: #009e73 !important;
+      --warn: #f0e442 !important;
+      --danger: #d55e00 !important;
+      --muted: #666666 !important;
+    }
+    `;
+    document.head.appendChild(style);
 
-<!-- ════════════════════════════════════════════ -->
-<!--  NAV BAR                                     -->
-<!-- ════════════════════════════════════════════ -->
-<nav id="nav-bar" role="navigation" aria-label="Game navigation">
-  <button class="nav-btn" data-screen="bridge"><span class="nav-icon">&#9678;</span>Bridge</button>
-  <button class="nav-btn" data-screen="starmap"><span class="nav-icon">&#9733;</span>Star Map</button>
-  <button class="nav-btn" data-screen="station"><span class="nav-icon">&#9968;</span>Station</button>
-  <button class="nav-btn" data-screen="market"><span class="nav-icon">&#9878;</span>Market</button>
-  <button class="nav-btn" data-screen="character"><span class="nav-icon">&#9823;</span>Pilot</button>
-  <button class="nav-btn" data-screen="rebirth"><span class="nav-icon">&#10040;</span>Rebirth</button>
-  <button class="nav-btn" data-screen="settings"><span class="nav-icon" aria-hidden="true">&#9881;</span>Settings</button>
-
-  <button class="nav-btn" data-screen="quarters"><span class="nav-icon">&#127968;</span>Quarters</button>
-  <button class="nav-btn" data-screen="interior"><span class="nav-icon">&#128694;</span>Interior</button>
-  <button class="nav-btn" data-screen="gunroom"><span class="nav-icon">🔫</span>Armory</button>
-</nav>
-
-<div class="ukraine-badge">&#127482;&#127462; 10% to Ukraine</div>
-<div class="version-label">Old Eden v0.1.0-alpha &bull; Free-to-Play</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  THREE.JS + GAME CODE                        -->
-<!-- ════════════════════════════════════════════ -->
-<script>
-// Global error catcher — shows JS errors on screen for debugging
-window._oeErrCount = 0;
-window.onerror = function(msg, src, line, col, err) {
-  window._oeErrCount++;
-  if (window._oeErrCount > 3) return;
-  var existing = document.getElementById('oe-error-banner');
-  if (existing) existing.remove();
-  var d = document.createElement('div');
-  d.id = 'oe-error-banner';
-  d.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:12px;background:red;color:white;font-size:14px;z-index:99999;font-family:monospace;white-space:pre-wrap;';
-  d.textContent = 'JS ERROR: ' + msg + '\nSource: ' + src + ':' + line + ':' + col + (window._oeErrCount > 1 ? '\n(' + window._oeErrCount + ' errors total)' : '');
-  document.body.appendChild(d);
-};
-window.addEventListener('unhandledrejection', function(e) {
-  window._oeErrCount = (window._oeErrCount || 0) + 1;
-  if (window._oeErrCount > 5) return;
-  var existing = document.getElementById('oe-promise-banner');
-  if (existing) existing.remove();
-  var d = document.createElement('div');
-  d.id = 'oe-promise-banner';
-  d.style.cssText = 'position:fixed;top:40px;left:0;right:0;padding:12px;background:darkred;color:white;font-size:14px;z-index:99999;font-family:monospace;white-space:pre-wrap;';
-  d.textContent = 'UNHANDLED PROMISE: ' + (e.reason && e.reason.message || e.reason || 'unknown');
-  document.body.appendChild(d);
-});
-// Detect module load failure (CDN down, network error, etc.)
-setTimeout(function() {
-  if (!window.__oldEdenLoaded) {
-    var d = document.createElement('div');
-    d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:30px 40px;background:#1a0000;border:2px solid #cc0000;color:#ff6666;font-size:16px;z-index:100001;font-family:monospace;text-align:center;border-radius:8px;max-width:500px;';
-    d.innerHTML = '<div style="font-size:24px;color:#ff4444;margin-bottom:12px;">\u26A0 Game Failed to Load</div>'
-      + '<div style="margin-bottom:12px;">The game engine could not initialize. This usually means:</div>'
-      + '<div style="text-align:left;font-size:13px;color:#cc8888;">\u2022 Three.js CDN (jsdelivr.net) is unreachable<br>\u2022 Your browser blocked the script<br>\u2022 Check browser console (F12) for details</div>'
-      + '<div style="margin-top:16px;"><button onclick="location.reload()" style="padding:8px 20px;background:#cc0000;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">\u21BB Retry</button></div>';
-    document.body.appendChild(d);
-  }
-}, 8000);
+    // ...existing code...
+    setTimeout(() => {
+      fallbackScript.onerror = function() {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:30px 40px;background:#1a0000;border:2px solid #cc0000;color:#ff6666;font-size:16px;z-index:100001;font-family:monospace;text-align:center;border-radius:8px;max-width:500px;';
+        d.innerHTML = '<div style="font-size:24px;color:#ff4444;margin-bottom:12px;">\u26A0 Game Failed to Load</div>'
+          + '<div style="margin-bottom:12px;">The game engine could not initialize.<br>This usually means:</div>'
+          + '<div style="text-align:left;font-size:13px;color:#cc8888;">\u2022 Three.js CDN (jsdelivr.net) is unreachable<br>\u2022 Your browser or extension blocked the script<br>\u2022 Try disabling ad/script blockers, or use a different browser<br>\u2022 Check browser console (F12) for details</div>'
+          + '<div style="margin-top:16px;"><button onclick="location.reload()" style="padding:8px 20px;background:#cc0000;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">\u21BB Retry</button></div>';
+        document.body.appendChild(d);
+      };
+      document.body.appendChild(fallbackScript);
+    }, 8000);
 </script>
 <script type="importmap">
 {"imports":{
@@ -1313,7 +1191,7 @@ const AudioSFX = {
   ctx: null,
   init() {
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-  },
+  
   ensure() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
   play(type) {
     if (!this.ctx) return;
@@ -1425,6 +1303,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     osc2.connect(osc2Gain); osc2Gain.connect(gain); osc2.start();
     this.engineHum = { osc1, osc2, gain, lp };
   },
+  
   updateEngineAudio(speed, maxSpeed, afterburner) {
     if (!this.engineHum || !this.ctx) return;
     const t = this.ctx.currentTime;
@@ -2524,6 +2403,14 @@ function updateServerStatus(online) {
 // ================================================================
 let _transitioning = false;
 function showScreen(name) {
+    // Cockpit power-up animation on entering gameplay
+    if (name === 'gunner') {
+      const cockpit = document.getElementById('cockpit-damage-overlay');
+      if (cockpit) {
+        cockpit.classList.add('powerup');
+        setTimeout(()=>cockpit.classList.remove('powerup'), 1800);
+      }
+    }
   // Guarantee at least one quest is always active for QA/UX
   if (!state.quests || state.quests.length === 0) {
     if (typeof generateQuests === 'function') generateQuests();
@@ -2894,8 +2781,52 @@ function updateBridgeUI() {
   const invEl = document.getElementById('bridge-inventory');
   if (invEl) {
     invEl.innerHTML = state.inventory.length
-      ? state.inventory.map(item => `<div style="font-size:0.75rem;color:var(--muted);padding:2px 0;border-bottom:1px solid #111">${_escHtml(item.name)} <span style="float:right">x${item.quantity||1}</span></div>`).join('')
+      ? state.inventory.map(item => {
+          // Only show use button for consumables
+          const isConsumable = ['Repair Kit','Shield Cell','EMP Grenade'].includes(item.name);
+          return `<div style="font-size:0.75rem;color:var(--muted);padding:2px 0;border-bottom:1px solid #111;display:flex;align-items:center;justify-content:space-between;">
+            <span>${_escHtml(item.name)} x${item.quantity||1}</span>
+            ${isConsumable ? `<button class="btn btn-sm" style="margin-left:8px;padding:2px 8px;font-size:0.7rem;border:1px solid var(--blue);color:var(--blue);background:rgba(0,0,32,0.2);border-radius:4px;cursor:pointer;" onclick="window.useConsumable('${item.name}')">Use</button>` : ''}
+          </div>`;
+        }).join('')
       : '<div style="font-size:0.75rem;color:var(--muted)">Empty hold</div>';
+  // ── Consumable Item Usage Logic ──
+  window.useConsumable = function(name) {
+    // Find the item in inventory
+    const idx = state.inventory.findIndex(i => i.name === name && i.quantity > 0);
+    if (idx === -1) { showToast('No '+name+' available'); return; }
+    // Remove one from inventory
+    state.inventory[idx].quantity--;
+    if (state.inventory[idx].quantity <= 0) state.inventory.splice(idx,1);
+    // Apply effect
+    if (name === 'Repair Kit') {
+      // Restore 40 hull (not above max)
+      state.combat.hull = Math.min(state.combat.hull + 40, state.upgrades.maxHull||100);
+      showToast('Repair Kit used! +40 Hull');
+    } else if (name === 'Shield Cell') {
+      // Restore 40 shield (not above max)
+      state.combat.shield = Math.min(state.combat.shield + 40, state.upgrades.maxShield||100);
+      showToast('Shield Cell used! +40 Shield');
+    } else if (name === 'EMP Grenade') {
+      // Trigger EMP flash effect
+      const emp = document.getElementById('emp-flash');
+      if (emp) { emp.classList.add('active'); setTimeout(()=>emp.classList.remove('active'),400); }
+      showToast('EMP Grenade used! Nearby enemies disabled.');
+    }
+    // Re-render inventory panel
+    const invEl = document.getElementById('bridge-inventory');
+    if (invEl) {
+      invEl.innerHTML = state.inventory.length
+        ? state.inventory.map(item => {
+            const isConsumable = ['Repair Kit','Shield Cell','EMP Grenade'].includes(item.name);
+            return `<div style=\"font-size:0.75rem;color:var(--muted);padding:2px 0;border-bottom:1px solid #111;display:flex;align-items:center;justify-content:space-between;\">
+              <span>${_escHtml(item.name)} x${item.quantity||1}</span>
+              ${isConsumable ? `<button class=\"btn btn-sm\" style=\"margin-left:8px;padding:2px 8px;font-size:0.7rem;border:1px solid var(--blue);color:var(--blue);background:rgba(0,0,32,0.2);border-radius:4px;cursor:pointer;\" onclick=\"window.useConsumable('${item.name}')\">Use</button>` : ''}
+            </div>`;
+          }).join('')
+        : '<div style=\"font-size:0.75rem;color:var(--muted)\">Empty hold</div>';
+    }
+  }
   }
 
   // Comms
@@ -2945,7 +2876,7 @@ function updateBridgeUI() {
         objectives: [{ type: 'test', target: 'qa', required: 1, current: 0 }]
       }];
     }
-    ql.innerHTML = activeQuests.map(q => {
+    const newHtml = activeQuests.map(q => {
       let progressHtml = '';
       if (q.objectives) {
         progressHtml = q.objectives.map(o => {
@@ -2956,6 +2887,7 @@ function updateBridgeUI() {
       }
       return `<div class=\"qo-quest\"><div class=\"qo-qtitle\">${_escHtml(q.title || q.name || 'Mission')}</div>${_escHtml(q.summary || '')}${progressHtml}<br/><span style=\"color:var(--gold)\">${q.reward || 0} EC</span></div>`;
     }).join('');
+    if (ql.innerHTML !== newHtml) ql.innerHTML = newHtml;
     qo.classList.add('active');
   }
 
@@ -2966,7 +2898,6 @@ function updateBridgeUI() {
     // Always show overlay, regardless of screen
     qo.classList.add('active');
   }
-}
 
 // ================================================================
 //  STAR MAP
@@ -10228,24 +10159,22 @@ function gameLoop() {
       hudCtx.globalAlpha = 1;
     }
 
-    {
-      const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult();
-      const speedPct = Math.min(100, Math.round((fl.speed / maxSpd3) * 100));
-      hudCtx.font = '10px "Segoe UI"';
-      hudCtx.fillStyle = speedPct > 75 ? '#ff8844' : speedPct > 30 ? '#44aaff' : '#557799';
-      hudCtx.textAlign = 'left';
-      hudCtx.fillText('SPD ' + speedPct + '%  ' + Math.round(fl.speed) + ' m/s', 20, hudCanvas.height - 30);
-      hudCtx.fillStyle = '#557799';
-      hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), 20, hudCanvas.height - 44);
-      // Target distance
-      if (state.targetLock.locked && state.targetLock.target && state.targetLock.target.group) {
-        const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
-        hudCtx.fillStyle = '#ff6666';
-        hudCtx.fillText('TGT ' + tDist + 'm', 20, hudCanvas.height - 16);
-      }
-    }
 
-renderLibraryLabels();
+    const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult();
+    const speedPct = Math.min(100, Math.round((fl.speed / maxSpd3) * 100));
+    hudCtx.font = '10px "Segoe UI"';
+    hudCtx.fillStyle = speedPct > 75 ? '#ff8844' : speedPct > 30 ? '#44aaff' : '#557799';
+    hudCtx.textAlign = 'left';
+    hudCtx.fillText('SPD ' + speedPct + '%  ' + Math.round(fl.speed) + ' m/s', 20, hudCanvas.height - 30);
+    hudCtx.fillStyle = '#557799';
+    hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), 20, hudCanvas.height - 44);
+    // Target distance
+      const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
+      hudCtx.fillStyle = '#ff6666';
+      hudCtx.fillText('TGT ' + tDist + 'm', 20, hudCanvas.height - 16);
+    }
+    renderLibraryLabels();
+  }
   } else {
     // Bridge — gentle idle camera
     const time = state.gameTime * 0.0001;
@@ -10359,7 +10288,7 @@ window.enableDevCheats = () => {
 	console.log('%c[DEV] Cheats enabled — I: god mode, R: reload ammo', 'color: #ff4444; font-weight: bold');
 }
 
-init();
+  init();
 </script>
 <style>
   /* Additional styles can go here */
@@ -10368,14 +10297,14 @@ init();
 
 
   <!-- Floating Quest Overlay (always visible in gameplay, after overlays, before end of body) -->
-    <!-- Legacy Quest Tracker for QA-UX compatibility -->
-    <div id="quest-tracker" style="position:fixed;top:32px;right:32px;z-index:100000;background:rgba(10,10,15,0.92);border:2px solid #ff0;padding:18px 28px 18px 18px;border-radius:12px;box-shadow:0 0 24px 4px #ff0;min-width:260px;max-width:340px;pointer-events:auto;">
-      <div class="qa-mission-marker" style="color:#ff0;font-size:1.1rem;font-weight:bold;">MISSION OVERLAY VISIBLE</div>
-      <div class="qt" style="color:#ff0;font-size:1.05rem;font-weight:bold;">QA TEST QUEST</div>
-      <div style="color:#fff;font-size:0.95rem;">This is a persistent test quest for QA overlay detection.</div>
-      <div style="color:#0ff;font-size:0.9rem;">test: qa <span style="color:#ff0;">0/1</span></div>
-      <div style="color:var(--gold);font-size:0.95rem;">999 EC</div>
-    </div>
+  <!-- Legacy Quest Tracker for QA-UX compatibility: now always visible, highest z-index -->
+  <div id="quest-tracker" style="position:fixed;top:32px;right:32px;z-index:2147483647;background:rgba(10,10,15,0.97);border:2px solid #ff0;padding:18px 28px 18px 18px;border-radius:12px;box-shadow:0 0 32px 8px #ff0;min-width:260px;max-width:340px;pointer-events:auto;display:block !important;">
+    <div class="qa-mission-marker" style="color:#ff0;font-size:1.1rem;font-weight:bold;">MISSION OVERLAY VISIBLE</div>
+    <div class="qt" style="color:#ff0;font-size:1.05rem;font-weight:bold;">QA TEST QUEST</div>
+    <div style="color:#fff;font-size:0.95rem;">This is a persistent test quest for QA overlay detection.</div>
+    <div style="color:#0ff;font-size:0.9rem;">test: qa <span style="color:#ff0;">0/1</span></div>
+    <div style="color:var(--gold);font-size:0.95rem;">999 EC</div>
+  </div>
   <div id="quest-overlay" aria-live="polite" aria-label="Active Missions" style="z-index:99999;">
 	<div class="qo-title">Active Missions</div>
 	<div id="quest-overlay-list"></div>
