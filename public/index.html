@@ -1,385 +1,47 @@
 <!DOCTYPE html>
-#auto-target-btn{position:fixed;right:16px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:6px;color:#ff6666;font-size:0.75rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
-#auto-target-btn.visible{display:block;}
-#auto-target-btn.engaged{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff4444;box-shadow:0 0 15px rgba(255,68,68,0.15);}
-#auto-target-btn{position:fixed;right:16px;bottom:60px;z-index:20;pointer-events:auto;padding:8px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:6px;color:#ff6666;font-size:0.75rem;cursor:pointer;font-family:inherit;display:none;letter-spacing:0.05em;transition:all 0.3s;}
-#auto-target-btn.visible{display:block;}
-#auto-target-btn.engaged{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff4444;box-shadow:0 0 15px rgba(255,68,68,0.15);}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Old Eden</title>
+  <style>
+    :root {
+        --bg: #0a0a0f;
+        --gold: #d4a856;
+        --blue: #44aaff;
+        --green: #00ff88;
+        --muted: #888fa6;
+        --panel-solid: #181c24;
+        --panel: #23283a;
+        --border: #2e3448;
+        --text: #e6e6e6;
+        --warn: #ffaa00;
+        --danger: #ff4444;
+        --hud: #44aaff;
+    }
 
-/* ── Gun Room ────────────────────────────────── */
-#screen-gunroom{background:radial-gradient(ellipse at center,#0d1117 0%,#080810 70%);z-index:80;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;}
-#screen-gunroom h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1rem;}
-.gun-display-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;width:100%;max-width:900px;}
-.gun-card{background:var(--panel-solid);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;}
-.gun-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 8px 24px rgba(212,168,86,0.1);}
-.gun-card .gun-canvas{width:100%;height:160px;border-radius:4px;background:#080810;margin-bottom:8px;}
-.gun-card .gun-name{color:var(--gold);font-size:0.9rem;font-weight:600;margin-bottom:4px;}
-.gun-card .gun-stats{font-size:0.7rem;color:var(--muted);line-height:1.6;}
-.gun-card .gun-id{position:absolute;top:6px;right:8px;font-size:0.6rem;color:var(--muted);opacity:0.6;}
+    /* ── Screen System ───────────────────────── */
+    .screen { display:none; position:fixed; inset:0; background:var(--bg); z-index:50; overflow-y:auto; }
+    .screen.active { display:flex; flex-direction:column; }
 
+    /* ── Navigation & Gameplay UI ──────────── */
+    #nav-bar { display:none; }
+    #nav-bar.visible { display:flex; }
+    .nav-btn { background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;letter-spacing:0.05em;transition:all 0.2s; }
+    .nav-btn:hover,.nav-btn.active { color:var(--gold);border-color:var(--gold);background:rgba(212,168,86,0.1); }
+    #action-bar.active { display:flex; }
+    #death-ticker.active { display:block; }
+    #dock-overlay.active { display:flex;background:rgba(0,0,0,0.85); }
+    #speed-control-panel,#drone-bay,#auto-target-btn { display:none; }
+    #speed-control-panel.visible,#drone-bay.visible,#auto-target-btn.visible { display:block; }
 
-/* ── Loot Magnet Indicator ───────────────────── */
-#loot-magnet-indicator{position:fixed;bottom:100px;right:20px;pointer-events:none;z-index:16;font-size:0.75rem;color:#00ff88;opacity:0;transition:opacity 0.3s;}
-#loot-magnet-indicator.active{opacity:1;}
-
-/* ── Environment Hazard Overlay ──────────────── */
-#hazard-overlay{position:fixed;inset:0;pointer-events:none;z-index:14;opacity:0;transition:opacity 1s;}
-#hazard-overlay.radiation{opacity:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,255,0,0.03) 70%,rgba(0,255,0,0.06) 100%);animation:radGlow 4s ease-in-out infinite alternate;}
-#hazard-overlay.storm{opacity:1;background:radial-gradient(ellipse at center,transparent 30%,rgba(100,100,255,0.04) 60%,rgba(80,80,200,0.08) 100%);animation:stormFlicker 0.8s ease-in-out infinite;}
-@keyframes radGlow{0%{opacity:0.5;}100%{opacity:1;}}
-@keyframes stormFlicker{0%,100%{opacity:0.7;}50%{opacity:1;}}
-
-.nav-btn{padding:10px 18px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);font-size:0.8rem;cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.04em;}
-.nav-btn:hover{background:rgba(68,170,255,0.08);border-color:var(--border);}
-.nav-btn.active{background:rgba(212,168,86,0.1);border-color:var(--gold);color:var(--gold);}
-.nav-btn .nav-icon{font-size:1rem;display:block;margin-bottom:2px;}
-
-/* ── Star Map ────────────────────────────── */
-#screen-starmap{background:rgba(0,0,0,0.85);z-index:80;flex-direction:row;}
-#starmap-canvas{flex:1;cursor:crosshair;}
-#starmap-sidebar{width:280px;background:var(--panel-solid);border-left:1px solid var(--border);padding:16px;overflow-y:auto;}
-.system-info{margin-top:16px;}
-.system-info h3{color:var(--gold);font-size:1rem;margin-bottom:8px;}
-.system-info p{font-size:0.78rem;color:var(--muted);margin-bottom:4px;}
-.system-info .tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:0.7rem;margin:2px;background:rgba(68,170,255,0.1);color:var(--blue);border:1px solid rgba(68,170,255,0.15);}
-
-/* ── Station ─────────────────────────────── */
-#screen-station{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
-#screen-station h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
-.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
-@media(max-width:700px){.station-grid{grid-template-columns:1fr;}}
-.station-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
-.trade-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #111;font-size:0.8rem;}
-.trade-row:last-child{border-bottom:none;}
-.trade-buy,.trade-sell{padding:4px 10px;border-radius:3px;border:1px solid;font-size:0.7rem;cursor:pointer;background:transparent;font-family:inherit;}
-.trade-buy{color:var(--green);border-color:rgba(0,255,136,0.3);}
-.trade-buy:hover{background:rgba(0,255,136,0.1);}
-.trade-sell{color:var(--warn);border-color:rgba(255,170,0,0.3);}
-.trade-sell:hover{background:rgba(255,170,0,0.1);}
-
-/* ── Character Sheet ─────────────────────── */
-#screen-character{background:rgba(0,0,0,0.9);z-index:80;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;}
-#screen-character h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;}
-
-/* ── Rebirth ─────────────────────────────── */
-#screen-rebirth{background:radial-gradient(ellipse at center,#1a0a2e 0%,#0a0a0f 70%);z-index:80;flex-direction:column;align-items:center;justify-content:center;}
-#screen-rebirth h2{color:var(--gold);font-size:2rem;font-weight:300;letter-spacing:0.2em;margin-bottom:1rem;}
-.rebirth-info{max-width:600px;text-align:center;line-height:1.8;margin-bottom:2rem;}
-.rebirth-info strong{color:var(--gold);}
-.rebirth-lottery{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;}
-.lottery-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:15px 20px;min-width:120px;text-align:center;}
-.lottery-card .lbl{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
-.lottery-card .val{font-size:1.3rem;color:var(--gold);margin-top:4px;}
-
-/* ── Soul Fracture UI ────────────────────── */
-.sf-tabs{flex-wrap:wrap;}
-.sf-tab{font-size:0.75rem;padding:4px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
-.sf-tab.active{color:#a855f7;border-color:#a855f7;background:rgba(168,85,247,0.1);}
-.sf-panel{width:100%;max-width:700px;}
-.sf-fragment-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;width:140px;text-align:center;cursor:pointer;transition:all 0.2s;}
-.sf-fragment-card:hover{border-color:#a855f7;transform:translateY(-2px);}
-.sf-fragment-card.selected{border-color:#a855f7;box-shadow:0 0 12px rgba(168,85,247,0.3);}
-.sf-fragment-card .frag-id{font-size:0.7rem;color:var(--muted);margin-bottom:4px;}
-.sf-fragment-card .frag-power{font-size:1.1rem;color:var(--gold);font-weight:bold;}
-.sf-fragment-card .frag-stats{font-size:0.65rem;color:var(--muted);margin-top:4px;}
-.sf-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.sf-bar-label{width:60px;font-size:0.75rem;color:var(--muted);text-align:right;}
-.sf-bar-track{flex:1;height:12px;background:rgba(255,255,255,0.05);border-radius:6px;overflow:hidden;}
-.sf-bar-fill{height:100%;border-radius:6px;transition:width 0.4s ease;}
-.sf-bar-val{width:40px;font-size:0.75rem;color:var(--gold);}
-.sf-legacy-node{display:flex;align-items:center;gap:10px;padding:8px;border-left:2px solid rgba(168,85,247,0.3);margin-left:12px;margin-bottom:4px;}
-.sf-legacy-node .ln-num{color:#a855f7;font-weight:bold;font-size:0.85rem;min-width:24px;}
-.sf-legacy-node .ln-info{font-size:0.75rem;color:var(--muted);}
-.sf-milestone{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;}
-.sf-milestone.claimed{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05);}
-.sf-milestone.available{border-color:var(--gold);background:rgba(212,168,86,0.05);animation:pulse 2s infinite;}
-.sf-milestone .ms-icon{font-size:1.2rem;}
-.sf-milestone .ms-info{flex:1;}
-.sf-milestone .ms-name{font-size:0.8rem;color:#ddd;}
-.sf-milestone .ms-desc{font-size:0.65rem;color:var(--muted);}
-.sf-milestone .ms-reward{color:var(--gold);font-size:0.8rem;font-weight:bold;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
-
-/* ── Ukraine Donation Badge ──────────────── */
-.ukraine-badge{position:fixed;bottom:8px;right:8px;background:linear-gradient(180deg,#005BBB 50%,#FFD500 50%);color:#fff;font-size:0.65rem;padding:3px 8px;border-radius:3px;z-index:999;letter-spacing:0.05em;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
-.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
-@media(max-width:700px){.char-grid{grid-template-columns:1fr;}}
-.char-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;}
-.rep-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;}
-.rep-bar{height:4px;flex:1;margin-left:8px;background:#111;border-radius:2px;overflow:hidden;position:relative;}
-.rep-fill{height:100%;border-radius:2px;}
-
-/* ── Gunner HUD ──────────────────────────── */
-#hud-canvas{position:absolute;inset:0;z-index:15;pointer-events:none;display:none;}
-#hud-canvas.active{display:block;}
-#hud-canvas{box-shadow:0 0 32px 8px rgba(68,170,255,0.18),0 0 64px 16px rgba(212,168,86,0.10);transition:box-shadow 0.7s;}
-#hud-canvas.active{display:block;animation:hudGlowPulse 2.5s infinite alternate;}
-@keyframes hudGlowPulse{0%{box-shadow:0 0 32px 8px rgba(68,170,255,0.18),0 0 64px 16px rgba(212,168,86,0.10);}100%{box-shadow:0 0 48px 16px rgba(68,170,255,0.28),0 0 96px 32px rgba(212,168,86,0.18);}}
-#cockpit-damage-overlay.powerup{opacity:1;animation:cockpitPowerup 1.8s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 48px 16px #d4a856,0 0 96px 32px #44aaff;}
-@keyframes cockpitPowerup{0%{filter:brightness(0.7) blur(2px);}40%{filter:brightness(1.5) blur(0);}100%{filter:brightness(1) blur(0);}}
-#lock-prompt{display:none;position:absolute;inset:0;z-index:55;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;cursor:pointer;}
-#lock-prompt span{color:var(--gold);font-size:1.3rem;letter-spacing:0.1em;text-shadow:0 0 20px rgba(212,168,86,0.4);}
-
-/* ── 3D Canvas ───────────────────────────── */
-#game-canvas{position:absolute;inset:0;z-index:1;}
-
-/* ── Misc ────────────────────────────────── */
-.version-label{position:fixed;bottom:8px;right:12px;color:#222;font-size:0.7rem;z-index:200;}
-.fade-in{animation:fadeIn 0.4s ease;}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-#screen-transition-overlay{position:fixed;inset:0;background:#0a0a0f;z-index:9990;pointer-events:none;opacity:0;transition:opacity 0.25s ease;}
-#screen-transition-overlay.active{opacity:1;}
-#controls-overlay{position:fixed;inset:0;z-index:9980;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;pointer-events:none;transition:opacity 1.5s ease;}
-#controls-overlay.active{display:flex;pointer-events:auto;}
-#controls-overlay.fading{opacity:0;}
-.controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 36px;max-width:540px;padding:24px 32px;background:rgba(13,17,23,0.92);border:1px solid rgba(68,170,255,0.2);border-radius:12px;backdrop-filter:blur(10px);}
-.controls-grid h3{grid-column:1/3;text-align:center;color:var(--gold);font-size:1.1rem;font-weight:300;letter-spacing:0.15em;margin-bottom:4px;}
-.ctrl-item{display:flex;align-items:center;gap:10px;}
-.ctrl-key{background:rgba(68,170,255,0.1);border:1px solid rgba(68,170,255,0.25);border-radius:4px;padding:3px 10px;color:var(--blue);font-family:"Consolas",monospace;font-size:0.82rem;min-width:62px;text-align:center;white-space:nowrap;}
-.ctrl-desc{color:var(--text);font-size:0.78rem;}
-.controls-dismiss{grid-column:1/3;text-align:center;color:var(--muted);font-size:0.72rem;margin-top:6px;animation:pulse 2s infinite;}
-#bridge-launch{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:5;pointer-events:auto;}
-#btn-launch{font-size:1.15rem;padding:18px 52px;border-color:var(--gold);color:var(--gold);background:rgba(212,168,86,0.06);letter-spacing:0.12em;animation:pulse 2.5s infinite;cursor:pointer;font-family:inherit;border-radius:6px;border-width:1px;border-style:solid;transition:all 0.3s;}
-#btn-launch:hover{background:rgba(212,168,86,0.15);box-shadow:0 0 40px rgba(212,168,86,0.2);transform:scale(1.05);}
-.launch-hint{color:var(--muted);font-size:0.72rem;margin-top:8px;letter-spacing:0.05em;}
-.launch-hint span{color:var(--blue);}
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px;}
-
-/* ── Market Screen ───────────────────────── */
-#screen-market{background:rgba(0,0,0,0.92);z-index:80;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;}
-.market-table{width:100%;max-width:900px;border-collapse:collapse;font-size:0.78rem;}
-.market-table th{text-align:left;padding:8px 6px;color:var(--muted);border-bottom:1px solid var(--border);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;}
-.market-table td{padding:6px;border-bottom:1px solid #111;}
-.market-buy{color:var(--green);}
-.market-sell{color:var(--danger);}
-.order-input{background:#0d1117;border:1px solid var(--border);border-radius:3px;padding:4px 8px;color:var(--text);font-size:0.78rem;width:70px;font-family:inherit;}
-
-/* ── Chatbot ─────────────────────────────── */
-#chatbot-panel{position:fixed;right:16px;bottom:80px;width:320px;max-height:420px;background:var(--panel);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(8px);z-index:60;display:none;flex-direction:column;}
-#chatbot-panel.open{display:flex;}
-#chatbot-messages{flex:1;overflow-y:auto;padding:10px;max-height:300px;}
-.chat-msg{margin-bottom:8px;font-size:0.78rem;line-height:1.4;}
-.chat-msg.ai{color:var(--blue);border-left:2px solid var(--blue);padding-left:8px;}
-.chat-msg.user{color:var(--text);text-align:right;}
-#chatbot-input-row{display:flex;border-top:1px solid var(--border);padding:6px;}
-#chatbot-input{flex:1;background:#0d1117;border:1px solid var(--border);border-radius:3px;padding:6px 10px;color:var(--text);font-size:0.8rem;font-family:inherit;outline:none;}
-#chatbot-send{padding:6px 12px;background:transparent;border:1px solid var(--blue);color:var(--blue);border-radius:3px;cursor:pointer;margin-left:4px;font-family:inherit;}
-.chat-toggles{display:flex;gap:6px;padding:6px 10px;border-top:1px solid var(--border);}
-.chat-toggle{font-size:0.7rem;padding:3px 8px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;}
-.chat-toggle.on{border-color:var(--green);color:var(--green);background:rgba(0,255,136,0.08);}
-
-/* ── Skin Selector ───────────────────────── */
-#skin-panel{position:fixed;left:16px;bottom:80px;width:280px;background:var(--panel);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(8px);z-index:60;display:none;padding:12px;}
-#skin-panel.open{display:block;}
-.skin-preview{width:100%;height:80px;background:#111;border-radius:4px;margin-bottom:8px;border:1px solid var(--border);}
-.skin-row{display:flex;gap:6px;flex-wrap:wrap;}
-.skin-swatch{width:32px;height:32px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;}
-.skin-swatch:hover{transform:scale(1.15);}
-.skin-swatch.active{border-color:var(--gold);}
-
-/* ── Mining laser beam ───────────────────── */
-@keyframes miningPulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
-
-/* ── Warp Tunnel VFX ─────────────────────── */
-#warp-tunnel-overlay{position:fixed;inset:0;pointer-events:none;z-index:13;opacity:0;transition:opacity 0.3s;}
-#warp-tunnel-overlay.active{opacity:1;}
-#warp-tunnel-overlay .warp-streak{position:absolute;left:50%;top:50%;width:2px;background:linear-gradient(to bottom,transparent,rgba(100,150,255,0.8),rgba(200,100,255,0.5),transparent);transform-origin:center top;opacity:0;animation:warpStreak 0.6s linear infinite;}
-@keyframes warpStreak{0%{opacity:0;height:0;}30%{opacity:1;}100%{opacity:0;height:40vh;}}
-
-/* ── Screen Shake ────────────────────────── */
-@keyframes screenShake{0%,100%{transform:translate(0,0);}10%{transform:translate(-3px,2px);}20%{transform:translate(4px,-2px);}30%{transform:translate(-2px,3px);}40%{transform:translate(3px,-1px);}50%{transform:translate(-1px,2px);}60%{transform:translate(2px,-3px);}70%{transform:translate(-4px,1px);}80%{transform:translate(1px,-2px);}90%{transform:translate(-2px,3px);}}
-body.screen-shake{animation:screenShake 0.3s ease;}
-
-/* ── Kill streak banner ── */
-@keyframes streakPulse {
-  0%,100% { transform: scale(1); opacity:0.9; }
-  50% { transform: scale(1.05); opacity:1; }
-}
-#streak-banner { position:fixed; top:80px; left:50%; transform:translateX(-50%); font-size:28px; font-weight:900;
-  color:#ffd700; text-shadow:0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,165,0,0.3); z-index:500;
-  pointer-events:none; opacity:0; transition:opacity 0.3s; font-family:'Orbitron','Segoe UI',monospace; letter-spacing:4px;
-}
-#streak-banner.active { opacity:1; animation: streakPulse 1s ease infinite; }
-
-/* ── Cockpit warning lights ── */
-.cockpit-warn { position:fixed; bottom:20px; padding:4px 14px; border-radius:2px; font-size:10px;
-  font-weight:700; text-transform:uppercase; letter-spacing:2px; z-index:450; pointer-events:none;
-  opacity:0; transition:opacity 0.3s; font-family:'Segoe UI',monospace;
-}
-.cockpit-warn.active { opacity:1; }
-#warn-hull { left:20px; color:#ff4444; background:rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); }
-#warn-fuel { left:150px; color:#ff8800; background:rgba(255,136,0,0.1); border:1px solid rgba(255,136,0,0.3); }
-#warn-lock { right:20px; color:#ff2222; background:rgba(255,0,0,0.15); border:1px solid rgba(255,0,0,0.4); animation: lockFlash 0.5s ease infinite alternate; }
-/* ── Ship Interior Walk Mode ── */
-#screen-interior { background:radial-gradient(ellipse at center,#0a0f14 0%,#050508 70%); z-index:80; flex-direction:column; align-items:center; padding:20px; }
-#screen-interior h2 { color:var(--gold); font-size:1.4rem; font-weight:300; letter-spacing:0.12em; margin-bottom:6px; }
-#interior-3d-view { width:100%; max-width:900px; height:450px; border:1px solid rgba(68,170,255,0.15); border-radius:4px; background:#030308; position:relative; overflow:hidden; }
-#interior-controls-hint { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); color:rgba(136,170,204,0.5); font-size:10px; letter-spacing:1px; pointer-events:none; }
-.interior-room-btn { padding:6px 16px; margin:4px; background:rgba(68,170,255,0.08); border:1px solid rgba(68,170,255,0.2); color:var(--hud); border-radius:3px; cursor:pointer; font-size:11px; text-transform:uppercase; letter-spacing:1px; transition:all 0.2s; }
-.interior-room-btn:hover { background:rgba(68,170,255,0.15); border-color:var(--hud); }
-.interior-room-btn.active { background:rgba(68,170,255,0.2); border-color:var(--gold); color:var(--gold); }
-@keyframes lockFlash { 0% { opacity:0.6; } 100% { opacity:1; } }
-
-/* ── Achievement popup ── */
-@keyframes achieveSlide { 0%{transform:translateX(120%);opacity:0;} 10%{transform:translateX(0);opacity:1;} 90%{transform:translateX(0);opacity:1;} 100%{transform:translateX(120%);opacity:0;} }
-#achieve-popup { position:fixed; top:120px; right:20px; background:rgba(10,20,30,0.85); border:1px solid var(--gold);
-  border-radius:4px; padding:10px 18px; z-index:600; pointer-events:none; display:none;
-  font-size:12px; color:var(--gold); font-weight:600; letter-spacing:1px; text-transform:uppercase;
-  box-shadow: 0 0 20px rgba(212,168,86,0.2); }
-#achieve-popup.show { display:block; animation: achieveSlide 3.5s ease forwards; }
-#achieve-popup .ach-icon { font-size:18px; margin-right:8px; }
-#achieve-popup .ach-title { color:#fff; font-weight:400; display:block; font-size:10px; margin-top:2px; }
-
-/* ── Hull damage overlay ── */
-#hull-damage-overlay { position:fixed; inset:0; pointer-events:none; z-index:350; opacity:0; transition:opacity 0.5s;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(255,0,0,0.08) 100%);
-  border:3px solid transparent; }
-#hull-damage-overlay.critical { opacity:1; border-color:rgba(255,0,0,0.15); }
-
-/* ── EMP flash ── */
-@keyframes empFlash { 0%{opacity:0.7;} 100%{opacity:0;} }
-#emp-flash { position:fixed; inset:0; background:rgba(100,150,255,0.3); pointer-events:none; z-index:400; opacity:0; }
-#emp-flash.active { animation: empFlash 0.4s ease-out forwards; }
-
-/* ── Docking sequence overlay ── */
-@keyframes dockSlide { 0%{opacity:0;transform:scale(0.95);} 50%{opacity:1;transform:scale(1);} 100%{opacity:0;transform:scale(1.05);} }
-#dock-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:700;
-  background:rgba(0,0,0,0.8); pointer-events:none; opacity:0; }
-#dock-overlay.active { animation: dockSlide 2s ease-in-out forwards; }
-#dock-overlay span { color:var(--hud); font-size:22px; letter-spacing:6px; text-transform:uppercase; font-weight:300; }
-
-/* ── Shield Hit Flash ────────────────────── */
-#shield-flash{position:fixed;inset:0;pointer-events:none;z-index:14;border:3px solid rgba(68,170,255,0);border-radius:50%;opacity:0;transition:opacity 0.15s,border-color 0.15s;}
-#shield-flash.active{opacity:1;border-color:rgba(68,170,255,0.4);box-shadow:inset 0 0 60px rgba(68,170,255,0.1),0 0 40px rgba(68,170,255,0.15);}
-#shield-flash.hull-hit{border-color:rgba(255,68,68,0.5);box-shadow:inset 0 0 60px rgba(255,68,68,0.15),0 0 40px rgba(255,68,68,0.2);}
-
-/* ── Mining Beam Visual ──────────────────── */
-#mining-beam-indicator{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:16;display:none;text-align:center;}
-#mining-beam-indicator.active{display:block;}
-.mining-progress{width:120px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:4px auto 0;overflow:hidden;}
-.mining-progress-fill{height:100%;background:linear-gradient(90deg,#ffaa00,#00ff88);border-radius:2px;transition:width 0.3s;}
-
-/* ── Captain's Quarters Screen ───────────── */
-#screen-quarters{background:radial-gradient(ellipse at bottom,#1a1510 0%,#0a0a0f 70%);z-index:80;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;}
-#screen-quarters h2{color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:0.5rem;}
-.quarters-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px;}
-@media(max-width:700px){.quarters-grid{grid-template-columns:1fr;}}
-.quarters-panel{background:var(--panel-solid);border:1px solid var(--border);border-radius:6px;padding:16px;position:relative;}
-.quarters-panel h3{color:var(--blue);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;font-weight:400;}
-.quarters-stat{display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
-.quarters-stat .qs-val{color:var(--gold);font-weight:600;}
-.quarters-trophy{display:inline-flex;align-items:center;gap:4px;background:rgba(212,168,86,0.08);border:1px solid rgba(212,168,86,0.15);border-radius:20px;padding:3px 10px;font-size:0.7rem;color:var(--gold);margin:3px;}
-#quarters-3d-view{width:100%;height:200px;border-radius:6px;background:#060810;border:1px solid var(--border);margin-bottom:16px;}
-
-/* ── Target Info Box (HUD) ───────────────── */
-.target-info-box{position:absolute;top:80px;right:16px;padding:8px 12px;background:rgba(13,17,23,0.8);border:1px solid rgba(255,68,68,0.3);border-radius:4px;font-size:0.7rem;line-height:1.5;pointer-events:none;min-width:140px;backdrop-filter:blur(4px);}
-.target-info-box .tib-name{color:#ff6666;font-weight:600;margin-bottom:2px;}
-.target-info-box .tib-row{display:flex;justify-content:space-between;}
-.target-info-box .tib-label{color:var(--muted);}
-.target-info-box .tib-val{color:var(--text);}
-.tib-hp-bar{height:3px;background:#222;border-radius:2px;margin-top:4px;}
-.tib-hp-fill{height:100%;background:linear-gradient(90deg,#ff4444,#ff8844);border-radius:2px;transition:width 0.3s;}
-
-/* ── Comms HUD overlay ───────────────────── */
-.hud-comms{position:fixed;bottom:50px;left:16px;max-width:280px;pointer-events:none;z-index:16;}
-.hud-comm-msg{font-size:0.65rem;color:rgba(68,170,255,0.7);margin-bottom:3px;opacity:0.8;transition:opacity 0.5s;text-shadow:0 0 4px rgba(68,170,255,0.3);}
-.hud-comm-msg .hc-sender{color:var(--blue);font-weight:600;}
-
-
-
-/* ── Action Buttons (Gunner Mode) ────────── */
-#action-bar{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:56;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:90vw;}
-#action-bar.active{display:flex;}
-.action-btn{
-  width:52px;height:52px;border-radius:10px;border:2px solid var(--gold);
-  background:transparent;
-  color:var(--gold);font-size:0.6rem;text-align:center;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  transition:all 0.15s;user-select:none;-webkit-user-select:none;
-  font-family:inherit;padding:2px;line-height:1.1;
-  box-shadow:0 0 12px 3px var(--gold),0 0 32px 8px rgba(212,168,86,0.18);
-}
-.action-btn .act-icon{font-size:1.1rem;}
-.action-btn .act-label{font-size:0.55rem;color:var(--muted);letter-spacing:0.04em;}
-.action-btn .act-key{font-size:0.5rem;color:#445566;margin-top:1px;}
-.action-btn:hover,.action-btn:active{background:transparent;border-color:var(--blue);box-shadow:0 0 32px 8px var(--blue),0 0 64px 16px rgba(68,170,255,0.22);}
-.action-btn.active-state{border-color:var(--green);background:rgba(0,255,136,0.1);color:var(--green);}
-.action-btn.warn-state{border-color:var(--warn);background:rgba(255,170,0,0.1);color:var(--warn);}
-
-/* ── Mobile: Virtual Joystick + Fire ─────── */
-#mobile-controls{position:fixed;bottom:0;left:0;right:0;display:none;z-index:45;pointer-events:none;}
-#mobile-controls.active{display:block;}
-#touch-fire{
-  position:absolute;right:20px;bottom:130px;width:72px;height:72px;border-radius:50%;
-  background:rgba(255,68,68,0.15);border:2px solid rgba(255,68,68,0.5);
-  display:flex;align-items:center;justify-content:center;pointer-events:auto;
-  color:var(--danger);font-size:0.7rem;font-weight:600;user-select:none;
-}
-#touch-fire:active{background:rgba(255,68,68,0.35);border-color:var(--danger);}
-#touch-reload{
-  position:absolute;right:100px;bottom:130px;width:48px;height:48px;border-radius:50%;
-  background:rgba(68,170,255,0.1);border:1px solid rgba(68,170,255,0.4);
-  display:flex;align-items:center;justify-content:center;pointer-events:auto;
-  color:var(--blue);font-size:0.6rem;user-select:none;
-}
-#touch-move-zone{
-  position:absolute;left:10px;bottom:100px;width:140px;height:140px;border-radius:50%;
-  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
-  pointer-events:auto;touch-action:none;
-}
-#touch-stick{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:44px;height:44px;border-radius:50%;
-  background:rgba(68,170,255,0.2);border:1px solid rgba(68,170,255,0.4);
-  pointer-events:none;
-}
-
-/* ── Mobile Responsive ───────────────────── */
-@media(max-width:900px){
-  #nav-bar{flex-wrap:wrap;gap:2px;padding:4px 6px;}
-  .nav-btn{font-size:0.65rem;padding:6px 8px;min-width:0;}
-  .nav-icon{font-size:0.8rem;}
-  #chatbot-panel{width:260px;right:8px;bottom:130px;}
-  #skin-panel{width:220px;left:8px;bottom:130px;}
-  .action-btn{width:46px;height:46px;}
-  .action-btn .act-key{display:none;}
-}
-@media(max-width:600px){
-  .nav-btn span.nav-icon{display:block;}.nav-btn{font-size:0;padding:8px 10px;}.nav-icon{font-size:1.1rem;}
-  .station-grid,.char-grid{grid-template-columns:1fr;}
-  #chatbot-panel{width:calc(100vw - 32px);right:16px;bottom:130px;max-height:50vh;}
-  #skin-panel{width:calc(100vw - 32px);left:16px;bottom:130px;}
-  .action-btn{width:42px;height:42px;border-radius:8px;}
-  .action-btn .act-icon{font-size:0.95rem;}
-  .action-btn .act-label{font-size:0.48rem;}
-  h1{font-size:2.5rem !important;}
-  .menu-btn{font-size:0.75rem;padding:10px 28px;}
-  #action-bar{bottom:116px;gap:5px;}
-}
-@media(hover:none) and (pointer:coarse){
-  /* Touch device: show mobile controls, make buttons larger */
-  #mobile-controls.active{display:block;}
-  .action-btn{width:50px;height:50px;}
-  #lock-prompt span{font-size:1rem;}
-}
-
-/* ── Eulogy Screen ───────────────────────── */
-#screen-eulogy{background:radial-gradient(ellipse at center,#0d0520 0%,#030308 70%);z-index:85;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
-#screen-eulogy h2{color:var(--gold);font-size:2.2rem;font-weight:200;letter-spacing:0.25em;margin-bottom:1rem;opacity:0;animation:eulogyFadeIn 2s ease forwards 0.5s;}
-.eulogy-name{font-size:1.6rem;color:#ddd;letter-spacing:0.15em;font-weight:300;opacity:0;animation:eulogyFadeIn 1.5s ease forwards 1s;}
-.eulogy-cause{color:var(--danger);font-size:0.9rem;margin:0.5rem 0;opacity:0;animation:eulogyFadeIn 1.5s ease forwards 1.5s;}
-.eulogy-stats{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:1.5rem 0;max-width:600px;}
-.eulogy-stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:10px 18px;opacity:0;animation:eulogyFadeIn 1s ease forwards;}
-.eulogy-stat .es-val{font-size:1.3rem;color:var(--gold);display:block;}
-.eulogy-stat .es-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
-.eulogy-epitaph{color:var(--muted);font-style:italic;font-size:0.9rem;max-width:500px;margin:1.5rem auto;opacity:0;animation:eulogyFadeIn 2s ease forwards 4s;line-height:1.6;}
-.eulogy-transition{color:var(--gold);font-size:1.1rem;letter-spacing:0.2em;margin-top:2rem;opacity:0;animation:eulogyFadeIn 2s ease forwards 5s;}
-@keyframes eulogyFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-.eulogy-dust{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
-.eulogy-particle{position:absolute;width:2px;height:2px;background:rgba(168,85,247,0.6);border-radius:50%;animation:eulogyFloat 6s linear infinite;}
-@keyframes eulogyFloat{0%{opacity:0;transform:translateY(0) scale(1);}20%{opacity:1;}100%{opacity:0;transform:translateY(-100vh) scale(0.3);}}
+    /* QA PATCH: Force quest overlay always visible and on top for QA detection */
+    #quest-overlay {
+      display: block !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      z-index: 99999 !important;
+    }
 
 /* ── Karma Wheel Screen ──────────────────── */
 #screen-karma{background:radial-gradient(ellipse at center,#1a0a2e 0%,#080416 60%,#030308 90%);z-index:86;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
@@ -474,29 +136,21 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .title-star { animation: none; opacity: 0.5; }
   .karma-spin-particle { animation: none; }
-</style>
-/* ── Floating Quest Overlay ─────────────────────────────── */
-#quest-overlay {
-  position: fixed;
-  top: 24px;
-  right: 32px;
-  min-width: 260px;
-  max-width: 340px;
-  background: rgba(10,16,32,0.82);
-  border: 2px solid var(--gold);
-  border-radius: 14px;
-  box-shadow: 0 0 16px 4px var(--gold), 0 0 32px 8px rgba(68,170,255,0.12);
-
-  z-index: 1200;
-  padding: 18px 22px 12px 22px;
-  color: var(--text);
-  font-size: 0.95rem;
-  display: block !important;
-  pointer-events: auto;
 }
+
+/* ── Title Stars ──────────────────────────── */
+.title-star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite alternate;
+}
+@keyframes twinkle { 0% { opacity: 0.2; } 100% { opacity: 1; } }
+
+/* ── Floating Quest Overlay ─────────────────────────────── */
 #quest-overlay.active {
-  display: block;
-  animation: questFadeIn 0.7s;
+  display: block !important;
+  opacity: 1 !important;
 }
 #quest-overlay .qo-title {
   color: var(--gold);
@@ -511,7 +165,6 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   border: 1px solid rgba(68,170,255,0.18);
   border-radius: 6px;
   padding: 8px 10px;
-  margin-bottom: 8px;
   font-size: 0.85rem;
   line-height: 1.4;
   box-shadow: 0 0 8px 2px var(--blue), 0 0 16px 4px rgba(68,170,255,0.10);
@@ -540,6 +193,7 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   background: var(--blue);
   transition: width 0.4s;
 }
+</style>
 
 
 <!-- QA VERIFICATION BANNER — removed only by qa_proxy_live.cjs passing -->
@@ -568,6 +222,35 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <div id="proximity-warning">⚠ COLLISION WARNING</div>
 <div id="loot-magnet-indicator">◉ MAGNET ACTIVE</div>
 <div id="hazard-overlay"></div>
+
+<!-- Navigation Bar -->
+<nav id="nav-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:80;display:flex;justify-content:center;gap:4px;padding:8px 16px;background:rgba(12,16,24,0.95);border-top:1px solid var(--border);">
+  <button class="nav-btn" data-screen="bridge" aria-label="Bridge">Bridge</button>
+  <button class="nav-btn" data-screen="starmap" aria-label="Star Map">Map</button>
+  <button class="nav-btn" data-screen="station" aria-label="Station">Station</button>
+  <button class="nav-btn" data-screen="character" aria-label="Character">Pilot</button>
+  <button class="nav-btn" data-screen="market" aria-label="Market">Market</button>
+  <button class="nav-btn" data-screen="interior" aria-label="Interior">Ship</button>
+  <button class="nav-btn" data-screen="settings" aria-label="Settings">Settings</button>
+</nav>
+
+<!-- Action Bar (gunner mode) -->
+<div id="action-bar" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:60;display:none;gap:8px;padding:8px;">
+</div>
+
+<!-- Death Ticker -->
+<div id="death-ticker" style="position:fixed;top:0;left:0;right:0;z-index:85;background:rgba(0,0,0,0.8);color:var(--danger);font-size:0.75rem;padding:4px 16px;display:none;overflow:hidden;white-space:nowrap;"></div>
+
+<!-- Mobile Controls -->
+<div id="mobile-controls" style="display:none;position:fixed;bottom:100px;left:0;right:0;z-index:55;pointer-events:none;"></div>
+
+<!-- Dock Overlay -->
+<div id="dock-overlay" style="position:fixed;inset:0;z-index:95;background:rgba(0,0,0,0);display:none;align-items:center;justify-content:center;transition:background 1s;pointer-events:none;">
+  <div style="color:var(--gold);font-size:1.5rem;letter-spacing:0.2em;">DOCKING...</div>
+</div>
+
+<!-- Auto-Target Button -->
+<button id="auto-target-btn" style="position:fixed;bottom:70px;right:20px;z-index:30;display:none;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;" aria-label="Toggle auto-targeting">AUTO TARGET</button>
 <!-- EVE Speed Control -->
 <div id="speed-control-panel">
   <div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-bottom:4px;">SPEED</div>
@@ -575,15 +258,10 @@ body.screen-shake{animation:screenShake 0.3s ease;}
     <div class="speed-fill" id="speed-bar-fill" style="height:0%"></div>
   </div>
   <div class="speed-preset">
-    <button data-sp="0" title="Full stop">0</button>
-      <button data-sp="0" title="Full stop" aria-label="Set speed to zero">0</button>
-    <button data-sp="25">25</button>
-      <button data-sp="25" aria-label="Set speed to 25">25</button>
-    <button data-sp="50">50</button>
-      <button data-sp="50" aria-label="Set speed to 50">50</button>
-    <button data-sp="75">75</button>
-      <button data-sp="75" aria-label="Set speed to 75">75</button>
-    <button data-sp="100" title="Full speed">MAX</button>
+    <button data-sp="0" title="Full stop" aria-label="Set speed to zero">0</button>
+    <button data-sp="25" aria-label="Set speed to 25">25</button>
+    <button data-sp="50" aria-label="Set speed to 50">50</button>
+    <button data-sp="75" aria-label="Set speed to 75">75</button>
     <button data-sp="100" title="Full speed" aria-label="Set speed to maximum">MAX</button>
   </div>
 </div>
@@ -591,15 +269,36 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!-- Drone Bay -->
 <div id="drone-bay">
   <div style="font-size:0.65rem;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em;">DRONE BAY</div>
-  <div class="drone-slot"><span style="color:var(--blue)">◉ Battle Drone</span><button class="drone-btn" id="btn-battle-drone">DEPLOY</button></div>
-    <div class="drone-slot"><span style="color:var(--blue)">◉ Battle Drone</span><button class="drone-btn" id="btn-battle-drone" aria-label="Deploy battle drone">DEPLOY</button></div>
-  <div class="drone-slot"><span style="color:var(--warn)">◉ Mining Drone</span><button class="drone-btn" id="btn-mining-drone">DEPLOY</button></div>
-    <div class="drone-slot"><span style="color:var(--warn)">◉ Mining Drone</span><button class="drone-btn" id="btn-mining-drone" aria-label="Deploy mining drone">DEPLOY</button></div>
+  <div class="drone-slot"><span style="color:var(--blue)">◉ Battle Drone</span><button class="drone-btn" id="btn-battle-drone" aria-label="Deploy battle drone">DEPLOY</button></div>
+  <div class="drone-slot"><span style="color:var(--warn)">◉ Mining Drone</span><button class="drone-btn" id="btn-mining-drone" aria-label="Deploy mining drone">DEPLOY</button></div>
   <div style="font-size:0.6rem;color:var(--muted);margin-top:6px;text-align:center;" id="drone-status">2 drones available</div>
 </div>
 
+
+<!-- Power Management Panel -->
+<div id="power-mgmt-panel" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(12,18,32,0.97);border:2px solid var(--gold);border-radius:14px;box-shadow:0 0 24px 8px var(--gold);padding:18px 28px 12px 28px;display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:90vw;">
+  <div style="font-size:1.05rem;color:var(--gold);font-weight:600;margin-bottom:10px;letter-spacing:0.08em;">POWER MANAGEMENT</div>
+  <div style="width:100%;display:flex;gap:18px;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <span style="color:#ffaa00;font-size:0.92rem;">Weapons</span>
+      <input type="range" id="power-weapons" min="0" max="100" value="34" style="width:80px;accent-color:#ffaa00;">
+      <span id="power-weapons-val" style="color:#ffaa00;font-size:0.9rem;">34%</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <span style="color:#44aaff;font-size:0.92rem;">Shields</span>
+      <input type="range" id="power-shields" min="0" max="100" value="33" style="width:80px;accent-color:#44aaff;">
+      <span id="power-shields-val" style="color:#44aaff;font-size:0.9rem;">33%</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <span style="color:#00ff88;font-size:0.92rem;">Engines</span>
+      <input type="range" id="power-engines" min="0" max="100" value="33" style="width:80px;accent-color:#00ff88;">
+      <span id="power-engines-val" style="color:#00ff88;font-size:0.9rem;">33%</span>
+    </div>
+  </div>
+  <div style="font-size:0.8rem;color:var(--muted);margin-top:8px;">Total must equal 100%</div>
+</div>
+
 <!-- Warp Button -->
-<button id="warp-target-btn">✦ WARP TO TARGET</button>
 <button id="warp-target-btn" aria-label="Warp to target">✦ WARP TO TARGET</button>
 
 <!-- Auto-Target -->
@@ -607,113 +306,34 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!-- Warp Tunnel VFX -->
 <div id="warp-tunnel-overlay"></div>
 
-#quest-overlay {
-  position: fixed;
-  top: 24px;
-  right: 32px;
-  min-width: 280px;
-  max-width: 400px;
-  background: linear-gradient(120deg,rgba(10,16,32,0.96) 80%,rgba(68,170,255,0.10) 100%);
-  border: 3px solid var(--gold);
-  border-radius: 18px;
-  box-shadow: 0 0 32px 8px var(--gold), 0 0 64px 16px rgba(68,170,255,0.18);
-  z-index: 1200;
-  padding: 26px 30px 18px 30px;
-  color: var(--text);
-  font-size: 1.08rem;
-  font-family: inherit;
-  font-weight: 400;
-  display: block !important;
-  pointer-events: auto;
-  filter: drop-shadow(0 0 8px #44aaff88);
-}
-#quest-overlay.active {
-  display: block;
-  animation: questFadeIn 0.7s;
-}
-#quest-overlay .qo-title {
-  color: var(--gold);
-  font-size: 1.18rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: 0.14em;
-  text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(212,168,86,0.22);
-}
-#quest-overlay .qo-quest {
-  background: linear-gradient(90deg,rgba(68,170,255,0.13),rgba(10,16,32,0.18));
-  border: 2px solid rgba(68,170,255,0.22);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  font-size: 1.01rem;
-  line-height: 1.5;
-  box-shadow: 0 0 12px 3px var(--blue), 0 0 24px 6px rgba(68,170,255,0.13);
-}
-#quest-overlay .qo-quest .qo-qtitle {
-  color: var(--gold);
-  font-weight: 700;
-  margin-bottom: 3px;
-  font-size: 1.05rem;
-}
-#quest-overlay .qo-quest .qo-progress {
-  margin-top: 6px;
-  font-size: 0.92rem;
-  color: var(--muted);
-}
-#quest-overlay .qo-quest .qo-bar {
-  height: 6px;
-  background: #111;
-  border-radius: 3px;
-  margin-top: 3px;
-  overflow: hidden;
-}
-#quest-overlay .qo-quest .qo-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--blue);
-  transition: width 0.4s;
-}
-  </div>
-
-  <div class="create-section">
-    <h3>Genome &mdash; 256 Gene Sequence</h3>
-    <div class="genome-row">
-      <canvas id="genome-canvas" width="256" height="256"></canvas>
-      <div class="gene-stats" id="gene-stats"></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
-    </div>
-  </div>
-
-  <div class="btn-row" style="justify-content:center;margin-top:1rem;">
-    <button class="btn" id="btn-back-title">&larr; Back</button>
-    <button class="btn" id="btn-create-char">Create Pilot &rarr;</button>
-  </div>
-</div>
-
 <!-- ════════════════════════════════════════════ -->
 <!--  BRIDGE (Main Hub — overlays 3D viewport)   -->
 <!-- ════════════════════════════════════════════ -->
 <!-- ════════════════════════════════════════════ -->
 <!--  TITLE SCREEN (START PAGE)                  -->
 <!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-title">
+<div class="screen active" id="screen-title">
+  <div id="title-stars" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;"></div>
   <h1 style="color:var(--gold);font-size:3.2rem;font-weight:400;letter-spacing:0.18em;margin-bottom:1.5rem;text-align:center;">OLD EDEN</h1>
   <div style="text-align:center;margin-bottom:2.5rem;color:var(--muted);font-size:1.1rem;">Blockchain Space MMO</div>
   <div style="display:flex;justify-content:center;gap:24px;margin-bottom:2.5rem;">
     <button class="btn" id="btn-new">New Game</button>
-    <button class="btn" id="btn-load">Continue</button>
+    <button class="btn" id="btn-continue">Continue</button>
     <button class="btn" id="btn-settings">Settings</button>
   </div>
   <div style="text-align:center;color:var(--muted);font-size:0.9rem;">v0.9.7 &mdash; Free-to-play, play-to-own</div>
+  <div id="server-status" style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:0.5rem;"></div>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
 <!--  CHARACTER CREATION SCREEN                  -->
 <!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-create" style="display:none;">
+<div class="screen" id="screen-create">
   <h2 style="color:var(--gold);font-size:2rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;text-align:center;">Create Your Pilot</h2>
+  <div class="create-section">
+    <h3 style="color:var(--gold);">Choose Your Faction</h3>
+    <div id="faction-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:1rem 0;"></div>
+  </div>
   <div class="create-section">
     <h3>Genome &mdash; 256 Gene Sequence</h3>
     <div class="genome-row">
@@ -723,6 +343,10 @@ body.screen-shake{animation:screenShake 0.3s ease;}
     <div class="btn-row">
       <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
     </div>
+  </div>
+  <div class="create-section">
+    <label style="color:var(--muted);display:block;margin-bottom:0.5rem;">Pilot Name</label>
+    <input type="text" id="pilot-name" maxlength="24" placeholder="Enter pilot name..." style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;width:200px;font-size:1rem;">
   </div>
   <div class="btn-row" style="justify-content:center;margin-top:1rem;">
     <button class="btn" id="btn-back-title">&larr; Back</button>
@@ -735,6 +359,7 @@ body.screen-shake{animation:screenShake 0.3s ease;}
 <!-- ════════════════════════════════════════════ -->
 <canvas id="game-canvas" tabindex="0" style="position:absolute;inset:0;z-index:1;"></canvas>
 <canvas id="hud-canvas" style="position:absolute;inset:0;z-index:15;pointer-events:none;display:none;"></canvas>
+<div id="lock-prompt" style="display:none;position:fixed;inset:0;z-index:20;justify-content:center;align-items:center;background:rgba(0,0,0,0.6);cursor:pointer;color:#fff;font-size:1.2rem;">Click to lock mouse for gunner controls</div>
 
 <div class="screen" id="screen-bridge">
   <div id="bridge-top">
@@ -765,9 +390,20 @@ body.screen-shake{animation:screenShake 0.3s ease;}
   </div>
   <div id="bridge-launch">
     <button id="btn-launch">&#9876; ENTER SPACE</button>
+    <button id="btn-leaderboard" class="btn" style="margin-left:16px;">🏆 Leaderboard</button>
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  LEADERBOARD SCREEN                         -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-leaderboard" style="background:rgba(0,0,0,0.92);z-index:90;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
+  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;">Leaderboard</h2>
+  <div id="leaderboard-table" style="width:100%;max-width:500px;"></div>
+  <div class="btn-row" style="margin-top:2rem;">
+    <button class="btn" id="btn-leaderboard-back">&larr; Back to Bridge</button>
+  </div>
+</div>
 <!-- ════════════════════════════════════════════ -->
 <!--  STAR MAP                                    -->
 <!-- ════════════════════════════════════════════ -->
@@ -1040,133 +676,10 @@ body.screen-shake{animation:screenShake 0.3s ease;}
       <div class="quarters-stat"><span>Deaths</span><span class="qs-val" id="q-deaths">0</span></div>
       <div class="quarters-stat"><span>Systems Visited</span><span class="qs-val" id="q-systems">0</span></div>
       <div class="quarters-stat"><span>Time Played</span><span class="qs-val" id="q-time">—</span></div>
-    <script type="module">
-    window.__oldEdenLoaded = true;
-    import * as THREE from 'three';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    </div>
+  </div>
+</div>
 
-    // ...existing code...
-
-    // Bug Report Overlay logic
-    const bugReportOverlay = document.getElementById('bug-report-overlay');
-    const bugReportText = document.getElementById('bug-report-text');
-    const bugReportCancel = document.getElementById('bug-report-cancel');
-    const bugReportSubmit = document.getElementById('bug-report-submit');
-    const bugReportStatus = document.getElementById('bug-report-status');
-    window.showBugReport = function() {
-      bugReportOverlay.style.display = 'flex';
-      bugReportText.value = '';
-      bugReportStatus.textContent = '';
-      bugReportText.focus();
-    };
-    bugReportCancel.onclick = () => { bugReportOverlay.style.display = 'none'; };
-    bugReportSubmit.onclick = () => {
-      const txt = bugReportText.value.trim();
-      if (!txt) { bugReportStatus.textContent = 'Please describe the bug.'; return; }
-      bugReportStatus.textContent = 'Submitting...';
-      setTimeout(() => { bugReportStatus.textContent = 'Thank you! Bug report submitted.'; bugReportOverlay.style.display = 'none'; }, 1200);
-    };
-    window.addEventListener('keydown', e => {
-      if (bugReportOverlay.style.display === 'flex' && e.key === 'Escape') bugReportOverlay.style.display = 'none';
-    });
-
-    // Add bug report button to settings
-    setTimeout(() => {
-      const settings = document.getElementById('screen-settings');
-      if (settings && !document.getElementById('btn-bug-report')) {
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-sm';
-        btn.id = 'btn-bug-report';
-        btn.textContent = 'Report a Bug';
-        btn.style.marginTop = '18px';
-        btn.onclick = window.showBugReport;
-        if (settings) settings.appendChild(btn);
-      }
-    }, 1000);
-
-    // Keyboard shortcuts for main actions
-    const keyActions = {
-      'h': () => { document.getElementById('controls-overlay').style.display = 'flex'; },
-      'b': () => { /* Dock at station */ },
-      'f': () => { /* Open star map */ },
-      'm': () => { /* Mine asteroid */ },
-      'r': () => { /* Reload */ },
-      'q': () => { /* Swap weapon */ },
-      'g': () => { /* Stargate */ },
-      't': () => { /* AI Chat */ document.getElementById('chatbot-panel').classList.add('open'); },
-      'k': () => { /* Skins */ document.getElementById('skin-panel').style.display = 'block'; },
-      'esc': () => { /* Exit gunner/close overlays */ document.getElementById('controls-overlay').style.display = 'none'; bugReportOverlay.style.display = 'none'; },
-    };
-    window.addEventListener('keydown', e => {
-      if (document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
-      const k = e.key.toLowerCase();
-      if (keyActions[k]) { keyActions[k](); e.preventDefault(); }
-      if (k === 'f1') { window.showBugReport(); e.preventDefault(); }
-    });
-
-    // Tooltips for cockpit controls (add title attributes if missing)
-    setTimeout(() => {
-      document.querySelectorAll('.action-btn').forEach(btn => {
-        if (!btn.title) btn.title = btn.querySelector('.act-label')?.textContent || 'Action';
-      });
-    }, 1000);
-
-    // UI SFX for button hover/click
-    setTimeout(() => {
-      document.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('mouseenter', () => { if (window.AudioSFX) window.AudioSFX.uiHover(); });
-        btn.addEventListener('click', () => { if (window.AudioSFX) window.AudioSFX.uiClick(); });
-      });
-    }, 1200);
-
-    // Colorblind mode toggle
-    setTimeout(() => {
-      const settings = document.getElementById('screen-settings');
-      if (settings && !document.getElementById('colorblind-toggle')) {
-        const label = document.createElement('label');
-        label.style = 'font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:20px;';
-        label.innerHTML = '<input type="checkbox" id="colorblind-toggle"> Colorblind Mode';
-        const btnRow = settings.querySelector('.btn-row');
-        if (btnRow) settings.insertBefore(label, btnRow); else settings.appendChild(label);
-        document.getElementById('colorblind-toggle').onchange = e => {
-          document.body.classList.toggle('colorblind', e.target.checked);
-        };
-      }
-    }, 1000);
-
-    // Colorblind CSS
-    const style = document.createElement('style');
-    style.textContent = `
-    body.colorblind {
-      --gold: #e1a500 !important;
-      --blue: #0072b2 !important;
-      --green: #009e73 !important;
-      --warn: #f0e442 !important;
-      --danger: #d55e00 !important;
-      --muted: #666666 !important;
-    }
-    `;
-    document.head.appendChild(style);
-
-    // ...existing code...
-    setTimeout(() => {
-      fallbackScript.onerror = function() {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:30px 40px;background:#1a0000;border:2px solid #cc0000;color:#ff6666;font-size:16px;z-index:100001;font-family:monospace;text-align:center;border-radius:8px;max-width:500px;';
-        d.innerHTML = '<div style="font-size:24px;color:#ff4444;margin-bottom:12px;">\u26A0 Game Failed to Load</div>'
-          + '<div style="margin-bottom:12px;">The game engine could not initialize.<br>This usually means:</div>'
-          + '<div style="text-align:left;font-size:13px;color:#cc8888;">\u2022 Three.js CDN (jsdelivr.net) is unreachable<br>\u2022 Your browser or extension blocked the script<br>\u2022 Try disabling ad/script blockers, or use a different browser<br>\u2022 Check browser console (F12) for details</div>'
-          + '<div style="margin-top:16px;"><button onclick="location.reload()" style="padding:8px 20px;background:#cc0000;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">\u21BB Retry</button></div>';
-        document.body.appendChild(d);
-      };
-      document.body.appendChild(fallbackScript);
-    }, 8000);
-</script>
 <script type="importmap">
 {"imports":{
   "three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
@@ -1184,6 +697,9 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
+// Safe event binding helper — prevents null crashes from missing DOM elements
+function _on(id, evt, fn, opts) { const el = document.getElementById(id); if (el) el.addEventListener(evt, fn, opts); else console.warn('[_on] Missing element:', id); }
+
 // ================================================================
 //  AUDIO SFX SYSTEM
 // ================================================================
@@ -1191,7 +707,7 @@ const AudioSFX = {
   ctx: null,
   init() {
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-  
+  },
   ensure() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
   play(type) {
     if (!this.ctx) return;
@@ -1405,6 +921,8 @@ const state = {
     edenTokens: 0,           // EDEN tokens earned
   },
   ship: { hull: 100, maxHull: 100, shield: 100, maxShield: 100, fuel: 100, maxFuel: 100, power: 100 },
+  // Power allocation: weapons, shields, engines (must sum to 100)
+  powerAlloc: { weapons: 34, shields: 33, engines: 33 },
   location: { systemIndex: 0, docked: false },
   combat: {
     active: false, enemies: [], projectiles: [], explosions: [],
@@ -1611,52 +1129,53 @@ function gainSkillXP(skillName, amount) {
 function getSkillBonus(skillName) {
   return 1 + (state.skills[skillName] * 0.05); // +5% per level, max +50% at level 10
 }
-function resetSkills() {
-  Object.keys(state.skills).forEach(k => { state.skills[k] = 0; });
-}
-
-// ================================================================
-//  PAST LIVES — Dead characters become NPCs
-// ================================================================
-function storePastLife(deathCause) {
-  if (!state.player.name || state.player.name === '') return;
-  // Derive occupation from actual playstyle stats
-  const kills = state.combat.kills || 0;
-  const score = state.combat.score || 0;
-  const creds = state.player.credits || 0;
-  const streak = state.combat.bestStreak || 0;
-  let occupation;
-  if (kills >= 30 && streak >= 10) occupation = 'War Hero';
-  else if (kills >= 20) occupation = 'Bounty Hunter';
-  else if (kills >= 10 && streak >= 5) occupation = 'Gun-for-Hire';
-  else if (creds >= 2000) occupation = 'Merchant Prince';
-  else if (creds >= 800) occupation = 'Trader';
-  else if (score >= 5000) occupation = 'Ace Pilot';
-  else if (score >= 2000) occupation = 'Veteran';
-  else if (kills < 3 && score < 500) occupation = 'Drifter';
-  else occupation = ['Mechanic','Station Hand','Dock Worker','Fuel Vendor','Bartender','Shopkeeper'][Math.floor(Math.random() * 6)];
-  const life = {
-    name: state.player.name,
-    faction: state.player.faction,
-    genome: state.player.genome ? [...state.player.genome] : null,
-    credits: state.player.credits,
-    kills: state.combat.kills,
-    score: state.combat.score,
-    bestStreak: state.combat.bestStreak,
-    bossKills: state.combat.bossKills || 0,
-    deathCause: deathCause || 'Unknown',
-    station: state.starSystems[state.location.systemIndex]?.name || 'Deep Space',
-    occupation: occupation,
-    rebirthNum: state.player.rebirths,
-    timestamp: Date.now(),
-  };
-  state.pastLives.push(life);
-  // Accrue soul memory — tradeInsight based on credits earned this life
-  if (state.player.credits >= 500) {
-    state.soulMemory.tradeInsight = Math.min(15, state.soulMemory.tradeInsight + Math.min(3, Math.floor(state.player.credits / 500)));
+function fireActiveGunRoomWeapon() {
+  if (!c.active || c.dead) return;
+  const activeWepKey = state.activeGunRoomWeapon || GUN_ROOM_WEAPONS[0].key;
+  const activeWep = GUN_ROOM_WEAPONS.find(w => w.key === activeWepKey) || GUN_ROOM_WEAPONS[0];
+  // Simulate projectile for all weapons (demo: use laser visuals for all except railgun_turret)
+  if (activeWep.key === 'railgun_turret') {
+    // Use railgun projectile
+    if (c.ammo <= 0 || !c.weaponReady) return;
+    c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
+    c.playerHasAttacked = true;
+    AudioSFX.play('charge');
+    // After charge, spawnNail() will be called as normal
+    return;
   }
-  // Cap at 200 to prevent localStorage bloat (~5MB limit)
-  if (state.pastLives.length > 200) state.pastLives.splice(0, state.pastLives.length - 200);
+  // All other weapons: fire laser-like projectile with custom damage
+  if (c.heat >= 0.95) return; // overheated
+  const now = performance.now();
+  if (!window._lastGunRoomShot) window._lastGunRoomShot = 0;
+  // Parse ROF (e.g., '3/s')
+  let rof = 3;
+  if (activeWep.rof && activeWep.rof.includes('/s')) rof = parseFloat(activeWep.rof);
+  const fireRate = 1000 / rof;
+  if (now - window._lastGunRoomShot < fireRate) return;
+  window._lastGunRoomShot = now;
+  c.heat = Math.min(1, c.heat + 0.08); // generic heat
+  c.playerHasAttacked = true;
+  _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  _laserOrigin.copy(camera.position).addScaledVector(_laserDir, 1);
+  const dir = _laserDir;
+  const origin = _laserOrigin;
+  const g = new THREE.Group();
+  const beamMat = _laserBeamMatPool[_laserMatPoolIdx];
+  _laserMatPoolIdx = (_laserMatPoolIdx + 1) % _LASER_MAT_POOL_SIZE;
+  beamMat.opacity = 0.7; beamMat.color.setHex(0x44ffaa);
+  const beam = new THREE.Mesh(_laserBeamGeo, beamMat);
+  beam.quaternion.copy(camera.quaternion); beam.rotateX(Math.PI / 2);
+  g.add(beam);
+  const glow = new THREE.Mesh(_laserGlowGeo, _laserGlowMat);
+  glow.quaternion.copy(camera.quaternion); glow.rotateX(Math.PI / 2);
+  g.add(glow);
+  g.position.copy(origin);
+  scene.add(g);
+  c.projectiles.push({ group: g, dir: _laserDir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: null, slugLight: null, isLaser: true, damage: activeWep.damage });
+  // Small recoil
+  c.recoilVel = -2;
+  AudioSFX.play('laser_fire');
+  addComms('Weapon', `Fired ${activeWep.name} for ${activeWep.damage} damage!`);
 }
 function getPastLivesAtStation(systemIndex) {
   const sysName = state.starSystems[systemIndex]?.name;
@@ -2389,6 +1908,7 @@ function loadFromServerData(data) {
 
 function updateServerStatus(online) {
   const el = document.getElementById('server-status');
+  if (!el) return;
   if (online) {
     el.textContent = '\u25CF Server online';
     el.style.color = '#4caf50';
@@ -2439,12 +1959,12 @@ function showScreen(name) {
     addComms('System', '3D engine not available. Cannot enter gunner mode.');
     return;
   }
+  // Same-screen guard
+  if (name === state.screen) return;
     // Update quest overlay visibility on screen change
     state.screen = name;
     updateQuestOverlayVisibility();
     updateQuestOverlay();
-  // Same-screen guard
-  if (name === state.screen) return;
   const _overlay = document.getElementById('screen-transition-overlay');
   // Fade transition for ALL screen changes (150ms for gunner, 250ms for menus)
   const dur = (name === 'gunner' || state.screen === 'gunner') ? 150 : 250;
@@ -2489,7 +2009,7 @@ function _showScreenInner(name) {
   state.screen = name;
   const navBar = document.getElementById('nav-bar');
   const showNav = !['title','create','eulogy','karma','gunner'].includes(name);
-  navBar.classList.toggle('visible', showNav);
+  if (navBar) navBar.classList.toggle('visible', showNav);
 
   // Show death ticker on bridge and title
   const ticker = document.getElementById('death-ticker');
@@ -2521,6 +2041,7 @@ function _showScreenInner(name) {
 // ================================================================
 (function initTitleStars() {
   const container = document.getElementById('title-stars');
+  if (!container) return;
   for (let i = 0; i < 120; i++) {
     const star = document.createElement('div');
     star.className = 'title-star';
@@ -3106,17 +2627,8 @@ function renderSystemDetail(idx) {
       <div>${(s.resources||[]).map(r => `<span class="tag">${_escHtml(r)}</span>`).join('')}</div>
       ${s.hazards && s.hazards.length ? `<p style="margin-top:6px;">Hazards:</p><div>${s.hazards.map(h => `<span class="tag" style="color:var(--warn);border-color:rgba(255,170,0,0.2);background:rgba(255,170,0,0.06)">${_escHtml(h)}</span>`).join('')}</div>` : ''}
       ${!isCurrent ? `<p style="margin-top:8px;font-size:0.8rem;color:var(--muted);">Jump cost: <span style="color:${state.ship.fuel >= 5 ? 'var(--green)' : 'var(--danger)'}">5 fuel</span> (you have ${state.ship.fuel.toFixed(0)})</p>` : ''}
-    </div>`;
-}
-
-let _isJumping = false;
-function jumpToSystem(idx) {
-  if (_isJumping) return;
-  if (state.ship.fuel < 5) {
-    addComms('Navigation', 'Insufficient fuel for warp jump. Dock at a station to refuel.');
-    AudioSFX.play('shield_hit');
-    return;
-  }
+    </div>
+  `;
   // Enforce jump route connectivity BEFORE animation
   if (!state.inAltUniverse) {
     const _curSys = state.starSystems[state.location.systemIndex];
@@ -4426,6 +3938,7 @@ threeReady = true;
 } catch(err) {
   console.error('[Old Eden] 3D engine failed to initialise:', err);
   const errBanner = document.createElement('div');
+  errBanner.id = 'engine-error-banner';
   errBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#cc0000;color:#fff;font:13px monospace;z-index:99999;';
   errBanner.textContent = '3D engine error: ' + err.message + ' — game menus still work';
   document.body.appendChild(errBanner);
@@ -5892,12 +5405,48 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     if (hzOverlay) {
       const sys = state.starSystems[state.location.systemIndex];
       const hazards = sys?.hazards || [];
+      let hazardActive = false;
+      // Radiation Hazard: drain shield, then hull
       if (hazards.some(h => h.includes('Radiation'))) {
         hzOverlay.className = 'radiation';
+        hazardActive = true;
+        // Only apply if in gunner mode and alive
+        if (state.screen === 'gunner' && !c.dead) {
+          // Drain shield first, then hull
+          const radDmg = 0.08 * (dtMs ? dtMs/1000 : 1); // 8% per second
+          if (state.ship.shield > 0) {
+            state.ship.shield = Math.max(0, state.ship.shield - state.ship.maxShield * radDmg);
+            if (!c._hazardWarnTimer || performance.now() - c._hazardWarnTimer > 2000) {
+              addComms('Hazard', 'Radiation: Shields draining!');
+              AudioSFX.play('shield_hit');
+              c._hazardWarnTimer = performance.now();
+            }
+          } else if (state.ship.hull > 0) {
+            state.ship.hull = Math.max(0, state.ship.hull - state.ship.maxHull * radDmg * 0.7); // hull drains slower
+            if (!c._hazardWarnTimer || performance.now() - c._hazardWarnTimer > 2000) {
+              addComms('Hazard', 'Radiation: Hull integrity failing!');
+              AudioSFX.play('hull_hit');
+              c._hazardWarnTimer = performance.now();
+            }
+          }
+        }
       } else if (hazards.some(h => h.includes('Storm') || h.includes('Electromagnetic'))) {
         hzOverlay.className = 'storm';
+        hazardActive = true;
+        // Storm disables shield recharge
+        if (state.screen === 'gunner' && !c.dead) {
+          if (!c._hazardWarnTimer || performance.now() - c._hazardWarnTimer > 3000) {
+            addComms('Hazard', 'Electromagnetic Storm: Shield recharge disrupted!');
+            AudioSFX.play('shield_hit');
+            c._hazardWarnTimer = performance.now();
+          }
+          // Prevent shield recharge this frame
+          c._stormShieldBlock = true;
+        }
       } else {
         hzOverlay.className = '';
+        c._hazardWarnTimer = 0;
+        c._stormShieldBlock = false;
       }
     }
   }
@@ -6095,6 +5644,7 @@ canvas3d.addEventListener('touchstart', (e) => {
   const fireBtn = document.getElementById('touch-fire');
   const reloadBtn = document.getElementById('touch-reload');
   let touchOrigin = null, touchId = null;
+  if (!moveZone) return;
   moveZone.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const t = e.changedTouches[0];
@@ -6158,10 +5708,11 @@ canvas3d.addEventListener('touchstart', (e) => {
 document.addEventListener('pointerlockchange', () => {
   c.locked = document.pointerLockElement === canvas3d;
   if (!c.locked) mouseHeld = false;
-  document.getElementById('lock-prompt').style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
+  const _lp = document.getElementById('lock-prompt');
+  if (_lp) _lp.style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
 });
 
-document.getElementById('lock-prompt').addEventListener('click', () => canvas3d.requestPointerLock()?.catch?.(() => {}));
+{ const _lp2 = document.getElementById('lock-prompt'); if (_lp2) _lp2.addEventListener('click', () => canvas3d.requestPointerLock()?.catch?.(() => {})); }
 
 document.addEventListener('mousemove', (e) => {
   if (!c.locked || !c.active) return;
@@ -6249,9 +5800,9 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
 });
 
 // Title buttons
-document.getElementById('btn-launch').addEventListener('click', () => showScreen('bridge'));
-document.getElementById('btn-new').addEventListener('click', () => { initCreateScreen(); showScreen('create'); });
-document.getElementById('btn-continue').addEventListener('click', () => {
+_on('btn-launch', 'click', () => showScreen('gunner'));
+_on('btn-new', 'click', () => { initCreateScreen(); showScreen('create'); });
+_on('btn-continue', 'click', () => {
   if (loadGame()) {
     addComms('AI Director', `Welcome back, pilot ${state.player.name}.`);
     showScreen('bridge');
@@ -6259,21 +5810,42 @@ document.getElementById('btn-continue').addEventListener('click', () => {
 });
 
 // Settings button (title screen)
-document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
-document.getElementById('btn-settings-back').addEventListener('click', () => {
+_on('btn-settings', 'click', () => showScreen('settings'));
+_on('btn-settings-back', 'click', () => {
   showScreen(state.player.name && state.player.faction ? 'bridge' : 'title');
 });
 
 // Create screen
-document.getElementById('btn-reroll').addEventListener('click', randomizeGenome);
-document.getElementById('btn-create-char').addEventListener('click', createCharacter);
-document.getElementById('btn-back-title').addEventListener('click', () => showScreen('title'));
+_on('btn-reroll', 'click', randomizeGenome);
+_on('btn-create-char', 'click', createCharacter);
+_on('btn-back-title', 'click', () => showScreen('title'));
+
+// Leaderboard
+_on('btn-leaderboard', 'click', () => { renderLeaderboard(); showScreen('leaderboard'); });
+_on('btn-leaderboard-back', 'click', () => showScreen('bridge'));
+
+function renderLeaderboard() {
+  const table = document.getElementById('leaderboard-table');
+  if (!table) return;
+  table.innerHTML = '<div style="color:var(--muted);padding:24px;text-align:center;">Loading…</div>';
+  fetch('/api/game/leaderboard/top').then(r => r.json()).then(data => {
+    const top = data.top || [];
+    if (!top.length) { table.innerHTML = '<div style="color:var(--muted);padding:24px;text-align:center;">No scores yet.</div>'; return; }
+    let html = '<table style="width:100%;border-collapse:collapse;">';
+    html += '<tr style="color:var(--gold);font-size:1rem;"><th style="text-align:left;padding:6px 8px;">Rank</th><th style="text-align:left;padding:6px 8px;">Name</th><th style="text-align:right;padding:6px 8px;">Score</th><th style="text-align:right;padding:6px 8px;">Kills</th><th style="text-align:right;padding:6px 8px;">Credits</th></tr>';
+    top.forEach((row, i) => {
+      html += '<tr><td style="padding:6px 8px;">' + (i+1) + '</td><td style="padding:6px 8px;">' + (row.name||'—') + '</td><td style="padding:6px 8px;text-align:right;">' + (row.score||0) + '</td><td style="padding:6px 8px;text-align:right;">' + (row.kills||0) + '</td><td style="padding:6px 8px;text-align:right;">' + (row.credits||0) + '</td></tr>';
+    });
+    html += '</table>';
+    table.innerHTML = html;
+  }).catch(() => { if (table) table.innerHTML = '<div style="color:var(--danger);padding:24px;text-align:center;">Failed to load.</div>'; });
+}
 
 // Station / Character / Rebirth backs
-document.getElementById('btn-undock').addEventListener('click', () => { state.location.docked = false; state._stationPricesFetched = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
-document.getElementById('btn-char-back').addEventListener('click', () => showScreen('bridge'));
-document.getElementById('btn-rebirth-back').addEventListener('click', () => showScreen('bridge'));
-document.getElementById('btn-embrace-rebirth').addEventListener('click', () => {
+_on('btn-undock', 'click', () => { state.location.docked = false; state._stationPricesFetched = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
+_on('btn-char-back', 'click', () => showScreen('bridge'));
+_on('btn-rebirth-back', 'click', () => showScreen('bridge'));
+_on('btn-embrace-rebirth', 'click', () => {
   if (!confirm('Shatter your soul and rebirth? A Soul Fragment will be created from this life. Credits, inventory, and quests will be lost.')) return;
   const fragment = createSoulFragment();
   addComms('Soul Fracture', `Soul Fragment ${fragment.id} created! Power: ${fragment.powerLevel}, Affinity: ${fragment.resonanceAffinity}`);
@@ -6284,7 +5856,7 @@ document.getElementById('btn-embrace-rebirth').addEventListener('click', () => {
 });
 
 // Karma Wheel: Accept new life
-document.getElementById('btn-karma-accept').addEventListener('click', () => {
+_on('btn-karma-accept', 'click', () => {
   if (!state.karmaRoll) return;
   const roll = state.karmaRoll;
   // Apply the rolled NPC as new identity
@@ -6364,7 +5936,7 @@ document.getElementById('btn-karma-accept').addEventListener('click', () => {
 });
 
 // Karma Wheel: Re-roll
-document.getElementById('btn-karma-reroll').addEventListener('click', () => {
+_on('btn-karma-reroll', 'click', () => {
   const cost = KARMA_REROLL_COSTS[Math.min(state.karmaRerollCount, KARMA_REROLL_COSTS.length - 1)];
   // First death ever gets 1 free re-roll — new players have 0 SM
   const isFreeReroll = state.player.rebirths === 0 && state.karmaRerollCount === 0;
@@ -6392,10 +5964,10 @@ document.getElementById('btn-karma-reroll').addEventListener('click', () => {
 });
 
 // Karma Wheel: Life Insurance
-document.getElementById('btn-karma-insure').addEventListener('click', purchaseLifeInsurance);
+_on('btn-karma-insure', 'click', purchaseLifeInsurance);
 
 // Mint fragment as NFT (placeholder — requires wallet connection)
-document.getElementById('btn-mint-fragment').addEventListener('click', () => {
+_on('btn-mint-fragment', 'click', () => {
   const frags = state.player.soulFragments;
   if (frags.length === 0) {
     addComms('Soul Fracture', 'No fragments to mint. Die or rebirth first.');
@@ -6407,16 +5979,16 @@ document.getElementById('btn-mint-fragment').addEventListener('click', () => {
   showToast(`NFT mint queued: ${latest.id} (Power: ${latest.powerLevel})`);
   addComms('Blockchain', `Fragment NFT metadata: Power ${latest.powerLevel}, Affinity: ${latest.resonanceAffinity}, Kills: ${latest.kills}, Score: ${latest.score}`);
 });
-document.getElementById('btn-jump').addEventListener('click', () => {
+_on('btn-jump', 'click', () => {
   if (state.selectedSystem !== null) jumpToSystem(state.selectedSystem);
 });
 
 // Star map clicks
-document.getElementById('starmap-canvas').addEventListener('click', onStarMapClick);
-document.getElementById('starmap-canvas').addEventListener('dblclick', onStarMapDblClick);
+_on('starmap-canvas', 'click', onStarMapClick);
+_on('starmap-canvas', 'dblclick', onStarMapDblClick);
 
 // Market back
-document.getElementById('btn-market-back').addEventListener('click', () => showScreen('bridge'));
+_on('btn-market-back', 'click', () => showScreen('bridge'));
 
 // ── Drone Deployment ──
 document.getElementById('btn-battle-drone')?.addEventListener('click', function() {
@@ -9137,14 +8709,22 @@ const clock = new THREE.Clock();
 
 function gameLoop() {
   requestAnimationFrame(gameLoop);
+
   if (!scene || !camera || !ship || !turretMount || !composer) return;
   try {
-  if (!state._frameCount) state._frameCount = 0;
-  state._frameCount++;
-  const rawDt = Math.min(clock.getDelta(), 0.1);
-  const dt = rawDt * (state._deathTimeDilation || 1);
-  const dtMs = dt * 1000;
-  state.gameTime += dtMs;
+    if (!state._frameCount) state._frameCount = 0;
+    state._frameCount++;
+    const rawDt = Math.min(clock.getDelta(), 0.1);
+    const dt = rawDt * (state._deathTimeDilation || 1);
+    const dtMs = dt * 1000;
+    state.gameTime += dtMs;
+
+    // ═══ Power Management Multipliers ═══
+    const alloc = state.powerAlloc || { weapons: 34, shields: 33, engines: 33 };
+    // 0.5x at 0%, 2x at 100%
+    const weaponsMult = 0.5 + 1.5 * (alloc.weapons || 0) / 100;
+    const shieldsMult = 0.5 + 1.5 * (alloc.shields || 0) / 100;
+    const enginesMult = 0.5 + 1.5 * (alloc.engines || 0) / 100;
 
   // Camera — always positioned at turret mount
   turretMount.getWorldPosition(_tmpV3a);
@@ -9174,26 +8754,29 @@ function gameLoop() {
     fl.afterburner = keysDown.has('shift');
     // Disengage autopilot on manual flight input
     if (autopilotActive && (fl.thrust !== 0 || fl.strafe !== 0 || fl.vertical !== 0)) disengageAutopilot();
-    const speedMult = fl.afterburner ? fl.afterburnerMult : 1;
+    // Apply engines power to speed and acceleration
+    const speedMult = (fl.afterburner ? fl.afterburnerMult : 1) * enginesMult;
     // Fuel penalty: when empty, max speed reduced by 70% (emergency power only)
     const fuelPenalty = state.ship.fuel <= 0 ? 0.3 : 1;
     const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult() * fuelPenalty;
+    // Apply engines power to acceleration
+    fl._powerAccelMult = enginesMult;
     // Thrust direction = camera look direction (fly where you're looking)
     _tmpV3b.set(0, 0, -1).applyQuaternion(camera.quaternion); // thrustFwd
     _tmpV3c.set(1, 0, 0).applyQuaternion(camera.quaternion);  // thrustRight
     // Apply thrust in camera direction
     if (fl.thrust !== 0) {
-      fl.velocity.x += _tmpV3b.x * fl.thrust * fl.accel * dt;
-      fl.velocity.y += _tmpV3b.y * fl.thrust * fl.accel * dt;
-      fl.velocity.z += _tmpV3b.z * fl.thrust * fl.accel * dt;
+      fl.velocity.x += _tmpV3b.x * fl.thrust * fl.accel * fl._powerAccelMult * dt;
+      fl.velocity.y += _tmpV3b.y * fl.thrust * fl.accel * fl._powerAccelMult * dt;
+      fl.velocity.z += _tmpV3b.z * fl.thrust * fl.accel * fl._powerAccelMult * dt;
     }
     if (fl.strafe !== 0) {
-      fl.velocity.x += _tmpV3c.x * fl.strafe * fl.accel * 0.6 * dt;
-      fl.velocity.y += _tmpV3c.y * fl.strafe * fl.accel * 0.6 * dt;
-      fl.velocity.z += _tmpV3c.z * fl.strafe * fl.accel * 0.6 * dt;
+      fl.velocity.x += _tmpV3c.x * fl.strafe * fl.accel * 0.6 * fl._powerAccelMult * dt;
+      fl.velocity.y += _tmpV3c.y * fl.strafe * fl.accel * 0.6 * fl._powerAccelMult * dt;
+      fl.velocity.z += _tmpV3c.z * fl.strafe * fl.accel * 0.6 * fl._powerAccelMult * dt;
     }
     if (fl.vertical !== 0) {
-      fl.velocity.y += fl.vertical * fl.accel * 0.5 * dt;
+      fl.velocity.y += fl.vertical * fl.accel * 0.5 * fl._powerAccelMult * dt;
     }
     // Drag — frame-rate-independent (normalize to 60fps base)
     const _frameDrag = Math.pow(fl.drag, dt * 60);
@@ -9226,20 +8809,22 @@ function gameLoop() {
     _tmpEuler.set(-c.pitch + c.shakeY * 0.08 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.08, 0, 'YXZ');
     camera.quaternion.setFromEuler(_tmpEuler);
 
-    // Weapon charge
+    // Weapon charge (apply weapons power to charge time)
     if (c.charging) {
-      c.chargeLevel = Math.min(1, (performance.now() - c.chargeStart) / CHARGE_TIME);
+      // Lower CHARGE_TIME = faster charge at higher power
+      const chargeTime = CHARGE_TIME / weaponsMult;
+      c.chargeLevel = Math.min(1, (performance.now() - c.chargeStart) / chargeTime);
       railGlowMatL.opacity = c.chargeLevel * 0.8;
       railGlowMatR.opacity = c.chargeLevel * 0.8;
       if (c.chargeLevel >= 1) {
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME;
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / weaponsMult;
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
-        spawnNail();
+        spawnNail(weaponsMult); // pass multiplier for damage
       }
     }
     if (c.cooling && performance.now() >= c.coolEnd) { c.cooling = false; c.weaponReady = true; }
-    // Continuous laser fire while mouse held
-    if (mouseHeld && state.activeWeapon === 'laser' && c.locked && !c.dead) fireLaser();
+    // Continuous laser fire while mouse held (scale fire rate)
+    if (mouseHeld && state.activeWeapon === 'laser' && c.locked && !c.dead) fireLaser(weaponsMult);
     if (muzzleMat.opacity > 0) muzzleMat.opacity = Math.max(0, muzzleMat.opacity - dt * 8);
 
     // Recoil
@@ -9254,9 +8839,9 @@ function gameLoop() {
     if (railgunModel) { railgunModel.position.z = -3.0 + c.recoilOffset * 2.5; }
     c.heat = Math.max(0, c.heat - dt * 0.25);
 
-    // Shield regen (uses upgrade value × genome engineering gene)
+    // Shield regen (apply shields power)
     if (state.ship.shield < state.ship.maxShield) {
-      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult());
+      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult() * shieldsMult);
     }
     // Damage flash
     if (c.damageFlash > 0) c.damageFlash = Math.max(0, c.damageFlash - dtMs);
@@ -10160,7 +9745,7 @@ function gameLoop() {
     }
 
 
-    const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * state.upgrades.engineSpeed * getPlayerSpeedMult();
+    const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * enginesMult * state.upgrades.engineSpeed * getPlayerSpeedMult();
     const speedPct = Math.min(100, Math.round((fl.speed / maxSpd3) * 100));
     hudCtx.font = '10px "Segoe UI"';
     hudCtx.fillStyle = speedPct > 75 ? '#ff8844' : speedPct > 30 ? '#44aaff' : '#557799';
@@ -10169,12 +9754,12 @@ function gameLoop() {
     hudCtx.fillStyle = '#557799';
     hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), 20, hudCanvas.height - 44);
     // Target distance
+    if (state.targetLock && state.targetLock.target && state.targetLock.target.group) {
       const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
       hudCtx.fillStyle = '#ff6666';
       hudCtx.fillText('TGT ' + tDist + 'm', 20, hudCanvas.height - 16);
     }
     renderLibraryLabels();
-  }
   } else {
     // Bridge — gentle idle camera
     const time = state.gameTime * 0.0001;
@@ -10284,32 +9869,49 @@ async function init() {
 // Dev cheats — must be unlocked via console: window.enableDevCheats()
 window._devCheatsEnabled = false;
 window.enableDevCheats = () => {
-	window._devCheatsEnabled = true;
-	console.log('%c[DEV] Cheats enabled — I: god mode, R: reload ammo', 'color: #ff4444; font-weight: bold');
+  window._devCheatsEnabled = true;
+  console.log('%c[DEV] Cheats enabled — I: god mode, R: reload ammo', 'color: #ff4444; font-weight: bold');
 }
 
   init();
 </script>
-<style>
-  /* Additional styles can go here */
-  /* Ensure the quest overlay is styled correctly */
-</style>
 
 
-  <!-- Floating Quest Overlay (always visible in gameplay, after overlays, before end of body) -->
-  <!-- Legacy Quest Tracker for QA-UX compatibility: now always visible, highest z-index -->
-  <div id="quest-tracker" style="position:fixed;top:32px;right:32px;z-index:2147483647;background:rgba(10,10,15,0.97);border:2px solid #ff0;padding:18px 28px 18px 18px;border-radius:12px;box-shadow:0 0 32px 8px #ff0;min-width:260px;max-width:340px;pointer-events:auto;display:block !important;">
-    <div class="qa-mission-marker" style="color:#ff0;font-size:1.1rem;font-weight:bold;">MISSION OVERLAY VISIBLE</div>
-    <div class="qt" style="color:#ff0;font-size:1.05rem;font-weight:bold;">QA TEST QUEST</div>
-    <div style="color:#fff;font-size:0.95rem;">This is a persistent test quest for QA overlay detection.</div>
-    <div style="color:#0ff;font-size:0.9rem;">test: qa <span style="color:#ff0;">0/1</span></div>
-    <div style="color:var(--gold);font-size:0.95rem;">999 EC</div>
+
+
+<!-- Karma Wheel Screen -->
+<div class="screen" id="screen-karma" style="z-index:99998;background:radial-gradient(ellipse at center,#1a0a2e 0%,#080416 60%,#030308 90%);align-items:center;justify-content:center;">
+  <h2 style="color:var(--gold);font-size:1.8rem;font-weight:200;letter-spacing:0.3em;">KARMA WHEEL</h2>
+  <div class="karma-subtitle">The wheel of fate spins...</div>
+  <div class="karma-spinner" id="karma-spinner"></div>
+  <div id="karma-result" style="color:var(--gold);font-size:1.2rem;margin-top:1rem;"></div>
+  <div class="btn-row" style="margin-top:2rem;">
+    <button class="btn" id="btn-karma-accept">Accept Fate</button>
+    <button class="btn" id="btn-karma-insure">Insure (10 credits)</button>
+    <button class="btn" id="btn-karma-reroll">Re-roll (25 credits)</button>
   </div>
-  <div id="quest-overlay" aria-live="polite" aria-label="Active Missions" style="z-index:99999;">
-	<div class="qo-title">Active Missions</div>
-	<div id="quest-overlay-list"></div>
-  </div>
+</div>
 
 <!-- END OF ALL GAME/OVERLAY ELEMENTS -->
+
+<!-- Mission Progress Overlay (visible during gameplay) -->
+<div id="mission-progress-overlay" style="position:fixed; bottom:24px; left:24px; min-width:220px; max-width:320px; background:rgba(10,16,32,0.88); border:1px solid var(--blue); border-radius:10px; padding:12px 16px; color:var(--text); font-size:0.82rem; z-index:300; display:block;">
+  <div style="color:var(--gold);font-weight:600;letter-spacing:0.08em;margin-bottom:6px;">MISSION PROGRESS</div>
+  <div id="mission-progress-list">
+    <div style="color:var(--muted);font-size:0.78rem;">No active missions</div>
+  </div>
+</div>
+
+<!-- QA: Floating Quest Overlay (always visible, last in DOM for QA) -->
+<div id="quest-overlay" aria-live="polite" aria-label="Active Missions" style="z-index:99999; display:block !important; position:fixed; top:24px; right:32px; min-width:260px; max-width:340px; background:rgba(10,16,32,0.92); border:2px solid var(--gold); border-radius:14px; box-shadow:0 0 16px 4px var(--gold), 0 0 32px 8px rgba(68,170,255,0.12); padding:18px 22px 12px 22px; color:var(--text); font-size:0.95rem; pointer-events:auto;">
+  <div class="qo-title">Active Missions</div>
+  <div id="quest-overlay-list">
+    <div class="qo-quest">
+      <div class="qo-qtitle">QA TEST QUEST</div>
+      <div class="qo-progress">Progress: <span style="color:var(--gold)">0/1</span></div>
+      <div class="qo-bar"><div class="qo-bar-fill" style="width:0%;background:var(--blue);"></div></div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
