@@ -1991,9 +1991,9 @@ function _showScreenInner(name) {
   document.getElementById('auto-target-btn')?.classList.toggle('visible', _inGame);
   const _hasTarget = state.targetLock && state.targetLock.locked && state.targetLock.target;
   document.getElementById('warp-target-btn')?.classList.toggle('visible', _inGame && !!_hasTarget);
-  if (name === 'gunroom') initGunRoom();
+  if (name === 'gunroom') { try { initGunRoom(); } catch(e) { console.warn('[GunRoom] Init failed:', e.message); } }
   if (name === 'quarters') initQuarters();
-  if (name === 'interior') initInterior();
+  if (name === 'interior') { try { initInterior(); } catch(e) { console.warn('[Interior] Init failed:', e.message); } }
 
   if (el) {
     el.classList.remove('fade-in');
