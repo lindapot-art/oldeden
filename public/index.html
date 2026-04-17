@@ -706,6 +706,14 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 
 <!-- Action Bar (gunner mode) -->
 <div id="action-bar" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:60;display:none;gap:8px;padding:8px;">
+  <button class="action-btn btn btn-sm" data-action="mine" title="Mine asteroid (M)">&#9874; Mine</button>
+  <button class="action-btn btn btn-sm" data-action="reload" title="Reload ammo (R)">&#8635; Reload</button>
+  <button class="action-btn btn btn-sm" data-action="chat" title="Chatbot (T)">&#128172; Chat</button>
+  <button class="action-btn btn btn-sm" data-action="gate" title="Stargate">&#9978; Gate</button>
+  <button class="action-btn btn btn-sm" data-action="warp" title="Star Map">&#9733; Map</button>
+  <button class="action-btn btn btn-sm" data-action="dock" title="Dock at Station">&#9875; Dock</button>
+  <button class="action-btn btn btn-sm" data-action="skins" title="Ship skins">&#127912; Skins</button>
+  <button class="action-btn btn btn-sm" data-action="exit" title="Exit to Bridge (ESC)" style="border-color:var(--danger);color:var(--danger);">&#10005; Exit</button>
 </div>
 
 <!-- Death Ticker -->
@@ -6237,8 +6245,9 @@ document.addEventListener('keyup', (e) => {
   keysDown.delete(e.key.toLowerCase());
 });
 window.addEventListener('blur', () => { keysDown.clear(); mouseHeld = false; });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { keysDown.clear(); mouseHeld = false; } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { keysDown.clear(); mouseHeld = false; if (!c.dead) { try { saveGame(); } catch(_e) {} } } });
 window.addEventListener('beforeunload', () => { if (!c.dead) { try { saveGame(); } catch(_e) {} } });
+window.addEventListener('pagehide', () => { if (!c.dead) { try { saveGame(); } catch(_e) {} } });
 
 // Nav bar
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -6268,6 +6277,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'collect') { if (state.inAltUniverse) collectArtifact(); }
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
+    else if (action === 'exit') { exitGunnerMode(); }
     else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
