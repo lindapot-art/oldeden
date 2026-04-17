@@ -720,7 +720,18 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 <div id="death-ticker" style="position:fixed;top:0;left:0;right:0;z-index:85;background:rgba(0,0,0,0.8);color:var(--danger);font-size:0.75rem;padding:4px 16px;display:none;overflow:hidden;white-space:nowrap;"></div>
 
 <!-- Mobile Controls -->
-<div id="mobile-controls" style="display:none;position:fixed;bottom:100px;left:0;right:0;z-index:55;pointer-events:none;"></div>
+<div id="mobile-controls" style="display:none;position:fixed;bottom:100px;left:0;right:0;z-index:55;pointer-events:none;">
+  <div id="touch-move-zone" style="position:absolute;left:16px;bottom:0;width:132px;height:132px;border-radius:50%;border:1px solid rgba(212,168,86,0.35);background:rgba(8,12,18,0.35);backdrop-filter:blur(4px);pointer-events:auto;touch-action:none;">
+    <div id="touch-stick" style="position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;transform:translate(-50%, -50%);background:rgba(212,168,86,0.28);border:1px solid rgba(212,168,86,0.55);box-shadow:0 0 18px rgba(212,168,86,0.18);opacity:0.5;"></div>
+  </div>
+  <div style="position:absolute;right:16px;bottom:0;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none;">
+    <button id="touch-fire" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:52px;background:rgba(192,57,43,0.82);border-color:#ff7a66;color:#fff;touch-action:none;">FIRE</button>
+    <div style="display:flex;gap:10px;pointer-events:none;">
+      <button id="touch-reload" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:46px;touch-action:none;">RELOAD</button>
+      <button id="touch-boost" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:46px;border-color:var(--blue);color:var(--blue);touch-action:none;">BOOST</button>
+    </div>
+  </div>
+</div>
 
 <!-- Dock Overlay -->
 <div id="dock-overlay" style="position:fixed;inset:0;z-index:95;background:rgba(0,0,0,0);display:none;align-items:center;justify-content:center;transition:background 1s;pointer-events:none;">
@@ -6124,7 +6135,7 @@ canvas3d.addEventListener('touchstart', (e) => {
   const fireBtn = document.getElementById('touch-fire');
   const reloadBtn = document.getElementById('touch-reload');
   let touchOrigin = null, touchId = null;
-  if (!moveZone) return;
+  if (!moveZone || !stick || !fireBtn || !reloadBtn) return;
   moveZone.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const t = e.changedTouches[0];
