@@ -1179,11 +1179,22 @@ const AudioSFX = {
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   },
   ensure() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  getSfxMix() {
+    return (state.settings.masterVol || 0) * (state.settings.sfxVol || 0);
+  },
+  getBgmMix() {
+    return 0.04 * (state.settings.masterVol || 0) * (state.settings.bgmVol != null ? state.settings.bgmVol : 0.6);
+  },
+  refreshMix() {
+    if (this.ambience?.gain?.gain) this.ambience.gain.gain.value = this.getSfxMix();
+    if (this.bgm?.masterGain?.gain) this.bgm.masterGain.gain.value = this.getBgmMix();
+    if (this.engineHum?.gain?.gain) this.engineHum.gain.gain.value = (this.engineHum.baseGain || 0) * this.getSfxMix();
+  },
   play(type) {
     if (!this.ctx) return;
     this.ensure();
     const ctx = this.ctx;
-    const vol = state.settings.masterVol * state.settings.sfxVol;
+    const vol = this.getSfxMix();
     if (vol <= 0) return;
     const now = ctx.currentTime;
     const gain = ctx.createGain();
@@ -1228,7 +1239,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     if (!this.ctx || this.ambience) return;
     this.ensure();
     const ctx = this.ctx;
-    const vol = (state.settings.masterVol || 1) * (state.settings.sfxVol || 1);
+    const vol = this.getSfxMix();
     const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.008;
@@ -1243,7 +1254,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     this.ensure();
     const ctx = this.ctx;
     const masterGain = ctx.createGain();
-    masterGain.gain.value = 0.04 * (state.settings.bgmVol != null ? state.settings.bgmVol : state.settings.masterVol);
+    masterGain.gain.value = this.getBgmMix();
     masterGain.connect(ctx.destination);
     // Deep bass drone
     const bass = ctx.createOscillator(); bass.type = 'sine'; bass.frequency.value = 55;
@@ -1287,7 +1298,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     const osc2 = ctx.createOscillator(); osc2.type = "sine"; osc2.frequency.value = 40;
     const osc2Gain = ctx.createGain(); osc2Gain.gain.value = 0.1;
     osc2.connect(osc2Gain); osc2Gain.connect(gain); osc2.start();
-    this.engineHum = { osc1, osc2, gain, lp };
+    this.engineHum = { osc1, osc2, gain, lp, baseGain: 0 };
   },
   
   updateEngineAudio(speed, maxSpeed, afterburner) {
@@ -1296,7 +1307,8 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     const ratio = Math.min(speed / (maxSpeed || 1), 1);
     this.engineHum.osc1.frequency.setTargetAtTime(60 + ratio * 120, t, 0.1);
     this.engineHum.osc2.frequency.setTargetAtTime(40 + ratio * 60, t, 0.1);
-    const vol = (0.02 + ratio * 0.08) * state.settings.masterVol;
+    this.engineHum.baseGain = 0.02 + ratio * 0.08;
+    const vol = this.engineHum.baseGain * this.getSfxMix();
     this.engineHum.gain.gain.setTargetAtTime(vol, t, 0.1);
     this.engineHum.lp.frequency.setTargetAtTime(200 + ratio * 600 + (afterburner ? 400 : 0), t, 0.1);
   },
@@ -1320,7 +1332,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     this._fuelWarnLast = now;
     this.ensure();
     const ctx = this.ctx;
-    const vol = state.settings.masterVol * state.settings.sfxVol;
+    const vol = this.getSfxMix();
     if (vol <= 0) return;
     const t = ctx.currentTime;
     const g = ctx.createGain(); g.connect(ctx.destination);
@@ -1336,7 +1348,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
   uiClick() {
     if (!this.ctx) return; this.ensure();
     const ctx = this.ctx; const t = ctx.currentTime;
-    const vol = state.settings.masterVol * state.settings.sfxVol * 0.5;
+    const vol = this.getSfxMix() * 0.5;
     const g = ctx.createGain(); g.connect(ctx.destination);
     g.gain.setValueAtTime(0.04*vol, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
     const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1000;
@@ -1345,7 +1357,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
   uiHover() {
     if (!this.ctx) return; this.ensure();
     const ctx = this.ctx; const t = ctx.currentTime;
-    const vol = state.settings.masterVol * state.settings.sfxVol * 0.3;
+    const vol = this.getSfxMix() * 0.3;
     const g = ctx.createGain(); g.connect(ctx.destination);
     g.gain.setValueAtTime(0.015*vol, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.03);
     const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1400;
@@ -3903,13 +3915,13 @@ function initSettingsScreen() {
   document.getElementById('vol-master-val').textContent = Math.round(state.settings.masterVol * 100) + '%';
   document.getElementById('vol-sfx-val').textContent = Math.round(state.settings.sfxVol * 100) + '%';
   document.getElementById('setting-sens-val').textContent = state.settings.sensitivity;
-  volM.oninput = () => { state.settings.masterVol = volM.value / 100; document.getElementById('vol-master-val').textContent = volM.value + '%'; };
-  volS.oninput = () => { state.settings.sfxVol = volS.value / 100; document.getElementById('vol-sfx-val').textContent = volS.value + '%'; };
+  volM.oninput = () => { state.settings.masterVol = volM.value / 100; document.getElementById('vol-master-val').textContent = volM.value + '%'; AudioSFX.refreshMix(); };
+  volS.oninput = () => { state.settings.sfxVol = volS.value / 100; document.getElementById('vol-sfx-val').textContent = volS.value + '%'; AudioSFX.refreshMix(); };
   const volB = document.getElementById('vol-bgm');
   if (volB) {
     volB.value = (state.settings.bgmVol || 0.6) * 100;
     document.getElementById('vol-bgm-val').textContent = Math.round((state.settings.bgmVol || 0.6) * 100) + '%';
-    volB.oninput = () => { state.settings.bgmVol = volB.value / 100; document.getElementById('vol-bgm-val').textContent = volB.value + '%'; if (AudioSFX.bgm) AudioSFX.bgm.masterGain.gain.value = 0.04 * state.settings.bgmVol; };
+    volB.oninput = () => { state.settings.bgmVol = volB.value / 100; document.getElementById('vol-bgm-val').textContent = volB.value + '%'; AudioSFX.refreshMix(); };
   }
   sens.oninput = () => { state.settings.sensitivity = parseInt(sens.value); document.getElementById('setting-sens-val').textContent = sens.value; };
   scan.onchange = () => { state.settings.scanlines = scan.checked; };
@@ -4890,6 +4902,8 @@ function exitGunnerMode(skipScreenChange) {
   AudioSFX.stopBGM();
   AudioSFX.stopEngineHum();
   AudioSFX.stopAmbience();
+  // Save combat session progress before returning to bridge
+  if (!c.dead) try { saveGame(); } catch(_e) {}
   if (!skipScreenChange) showScreen('bridge');
 }
 
@@ -6224,6 +6238,7 @@ document.addEventListener('keyup', (e) => {
 });
 window.addEventListener('blur', () => { keysDown.clear(); mouseHeld = false; });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { keysDown.clear(); mouseHeld = false; } });
+window.addEventListener('beforeunload', () => { if (!c.dead) { try { saveGame(); } catch(_e) {} } });
 
 // Nav bar
 document.querySelectorAll('.nav-btn').forEach(btn => {
