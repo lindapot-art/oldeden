@@ -18,6 +18,8 @@ import { QuestSystem } from '../systems/QuestSystem.js';
 import { EnemySpawnSystem } from '../systems/EnemySpawnSystem.js';
 import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { BossSystem } from '../systems/BossSystem.js';
+import { LeaderboardSystem } from '../systems/LeaderboardSystem.js';
+const leaderboard = new LeaderboardSystem();
 import { BountySystem } from '../systems/BountySystem.js';
 import { createHttpServer } from '../server/HttpServer.js';
 import { FileStore } from '../persistence/FileStore.js';
@@ -88,13 +90,19 @@ engine
   .registerSystem('projectiles', projectiles)
   .registerSystem('bosses', bosses)
   .registerSystem('bounties', bounties)
-  .registerSystem('director', director);
+  .registerSystem('director', director)
+  .registerSystem('leaderboard', leaderboard);
 
 // ── Persistence ──────────────────────────────────────────────────────────────
 let store;
-if (process.env.MONGODB_URI) {
+if (typeof process.env.MONGODB_URI === 'string' && process.env.MONGODB_URI.length > 0) {
   store = new MongoStore(process.env.MONGODB_URI);
   await store.init();
+  try {
+    await leaderboard.init(process.env.MONGODB_URI);
+  } catch (err) {
+    console.warn('[Main] Leaderboard MongoDB init failed:', err?.message || err);
+  }
   if (!store.connected) {
     console.warn('[Main] MongoDB unavailable — falling back to FileStore');
     store = new FileStore(path.resolve(PROJECT_ROOT, process.env.SAVE_DIR ?? 'saves'));
@@ -150,6 +158,13 @@ const STARTER_QUESTS = [
   { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 1800, reputation: { hegemony_vanguard: 50 } } },
   { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 900, reputation: { void_cult: 50 } } },
   { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 1050, reputation: { iron_syndicate: 50 } } },
+  // New quest types for variety
+  { id: 'q-mine-titanite', name: 'Mine Titanite Ore', objectives: [{ type: 'mine', target: 'Titanite Ore', required: 10 }], rewards: { credits: 950, item: 'Titanite Ore' } },
+  { id: 'q-deliver-fuel', name: 'Fuel Delivery', objectives: [{ type: 'deliver', target: 'Hydrogen Fuel', required: 20, destination: 'Outpost Gamma' }], rewards: { credits: 1100, reputation: { iron_syndicate: 30 } } },
+  { id: 'q-explore-anomaly', name: 'Explore Anomaly', objectives: [{ type: 'explore', target: 'Anomaly-7', required: 1 }], rewards: { credits: 1300, reputation: { void_cult: 40 } } },
+  { id: 'q-rescue-pilot', name: 'Rescue Downed Pilot', objectives: [{ type: 'rescue', target: 'Pilot', required: 1, location: 'Sector 12' }], rewards: { credits: 1600, reputation: { hegemony_vanguard: 60 } } },
+  { id: 'q-bounty-pirate', name: 'Pirate Bounty', objectives: [{ type: 'bounty', target: 'pirate_captain', required: 1 }], rewards: { credits: 2000, item: 'Rare Blaster' } },
+  { id: 'q-survive-radiation', name: 'Survive Radiation Zone', objectives: [{ type: 'survive', target: 'radiation', required: 60 }], rewards: { credits: 1400, reputation: { void_cult: 25 } } },
 ];
 STARTER_QUESTS.forEach(q => quests.registerQuest(q));
 
@@ -257,8 +272,36 @@ app.get('/api/game/load/:id', async (req, res) => {
   }
 });
 
-app.get('/api/game/quests/available', (_req, res) => {
-  res.json({ quests: STARTER_QUESTS });
+// ── Leaderboard API ──
+app.get('/api/game/leaderboard/top', async (_req, res) => {
+  try {
+    const top = await leaderboard.getTopScores(10);
+    res.json({ top });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.get('/api/game/leaderboard/rank/:playerId', async (req, res) => {
+  try {
+    const { playerId } = req.params;
+    const rank = await leaderboard.getPlayerRank(playerId);
+    if (!rank) return res.status(404).json({ error: 'Not found' });
+    res.json(rank);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+app.post('/api/game/leaderboard/submit', async (req, res) => {
+  try {
+    const { playerId, name, score, kills, credits } = req.body;
+    if (!playerId || !name) return res.status(400).json({ error: 'Missing playerId or name' });
+    await leaderboard.submitScore(playerId, name, score, kills, credits);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // SPA fallback — MUST be last route
@@ -387,6 +430,54 @@ setInterval(() => {
 }, 60_000).unref();
 
 io.on('connection', (socket) => {
+    // ── Leaderboard auto-submit on disconnect ──
+    socket.on('disconnect', async () => {
+      const player = players.get(socket.id);
+      if (player) {
+        // Composite score: kills * 10 + credits / 1000
+        const score = (player.kills || 0) * 10 + Math.floor((player.credits || 0) / 1000);
+        await leaderboard.submitScore(player.playerId, player.name, score, player.kills || 0, player.credits || 0);
+      }
+    });
+    const inventorySys = engine.getSystem('inventory');
+    const combatSys = engine.getSystem('combat');
+    socket.on('inventory:use_consumable', (data) => {
+      try {
+        const player = players.get(socket.id);
+        if (!player) return;
+        const itemId = typeof data?.itemId === 'string' ? data.itemId : '';
+        if (!itemId) return;
+        // Attempt to use the consumable
+        const used = inventorySys.useConsumable(player.playerId, itemId);
+        if (!used) {
+          socket.emit('inventory:use_failed', { itemId, reason: 'Not found or not consumable' });
+          return;
+        }
+        // Determine effect by itemId (simple hardcoded mapping for now)
+        // In production, this should use item stats/definitions
+        if (itemId === 'repair_kit') {
+          // Restore hull (combat stats)
+          if (!player.combat) player.combat = {};
+          player.combat.hull = Math.min((player.combat.hull ?? 100) + 50, 100);
+          socket.emit('inventory:consumable_used', { itemId, effect: 'hull_restored', value: 50, hull: player.combat.hull });
+        } else if (itemId === 'shield_cell') {
+          // Restore shield (if shield system present)
+          const shield = combatSys.getShield(player.playerId);
+          if (shield) {
+            shield.currentHp = Math.min(shield.maxCapacity, shield.currentHp + 50);
+            socket.emit('inventory:consumable_used', { itemId, effect: 'shield_restored', value: 50, shield: shield.currentHp });
+          } else {
+            socket.emit('inventory:consumable_used', { itemId, effect: 'no_shield', value: 0 });
+          }
+        } else if (itemId === 'emp_grenade') {
+          // EMP disables enemy shield (simulate by emitting event)
+          // In a real game, would need target selection
+          socket.emit('inventory:consumable_used', { itemId, effect: 'emp_triggered' });
+        } else {
+          socket.emit('inventory:consumable_used', { itemId, effect: 'unknown' });
+        }
+      } catch (err) { console.error('[Socket] inventory:use_consumable error:', err.message); }
+    });
   console.log(`[Socket.IO] Client connected: ${socket.id}`);
 
   // IP-based rate limiter — persists across reconnections from same IP

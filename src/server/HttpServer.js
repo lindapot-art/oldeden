@@ -14,7 +14,9 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { createAssetUploadRouter } from './AssetUploadRouter.js';
+import { logEvent } from './Logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,11 +98,20 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize, corsOrigi
     res.json({ status: 'ok' });
   });
 
+  // ── Log all requests (basic event logging) ──
+  app.use((req, res, next) => {
+    logEvent('request', `${req.method} ${req.url}`, { ip: req.ip });
+    next();
+  });
+
   // ── Static serving of uploaded assets ─────────────────────────────────────
   app.use('/assets', express.static(path.resolve(uploadDir)));
 
   // ── Asset upload API ──────────────────────────────────────────────────────
   app.use('/api/assets', createAssetUploadRouter({ uploadDir, maxFileSize }));
+
+  // ── Log server start event ──
+  logEvent('server', 'Express server initialized');
 
   /**
    * Add the SPA fallback — call AFTER registering game API routes in index.js.
@@ -115,8 +126,9 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize, corsOrigi
     app.use('/api', (_req, res) => {
       res.status(404).json({ error: 'Not found' });
     });
-    // Global error handler — catches unhandled Express errors
-    app.use((err, _req, res, _next) => {
+    // Global error handler — catches unhandled Express errors and logs them
+    app.use((err, req, res, _next) => {
+      logEvent('error', err.message, { url: req.url, stack: err.stack });
       console.error('[Express] Unhandled error:', err.message);
       res.status(500).json({ error: 'Internal server error' });
     });

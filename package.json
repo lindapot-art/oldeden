@@ -68,7 +68,7 @@
     "fbx2gltf": "^0.9.7-p1",
     "hardhat": "^2.22.1",
     "hardhat-gas-reporter": "^1.0.10",
-    "jest": "^29.7.0",
+    "jest": "^30.3.0",
     "jsdom": "^29.0.1",
     "puppeteer": "^24.40.0",
     "sharp": "^0.34.5",

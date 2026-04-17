@@ -35,14 +35,6 @@
     #speed-control-panel,#drone-bay,#auto-target-btn { display:none; }
     #speed-control-panel.visible,#drone-bay.visible,#auto-target-btn.visible { display:block; }
 
-    /* QA PATCH: Force quest overlay always visible and on top for QA detection */
-    #quest-overlay {
-      display: block !important;
-      opacity: 1 !important;
-      pointer-events: auto !important;
-      z-index: 99999 !important;
-    }
-
 /* ── Karma Wheel Screen ──────────────────── */
 #screen-karma{background:radial-gradient(ellipse at center,#1a0a2e 0%,#080416 60%,#030308 90%);z-index:86;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 #screen-karma h2{color:var(--gold);font-size:1.8rem;font-weight:200;letter-spacing:0.3em;margin-bottom:0.5rem;}
@@ -103,6 +95,7 @@
 /* ── QA UNVERIFIED BANNER ─────────────────── */
 #qa-unverified-banner{position:fixed;top:0;left:0;right:0;z-index:99999;background:repeating-linear-gradient(45deg,#ff0000,#ff0000 10px,#cc0000 10px,#cc0000 20px);color:#fff;text-align:center;font-size:0.85rem;font-weight:700;letter-spacing:0.15em;padding:6px 0;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.6);font-family:monospace;}
 #qa-unverified-banner.qa-passed{background:#00aa44;}
+body[data-screen]:not([data-screen="title"]) #qa-unverified-banner{display:none;}
 
 /* ── Save Indicator ──────────────────────── */
 #save-indicator{position:fixed;top:10px;right:10px;color:rgba(0,255,136,0.7);font-size:0.72rem;z-index:201;pointer-events:none;opacity:0;transition:opacity 0.3s ease;letter-spacing:0.08em;}
@@ -193,6 +186,481 @@
   background: var(--blue);
   transition: width 0.4s;
 }
+
+/* ── Base Reset ──────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Button Styles ───────────────────────── */
+.btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+.btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(212,168,86,0.08);
+  box-shadow: 0 0 12px rgba(212,168,86,0.15);
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+.btn-sm { padding: 6px 16px; font-size: 0.82rem; }
+.btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+/* ── Panel Title ─────────────────────────── */
+.panel-title {
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(212,168,86,0.15);
+  padding-bottom: 6px;
+}
+
+/* ── Bridge Screen Layout ────────────────── */
+#screen-bridge { padding: 16px 20px 80px; gap: 16px; }
+#bridge-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(24,28,36,0.9);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.bridge-location { color: var(--gold); font-size: 0.95rem; letter-spacing: 0.1em; }
+.bridge-connection { color: var(--green); font-size: 0.8rem; }
+.bridge-panel {
+  background: rgba(24,28,36,0.85);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  flex: 1;
+}
+#bridge-left { max-width: 320px; }
+#bridge-right { flex: 2; }
+#screen-bridge.active {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 16px;
+}
+#bridge-top { grid-column: 1 / -1; }
+#bridge-launch {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+#btn-launch {
+  background: rgba(0,255,136,0.08);
+  border: 2px solid var(--green);
+  color: var(--green);
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+#btn-launch:hover {
+  background: rgba(0,255,136,0.18);
+  box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  transform: scale(1.03);
+}
+#comms-feed {
+  max-height: 250px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+#comms-feed div { margin-bottom: 4px; }
+
+/* ── Stat Bars ───────────────────────────── */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.stat-bar {
+  flex: 1;
+  height: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.stat-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ── Create Screen ───────────────────────── */
+#screen-create { padding: 24px 32px 80px; align-items: center; }
+.create-section {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 24px;
+  background: rgba(24,28,36,0.6);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.create-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  color: var(--gold);
+}
+.genome-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+#genome-canvas {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  image-rendering: pixelated;
+}
+.gene-stats {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* ── Gene Bars ───────────────────────────── */
+.gene-bar {
+  margin-bottom: 8px;
+}
+.gene-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.gene-bar-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gene-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ── Faction Cards ───────────────────────── */
+.faction-card {
+  background: rgba(24,28,36,0.85);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--muted);
+  border-radius: 8px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.faction-card:hover {
+  border-color: var(--gold);
+  background: rgba(212,168,86,0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.faction-card.selected {
+  border-color: var(--gold) !important;
+  border-top-color: var(--gold) !important;
+  background: rgba(212,168,86,0.12);
+  box-shadow: 0 0 16px rgba(212,168,86,0.25), inset 0 0 20px rgba(212,168,86,0.05);
+}
+.faction-card .fname {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: 0.06em;
+}
+.faction-card .fdetail {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ── Title Screen ────────────────────────── */
+#screen-title { align-items: center; justify-content: center; text-align: center; }
+
+/* ── Quest/Mission Overlays ──────────────── */
+#quest-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 280px;
+  z-index: 75;
+  background: rgba(12,16,24,0.92);
+  border: 1px solid rgba(212,168,86,0.2);
+  border-radius: 10px;
+  padding: 14px;
+  display: none;
+  backdrop-filter: blur(4px);
+}
+#mission-progress-overlay {
+  position: fixed;
+  bottom: 60px;
+  left: 20px;
+  width: 280px;
+  z-index: 75;
+  background: rgba(12,16,24,0.92);
+  border: 1px solid rgba(212,168,86,0.2);
+  border-radius: 10px;
+  padding: 14px;
+  display: none;
+  backdrop-filter: blur(4px);
+}
+#mission-progress-overlay .mp-title {
+  color: var(--gold);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+/* ── Station Screen ──────────────────────── */
+#screen-station { padding: 24px 20px 80px; }
+#screen-station h2,
+#screen-character h2,
+#screen-interior h2,
+#screen-market h2 {
+  color: var(--gold);
+  font-size: 1.7rem;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  margin: 0 0 1.25rem;
+}
+.station-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.station-panel {
+  background: rgba(24,28,36,0.85);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.trade-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.trade-row:last-child { border-bottom: none; }
+.trade-row span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.trade-buy,
+.trade-sell,
+.interior-room-btn,
+.speed-preset button,
+#warp-target-btn {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.trade-buy,
+.trade-sell {
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+.trade-buy {
+  border-color: rgba(212,168,86,0.35);
+  color: var(--gold);
+}
+.trade-sell {
+  border-color: rgba(68,170,255,0.35);
+  color: var(--blue);
+}
+.trade-buy:hover,
+.trade-sell:hover,
+.interior-room-btn:hover,
+.speed-preset button:hover,
+#warp-target-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(212,168,86,0.12);
+}
+.quest-item {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  line-height: 1.45;
+}
+.quest-item:last-child { border-bottom: none; }
+.quest-item .qt {
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+/* ── Character/Pilot Screen ──────────────── */
+#screen-character { padding: 24px 20px 80px; }
+.char-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+.char-panel {
+  background: rgba(24,28,36,0.82);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+
+/* ── Star Map Screen ─────────────────────── */
+#screen-starmap {
+  padding: 0 0 64px;
+  overflow: hidden;
+}
+#screen-starmap.active {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: stretch;
+}
+#starmap-canvas {
+  width: 100%;
+  height: calc(100vh - 64px);
+  display: block;
+  background: radial-gradient(circle at 50% 20%, rgba(68,170,255,0.08), transparent 22%), linear-gradient(180deg, rgba(10,15,28,0.92), rgba(7,10,18,0.98));
+}
+#starmap-sidebar {
+  background: rgba(16,20,30,0.96);
+  border-left: 1px solid rgba(212,168,86,0.18);
+  padding: 20px 18px 24px;
+  overflow-y: auto;
+}
+#system-detail,
+#map-legend {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+/* ── Market Screen ───────────────────────── */
+#screen-market { padding: 24px 20px 80px; }
+#screen-market,
+#screen-station,
+#screen-character,
+#screen-interior {
+  align-items: stretch;
+}
+
+/* ── Interior Screen ─────────────────────── */
+#screen-interior { padding: 24px 20px 80px; }
+.interior-room-btn {
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+}
+.interior-room-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(212,168,86,0.08);
+}
+#interior-3d-view {
+  position: relative;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 20%, rgba(68,170,255,0.08), transparent 28%), linear-gradient(180deg, rgba(7,12,20,0.96), rgba(5,8,14,0.98));
+}
+#interior-controls-hint {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  color: var(--text);
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+  background: rgba(10,14,22,0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+/* ── Flight Utility Buttons ──────────────── */
+.speed-preset {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.speed-preset button {
+  padding: 4px 0;
+  font-size: 0.72rem;
+}
+.speed-preset button.active-speed {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(212,168,86,0.08);
+}
+#warp-target-btn {
+  padding: 8px 14px;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 960px) {
+  #screen-bridge.active,
+  #screen-starmap.active {
+    grid-template-columns: 1fr;
+  }
+  #bridge-left {
+    max-width: none;
+  }
+  #starmap-canvas {
+    height: 42vh;
+  }
+}
+
+/* ── Settings Screen ─────────────────────── */
+#screen-settings { padding: 24px 20px 80px; align-items: center; }
+
+/* ── Scrollbar Styling ───────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212,168,86,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(212,168,86,0.4); }
+
+/* ── Selection ───────────────────────────── */
+::selection { background: rgba(212,168,86,0.3); color: #fff; }
 </style>
 
 
@@ -224,14 +692,14 @@
 <div id="hazard-overlay"></div>
 
 <!-- Navigation Bar -->
-<nav id="nav-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:80;display:flex;justify-content:center;gap:4px;padding:8px 16px;background:rgba(12,16,24,0.95);border-top:1px solid var(--border);">
-  <button class="nav-btn" data-screen="bridge" aria-label="Bridge">Bridge</button>
-  <button class="nav-btn" data-screen="starmap" aria-label="Star Map">Map</button>
-  <button class="nav-btn" data-screen="station" aria-label="Station">Station</button>
-  <button class="nav-btn" data-screen="character" aria-label="Character">Pilot</button>
-  <button class="nav-btn" data-screen="market" aria-label="Market">Market</button>
-  <button class="nav-btn" data-screen="interior" aria-label="Interior">Ship</button>
-  <button class="nav-btn" data-screen="settings" aria-label="Settings">Settings</button>
+<nav id="nav-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:100;justify-content:center;gap:4px;padding:8px 16px;background:rgba(12,16,24,0.95);border-top:1px solid var(--border);">
+  <button class="nav-btn" id="nav-bridge" data-screen="bridge" aria-label="Bridge">Bridge</button>
+  <button class="nav-btn" id="nav-starmap" data-screen="starmap" aria-label="Star Map">Map</button>
+  <button class="nav-btn" id="nav-station" data-screen="station" aria-label="Station">Station</button>
+  <button class="nav-btn" id="nav-character" data-screen="character" aria-label="Character">Pilot</button>
+  <button class="nav-btn" id="nav-market" data-screen="market" aria-label="Market">Market</button>
+  <button class="nav-btn" id="nav-ship" data-screen="interior" aria-label="Interior">Ship</button>
+  <button class="nav-btn" id="nav-settings" data-screen="settings" aria-label="Settings">Settings</button>
 </nav>
 
 <!-- Action Bar (gunner mode) -->
@@ -1931,27 +2399,10 @@ function showScreen(name) {
         setTimeout(()=>cockpit.classList.remove('powerup'), 1800);
       }
     }
-  // Guarantee at least one quest is always active for QA/UX
-  if (!state.quests || state.quests.length === 0) {
-    if (typeof generateQuests === 'function') generateQuests();
-    // Failsafe: always add a visible test quest for QA overlay
-    state.quests.push({
-      id: 'qa-test', title: 'QA Test Mission', name: 'QA Test Mission',
-      summary: 'This is a test quest to ensure the overlay is always visible.',
-      active: true, completed: false,
-      objectives: [{ type: 'test', target: 'QA', required: 1, current: 0 }],
-      rewards: { credits: 1 }, reward: 1,
-    });
-  }
   // Highlight active nav button
   document.querySelectorAll('#nav-bar .nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.screen === name);
   });
-  // Failsafe: if switching to bridge, force it visible for QA-UX
-  if (name === 'bridge') {
-    const bridgeScreen = document.getElementById('screen-bridge');
-    if (bridgeScreen) bridgeScreen.classList.add('active');
-  }
   // Guard: block during active transition to prevent race conditions
   if (_transitioning) return;
   // Guard: don't enter gunner if 3D engine isn't ready — prevents dead-state trap
@@ -2007,6 +2458,7 @@ function _showScreenInner(name) {
   if (lp && name !== 'gunner') lp.style.display = 'none';
 
   state.screen = name;
+  document.body.dataset.screen = name;
   const navBar = document.getElementById('nav-bar');
   const showNav = !['title','create','eulogy','karma','gunner'].includes(name);
   if (navBar) navBar.classList.toggle('visible', showNav);
@@ -2034,6 +2486,9 @@ function _showScreenInner(name) {
   if (name === 'settings') initSettingsScreen();
   if (name === 'market') { if (state.market.orders.length === 0) generateNPCMarketOrders(); renderMarketScreen(); }
   if (name === 'gunner') enterGunnerMode();
+
+  // Toggle quest/mission overlays visibility per screen
+  updateQuestOverlayVisibility();
 }
 
 // ================================================================
@@ -2388,14 +2843,10 @@ function updateBridgeUI() {
     const ql = document.getElementById('quest-overlay-list');
     if (!qo || !ql) return;
     let activeQuests = (state.quests || []).filter(q => q.active && !q.completed);
-    // Always inject a visible QA test quest for overlay detection
     if (!activeQuests || activeQuests.length === 0) {
-      activeQuests = [{
-        title: 'QA TEST QUEST',
-        summary: 'This is a persistent test quest for QA overlay detection.',
-        reward: 999,
-        objectives: [{ type: 'test', target: 'qa', required: 1, current: 0 }]
-      }];
+      const ql2 = document.getElementById('quest-overlay-list');
+      if (ql2) ql2.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">No active missions</div>';
+      return;
     }
     const newHtml = activeQuests.map(q => {
       let progressHtml = '';
@@ -2409,15 +2860,20 @@ function updateBridgeUI() {
       return `<div class=\"qo-quest\"><div class=\"qo-qtitle\">${_escHtml(q.title || q.name || 'Mission')}</div>${_escHtml(q.summary || '')}${progressHtml}<br/><span style=\"color:var(--gold)\">${q.reward || 0} EC</span></div>`;
     }).join('');
     if (ql.innerHTML !== newHtml) ql.innerHTML = newHtml;
-    qo.classList.add('active');
+    updateQuestOverlayVisibility();
   }
 
   // Show/hide quest overlay based on screen
   function updateQuestOverlayVisibility() {
     const qo = document.getElementById('quest-overlay');
+    const mp = document.getElementById('mission-progress-overlay');
     if (!qo) return;
-    // Always show overlay, regardless of screen
-    qo.classList.add('active');
+    const gameScreens = ['bridge','gunner','starmap','station','character','market','quarters','armory'];
+    const show = gameScreens.includes(state.screen);
+    qo.style.display = show ? 'block' : 'none';
+    if (mp) mp.style.display = show ? 'block' : 'none';
+    if (show) qo.classList.add('active');
+    else qo.classList.remove('active');
   }
 
 // ================================================================
@@ -7802,7 +8258,8 @@ function spawnSystemNPCs() {
 function updateNPCShips(dt) {
   state.npcShips.forEach(npc => {
     // Follow waypoints
-    const target = npc.waypoints[npc.waypointIdx];
+    if (!npc.waypoints || !npc.waypoints.length) return;
+    const target = npc.waypoints[npc.waypointIdx || 0];
     if (!target) return;
     _tmpV3d.copy(target).sub(npc.group.position);
     const dist = _tmpV3d.length();
@@ -9863,6 +10320,7 @@ async function init() {
   addDeathFeedEvent('rebirth', 'A new soul enters the galaxy: Echo-441, Smuggler');
   addDeathFeedEvent('boss', 'DREADNOUGHT defeated by Pilot-Ash — 5,000 EC bounty claimed');
   addDeathFeedEvent('death', 'Pilot-Astra lost to solar flare in Sigma Gate');
+  updateQuestOverlayVisibility();
   if (threeReady) gameLoop();
 }
 
@@ -9895,7 +10353,7 @@ window.enableDevCheats = () => {
 <!-- END OF ALL GAME/OVERLAY ELEMENTS -->
 
 <!-- Mission Progress Overlay (visible during gameplay) -->
-<div id="mission-progress-overlay" style="position:fixed; bottom:24px; left:24px; min-width:220px; max-width:320px; background:rgba(10,16,32,0.88); border:1px solid var(--blue); border-radius:10px; padding:12px 16px; color:var(--text); font-size:0.82rem; z-index:300; display:block;">
+<div id="mission-progress-overlay" style="position:fixed; bottom:24px; left:24px; min-width:220px; max-width:320px; background:rgba(10,16,32,0.88); border:1px solid var(--blue); border-radius:10px; padding:12px 16px; color:var(--text); font-size:0.82rem; z-index:300; display:none;">
   <div style="color:var(--gold);font-weight:600;letter-spacing:0.08em;margin-bottom:6px;">MISSION PROGRESS</div>
   <div id="mission-progress-list">
     <div style="color:var(--muted);font-size:0.78rem;">No active missions</div>
@@ -9903,14 +10361,10 @@ window.enableDevCheats = () => {
 </div>
 
 <!-- QA: Floating Quest Overlay (always visible, last in DOM for QA) -->
-<div id="quest-overlay" aria-live="polite" aria-label="Active Missions" style="z-index:99999; display:block !important; position:fixed; top:24px; right:32px; min-width:260px; max-width:340px; background:rgba(10,16,32,0.92); border:2px solid var(--gold); border-radius:14px; box-shadow:0 0 16px 4px var(--gold), 0 0 32px 8px rgba(68,170,255,0.12); padding:18px 22px 12px 22px; color:var(--text); font-size:0.95rem; pointer-events:auto;">
+<div id="quest-overlay" aria-live="polite" aria-label="Active Missions" style="z-index:300; display:none; position:fixed; top:24px; right:32px; min-width:260px; max-width:340px; background:rgba(10,16,32,0.92); border:2px solid var(--gold); border-radius:14px; box-shadow:0 0 16px 4px var(--gold), 0 0 32px 8px rgba(68,170,255,0.12); padding:18px 22px 12px 22px; color:var(--text); font-size:0.95rem; pointer-events:auto;">
   <div class="qo-title">Active Missions</div>
   <div id="quest-overlay-list">
-    <div class="qo-quest">
-      <div class="qo-qtitle">QA TEST QUEST</div>
-      <div class="qo-progress">Progress: <span style="color:var(--gold)">0/1</span></div>
-      <div class="qo-bar"><div class="qo-bar-fill" style="width:0%;background:var(--blue);"></div></div>
-    </div>
+    <div style="color:var(--muted);font-size:0.82rem;">No active missions</div>
   </div>
 </div>
 </body>

@@ -1,19 +1,8 @@
-/**
- * InventorySystem — Weight-based inventory management with equipment slots,
- * item stacking, durability degradation, and rarity tiers.
- *
- * Each player carries items constrained by a maximum weight limit. Stackable
- * goods (ammo, materials, consumables) consolidate into a single slot up to
- * their maxStack cap, while non-stackable gear (weapons, armour) occupies
- * individual slots. Eight equipment slots let players wear or wield items
- * that match the correct slot type. Every piece of gear tracks durability
- * that decreases with use and must be repaired before it reaches zero.
- * Rarity tiers apply stat multipliers that scale item effectiveness.
- */
 
-// ── Constants ───────────────────────────────────────────────────────────────
+// ── System ──────────────────────────────────────────────────────────────────
 
-/** @enum {string} Rarity tier identifiers. */
+// (Move all export const above the class)
+
 export const RARITY = Object.freeze({
   COMMON:    'common',
   UNCOMMON:  'uncommon',
@@ -22,7 +11,6 @@ export const RARITY = Object.freeze({
   LEGENDARY: 'legendary',
 });
 
-/** Stat multiplier for each rarity tier. */
 export const RARITY_MULTIPLIER = Object.freeze({
   [RARITY.COMMON]:    1.0,
   [RARITY.UNCOMMON]:  1.15,
@@ -31,7 +19,6 @@ export const RARITY_MULTIPLIER = Object.freeze({
   [RARITY.LEGENDARY]: 2.0,
 });
 
-/** @enum {string} Equipment slot identifiers. */
 export const EQUIP_SLOT = Object.freeze({
   HEAD:      'head',
   CHEST:     'chest',
@@ -43,18 +30,39 @@ export const EQUIP_SLOT = Object.freeze({
   ACCESSORY: 'accessory',
 });
 
-/** Set of all valid equipment slot values for quick lookup. */
 const VALID_SLOTS = Object.freeze(new Set(Object.values(EQUIP_SLOT)));
-
-/** Default maximum carry weight in kilograms. */
 const DEFAULT_MAX_WEIGHT = 100;
-
-/** Default maximum stack size for stackable items. */
 const DEFAULT_MAX_STACK = 99;
 
-// ── System ──────────────────────────────────────────────────────────────────
-
 export class InventorySystem {
+  /**
+   * Use a consumable item from the player's inventory.
+   * Decrements quantity and emits an event if successful.
+   *
+   * @param {string} playerId
+   * @param {string} itemId
+   * @returns {boolean} True if used, false if not found or not consumable.
+   */
+  useConsumable(playerId, itemId) {
+    const stack = this._findStack(playerId, itemId);
+    if (!stack || stack.item.type !== 'consumable') return false;
+    if (stack.quantity <= 0) return false;
+
+    stack.quantity -= 1;
+    this._engine.events.emit('inventory:item_used', {
+      playerId,
+      itemId,
+      item: stack.item,
+    });
+    if (stack.quantity === 0) {
+      // Remove stack from inventory
+      const inv = this._getOrCreateInventory(playerId);
+      const idx = inv.items.indexOf(stack);
+      if (idx !== -1) inv.items.splice(idx, 1);
+    }
+    return true;
+  }
+// (Removed leftover partial constant block after the class)
   /**
    * Initialise the inventory system and register engine event listeners.
    * @param {object} engine  The game engine instance.
