@@ -21,3 +21,9 @@
 - **Alternatives:** (a) Self-host Three.js, (b) Remove CSP entirely
 - **Why:** CDN is the standard Three.js delivery method; self-hosting adds maintenance burden
 - **Outcome:** Three.js loads correctly. QA 5/5 PASS.
+
+### 2026-04-16 | Move frame render outside gameLoop update try/catch
+- **Decision:** Always attempt render after the gameplay update block, with separate render error logging
+- **Alternatives:** (a) Keep render inside update try/catch, (b) Wrap every subsystem individually
+- **Why:** A single update exception should not blank the frame or mimic a hard freeze while the loop keeps running
+- **Outcome:** Pending QA

@@ -23,4 +23,7 @@
 
 ## Stats
  2026-04-15: Restored missing main UI DOM elements (#screen-title, #screen-create, #btn-new, #game-canvas, #hud-canvas) to public/index.html. QA proxy run: PASS (hash:1cc960c5a2aac0b6). All 5/5 checks OK. DOM verified present.
+ 2026-04-16: Booted server on port 3847, re-ran QA Board, identified stripped CSS as the root cause of broken gameplay presentation (missing button, panel, bridge HUD, faction card, and gene bar styles). Applied restoration patch to public/index.html via patch_restore_css.cjs and re-started server for live validation.
+ 2026-04-16: Removed QA-only runtime contamination from showScreen() (forced test quest injection and forced bridge activation), limited the QA banner to the title screen, re-ran QA Board with 5/5 approval and ran qa_proxy_live.cjs plus qa_verify_hash.cjs successfully. Current verified hash: 268836e6fc6b7261.
+ 2026-04-16: Current batch: hardening gameLoop so gameplay update exceptions do not suppress rendering. Next step is syntax + live QA + QA Board confirmation.
 ## Key: ~8089 lines CRLF, 20 systems, 69 GLB models

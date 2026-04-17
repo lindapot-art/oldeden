@@ -30,6 +30,8 @@
     .nav-btn { background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;letter-spacing:0.05em;transition:all 0.2s; }
     .nav-btn:hover,.nav-btn.active { color:var(--gold);border-color:var(--gold);background:rgba(212,168,86,0.1); }
     #action-bar.active { display:flex; }
+    #hud-canvas.active { display:block !important; }
+    #mobile-controls.active { display:block !important; }
     #death-ticker.active { display:block; }
     #dock-overlay.active { display:flex;background:rgba(0,0,0,0.85); }
     #speed-control-panel,#drone-bay,#auto-target-btn { display:none; }
@@ -9167,7 +9169,8 @@ const clock = new THREE.Clock();
 function gameLoop() {
   requestAnimationFrame(gameLoop);
 
-  if (!scene || !camera || !ship || !turretMount || !composer) return;
+  if (!scene || !camera || !ship || !turretMount || (!composer && !renderer)) return;
+  const shouldRenderFrame = c.active || state.screen === 'gunner' || state.screen === 'bridge';
   try {
     if (!state._frameCount) state._frameCount = 0;
     state._frameCount++;
@@ -10225,14 +10228,24 @@ function gameLoop() {
     camera.quaternion.copy(_tmpQuat).multiply(_tmpQuatB.setFromEuler(_tmpEuler));
   }
 
-  // Skip expensive bloom on non-gameplay screens
-  if (c.active || state.screen === 'gunner' || state.screen === 'bridge') {
-    if (composer) composer.render(); else if (renderer) renderer.render(scene, camera);
-  }
   } catch (_loopErr) {
     if (!gameLoop._errCount) gameLoop._errCount = 0;
     gameLoop._errCount++;
     if (gameLoop._errCount <= 10) console.error('[GameLoop] Frame error:', _loopErr.message || _loopErr, _loopErr.stack ? _loopErr.stack.split('\n').slice(0,3).join(' <- ') : '');
+  }
+
+  // Render outside the gameplay update try/catch so one bad subsystem
+  // does not blank the frame and trap the player on a frozen screen.
+  if (shouldRenderFrame) {
+    try {
+      if (composer) composer.render();
+      else if (renderer) renderer.render(scene, camera);
+      if (gameLoop._errCount) gameLoop._errCount = 0;
+    } catch (_renderErr) {
+      if (!gameLoop._renderErrCount) gameLoop._renderErrCount = 0;
+      gameLoop._renderErrCount++;
+      if (gameLoop._renderErrCount <= 10) console.error('[GameLoop] Render error:', _renderErr.message || _renderErr, _renderErr.stack ? _renderErr.stack.split('\n').slice(0,3).join(' <- ') : '');
+    }
   }
 }
 
