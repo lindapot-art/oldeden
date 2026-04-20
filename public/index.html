@@ -6093,6 +6093,16 @@ function dropLootFromEnemy(pos) {
     const _rebirthLootMult = 1 + (state.rebirths || 0) * 0.02;
     spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)), type, Math.ceil(baseVal * rarity.mult * _rebirthLootMult), rarity);
   }
+  // Score fever — double loot drop
+  if (c._scoreFeverUntil && state.gameTime < c._scoreFeverUntil && Math.random() < 0.4) {
+    const types = ['credits', 'ammo', 'health', 'fuel', 'shield', 'scoreboost'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const vals = { credits: 50, ammo: 25, health: 25, fuel: 25, shield: 25, scoreboost: 25 };
+    const rarity = rollRarity();
+    const baseVal = vals[type] || 50;
+    const _rebirthLootMult = 1 + (state.rebirths || 0) * 0.02;
+    spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*8, 3, (Math.random()-0.5)*8)), type, Math.ceil(baseVal * rarity.mult * _rebirthLootMult), rarity);
+  }
 }
 
 // Scatter some initial loot in the system
@@ -13421,6 +13431,12 @@ function gameLoop() {
             const _now = performance.now();
             if (_now - c._lastKillTime < 5000) {
               c._scoreMultiplier = Math.min(4, c._scoreMultiplier + 0.25);
+              // Score fever — 3x+ multiplier triggers double loot for 10s
+              if (c._scoreMultiplier >= 3 && (!c._scoreFeverUntil || state.gameTime > c._scoreFeverUntil)) {
+                c._scoreFeverUntil = state.gameTime + 10000;
+                addComms('EDEN AI', '\u{1F525} SCORE FEVER! Double loot for 10s!');
+                addCombatLog('SCORE FEVER — 2x loot drops 10s', '#ffcc00');
+              }
               // Rapid kill announcements
               c._rapidKills = (c._rapidKills || 0) + 1;
               const _rapidNames = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL', 4: 'QUAD KILL', 5: 'PENTA KILL' };
@@ -14127,6 +14143,17 @@ function gameLoop() {
           let dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
           // Streak damage resistance
           if (c._streakDR > 0) dmg *= (1 - c._streakDR);
+          // Adaptive armor — same enemy type hits reduce damage by 5% per hit (cap 25%)
+          if (c._lastHitByType) {
+            if (!c._adaptiveArmor) c._adaptiveArmor = {};
+            const _aaKey = c._lastHitByType;
+            c._adaptiveArmor[_aaKey] = Math.min(0.25, (c._adaptiveArmor[_aaKey] || 0) + 0.05);
+          }
+          if (c._adaptiveArmor) {
+            let _aaType = null; let _aaMinD = Infinity;
+            c.enemies.forEach(_en => { const _bd = _en.group.position.distanceTo(b.group.position); if (_bd < _aaMinD) { _aaMinD = _bd; _aaType = _en.type; } });
+            if (_aaType && c._adaptiveArmor[_aaType]) dmg *= (1 - c._adaptiveArmor[_aaType]);
+          }
           // Damage absorption field — consume absorb buffer first
           if (c._absorbField > 0) {
             const _absorbed = Math.min(c._absorbField, dmg);
@@ -14262,7 +14289,9 @@ function gameLoop() {
       }
       if (l.group.userData.lootMesh) l.group.userData.lootMesh.scale.setScalar(0.9 + _lootPulse * 0.3);
       // Player collect (magnet-aware range)
-      const _collectRange = state.lootMagnet.active ? 30 : 12;
+      let _collectRange = state.lootMagnet.active ? 30 : 12;
+      // Veteran aura — 2x collect range after 100 kills
+      if (c.kills >= 100) _collectRange *= 2;
       const _collectDistSq = l.group.position.distanceToSquared(ship.position);
       if (_collectDistSq < _collectRange * _collectRange) {
         // Magnet pull toward player if not yet close enough to pick up
