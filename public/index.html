@@ -8817,6 +8817,15 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('NANO REPAIR PULSE — +20 hull +10 shield', '#44ff88');
     AudioSFX.play('shield_regen');
   }
+  // Shield capacitor: 7 key — restore 50% max shield, 45s cooldown
+  if (e.key === '7' && c.active && !c.dead && (!c._shieldCapCD || state.gameTime > c._shieldCapCD)) {
+    const _capAmount = Math.floor(state.ship.maxShield * 0.5);
+    state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + _capAmount);
+    c._shieldCapCD = state.gameTime + 45000;
+    addComms('Engineering', '\u{1F6E1} Shield capacitor discharged! +' + _capAmount + ' shield.');
+    addCombatLog('SHIELD CAPACITOR — +' + _capAmount + ' shield', '#44ccff');
+    AudioSFX.play('shield_regen');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -13306,6 +13315,9 @@ function gameLoop() {
           spawnImpactSparks(p.group.position, p.isLaser ? 0x44ffaa : 0xffaa44);
           c.hitMarkerTimer = isCrit ? 300 : 150;
           c._shotsHit = (c._shotsHit || 0) + 1;
+          // Hit combo tracker — consecutive hits without miss, 10+ gives +10% damage
+          c._hitCombo = (c._hitCombo || 0) + 1;
+          if (c._hitCombo >= 10) genomeDmg *= 1.10;
           c.dmgNumbers.push({ text: (isCrit ? 'CRIT -' : '-') + genomeDmg.toFixed(1), px: p.group.position.x, py: p.group.position.y, pz: p.group.position.z, age: 0, color: isCrit ? '#ffee00' : '#ff6644' });
           if (e.hp <= 0) {
             // Ricochet shot — 5% chance projectile bounces to another enemy after kill
@@ -13394,6 +13406,14 @@ function gameLoop() {
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
+            // Double tap — killing 2 enemies within 1s gives +25% credits on second
+            const _dtNow = performance.now();
+            if (c._lastKillForDT && _dtNow - c._lastKillForDT < 1000) {
+              const _dtBonus = Math.floor(e.points * _creditStreakMult * 0.4 * 0.25);
+              state.player.credits += _dtBonus;
+              c.dmgNumbers.push({ text: 'DOUBLE TAP +' + _dtBonus, px: e.group.position.x, py: e.group.position.y + 9, pz: e.group.position.z, age: 0, color: '#ff88ff' });
+            }
+            c._lastKillForDT = _dtNow;
             // Danger close bonus — kills within 10m give +50% score
             const _killDist = e.group.position.distanceTo(ship.position);
             if (_killDist < 10) {
@@ -13734,7 +13754,10 @@ function gameLoop() {
           }
         }
       }
-      if (hit || p.age > p.life) { scene.remove(p.group); disposeObject(p.group); c.projectiles.splice(i, 1); }
+      if (hit || p.age > p.life) {
+        if (!hit && c._hitCombo) { c._hitCombo = 0; } // Reset hit combo on miss
+        scene.remove(p.group); disposeObject(p.group); c.projectiles.splice(i, 1);
+      }
     }
 
     // Update enemies
