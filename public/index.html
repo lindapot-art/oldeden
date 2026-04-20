@@ -7252,6 +7252,30 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.fillStyle = c._dmgVigGrad;
     hudCtx.fillRect(0, 0, W, H);
     hudCtx.globalAlpha = 1;
+    // HUD static/interference — noise lines at critical hull
+    if (hullPct < 0.25) {
+      const staticIntensity = Math.floor((1 - hullPct / 0.25) * 12); // 0-12 lines
+      hudCtx.save();
+      for (let si = 0; si < staticIntensity; si++) {
+        const sy = Math.floor(Math.random() * H);
+        const sw = 40 + Math.floor(Math.random() * (W - 80));
+        const sx = Math.floor(Math.random() * (W - sw));
+        hudCtx.globalAlpha = 0.05 + Math.random() * 0.12;
+        hudCtx.fillStyle = Math.random() > 0.5 ? '#ff4444' : '#ffffff';
+        hudCtx.fillRect(sx, sy, sw, 1 + Math.floor(Math.random() * 2));
+      }
+      // Random glitch block (1-2 per frame at <10% hull)
+      if (hullPct < 0.1 && Math.random() < 0.3) {
+        const gx = Math.floor(Math.random() * W);
+        const gy = Math.floor(Math.random() * H);
+        const gw = 20 + Math.floor(Math.random() * 60);
+        const gh = 4 + Math.floor(Math.random() * 12);
+        hudCtx.globalAlpha = 0.08 + Math.random() * 0.1;
+        hudCtx.fillStyle = '#ff2222';
+        hudCtx.fillRect(gx, gy, gw, gh);
+      }
+      hudCtx.restore();
+    }
   }
 
   // Boss HP bar (top-center)
@@ -7263,6 +7287,45 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(bx, by, bw, bh);
     hudCtx.fillStyle = '#ff2200'; hudCtx.fillRect(bx, by, bw*(boss.hp/boss.maxHp), bh);
     hudCtx.strokeStyle = '#ff4422'; hudCtx.lineWidth = 1; hudCtx.strokeRect(bx, by, bw, bh);
+  }
+
+  // ── Compass / Bearing Indicator (top-center strip) ──
+  {
+    const cmpY = 18, cmpW = 240, cmpH = 16;
+    const cmpX = cx - cmpW / 2;
+    // Get camera yaw in degrees (0-360)
+    const _camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const heading = ((Math.atan2(_camDir.x, -_camDir.z) * 180 / Math.PI) + 360) % 360;
+    hudCtx.save();
+    hudCtx.globalAlpha = 0.4;
+    hudCtx.fillStyle = '#0a0e18'; hudCtx.fillRect(cmpX, cmpY, cmpW, cmpH);
+    hudCtx.strokeStyle = '#334455'; hudCtx.lineWidth = 0.5; hudCtx.strokeRect(cmpX, cmpY, cmpW, cmpH);
+    // Draw compass ticks + cardinal labels
+    hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
+    hudCtx.textAlign = 'center'; hudCtx.globalAlpha = 0.6;
+    const cardinals = {0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW'};
+    for (let deg = 0; deg < 360; deg += 15) {
+      let offset = deg - heading;
+      if (offset > 180) offset -= 360;
+      if (offset < -180) offset += 360;
+      const px = cx + (offset / 180) * (cmpW / 2);
+      if (px < cmpX + 4 || px > cmpX + cmpW - 4) continue;
+      const isCardinal = cardinals[deg];
+      hudCtx.fillStyle = isCardinal ? '#44aaff' : '#445566';
+      hudCtx.globalAlpha = isCardinal ? 0.7 : 0.35;
+      if (isCardinal) {
+        hudCtx.fillText(isCardinal, px, cmpY + 11);
+      }
+      hudCtx.fillRect(px, cmpY + (isCardinal ? 0 : 2), 1, isCardinal ? 4 : 3);
+    }
+    // Center marker
+    hudCtx.globalAlpha = 0.8; hudCtx.fillStyle = '#44aaff';
+    hudCtx.beginPath(); hudCtx.moveTo(cx - 3, cmpY + cmpH); hudCtx.lineTo(cx + 3, cmpY + cmpH); hudCtx.lineTo(cx, cmpY + cmpH - 4); hudCtx.fill();
+    // Heading number
+    hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#88aacc';
+    hudCtx.fillText(Math.round(heading) + '\u00B0', cx, cmpY + cmpH + 10);
+    hudCtx.textAlign = 'left';
+    hudCtx.restore();
   }
 
   // Enemy bolt count on HUD
@@ -7590,6 +7653,29 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
       hudCtx.beginPath(); hudCtx.moveTo(cx-kx1,cy-kx1); hudCtx.lineTo(cx+kx1,cy+kx1); hudCtx.stroke();
       hudCtx.beginPath(); hudCtx.moveTo(cx+kx1,cy-kx1); hudCtx.lineTo(cx-kx1,cy+kx1); hudCtx.stroke();
     }
+    // Heat arc — 180° arc below crosshair showing weapon temperature
+    if (c.heat > 0.05) {
+      const heatArc = Math.PI * c.heat; // 0° at 0 heat, 180° at full
+      const heatR = crSize + 16;
+      hudCtx.strokeStyle = c.heat > 0.8 ? '#ff2222' : c.heat > 0.5 ? '#ff8800' : '#ffaa44';
+      hudCtx.lineWidth = 2.5; hudCtx.globalAlpha = 0.5 + c.heat * 0.4;
+      hudCtx.beginPath(); hudCtx.arc(cx, cy, heatR, Math.PI/2 - heatArc/2, Math.PI/2 + heatArc/2); hudCtx.stroke();
+      // OVERHEAT warning
+      if (c.heat >= 0.9) {
+        hudCtx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
+        hudCtx.fillStyle = '#ff2222'; hudCtx.textAlign = 'center';
+        hudCtx.globalAlpha = 0.6 + 0.4 * Math.sin(state.gameTime * 0.015);
+        hudCtx.fillText('OVERHEAT', cx, cy + crSize + 32);
+        hudCtx.textAlign = 'left';
+      }
+    }
+    // Weapon mode label above crosshair
+    hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
+    hudCtx.textAlign = 'center'; hudCtx.globalAlpha = 0.45;
+    const wLabel = c.charging ? 'CHARGE' : (state.activeWeapon === 'laser' ? 'LASER' : 'RAILGUN');
+    hudCtx.fillStyle = c.charging ? '#ffcc00' : (state.activeWeapon === 'laser' ? '#44ff88' : '#44aaff');
+    hudCtx.fillText(wLabel, cx, cy - crSize - 8);
+    hudCtx.textAlign = 'left';
     hudCtx.restore();
   }
 
@@ -12570,6 +12656,15 @@ function gameLoop() {
     hudCtx.fillText('SPD ' + speedPct + '%  ' + Math.round(fl.speed) + ' m/s', 20, hudCanvas.height - 30);
     hudCtx.fillStyle = '#557799';
     hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), 20, hudCanvas.height - 44);
+    // Station distance (bottom-left)
+    if (stationModels[0]?.position) {
+      const stDist = Math.round(ship.position.distanceTo(stationModels[0].position));
+      hudCtx.fillStyle = stDist < 80 ? '#00ff88' : stDist < 200 ? '#44aaff' : '#557799';
+      hudCtx.fillText('STA ' + stDist + 'm' + (stDist < 80 ? ' [DOCK]' : ''), 130, hudCanvas.height - 30);
+    }
+    // Coordinates (bottom-left, subtle)
+    hudCtx.fillStyle = '#334455'; hudCtx.font = '8px "Segoe UI"';
+    hudCtx.fillText('X:' + Math.round(ship.position.x) + ' Y:' + Math.round(ship.position.y) + ' Z:' + Math.round(ship.position.z), 20, hudCanvas.height - 4);
     // Target distance
     if (state.targetLock && state.targetLock.target && state.targetLock.target.group) {
       const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
