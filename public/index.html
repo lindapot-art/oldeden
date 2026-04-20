@@ -12261,7 +12261,10 @@ function gameLoop() {
     if (!state._frameCount) state._frameCount = 0;
     state._frameCount++;
     const rawDt = Math.min(clock.getDelta(), 0.1);
-    const dt = rawDt * (state._deathTimeDilation || 1);
+    // Kill-cam slow-mo effect
+    const _killCamMult = (c._killCamTimer > 0) ? 0.3 : 1;
+    if (c._killCamTimer > 0) c._killCamTimer -= rawDt * 1000;
+    const dt = rawDt * (state._deathTimeDilation || 1) * _killCamMult;
     const dtMs = dt * 1000;
     state.gameTime += dtMs;
     updateWorldCycleVisuals();
@@ -12378,13 +12381,35 @@ function gameLoop() {
     if (c.charging) {
       // Lower CHARGE_TIME = faster charge at higher power
       const chargeTime = CHARGE_TIME / weaponsMult;
-      c.chargeLevel = Math.min(1, (performance.now() - c.chargeStart) / chargeTime);
-      railGlowMatL.opacity = c.chargeLevel * 0.8;
-      railGlowMatR.opacity = c.chargeLevel * 0.8;
-      if (c.chargeLevel >= 1) {
+      const _rawCharge = (performance.now() - c.chargeStart) / chargeTime;
+      c.chargeLevel = Math.min(2, _rawCharge); // Overcharge up to 2x
+      // Visual feedback: overcharge glows brighter + pulse
+      const _overPct = Math.max(0, c.chargeLevel - 1);
+      const _pulse = _overPct > 0 ? 0.2 * Math.sin(performance.now() * 0.02) : 0;
+      railGlowMatL.opacity = Math.min(1, c.chargeLevel * 0.8 + _pulse);
+      railGlowMatR.opacity = Math.min(1, c.chargeLevel * 0.8 + _pulse);
+      // Overcharge color shift — yellow to red
+      if (_overPct > 0) {
+        const _ocColor = _overPct > 0.7 ? 0xff2200 : _overPct > 0.3 ? 0xffaa00 : 0xffee44;
+        railGlowMatL.color.setHex(_ocColor);
+        railGlowMatR.color.setHex(_ocColor);
+      }
+      // Auto-fire at max overcharge (2x) OR fire on release
+      if (c.chargeLevel >= 2) {
+        const _overMult = 1 + c.chargeLevel; // 3x at full overcharge
         c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / weaponsMult;
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
-        spawnNail(weaponsMult); // pass multiplier for damage
+        railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
+        spawnNail(weaponsMult * _overMult);
+        if (_overMult >= 2.5) { c.dmgNumbers.push({ text: '\u26A1 OVERCHARGED!', px: ship.position.x, py: ship.position.y + 3, pz: ship.position.z, age: 0, color: '#ff4400' }); }
+      } else if (!mouseHeld && c.chargeLevel >= 1) {
+        // Release fire at normal+ charge
+        const _overMult = 1 + Math.max(0, c.chargeLevel - 1);
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / weaponsMult;
+        c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
+        railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
+        spawnNail(weaponsMult * _overMult);
+        if (_overMult > 1.2) { c.dmgNumbers.push({ text: '\u26A1 OVERCHARGE x' + _overMult.toFixed(1), px: ship.position.x, py: ship.position.y + 3, pz: ship.position.z, age: 0, color: '#ffaa00' }); }
       }
     }
     if (c.cooling && performance.now() >= c.coolEnd) { c.cooling = false; c.weaponReady = true; }
@@ -12904,7 +12929,7 @@ function gameLoop() {
             c.streakMultiplier = c.streak >= 20 ? 4 : c.streak >= 15 ? 3.5 : c.streak >= 10 ? 3 : c.streak >= 5 ? 2 : c.streak >= 3 ? 1.5 : 1;
             // Streak milestone announcements
             const _milestones = {5:'RAMPAGE!',10:'UNSTOPPABLE!',15:'GODLIKE!',20:'LEGENDARY!'};
-            if (_milestones[c.streak]) { c._streakMilestoneText = _milestones[c.streak]; c._streakMilestoneTimer = 1500; AudioSFX.play('quest_complete'); }
+            if (_milestones[c.streak]) { c._streakMilestoneText = _milestones[c.streak]; c._streakMilestoneTimer = 1500; AudioSFX.play('quest_complete'); c._killCamTimer = 400; }
             // Show streak banner DOM element
             const _streakBanner = document.getElementById('streak-banner');
             if (_streakBanner && _milestones[c.streak]) {
@@ -12967,6 +12992,10 @@ function gameLoop() {
               addComms('EDEN AI', '\u2B50 COMMANDER DOWN! +' + cmdBonus + ' EC bonus, +3 SM');
               addCombatLog('Fleet Commander destroyed — bonus +' + cmdBonus + ' EC', '#ffcc00');
               AudioSFX.play('quest_complete');
+              // Reinforcement call — 2-4 enemies warp in when commander dies
+              const _reinfCount = 2 + Math.floor(Math.random() * 3);
+              addComms('Intercepted Comms', '\u26A0\uFE0F Enemy reinforcements inbound! ' + _reinfCount + ' contacts!');
+              for (let _ri = 0; _ri < _reinfCount; _ri++) setTimeout(() => createEnemy(), 500 + _ri * 300);
             }
             // Bounty target kill bonus — 3x credits
             if (e._isBounty) {
