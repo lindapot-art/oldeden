@@ -6950,9 +6950,27 @@ function renderHUD(dtMs) {
     hudCtx.restore();
   }
 
+  // ── Sector Threat Level (below kills, right side) ──
+  {
+    const enemyCount = c.enemies.length;
+    const threatLevel = enemyCount === 0 ? 'CLEAR' : enemyCount <= 2 ? 'LOW' : enemyCount <= 5 ? 'MEDIUM' : enemyCount <= 8 ? 'HIGH' : 'CRITICAL';
+    const threatColor = enemyCount === 0 ? '#00ff88' : enemyCount <= 2 ? '#44aaff' : enemyCount <= 5 ? '#ffaa00' : enemyCount <= 8 ? '#ff6600' : '#ff2222';
+    const _tly = sry + (c.streak >= 3 ? 95 : 70);
+    hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566';
+    hudCtx.fillText('THREAT', srx, _tly);
+    hudCtx.fillStyle = threatColor; hudCtx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
+    hudCtx.fillText(threatLevel + ' (' + enemyCount + ')', srx + 42, _tly);
+    // Threat pips — small colored dots
+    for (let tp = 0; tp < Math.min(5, Math.ceil(enemyCount / 2)); tp++) {
+      hudCtx.globalAlpha = 0.7; hudCtx.fillStyle = threatColor;
+      hudCtx.fillRect(srx + 120 + tp * 10, _tly - 7, 6, 6);
+    }
+    hudCtx.globalAlpha = 1;
+  }
+
   // ── Active Encounter / Hazard HUD Indicator (top-right, below streak) ──
   {
-    let _hudStatusY = sry + (c.streak >= 3 ? 95 : 70);
+    let _hudStatusY = sry + (c.streak >= 3 ? 110 : 85);
     // Active encounter
     if (state._activeEncounter) {
       const enc = state._activeEncounter;
@@ -8042,7 +8060,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
     else if (action === 'exit') { exitGunnerMode(); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } addComms('Station', 'Docking clearance granted. Initiating approach...'); AudioSFX.play('dock'); const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => addComms('Station', 'Docking clamps engaged. Welcome aboard.'), 1200); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -10229,6 +10247,23 @@ function updateMining(dt) {
     miningLaserBeam.quaternion.setFromUnitVectors(_upVec, _tmpV3a);
     miningLaserBeam.material.opacity = 0.4 + Math.sin(state.gameTime * 0.01) * 0.3;
     miningLaserBeam.material.color.setHSL(0.33 + Math.sin(state.gameTime * 0.005) * 0.05, 1, 0.5);
+    // Mining sparks at asteroid contact point (every ~4 frames)
+    if ((state._frameCount & 3) === 0) {
+      for (let msi = 0; msi < 2; msi++) {
+        const sparkG = new THREE.Group();
+        const sparkMesh = new THREE.Mesh(
+          _explFragGeos[0] || new THREE.TetrahedronGeometry(0.15),
+          new THREE.MeshBasicMaterial({ color: 0xffcc44, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })
+        );
+        sparkMesh.scale.setScalar(0.3 + Math.random() * 0.5);
+        sparkG.add(sparkMesh);
+        sparkG.position.copy(asteroid.position).addScaledVector(
+          new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2).normalize(), 1.5
+        );
+        scene.add(sparkG);
+        c.explosions.push({ group: sparkG, age: 0, maxAge: 200 + Math.random() * 150 });
+      }
+    }
   }
 
   if (state.mining.progress >= 100) {
