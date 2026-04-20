@@ -12836,6 +12836,9 @@ function gameLoop() {
           // Close-range bonus — 50% extra damage within 20m
           const _hitDist = p.group.position.distanceTo(ship.position);
           if (_hitDist < 20) genomeDmg *= 1.5;
+          // Focus fire bonus — every 5th hit on same enemy does 2x
+          e._hitCount = (e._hitCount || 0) + 1;
+          if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
           e.hp -= genomeDmg;
           e.hitFlash = 150;
           // Evasion: 20% chance to dodge sideways after being hit (interceptors/corvettes 35%)
@@ -13100,6 +13103,24 @@ function gameLoop() {
         e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0xff2200); ch.material.emissiveIntensity = 0.8; } });
       }
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
+      // Enemy retreat AI — enemies at <20% HP flee (not bosses/commanders)
+      const _hpPct = e.hp / e.maxHp;
+      if (_hpPct < 0.20 && !e.isBoss && !e._isCommander && !e._retreating) {
+        e._retreating = true;
+        e.speed *= 1.5; // flee faster
+        if (!e._retreatAnnounced) { e._retreatAnnounced = true; addCombatLog((e.type || 'Hostile').toUpperCase() + ' retreating!', '#ffaa44'); }
+      }
+      if (e._retreating) {
+        // Flee away from player
+        e.group.position.addScaledVector(_tmpV3a, -e.speed * dt);
+        e.group.lookAt(ship.position);
+        // Despawn if too far
+        if (e.group.position.distanceTo(ship.position) > SPAWN_RADIUS * 2) {
+          scene.remove(e.group); disposeObject(e.group); c.enemies.splice(ei, 1);
+          addCombatLog('Enemy escaped the sector', '#888888');
+        }
+        continue;
+      }
       // Enemies only chase if player has attacked (passive until provoked)
       // First life stays non-aggressive until the player engages.
       const autoAggro = !isFirstLife && !isProtectedSpace() && state.gameTime > 15000;
@@ -13668,6 +13689,19 @@ function gameLoop() {
           _atClosest.hitFlash = 100;
           spawnImpactSparks(_atClosest.group.position, 0x44ffaa);
           c.dmgNumbers.push({ text: '-' + (5 * weaponsMult).toFixed(0), px: _atClosest.group.position.x, py: _atClosest.group.position.y + 2, pz: _atClosest.group.position.z, age: 0, color: '#44ffaa' });
+          // Turret kill credit
+          if (_atClosest.hp <= 0) {
+            c.kills++; c.score += _atClosest.points;
+            state.player.credits += Math.floor(_atClosest.points * 0.3);
+            gainSkillXP('gunnery', 0.01);
+            addCombatLog('Turret destroyed ' + (_atClosest.type || 'hostile') + ' +' + _atClosest.points + 'pts', '#44ffaa');
+            AudioSFX.play('explode');
+            spawnExplosion(_atClosest.group.position, _atClosest.cfg.scale || 0.6);
+            if (typeof spawnExplosionAt === 'function') spawnExplosionAt(_atClosest.group.position, 0xff4400, 10);
+            scene.remove(_atClosest.group); disposeObject(_atClosest.group);
+            const _atIdx = c.enemies.indexOf(_atClosest);
+            if (_atIdx >= 0) c.enemies.splice(_atIdx, 1);
+          }
         }
       }
     }
