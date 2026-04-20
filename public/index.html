@@ -6910,7 +6910,8 @@ function fireRailgun() {
 
 function spawnNail() {
   c._shotsFired = (c._shotsFired || 0) + 1;
-  c.ammo--;
+  // Ammo echo — every 25th shot is free
+  if (c._shotsFired % 25 !== 0) c.ammo--;
   c.heat = Math.min(1, c.heat + (c._ammoType === 'ap' ? 0.18 : 0.12));
   c.recoilVel = -8;
   c.fireRecoilKick = 0.045; // Camera kick on fire
@@ -13458,6 +13459,17 @@ function gameLoop() {
               c.score += _okBonus;
               c.dmgNumbers.push({ text: 'OVERKILL +' + _okBonus, px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#ff4400' });
             }
+            // Overkill chain — excess damage carries to nearest enemy within 20m
+            if (_overkill > 0) {
+              let _okTarget = null, _okDist = 20;
+              c.enemies.forEach(_oe => { if (_oe !== e && _oe.hp > 0) { const _od = _oe.group.position.distanceTo(e.group.position); if (_od < _okDist) { _okDist = _od; _okTarget = _oe; } } });
+              if (_okTarget) {
+                _okTarget.hp -= _overkill * 0.5;
+                _okTarget.hitFlash = 200;
+                spawnImpactSparks(_okTarget.group.position, 0xff6600);
+                c.dmgNumbers.push({ text: 'CHAIN −' + Math.floor(_overkill * 0.5), px: _okTarget.group.position.x, py: _okTarget.group.position.y + 4, pz: _okTarget.group.position.z, age: 0, color: '#ff6600' });
+              }
+            }
             // Kill streak
             c.streak++; c.streakTimer = 5000;
             c.streakMultiplier = c.streak >= 20 ? 4 : c.streak >= 15 ? 3.5 : c.streak >= 10 ? 3 : c.streak >= 5 ? 2 : c.streak >= 3 ? 1.5 : 1;
@@ -14576,6 +14588,19 @@ function gameLoop() {
       c._ammoFabTimer = state.gameTime + 15000;
     }
     // Proximity alarm — warn when enemy within 15m behind player
+    // Survival milestones — credit bonuses at 60s, 120s, 180s alive
+    if (!c._survivalMilestones) c._survivalMilestones = {};
+    const _aliveS = Math.floor(state.gameTime / 1000);
+    const _survRewards = { 60: 500, 120: 1000, 180: 2000 };
+    for (const [_sTime, _sReward] of Object.entries(_survRewards)) {
+      if (_aliveS >= Number(_sTime) && !c._survivalMilestones[_sTime]) {
+        c._survivalMilestones[_sTime] = true;
+        state.player.credits += _sReward;
+        addComms('EDEN AI', '\u{1F3C6} Survival milestone: ' + _sTime + 's alive! +' + _sReward + ' EC!');
+        addCombatLog('SURVIVAL ' + _sTime + 's — +' + _sReward + ' EC', '#ffcc00');
+        c.dmgNumbers.push({ text: '\u{1F3C6} SURVIVE +' + _sReward, px: ship.position.x, py: ship.position.y + 5, pz: ship.position.z, age: 0, color: '#ffcc00' });
+      }
+    }
     if (!c._proxAlarmCD) c._proxAlarmCD = 0;
     // Danger sense HUD — draw threat arrows for enemies within 30m that recently fired
     c._dangerArrows = [];
