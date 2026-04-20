@@ -1459,6 +1459,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <span><span style="color:var(--blue);">Ctrl</span> Down</span>
         <span><span style="color:var(--blue);">R</span> Reload</span>
         <span><span style="color:var(--blue);">Q</span> Swap weapon</span>
+        <span><span style="color:var(--blue);">V</span> Fire missile</span>
         <span><span style="color:var(--blue);">M</span> Mine</span>
         <span><span style="color:var(--blue);">T</span> AI Chat</span>
         <span><span style="color:var(--blue);">K</span> Skins</span>
@@ -1924,6 +1925,10 @@ const state = {
     barrelRollCooldown: 0,  // cooldown before next roll (ms)
     _lastTapA: 0, _lastTapD: 0, // double-tap detection timestamps
     _killFeed: [],          // recent kill log [{text, time, color}]
+    missiles: 4,            // homing missile count
+    maxMissiles: 4,         // max missile capacity
+    _missiles: [],          // active missile projectiles [{mesh, target, vel, age}]
+    _shieldRegenPulse: 0,   // shield regen visual pulse timer
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -2806,6 +2811,36 @@ function fireLaser() {
   AudioSFX.play('laser_fire');
 }
 
+// ── Homing Missile System ──
+function fireMissile() {
+  if (c.dead || c.missiles <= 0) return;
+  if (!state.targetLock || !state.targetLock.locked || !state.targetLock.target) {
+    showToast('No target lock — hold to acquire');
+    return;
+  }
+  c.missiles--;
+  c.playerHasAttacked = true;
+  const tgt = state.targetLock.target;
+  // Create missile mesh (small elongated shape)
+  const mGeo = new THREE.CylinderGeometry(0.15, 0.05, 1.5, 6);
+  const mMat = new THREE.MeshBasicMaterial({ color: 0xff8844, emissive: 0xff4400, transparent: true, opacity: 0.9 });
+  const mMesh = new THREE.Mesh(mGeo, mMat);
+  mMesh.quaternion.copy(camera.quaternion);
+  mMesh.position.copy(camera.position);
+  const initDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  mMesh.position.addScaledVector(initDir, 3);
+  // Exhaust trail glow
+  const trailGeo = new THREE.SphereGeometry(0.3, 4, 4);
+  const trailMat = new THREE.MeshBasicMaterial({ color: 0xff6622, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+  const trail = new THREE.Mesh(trailGeo, trailMat);
+  trail.position.set(0, -0.8, 0);
+  mMesh.add(trail);
+  scene.add(mMesh);
+  c._missiles.push({ mesh: mMesh, target: tgt, vel: initDir.multiplyScalar(120), age: 0, damage: 35, trailMat });
+  addComms('Weapons', '\uD83D\uDE80 Missile away! ' + c.missiles + ' remaining');
+  AudioSFX.play('boost');
+}
+
 // ================================================================
 //  LIFE INSURANCE — Soul-bind one item across death
 // ================================================================
@@ -3537,6 +3572,7 @@ function createCharacter() {
   state.ship.shield = state.ship.maxShield;
   state.ship.fuel = state.ship.maxFuel;
   c.ammo = c.maxAmmo;
+  c.missiles = c.maxMissiles;
   c.heat = 0;
   c.enemies = [];
   c.enemyBolts = [];
@@ -4574,6 +4610,8 @@ function renderStation() {
       <button class="trade-buy" onclick="window._buyAmmo()" ${ammoNeeded < 1 ? 'disabled style="opacity:0.4"' : ''}>${ammoCost} EC</button></div>
     <div class="trade-row"><span>Refuel (${Math.round(state.ship.maxFuel - state.ship.fuel)} units)</span>
       <button class="trade-buy" onclick="window._refuel()" ${state.ship.fuel >= state.ship.maxFuel ? 'disabled style="opacity:0.4"' : ''}>${Math.ceil((state.ship.maxFuel - state.ship.fuel) * 0.5)} EC</button></div>
+    <div class="trade-row"><span>Rearm Missiles (${c.maxMissiles - c.missiles})</span>
+      <button class="trade-buy" onclick="window._rearmMissiles()" ${c.missiles >= c.maxMissiles ? 'disabled style="opacity:0.4"' : ''}>${(c.maxMissiles - c.missiles) * 50} EC</button></div>
     <div style="color:var(--muted);font-size:0.7rem;margin-top:8px">Docking fee: ${state.economy.dockingFee} EC (auto-paid)</div>`;
 
   // ── Past Lives — Your dead characters as station NPCs ──
@@ -4874,6 +4912,17 @@ window._refuel = () => {
   state.ship.fuel = state.ship.maxFuel;
   AudioSFX.play('dock');
   addComms('Station', `Ship refueled. (-${cost} EC)`);
+  renderStation();
+};
+window._rearmMissiles = () => {
+  const needed = c.maxMissiles - c.missiles;
+  if (needed < 1) { addComms('Station', 'Missiles full.'); return; }
+  const cost = needed * 50;
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for missiles.'); return; }
+  state.player.credits -= cost;
+  c.missiles = c.maxMissiles;
+  AudioSFX.play('reload');
+  addComms('Station', `Missiles rearmed. (-${cost} EC)`);
   renderStation();
 };
 window._acceptQuest = (id) => {
@@ -6913,6 +6962,9 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = c.heat < 0.95 ? '#00ff88' : danger;
     hudCtx.fillText(c.heat < 0.95 ? '\u25CF FIRING' : '\u25CB OVERHEAT', wrx, wry+92);
   }
+  // Missile counter
+  hudCtx.fillStyle = c.missiles > 0 ? '#ff8844' : '#555555';
+  hudCtx.fillText('\uD83D\uDE80 MSL: ' + c.missiles + '/' + c.maxMissiles + '  [V]', wrx, wry+108);
 
   // Shield/Hull (top-left)
   const slx = 24, sly = 30;
@@ -8211,6 +8263,9 @@ document.addEventListener('keydown', (e) => {
       c._lastTapD = now;
     }
   }
+  // Missile fire: F key
+  // Missile fire: V key
+  if ((e.key === 'v' || e.key === 'V') && c.active && !c.dead) { fireMissile(); }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -12941,6 +12996,50 @@ function gameLoop() {
         }
       }
     }
+
+    // ── Homing missile update ──
+    for (let mi = c._missiles.length - 1; mi >= 0; mi--) {
+      const m = c._missiles[mi];
+      m.age += dtMs;
+      if (m.age > 6000 || !m.mesh.parent) { scene.remove(m.mesh); if (m.mesh.geometry) m.mesh.geometry.dispose(); if (m.trailMat) m.trailMat.dispose(); c._missiles.splice(mi, 1); continue; }
+      // Homing: steer towards target
+      if (m.target && m.target.group && m.target.group.parent) {
+        const toTarget = new THREE.Vector3().subVectors(m.target.group.position, m.mesh.position);
+        const dist = toTarget.length();
+        if (dist > 0.1) {
+          toTarget.normalize();
+          // Lerp velocity direction towards target (turn rate increases with age)
+          const turnRate = Math.min(6, 2 + m.age * 0.002);
+          m.vel.normalize().lerp(toTarget, turnRate * dt).normalize().multiplyScalar(120 + m.age * 0.01);
+        }
+        // Hit detection
+        if (dist < 5) {
+          m.target.hp -= m.damage;
+          m.target.hitFlash = 300;
+          spawnExplosion(m.mesh.position, 10, 0xff8844);
+          if (m.target.hp <= 0) {
+            const pts = m.target.points || 25;
+            state.player.score += pts;
+            c.kills++;
+            c.streak++;
+            c.killConfirmTimer = 400;
+            const _kfColor = m.target.isBoss ? '#ff2200' : c.streak >= 5 ? '#ff8800' : '#44ff88';
+            c._killFeed.unshift({ text: (m.target.isBoss ? '\u2605 BOSS ' : '') + (m.target.type || 'hostile').toUpperCase() + ' +' + pts + ' [MISSILE]', time: performance.now(), color: _kfColor });
+            if (c._killFeed.length > 5) c._killFeed.length = 5;
+          }
+          scene.remove(m.mesh); if (m.mesh.geometry) m.mesh.geometry.dispose(); if (m.trailMat) m.trailMat.dispose(); c._missiles.splice(mi, 1); continue;
+        }
+      }
+      m.mesh.position.addScaledVector(m.vel, dt);
+      m.mesh.lookAt(m.mesh.position.clone().add(m.vel));
+      // Pulsing trail
+      if (m.trailMat) m.trailMat.opacity = 0.3 + 0.3 * Math.sin(m.age * 0.02);
+    }
+
+    // ── Shield regen visual pulse ──
+    if (state.ship.shield < state.ship.maxShield && state.ship.shield > 0 && !c.dead) {
+      c._shieldRegenPulse = (c._shieldRegenPulse || 0) + dt * 3;
+    } else { c._shieldRegenPulse = 0; }
 
     // Weapon heat glow on barrels
     if (railGlowMatL) { railGlowMatL.opacity = c.heat * 0.6; railGlowMatL.color.setHex(c.heat > 0.5 ? 0xff2200 : 0xff8800); }
