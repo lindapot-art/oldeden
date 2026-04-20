@@ -2336,6 +2336,18 @@ const EPITAPHS = [
   '"The universe writes stories in lives, not ink."',
   '"You were cosmic dust pretending to be a person. Now you\'re dust again."',
   '"In Old Eden, every graveyard is a nursery."',
+  // Combat / Military
+  '"Shields failed. Hull breached. Spirit unbroken."',
+  '"They will build statues of pilots like you. Probably."',
+  '"The enemy salutes your wreckage. Cold comfort."',
+  '"Your kill count speaks louder than any eulogy."',
+  '"Weapon systems offline. Soul systems: nominal."',
+  // Dark Humor
+  '"Insurance claim denied: acts of void."',
+  '"On the bright side, you don\'t owe docking fees anymore."',
+  '"Your ship\'s warranty just expired. So did you."',
+  '"The wreckage has been catalogued. It scored a 3/10."',
+  '"At least the explosion was pretty."',
 ];
 
 function storePastLife(deathCause) {
@@ -2368,13 +2380,22 @@ function showEulogy(deathStats, deathCause) {
   document.getElementById('eulogy-cause').textContent = deathCause || 'Destroyed in combat';
   
   const stats = document.getElementById('eulogy-stats');
+  // Performance rating based on stats
+  const _acc = deathStats.accuracy || 0;
+  const _k = deathStats.kills || 0;
+  const _survT = deathStats.longestLife || 0;
+  const _rating = _k >= 100 ? 'S' : _k >= 50 ? 'A' : _k >= 25 ? 'B' : _k >= 10 ? 'C' : _k >= 3 ? 'D' : 'F';
+  const _ratingColor = {S:'#ffd700',A:'#44ff88',B:'#44aaff',C:'#ffaa44',D:'#ff6644',F:'#ff2222'}[_rating];
   const statItems = [
-    { val: deathStats.kills || 0, lbl: 'Enemies Slain' },
+    { val: _k, lbl: 'Enemies Slain' },
     { val: deathStats.score || 0, lbl: 'Score' },
     { val: deathStats.streak || 0, lbl: 'Best Streak' },
+    { val: _acc + '%', lbl: 'Accuracy' },
+    { val: _survT + 's', lbl: 'Time Survived' },
     { val: (deathStats.credits || 0).toLocaleString(), lbl: 'Credits Lost' },
     { val: faction?.name || 'None', lbl: 'Faction' },
     { val: state.player.rebirths, lbl: 'Lives Lived' },
+    { val: `<span style="color:${_ratingColor};font-size:1.6em">${_rating}</span>`, lbl: 'Rating' },
   ];
   stats.innerHTML = statItems.map((s, i) => 
     `<div class="eulogy-stat" style="animation-delay:${2 + i * 0.3}s">
@@ -6926,6 +6947,53 @@ function renderHUD(dtMs) {
       hudCtx.textAlign = 'left';
     }
     hudCtx.restore();
+  }
+
+  // ── Active Encounter / Hazard HUD Indicator (top-right, below streak) ──
+  {
+    let _hudStatusY = sry + (c.streak >= 3 ? 95 : 70);
+    // Active encounter
+    if (state._activeEncounter) {
+      const enc = state._activeEncounter;
+      const elapsed = performance.now() - enc.startTime;
+      const remaining = Math.max(0, Math.ceil((enc.duration - elapsed) / 1000));
+      const _encLabels = { distress: '\u26a0 DISTRESS RESCUE', ambush: '\u2694 PIRATE AMBUSH', trader: '\u2606 TRADER BOOST', patrol: '\u2605 PATROL ACTIVE' };
+      const _encColors = { distress: '#ffaa00', ambush: '#ff4444', trader: '#44ff88', patrol: '#44aaff' };
+      const label = _encLabels[enc.type] || enc.type.toUpperCase();
+      hudCtx.save();
+      hudCtx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = _encColors[enc.type] || '#ffffff';
+      hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(state.gameTime * 0.008);
+      hudCtx.shadowColor = _encColors[enc.type] || '#ffffff'; hudCtx.shadowBlur = 6;
+      hudCtx.fillText(label + '  ' + remaining + 's', srx, _hudStatusY);
+      if (enc.type === 'distress') {
+        hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.globalAlpha = 0.6;
+        hudCtx.fillText('Kills: ' + (enc.killsGot || 0) + '/' + enc.killsNeeded, srx, _hudStatusY + 14);
+        _hudStatusY += 14;
+      }
+      hudCtx.restore();
+      _hudStatusY += 18;
+    }
+    // Bonus multiplier timer
+    if (c._bonusTimer && c._bonusTimer > 0) {
+      hudCtx.save();
+      hudCtx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ffdd44';
+      hudCtx.globalAlpha = 0.8;
+      hudCtx.fillText('\u2726 BOUNTY +50%  ' + Math.ceil(c._bonusTimer / 1000) + 's', srx, _hudStatusY);
+      hudCtx.restore();
+      _hudStatusY += 16;
+    }
+    // Hazard zone indicator
+    const _hzSys = state.starSystems[state.location.systemIndex];
+    const _hzList = _hzSys?.hazards || [];
+    if (_hzList.length > 0) {
+      hudCtx.save();
+      hudCtx.font = '10px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ff6644'; hudCtx.globalAlpha = 0.5 + 0.2 * Math.sin(state.gameTime * 0.005);
+      hudCtx.fillText('\u26a0 HAZARD: ' + _hzList[0], srx, _hudStatusY);
+      hudCtx.restore();
+    }
   }
 
   // Credits (bottom-left)
@@ -11995,6 +12063,23 @@ function gameLoop() {
             // Skill XP: combat actions level gunnery + piloting
             gainSkillXP('gunnery', 0.03);
             gainSkillXP('piloting', 0.01);
+            // ── Kill count milestones — total kills per run ──
+            const _killMilestones = {
+              10:  { title: 'FIRST BLOOD — 10 Kills', credits: 100, sm: 1 },
+              25:  { title: 'HUNTER — 25 Kills',      credits: 250, sm: 2 },
+              50:  { title: 'DESTROYER — 50 Kills',    credits: 500, sm: 3 },
+              75:  { title: 'ANNIHILATOR — 75 Kills',  credits: 750, sm: 4 },
+              100: { title: 'CENTURION — 100 Kills',   credits: 1000, sm: 5, heal: true },
+            };
+            const _km = _killMilestones[c.kills];
+            if (_km) {
+              state.player.credits += _km.credits;
+              state.player.stellarMarks += _km.sm;
+              if (_km.heal) { state.ship.hull = state.ship.maxHull; state.ship.shield = state.ship.maxShield; }
+              addComms('EDEN AI', `\u2605 ${_km.title} — +${_km.credits} EC, +${_km.sm} SM${_km.heal ? ', FULL REPAIR!' : ''}`);
+              AudioSFX.play('quest_complete');
+              c.damageFlash = 300;
+            }
             // Floating damage number
             c.dmgNumbers.push({ text: '+' + pts, px: e.group.position.x, py: e.group.position.y, pz: e.group.position.z, age: 0, color: c.streak >= 5 ? '#ffcc00' : '#00ff88' });
             if (e.isBoss) {
