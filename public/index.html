@@ -7132,10 +7132,21 @@ function renderHUD(dtMs) {
 
   const primary = '#44aaff', accent = '#00ff88', warning = '#ffaa00', danger = '#ff4444';
 
-  // Crosshair
+  // Crosshair — color shifts based on targeting
   const hitActive = c.hitMarkerTimer > 0;
   const killActive = c.killConfirmTimer > 0;
-  const crossColor = killActive ? '#ffcc00' : hitActive ? '#ff4444' : primary;
+  // Check if crosshair is aimed at an enemy (project enemy positions)
+  let _aimingAtEnemy = false;
+  {
+    const _aimV = new THREE.Vector3();
+    for (const _ae of c.enemies) {
+      _aimV.copy(_ae.group.position).project(camera);
+      if (_aimV.z > 1) continue;
+      const _asx = (1 + _aimV.x) * W / 2, _asy = (1 - _aimV.y) * H / 2;
+      if (Math.abs(_asx - cx) < 40 && Math.abs(_asy - cy) < 40) { _aimingAtEnemy = true; break; }
+    }
+  }
+  const crossColor = killActive ? '#ffcc00' : hitActive ? '#ff4444' : _aimingAtEnemy ? '#ff3333' : c.lockedTarget ? '#44ff44' : primary;
   const crossSize = killActive ? 36 : hitActive ? 33 : 30;
   hudCtx.strokeStyle = crossColor; hudCtx.lineWidth = hitActive ? 2.5 : 1.5; hudCtx.globalAlpha = 0.8;
   hudCtx.beginPath(); hudCtx.arc(cx, cy, crossSize, 0, Math.PI*2); hudCtx.stroke();
@@ -13225,8 +13236,15 @@ function gameLoop() {
               const bountyReward = Math.floor(e.points * _creditStreakMult * 0.4 * 2); // 2x extra (total 3x)
               state.player.credits += bountyReward;
               state.player.stellarMarks += 2;
-              addComms('Bounty Board', '\uD83C\uDFAF BOUNTY COLLECTED! +' + bountyReward + ' EC, +2 SM');
-              addCombatLog('Bounty collected — +' + bountyReward + ' EC bonus', '#ffcc00');
+              // Bounty hunter rank — track lifetime bounty kills
+              if (!state.player.lifetimeStats) state.player.lifetimeStats = {};
+              state.player.lifetimeStats.bountyKills = (state.player.lifetimeStats.bountyKills || 0) + 1;
+              const _bk = state.player.lifetimeStats.bountyKills;
+              const _bhRank = _bk >= 50 ? 'LEGENDARY HUNTER' : _bk >= 25 ? 'MASTER HUNTER' : _bk >= 10 ? 'BOUNTY HUNTER' : _bk >= 5 ? 'TRACKER' : 'NOVICE';
+              const _bhMult = _bk >= 50 ? 1.5 : _bk >= 25 ? 1.3 : _bk >= 10 ? 1.2 : _bk >= 5 ? 1.1 : 1;
+              if (_bhMult > 1) state.player.credits += Math.floor(bountyReward * (_bhMult - 1));
+              addComms('Bounty Board', '\uD83C\uDFAF BOUNTY COLLECTED! +' + bountyReward + ' EC, +2 SM — Rank: ' + _bhRank);
+              addCombatLog('Bounty collected — +' + bountyReward + ' EC bonus (' + _bhRank + ')', '#ffcc00');
               AudioSFX.play('quest_complete');
             }
             // Elite kill bonus — 2x credits + combat log
@@ -13409,7 +13427,7 @@ function gameLoop() {
               const _crateMesh = new THREE.Mesh(_crateGeo, _crateMat);
               _crateMesh.position.copy(_cratePos);
               scene.add(_crateMesh);
-              const _crateTypes = ['repair_kit', 'ammo_box', 'credit_stash', 'fuel_cell', 'emp_charge'];
+              const _crateTypes = ['repair_kit', 'ammo_box', 'credit_stash', 'fuel_cell', 'emp_charge', 'shield_battery'];
               c._salvageCrates.push({ mesh: _crateMesh, type: _crateTypes[Math.floor(Math.random() * _crateTypes.length)], life: 15000 });
             }
           }
@@ -14046,6 +14064,7 @@ function gameLoop() {
           else if (_ct === 'credit_stash') { state.player.credits += 50; addComms('Salvage', '\uD83D\uDCE6 Credit Stash! +50 EC'); }
           else if (_ct === 'fuel_cell') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 15); addComms('Salvage', '\uD83D\uDCE6 Fuel Cell! +15 fuel'); }
           else if (_ct === 'emp_charge') { c._empCharges = (c._empCharges || 0) + 1; addComms('Salvage', '\uD83D\uDCE6 EMP Charge found!'); }
+          else if (_ct === 'shield_battery') { state.ship.shield = Math.min(state.ship.maxShield + 20, state.ship.shield + 20); addComms('Salvage', '\uD83D\uDCE6 Shield Battery! +20 shield'); }
           AudioSFX.play('pickup');
           scene.remove(_cr.mesh); _cr.mesh.geometry.dispose(); _cr.mesh.material.dispose(); c._salvageCrates.splice(_ci, 1);
         }
