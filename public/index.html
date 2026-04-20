@@ -8710,6 +8710,17 @@ document.addEventListener('keydown', (e) => {
     c._ammoType = c._ammoType === 'ap' ? 'standard' : 'ap';
     addComms('Weapons', '\uD83D\uDD2B Ammo: ' + (c._ammoType === 'ap' ? 'ARMOR-PIERCING (+40% dmg, +50% heat)' : 'STANDARD'));
   }
+  // Taunt: Y key — draw aggro, +50% score from taunted kills for 10s
+  if ((e.key === 'y' || e.key === 'Y') && c.active && !c.dead && (!c._tauntCooldown || state.gameTime > c._tauntCooldown)) {
+    c._tauntActive = state.gameTime + 10000;
+    c._tauntCooldown = state.gameTime + 25000;
+    // Taunted enemies within 80m target player aggressively
+    let _taunted = 0;
+    c.enemies.forEach(en => { if (en.group.position.distanceTo(ship.position) < 80) { en._taunted = true; en.shootRate *= 0.6; _taunted++; } });
+    addComms('Pilot', '\uD83D\uDE24 COME AND GET ME! (' + _taunted + ' hostiles provoked)');
+    addCombatLog('TAUNT — ' + _taunted + ' enemies aggro\'d, +50% score for 10s', '#ffaa00');
+    AudioSFX.play('shield_break');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -12279,6 +12290,9 @@ function playerDeathSequence(cause) {
   if (_deathSequenceActive) return;
   _deathSequenceActive = true;
   c.dead = true;
+  // Revenge tracking — extract enemy type from cause string
+  const _revMatch = cause.match(/Rammed by hostile (\w+)|enemy weapons fire/i);
+  if (_revMatch) c._revengeTarget = _revMatch[1] || c._lastHitByType || null;
   if (window._clearMobileFireInterval) window._clearMobileFireInterval();
   AudioSFX.stopEngineHum();
   c.deathStats = { accuracy: c._shotsHit ? Math.round(c._shotsHit / Math.max(1, c._shotsFired) * 100) : 0, longestLife: Math.floor(state.gameTime / 1000), kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits, damageSources: Object.assign({}, c._damageSources) };
@@ -12906,6 +12920,28 @@ function gameLoop() {
       }
     }
 
+    // Taunt active HUD indicator
+    if (c._tauntActive && state.gameTime < c._tauntActive) {
+      const _ttLeft = Math.ceil((c._tauntActive - state.gameTime) / 1000);
+      hudCtx.save();
+      hudCtx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ffaa00';
+      hudCtx.globalAlpha = 0.7 + 0.2 * Math.sin(state.gameTime * 0.006);
+      hudCtx.textAlign = 'right';
+      hudCtx.fillText('\uD83D\uDE24 TAUNT ACTIVE — +50% SCORE (' + _ttLeft + 's)', W - 20, H - 80);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
+    // Fuel efficiency perk indicator
+    if (c.kills >= 50) {
+      hudCtx.save();
+      hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#44ff88';
+      hudCtx.globalAlpha = 0.6;
+      hudCtx.fillText('\u26FD Fuel Efficiency Active (-30% afterburner cost)', 20, H - 60);
+      hudCtx.restore();
+    }
+
     // Spawn enemies (capped at MAX_ENEMIES for performance)
     const MAX_ENEMIES = 15;
     // First life: keep the opening readable and delay the first wave.
@@ -13058,10 +13094,19 @@ function gameLoop() {
               }
             } else { c._scoreMultiplier = 1; c._rapidKills = 0; }
             c._lastKillTime = _now;
-            const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult * c._scoreMultiplier);
+            const _tauntMult = (c._tauntActive && state.gameTime < c._tauntActive && e._taunted) ? 1.5 : 1;
+            const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult * c._scoreMultiplier * _tauntMult);
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
+            // Revenge kill — 3x points if killing the type that killed you last life
+            if (c._revengeTarget && e.type === c._revengeTarget) {
+              c.score += pts * 2; // total 3x (original + 2x bonus)
+              c.dmgNumbers.push({ text: '\uD83D\uDDE1\uFE0F REVENGE!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff2200' });
+              addComms('EDEN AI', '\uD83D\uDDE1\uFE0F REVENGE KILL! 3x points on ' + e.type + '!');
+              addCombatLog('REVENGE — 3x score on ' + e.type, '#ff2200');
+              c._revengeTarget = null;
+            }
             state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
             // ── Random combat event every ~8 kills ──
             if (c.kills > 2 && c.kills % 8 === 0) {
@@ -13589,6 +13634,10 @@ function gameLoop() {
             c._shieldCap = 0;
           }
           c.damageFlash = 300;
+          // Track last enemy type that hit us (for revenge system)
+          c._lastHitByType = null;
+          let _minBoltDist = Infinity;
+          c.enemies.forEach(_en => { const _bd = _en.group.position.distanceTo(b.group.position); if (_bd < _minBoltDist) { _minBoltDist = _bd; c._lastHitByType = _en.type; } });
           addCombatLog('Hit by enemy fire — ' + dmg.toFixed(0) + ' dmg', '#ff6644');
           // Subsystem malfunction chance when hull < 40%
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.4 && Math.random() < 0.15) {
@@ -14002,7 +14051,8 @@ function gameLoop() {
     updateAging(dtMs);
     // Fuel consumption while flying (afterburner uses 3× fuel)
     if (fl.speed > 5) {
-      const fuelBurn = dt * 0.08 * (fl.afterburner ? 3 : 1);
+      const _fuelEfficiency = c.kills >= 50 ? 0.7 : 1; // 30% cheaper afterburner after 50 kills
+      const fuelBurn = dt * 0.08 * (fl.afterburner ? 3 * _fuelEfficiency : 1);
       state.ship.fuel = Math.max(0, state.ship.fuel - fuelBurn);
       if (state.ship.fuel <= 0) { fl.afterburner = false; }
     }
