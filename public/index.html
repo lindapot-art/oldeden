@@ -1936,6 +1936,7 @@ const state = {
     _empCooldown: 0,        // EMP blast cooldown (ms)
     _empCharges: 2,         // EMP charges per life
     _empMaxCharges: 2,      // max EMP charges
+    _streakDR: 0,           // damage resistance from kill streak (0-0.20)
     repairFlashTimer: 0,    // green flash on hull/shield repair pickup
     subsystemDamage: { engine: 0, weapons: 0, sensors: 0 }, // 0=ok, >0 = malfunction timer (ms remaining)
     barrelRoll: 0,          // barrel roll animation progress (0=none, -1..1 = direction*progress)
@@ -6726,6 +6727,49 @@ function spawnFormation() {
   addComms('Radar', '\u26A0 Formation detected! ' + count + ' ' + wingType + 's incoming!');
 }
 
+// ── Fleet Commander — rare elite enemy with escort wing ──
+function spawnFleetCommander() {
+  // Commander: a tougher, higher-reward version of a destroyer/cruiser
+  const cmdType = Math.random() < 0.5 ? 'destroyer' : 'cruiser';
+  const cfg = ENEMY_CONFIGS[cmdType] || ENEMY_CONFIGS.fighter;
+  const g = new THREE.Group();
+  const modelKey = cfg.model || 'iron_sentinel';
+  const srcModel = state.loadedModels[modelKey] || state.loadedModels['iron_sentinel'];
+  if (srcModel) {
+    g.add(reskinModel(srcModel, cfg.scale * 1.2, 0xffcc00)); // gold tint
+  } else {
+    const asset = GLB_ASSETS[modelKey] || GLB_ASSETS['iron_sentinel'] || { role: 'enemy', scale: cfg.scale };
+    const vecModel = _buildVectorModel(modelKey || 'enemy_ship', asset);
+    vecModel.scale.setScalar(cfg.scale * 1.2);
+    g.add(vecModel);
+  }
+  const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
+  const r = SPAWN_RADIUS + 120 + Math.random()*100;
+  g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
+  g.lookAt(ship.position);
+  scene.add(g);
+  const diffScale = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
+  const cmdHp = Math.ceil(cfg.hp * diffScale * 2.5); // 2.5x HP
+  c.enemies.push({ group: g, hp: cmdHp, maxHp: cmdHp, speed: ENEMY_SPEED * cfg.speed * 0.8, type: cmdType, points: Math.floor(cfg.points * diffScale * 3), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(800, cfg.shootRate * 0.6), _isCommander: true });
+  // Spawn 2-3 escort fighters around the commander
+  const escortCount = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < escortCount; i++) {
+    const eType = 'fighter';
+    const eCfg = ENEMY_CONFIGS[eType];
+    const eg = new THREE.Group();
+    const eSrc = state.loadedModels[eCfg.model || 'iron_sentinel'] || state.loadedModels['iron_sentinel'];
+    if (eSrc) { eg.add(reskinModel(eSrc, eCfg.scale, eCfg.tint || 0xff2200)); }
+    else { const vm = _buildVectorModel('enemy_ship', { role: 'enemy', scale: eCfg.scale }); vm.scale.setScalar(eCfg.scale); eg.add(vm); }
+    const offset = new THREE.Vector3((Math.random()-0.5)*30, (Math.random()-0.5)*10, (Math.random()-0.5)*30);
+    eg.position.copy(g.position).add(offset);
+    eg.lookAt(ship.position);
+    scene.add(eg);
+    c.enemies.push({ group: eg, hp: Math.ceil(eCfg.hp * diffScale), maxHp: Math.ceil(eCfg.hp * diffScale), speed: ENEMY_SPEED * eCfg.speed * (1 + (state.player.rebirths || 0) * 0.05), type: eType, points: Math.floor(eCfg.points * diffScale), cfg: eCfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, eCfg.shootRate), _formation: true });
+  }
+  addComms('Radar', '\u2B50 FLEET COMMANDER detected with ' + escortCount + ' escorts! High-value target!');
+  addCombatLog('Fleet Commander spotted — ' + cmdType + ' + ' + escortCount + ' escorts', '#ffcc00');
+}
+
 // Preload all combat-relevant models (enemies, bosses, NPCs)
 const COMBAT_MODELS = [
   // Enemies
@@ -7271,6 +7315,13 @@ function renderHUD(dtMs) {
       hudCtx.textAlign = 'left';
     }
     hudCtx.restore();
+  }
+
+  // Streak damage resistance indicator
+  if (c._streakDR > 0) {
+    hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
+    hudCtx.fillStyle = '#44ffcc';
+    hudCtx.fillText('\u{1F6E1}\uFE0F DR: ' + Math.round(c._streakDR * 100) + '%', srx, sry + (c.streak >= 3 ? 92 : 70));
   }
 
   // ── Sector Threat Level (below kills, right side) ──
@@ -12383,7 +12434,7 @@ function gameLoop() {
     // Kill streak decay
     if (c.streak > 0) {
       c.streakTimer -= dtMs;
-      if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; c._scoreMultiplier = 1; }
+      if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; c._scoreMultiplier = 1; c._streakDR = 0; }
       if (c._streakMilestoneTimer > 0) c._streakMilestoneTimer -= dtMs;
     }
 
@@ -12828,6 +12879,13 @@ function gameLoop() {
             // Skill XP: combat actions level gunnery + piloting
             gainSkillXP('gunnery', 0.03);
             gainSkillXP('piloting', 0.01);
+            // Ammo scavenger — 20% chance to recover 1 ammo per kill
+            if (Math.random() < 0.20 && c.ammo < c.maxAmmo) {
+              c.ammo = Math.min(c.maxAmmo, c.ammo + 1);
+              c.dmgNumbers.push({ text: '+1 AMMO', px: e.group.position.x, py: e.group.position.y + 2, pz: e.group.position.z, age: 0, color: '#44aaff' });
+            }
+            // Streak damage resistance — 5% DR per 5 streak kills, max 20%
+            c._streakDR = Math.min(0.20, Math.floor(c.streak / 5) * 0.05);
             // ── Kill count milestones — total kills per run ──
             const _killMilestones = {
               10:  { title: 'FIRST BLOOD — 10 Kills', credits: 100, sm: 1 },
@@ -13126,7 +13184,8 @@ function gameLoop() {
       }
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
-        const _ramDmg = isFirstLife ? 0.2 : 0.5;
+        let _ramDmg = isFirstLife ? 0.2 : 0.5;
+        if (c._streakDR > 0) _ramDmg *= (1 - c._streakDR);
         c._damageSources['Ram (' + e.type + ')'] = (c._damageSources['Ram (' + e.type + ')'] || 0) + _ramDmg;
         if (state.ship.shield > 0) {
           const _absorbed = Math.min(state.ship.shield, _ramDmg);
@@ -13155,7 +13214,9 @@ function gameLoop() {
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
-          const dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
+          let dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
+          // Streak damage resistance
+          if (c._streakDR > 0) dmg *= (1 - c._streakDR);
           const hadShield = state.ship.shield > 0;
           c._damageSources['Weapons fire'] = (c._damageSources['Weapons fire'] || 0) + dmg;
           // Damage direction indicator
@@ -13577,6 +13638,13 @@ function gameLoop() {
     if (state.gameTime > c._nextFormation && !c.dead && c.enemies.length < 15) {
       spawnFormation();
       c._nextFormation = state.gameTime + 45000 + Math.random() * 45000;
+    }
+
+    // ── Fleet Commander spawn — rare elite with escorts ──
+    if (!c._nextCommander) c._nextCommander = state.gameTime + 90000 + Math.random() * 60000;
+    if (state.gameTime > c._nextCommander && !c.dead && c.enemies.length < 12 && c.kills >= 10) {
+      spawnFleetCommander();
+      c._nextCommander = state.gameTime + 120000 + Math.random() * 90000; // 2-3.5 min between commanders
     }
 
     if (!c.dead && state.gameTime - c.lastAutoSave > 60000) {
