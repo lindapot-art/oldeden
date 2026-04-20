@@ -7740,6 +7740,25 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.restore();
   }
 
+  // ── Danger sense HUD — threat direction arrows for nearby firing enemies ──
+  if (c._dangerArrows && c._dangerArrows.length > 0) {
+    hudCtx.save();
+    const _arrowR = Math.min(W, H) * 0.38;
+    c._dangerArrows.forEach(_da => {
+      const _ax = cx + Math.sin(_da.angle) * _arrowR;
+      const _ay = cy - Math.cos(_da.angle) * _arrowR;
+      hudCtx.globalAlpha = 0.5 + 0.3 * Math.sin(state.gameTime * 0.01);
+      hudCtx.fillStyle = _da.dist < 15 ? '#ff2200' : '#ff8800';
+      hudCtx.beginPath();
+      hudCtx.moveTo(_ax, _ay - 6);
+      hudCtx.lineTo(_ax + 4, _ay + 4);
+      hudCtx.lineTo(_ax - 4, _ay + 4);
+      hudCtx.closePath();
+      hudCtx.fill();
+    });
+    hudCtx.restore();
+  }
+
   // ── Incoming fire warning (when bolts are very close) ──
   {
     const closeBolts = c.enemyBolts.filter(b => b.group && b.group.position.distanceToSquared(ship.position) < 900).length;
@@ -13497,6 +13516,13 @@ function gameLoop() {
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
+            // Ace pilot bonus — 50+ kills grants +5% speed for this life
+            if (c.kills === 50 && !c._acePilot) {
+              c._acePilot = true;
+              state.flight.maxSpeed *= 1.05;
+              addComms('EDEN AI', '\u{2B50} ACE PILOT! +5% max speed for this life.');
+              addCombatLog('ACE PILOT UNLOCKED — +5% speed', '#88ff88');
+            }
             // Enemy intel — track kills per type
             if (!c._enemyIntel) c._enemyIntel = {};
             c._enemyIntel[e.type] = (c._enemyIntel[e.type] || 0) + 1;
@@ -13653,6 +13679,9 @@ function gameLoop() {
               state.player.credits += _eliteBonus;
               addComms('EDEN AI', '\uD83D\uDD25 ELITE ' + (e.type || 'hostile').toUpperCase() + ' DESTROYED! +' + _eliteBonus + ' EC bonus');
               addCombatLog('Elite eliminated — bonus +' + _eliteBonus + ' EC', '#ff4422');
+              // Power siphon — killing elites restores 15% shield
+              state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + state.ship.maxShield * 0.15);
+              addCombatLog('POWER SIPHON — +15% shield from elite', '#44ccff');
             }
             // Earn Stellar Marks: +1 per 10 kills, +5 for bosses
             const _smKillAward = e.isBoss ? 5 : (c.kills % 10 === 0 ? 1 : 0);
@@ -14531,6 +14560,17 @@ function gameLoop() {
     }
     // Proximity alarm — warn when enemy within 15m behind player
     if (!c._proxAlarmCD) c._proxAlarmCD = 0;
+    // Danger sense HUD — draw threat arrows for enemies within 30m that recently fired
+    c._dangerArrows = [];
+    for (let _di = 0; _di < c.enemies.length; _di++) {
+      const _de = c.enemies[_di];
+      if (_de.hp <= 0) continue;
+      const _dDist = _de.group.position.distanceTo(ship.position);
+      if (_dDist < 30 && state.gameTime - (_de.lastShot || 0) < 2000) {
+        const _dAngle = Math.atan2(_de.group.position.x - ship.position.x, _de.group.position.z - ship.position.z) - c.yaw;
+        c._dangerArrows.push({ angle: _dAngle, dist: _dDist });
+      }
+    }
     if (state.gameTime > c._proxAlarmCD) {
       const _camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
       let _proxTriggered = false;
