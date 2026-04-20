@@ -8799,6 +8799,14 @@ document.addEventListener('keydown', (e) => {
       AudioSFX.play('pickup');
     } else { addComms('Drone', '\u26A0 No loot in drone range (100m).'); }
   }
+  // Tactical reload: 5 key — instant full ammo, 45s cooldown
+  if (e.key === '5' && c.active && !c.dead && (!c._tactReloadCD || state.gameTime > c._tactReloadCD)) {
+    c.ammo = c.maxAmmo;
+    c._tactReloadCD = state.gameTime + 45000;
+    addComms('Weapons', '\u{1F4A5} Tactical reload! Full ammo.');
+    addCombatLog('TACTICAL RELOAD — ammo restored', '#44aaff');
+    AudioSFX.play('reload');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -13285,6 +13293,21 @@ function gameLoop() {
           c._shotsHit = (c._shotsHit || 0) + 1;
           c.dmgNumbers.push({ text: (isCrit ? 'CRIT -' : '-') + genomeDmg.toFixed(1), px: p.group.position.x, py: p.group.position.y, pz: p.group.position.z, age: 0, color: isCrit ? '#ffee00' : '#ff6644' });
           if (e.hp <= 0) {
+            // Ricochet shot — 5% chance projectile bounces to another enemy after kill
+            if (Math.random() < 0.05) {
+              let _ricTarget = null, _ricDist = 50;
+              for (let _ri = 0; _ri < c.enemies.length; _ri++) {
+                const _re = c.enemies[_ri];
+                if (_re === e || _re.hp <= 0) continue;
+                const _rd = _re.group.position.distanceTo(e.group.position);
+                if (_rd < _ricDist) { _ricDist = _rd; _ricTarget = _re; }
+              }
+              if (_ricTarget) {
+                _ricTarget.hp -= genomeDmg * 0.5; _ricTarget.hitFlash = 150;
+                spawnImpactSparks(_ricTarget.group.position, 0xff8800);
+                c.dmgNumbers.push({ text: 'RICOCHET!', px: _ricTarget.group.position.x, py: _ricTarget.group.position.y + 4, pz: _ricTarget.group.position.z, age: 0, color: '#ff8800' });
+              }
+            }
             // Overkill bonus — excess damage beyond HP gives bonus score
             const _overkill = Math.abs(e.hp);
             if (_overkill > e.maxHp * 0.5) {
@@ -13379,6 +13402,15 @@ function gameLoop() {
               c._revengeTarget = null;
             }
             state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
+            // Bounty hunter mark — 3x credits if killed enemy has bounty
+            if (e._bounty) {
+              const _bountyReward = Math.floor(e.points * _creditStreakMult * 0.4 * 2); // +2x on top of normal = 3x total
+              state.player.credits += _bountyReward;
+              c.dmgNumbers.push({ text: '\uD83D\uDCB0 BOUNTY +' + _bountyReward, px: e.group.position.x, py: e.group.position.y + 7, pz: e.group.position.z, age: 0, color: '#ffd700' });
+              addComms('Bounty Board', '\uD83D\uDCB0 BOUNTY COLLECTED! +' + _bountyReward + ' credits!');
+              addCombatLog('BOUNTY KILL — +' + _bountyReward + ' EC', '#ffd700');
+              e._bounty = false;
+            }
             // Kill milestone rewards — special bonuses at key kill counts
             if (!c._milestonesClaimed) c._milestonesClaimed = {};
             const _killRewards = {
@@ -14314,6 +14346,20 @@ function gameLoop() {
           break;
         }
       }
+    }
+    // Bounty hunter mark — random enemy gets bounty every 60s, 3x credits on kill
+    if (!c._bountyMarkTimer) c._bountyMarkTimer = state.gameTime + 60000;
+    if (state.gameTime > c._bountyMarkTimer && c.enemies.length > 0) {
+      // Clear old bounty
+      c.enemies.forEach(_be => { _be._bounty = false; });
+      const _bIdx = Math.floor(Math.random() * c.enemies.length);
+      const _bTarget = c.enemies[_bIdx];
+      if (_bTarget && _bTarget.hp > 0) {
+        _bTarget._bounty = true;
+        addComms('Bounty Board', '\u{1F4B0} BOUNTY placed on ' + (_bTarget.type || 'hostile').toUpperCase() + ' — 3x credits!');
+        addCombatLog('BOUNTY TARGET marked', '#ffd700');
+      }
+      c._bountyMarkTimer = state.gameTime + 60000;
     }
     // Emergency warp — auto-teleport to station when hull < 5% (once per life, rebirths >= 4)
     if (state.player.rebirths >= 4 && !c._emergWarpUsed && state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.05) {
