@@ -12740,18 +12740,23 @@ function gameLoop() {
     // ── Proximity Warning — asteroids & enemies too close ──
     {
       let proxDanger = false;
+      let _proxThreat = '';
       c.asteroids.forEach(a => {
         if (!a || !a.position) return;
         const ad = a.position.distanceTo(ship.position);
-        if (ad < 25 && fl.speed > 30) proxDanger = true;
+        if (ad < 25 && fl.speed > 30) { proxDanger = true; _proxThreat = 'ASTEROID'; }
       });
+      let _proxClosest = 999;
       c.enemies.forEach(e => {
         const ed = e.group.position.distanceTo(ship.position);
-        if (ed < 15) proxDanger = true;
+        if (ed < 15) { proxDanger = true; if (ed < _proxClosest) { _proxClosest = ed; _proxThreat = (e._isCommander ? 'COMMANDER' : (e.type || 'HOSTILE')).toUpperCase(); } }
       });
       state.proximityAlert = proxDanger;
       const proxEl = document.getElementById('proximity-warning');
-      if (proxEl) { if (proxDanger) proxEl.classList.add('active'); else proxEl.classList.remove('active'); }
+      if (proxEl) {
+        if (proxDanger) { proxEl.classList.add('active'); proxEl.textContent = '\u26A0 ' + (_proxThreat || 'COLLISION') + ' WARNING'; }
+        else proxEl.classList.remove('active');
+      }
     }
 
 
@@ -12803,7 +12808,7 @@ function gameLoop() {
           // Apply genome damage multiplier + weapon-specific damage + crit chance
           const baseDmg = p.isLaser ? (p.damage || 0.65) : 1.0;
           let genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
-          const isCrit = Math.random() < 0.12; // 12% crit chance
+          const isCrit = Math.random() < 0.12 || (c.streak > 0 && c.streak % 10 === 0); // 12% crit + guaranteed every 10th streak kill
           if (isCrit) genomeDmg *= 2.0;
           e.hp -= genomeDmg;
           e.hitFlash = 150;
@@ -12873,6 +12878,15 @@ function gameLoop() {
             if (c._killFeed.length > 5) c._killFeed.length = 5;
             addCombatLog('Destroyed ' + (e.type || 'hostile') + (e.isBoss ? ' (BOSS)' : '') + ' +' + pts + 'pts', _kfColor);
             AudioSFX.play('kill_confirm');
+            // Fleet Commander kill bonus
+            if (e._isCommander) {
+              const cmdBonus = Math.floor(pts * 1.5);
+              state.player.credits += cmdBonus;
+              state.player.stellarMarks += 3;
+              addComms('EDEN AI', '\u2B50 COMMANDER DOWN! +' + cmdBonus + ' EC bonus, +3 SM');
+              addCombatLog('Fleet Commander destroyed — bonus +' + cmdBonus + ' EC', '#ffcc00');
+              AudioSFX.play('quest_complete');
+            }
             // Earn Stellar Marks: +1 per 10 kills, +5 for bosses
             const _smKillAward = e.isBoss ? 5 : (c.kills % 10 === 0 ? 1 : 0);
             state.player.stellarMarks += _smKillAward;
