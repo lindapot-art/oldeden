@@ -13236,6 +13236,8 @@ function gameLoop() {
           if (state.ship.shield > state.ship.maxShield * 0.8) genomeDmg *= 1.10;
           // Target painter — +30% damage to painted enemy
           if (e._painted && state.gameTime < e._painted) genomeDmg *= 1.30;
+          // Momentum bonus — +10% damage while afterburner active
+          if (state.flight && state.flight.afterburner) genomeDmg *= 1.10;
           // Shield break bonus — +25% damage after breaking enemy shield
           if (c._shieldBreakBonus) { genomeDmg *= 1.25; c._shieldBreakBonus = false; c.dmgNumbers.push({ text: 'BREAK BONUS +25%', px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#00eeff' }); }
           // Enemy shield absorbs damage first
@@ -13260,6 +13262,21 @@ function gameLoop() {
             e._evading = true; e._evadeTimer = 400;
             const _evDir = new THREE.Vector3((Math.random() - 0.5) * 2, (Math.random() - 0.5), (Math.random() - 0.5) * 2).normalize();
             e._evadeDir = _evDir;
+          }
+          // Chain lightning — 8% chance bolt arcs to 1 nearby enemy for 3 dmg
+          if (Math.random() < 0.08) {
+            let _chainTarget = null, _chainDist = 40;
+            for (let _ci = 0; _ci < c.enemies.length; _ci++) {
+              const _ce = c.enemies[_ci];
+              if (_ce === e || _ce.hp <= 0) continue;
+              const _cd = _ce.group.position.distanceTo(e.group.position);
+              if (_cd < _chainDist) { _chainDist = _cd; _chainTarget = _ce; }
+            }
+            if (_chainTarget) {
+              _chainTarget.hp -= 3; _chainTarget.hitFlash = 100;
+              spawnImpactSparks(_chainTarget.group.position, 0x4488ff);
+              c.dmgNumbers.push({ text: '⚡ CHAIN -3', px: _chainTarget.group.position.x, py: _chainTarget.group.position.y + 3, pz: _chainTarget.group.position.z, age: 0, color: '#4488ff' });
+            }
           }
           AudioSFX.play('hit');
           AudioSFX.play('hit_marker');
@@ -14297,6 +14314,15 @@ function gameLoop() {
           break;
         }
       }
+    }
+    // Emergency warp — auto-teleport to station when hull < 5% (once per life, rebirths >= 4)
+    if (state.player.rebirths >= 4 && !c._emergWarpUsed && state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.05) {
+      c._emergWarpUsed = true;
+      ship.position.set(0, 0, 0);
+      state.ship.hull = state.ship.maxHull * 0.25;
+      c.dmgNumbers.push({ text: 'EMERGENCY WARP!', px: 0, py: 5, pz: 0, age: 0, color: '#ff00ff' });
+      addComms('EDEN AI', '\u26a0 EMERGENCY WARP ENGAGED \u2014 teleported to station, 25% hull restored.');
+      addCombatLog('Emergency warp activated \u2014 hull critical', '#ff00ff');
     }
     // Overshield timer decay
     if (c._overshieldTimer > 0) {
