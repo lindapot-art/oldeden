@@ -14045,6 +14045,11 @@ function gameLoop() {
       }
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
+      // Predator instinct — enemies below 25% HP glow red
+      const _predPct = e.hp / e.maxHp;
+      if (_predPct < 0.25 && _predPct > 0) {
+        e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0xff2200); ch.material.emissiveIntensity = 0.5 + 0.3 * Math.sin(state.gameTime * 0.01); } });
+      }
       // Evasion movement
       if (e._evading && e._evadeDir) {
         e._evadeTimer -= dtMs;
@@ -14141,7 +14146,9 @@ function gameLoop() {
           if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.6);
           AudioSFX.play('shield_hit'); triggerShieldShimmer();
         } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); c._lastHullDmgTime = state.gameTime; AudioSFX.play('hull_hit'); }
-        if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); }
+        if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!');
+          if (Math.random() < 0.30 && (!c._phantomShieldCD || state.gameTime > c._phantomShieldCD)) { state.ship.shield = state.ship.maxShield * 0.20; c._phantomShieldCD = state.gameTime + 30000; addComms('EDEN AI', '\u{1F47B} Phantom shield!'); addCombatLog('PHANTOM SHIELD — 20% restored', '#88ccff'); }
+        }
         c.damageFlash = 200;
         if (typeof triggerShieldFlash === 'function') triggerShieldFlash(state.ship.shield <= 0);
         if (typeof triggerScreenShake === 'function') triggerScreenShake();
@@ -14205,7 +14212,15 @@ function gameLoop() {
             if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
             AudioSFX.play('shield_hit'); triggerShieldShimmer();
           } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); c._lastHullDmgTime = state.gameTime; AudioSFX.play('hull_hit'); }
-          if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); addCombatLog('SHIELDS DOWN — gate active', '#44ccff'); }
+          if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); addCombatLog('SHIELDS DOWN — gate active', '#44ccff');
+            // Phantom shield — 30% chance to restore 20% shield on break, 30s CD
+            if (Math.random() < 0.30 && (!c._phantomShieldCD || state.gameTime > c._phantomShieldCD)) {
+              state.ship.shield = state.ship.maxShield * 0.20;
+              c._phantomShieldCD = state.gameTime + 30000;
+              addComms('EDEN AI', '\u{1F47B} Phantom shield activated! 20% restored!');
+              addCombatLog('PHANTOM SHIELD — 20% restored', '#88ccff');
+            }
+          }
           // Shield capacitor auto-deploy when shield drops below 30%
           if (state.ship.shield > 0 && state.ship.shield < state.ship.maxShield * 0.3 && (c._shieldCap || 0) >= 5) {
             state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + c._shieldCap);
@@ -14331,7 +14346,7 @@ function gameLoop() {
           _tmpV3b.copy(ship.position).sub(l.group.position).normalize().multiplyScalar(Math.min(1, 50 * dt));
           l.group.position.add(_tmpV3b);
         } else {
-        if (l.type === 'credits') { const lootAmt = l.creditValue || 50; state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ffd700' }); }
+        if (l.type === 'credits') { let lootAmt = l.creditValue || 50; if (c.streak >= 5) { lootAmt = Math.floor(lootAmt * 1.5); } state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC' + (c.streak >= 5 ? ' (STREAK)' : ''), px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: c.streak >= 5 ? '#ffaa00' : '#ffd700' }); }
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); c.repairFlashTimer = 400; }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ff8844' }); }
@@ -14395,7 +14410,9 @@ function gameLoop() {
               const _overflow = dmg - _absorbed;
               if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
             } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); }
-            if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); }
+            if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!');
+              if (Math.random() < 0.30 && (!c._phantomShieldCD || state.gameTime > c._phantomShieldCD)) { state.ship.shield = state.ship.maxShield * 0.20; c._phantomShieldCD = state.gameTime + 30000; addComms('EDEN AI', '\u{1F47B} Phantom shield!'); addCombatLog('PHANTOM SHIELD — 20% restored', '#88ccff'); }
+            }
             c.damageFlash = 350;
             if (hadShield) { AudioSFX.play('shield_hit'); triggerShieldShimmer(); } else { AudioSFX.play('hull_hit'); }
             c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
