@@ -1929,6 +1929,9 @@ const state = {
     maxMissiles: 4,         // max missile capacity
     _missiles: [],          // active missile projectiles [{mesh, target, vel, age}]
     _shieldRegenPulse: 0,   // shield regen visual pulse timer
+    _scoreMultiplier: 1,    // score multiplier from kill chains
+    _lastKillTime: 0,       // timestamp of last kill for chain detection
+    _cockpitWarning: 0,     // cockpit warning light intensity
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -7932,6 +7935,28 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.restore();
   }
 
+// ── Cockpit warning lights — red border when hull critical ──
+  if (state.ship.hull < state.ship.maxHull * 0.25 && !c.dead) {
+    const _warnPulse = 0.15 + 0.15 * Math.sin(performance.now() * 0.008);
+    hudCtx.save();
+    hudCtx.globalAlpha = _warnPulse;
+    hudCtx.strokeStyle = '#ff2200';
+    hudCtx.lineWidth = 6;
+    hudCtx.strokeRect(3, 3, hudCanvas.width - 6, hudCanvas.height - 6);
+    hudCtx.restore();
+  }
+
+  // ── Score multiplier display ──
+  if (c._scoreMultiplier > 1) {
+    hudCtx.save();
+    hudCtx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+    hudCtx.textAlign = 'center';
+    hudCtx.fillStyle = c._scoreMultiplier >= 3 ? '#ff4444' : c._scoreMultiplier >= 2 ? '#ffaa00' : '#44ff88';
+    hudCtx.globalAlpha = 0.8;
+    hudCtx.fillText('x' + c._scoreMultiplier.toFixed(1) + ' CHAIN', hudCanvas.width / 2, 25);
+    hudCtx.restore();
+  }
+
 // Scanlines (throttled — every 4th frame)
   if (state.settings.scanlines && (state._frameCount & 3) === 0) {
     hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
@@ -12086,7 +12111,7 @@ function gameLoop() {
     // Kill streak decay
     if (c.streak > 0) {
       c.streakTimer -= dtMs;
-      if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; }
+      if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; c._scoreMultiplier = 1; }
       if (c._streakMilestoneTimer > 0) c._streakMilestoneTimer -= dtMs;
     }
 
@@ -12459,6 +12484,13 @@ function gameLoop() {
           if (isCrit) genomeDmg *= 2.0;
           e.hp -= genomeDmg;
           e.hitFlash = 150;
+          // Evasion: 20% chance to dodge sideways after being hit (interceptors/corvettes 35%)
+          const _evasionChance = (e.type === 'interceptor' || e.type === 'corvette' || e.type === 'swarm') ? 0.35 : 0.2;
+          if (Math.random() < _evasionChance && !e._evading) {
+            e._evading = true; e._evadeTimer = 400;
+            const _evDir = new THREE.Vector3((Math.random() - 0.5) * 2, (Math.random() - 0.5), (Math.random() - 0.5) * 2).normalize();
+            e._evadeDir = _evDir;
+          }
           AudioSFX.play('hit');
           AudioSFX.play('hit_marker');
           spawnImpactSparks(p.group.position, p.isLaser ? 0x44ffaa : 0xffaa44);
@@ -12482,7 +12514,13 @@ function gameLoop() {
             }
             if (c.streak > c.bestStreak) c.bestStreak = c.streak;
             const _temporalMult = c._temporalZone ? 1.25 : 1;
-            const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult);
+            // Kill chain multiplier: kills within 5s increase multiplier (caps at 4x)
+            const _now = performance.now();
+            if (_now - c._lastKillTime < 5000) {
+              c._scoreMultiplier = Math.min(4, c._scoreMultiplier + 0.25);
+            } else { c._scoreMultiplier = 1; }
+            c._lastKillTime = _now;
+            const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult * c._scoreMultiplier);
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
@@ -12734,6 +12772,12 @@ function gameLoop() {
       }
       e.group.lookAt(ship.position);
       e.hitFlash = Math.max(0, e.hitFlash - dtMs);
+      // Evasion movement
+      if (e._evading && e._evadeDir) {
+        e._evadeTimer -= dtMs;
+        e.group.position.addScaledVector(e._evadeDir, e.speed * dt * 3);
+        if (e._evadeTimer <= 0) { e._evading = false; }
+      }
       // Track enemy velocity for lead reticle
       if (!e._prevPos) e._prevPos = e.group.position.clone();
       if (!e._velocity) e._velocity = {x:0,y:0,z:0};
@@ -13018,7 +13062,10 @@ function gameLoop() {
           m.target.hitFlash = 300;
           spawnExplosion(m.mesh.position, 10, 0xff8844);
           if (m.target.hp <= 0) {
-            const pts = m.target.points || 25;
+            const _mNow = performance.now();
+            if (_mNow - c._lastKillTime < 5000) { c._scoreMultiplier = Math.min(4, c._scoreMultiplier + 0.25); } else { c._scoreMultiplier = 1; }
+            c._lastKillTime = _mNow;
+            const pts = Math.floor((m.target.points || 25) * c._scoreMultiplier);
             state.player.score += pts;
             c.kills++;
             c.streak++;
