@@ -12781,7 +12781,16 @@ function gameLoop() {
     // Wave pacing: 4-second breather every 10 kills
     if (!c._breatherStart) {
       const _brkAt = c._nextBreatherAt || 10;
-      if (c.kills >= _brkAt && c.enemies.length === 0) { c._breatherStart = state.gameTime; c._nextBreatherAt = _brkAt + 10; addComms('EDEN AI', 'Sector clear... for now.'); }
+      if (c.kills >= _brkAt && c.enemies.length === 0) {
+        c._breatherStart = state.gameTime; c._nextBreatherAt = _brkAt + 10;
+        // Wave clear bonus — credits + small heal
+        const _waveClearBonus = 25 + c.cycle * 15;
+        state.player.credits += _waveClearBonus;
+        state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 3);
+        addComms('EDEN AI', '\u2728 Wave cleared! +' + _waveClearBonus + ' EC, +3 hull repair.');
+        addCombatLog('Wave clear bonus — +' + _waveClearBonus + ' EC', '#44ff88');
+        AudioSFX.play('quest_complete');
+      }
     }
     const _inBreather = c._breatherStart > 0 && (state.gameTime - c._breatherStart < 4000);
     if (c._breatherStart > 0 && !_inBreather) c._breatherStart = 0;
@@ -12824,6 +12833,9 @@ function gameLoop() {
           let genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
           const isCrit = Math.random() < 0.12 || (c.streak > 0 && c.streak % 10 === 0); // 12% crit + guaranteed every 10th streak kill
           if (isCrit) genomeDmg *= 2.0;
+          // Close-range bonus — 50% extra damage within 20m
+          const _hitDist = p.group.position.distanceTo(ship.position);
+          if (_hitDist < 20) genomeDmg *= 1.5;
           e.hp -= genomeDmg;
           e.hitFlash = 150;
           // Evasion: 20% chance to dodge sideways after being hit (interceptors/corvettes 35%)
@@ -13246,6 +13258,21 @@ function gameLoop() {
         boltObj.trail.position.set(0,0,0); boltObj.trail.quaternion.copy(boltObj.bolt.quaternion);
         scene.add(boltObj.group);
         c.enemyBolts.push({ group: boltObj.group, dir: _tmpV3b.clone(), speed: 120, age: 0, life: 4000, _poolRef: boltObj });
+        // Enemy taunt comms — rare hostile chatter
+        if (Math.random() < 0.03 && !c._lastEnemyTaunt || state.gameTime - (c._lastEnemyTaunt || 0) > 15000) {
+          const _taunts = [
+            'You fly like a cargo barge!', 'Surrender your credits!',
+            'This sector belongs to us!', 'Your shields won\'t save you!',
+            'Another bounty for my collection.', 'You\'re outgunned, pilot.',
+            'Scanning weak points... locked.', 'Formation — converge on target!',
+            'No backup is coming for you.', 'Your ship will make fine salvage.',
+          ];
+          if (Math.random() < 0.05) {
+            const _t = _taunts[Math.floor(Math.random() * _taunts.length)];
+            addComms(e._isCommander ? 'Fleet Commander' : e._isBounty ? 'Bounty Target' : 'Hostile', _t);
+            c._lastEnemyTaunt = state.gameTime;
+          }
+        }
         // Boss desperate phase: fire a second spread bolt
         if (_bossPhase >= 2 && c.enemyBolts.length < MAX_BOLTS) {
           const _spread = new THREE.Vector3().copy(ship.position).sub(e.group.position).normalize();
