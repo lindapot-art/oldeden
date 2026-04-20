@@ -6213,6 +6213,13 @@ function enterGunnerMode() {
   // First-life combat now starts with a longer grace period so the player can learn the space.
   c.safeZoneUntil = performance.now() + (state.player.rebirths === 0 ? FIRST_LAUNCH_SAFE_MS : RETURN_LAUNCH_SAFE_MS);
   c.deathImmunityUntil = c.safeZoneUntil;
+  // Veteran perk — 3+ rebirths: +10% max hull, +5 ammo
+  if ((state.player.rebirths || 0) >= 3) {
+    state.ship.maxHull = Math.floor(state.ship.maxHull * 1.1);
+    state.ship.hull = state.ship.maxHull;
+    c.ammo = Math.min(c.maxAmmo, c.ammo + 5);
+    if (!c._veteranAnnounced) { addComms('EDEN AI', '\uD83C\uDF96\uFE0F Veteran perk: +10% hull, +5 ammo'); c._veteranAnnounced = true; }
+  }
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   AudioSFX.startEngineHum();
@@ -8672,11 +8679,11 @@ document.addEventListener('keydown', (e) => {
   if (c.active && !c.dead && c.barrelRoll === 0 && c.barrelRollCooldown <= 0) {
     const now = performance.now();
     if (e.key === 'a' || e.key === 'A') {
-      if (now - c._lastTapA < 300) { c.barrelRoll = -1; c.barrelRollCooldown = 2000; c.deathImmunityUntil = Math.max(c.deathImmunityUntil, now + 500); addComms('Flight', 'Barrel roll — evasive!'); AudioSFX.play('boost'); }
+      if (now - c._lastTapA < 300) { c.barrelRoll = -1; c.barrelRollCooldown = 2000; c.deathImmunityUntil = Math.max(c.deathImmunityUntil, now + 500); c._dodgeCounterUntil = now + 400; addComms('Flight', 'Barrel roll — evasive!'); AudioSFX.play('boost'); }
       c._lastTapA = now;
     }
     if (e.key === 'd' || e.key === 'D') {
-      if (now - c._lastTapD < 300) { c.barrelRoll = 1; c.barrelRollCooldown = 2000; c.deathImmunityUntil = Math.max(c.deathImmunityUntil, now + 500); addComms('Flight', 'Barrel roll — evasive!'); AudioSFX.play('boost'); }
+      if (now - c._lastTapD < 300) { c.barrelRoll = 1; c.barrelRollCooldown = 2000; c.deathImmunityUntil = Math.max(c.deathImmunityUntil, now + 500); c._dodgeCounterUntil = now + 400; addComms('Flight', 'Barrel roll — evasive!'); AudioSFX.play('boost'); }
       c._lastTapD = now;
     }
   }
@@ -13125,6 +13132,13 @@ function gameLoop() {
               if (_rapidName) {
                 c.dmgNumbers.push({ text: _rapidName + '!', px: ship.position.x, py: ship.position.y + 8, pz: ship.position.z, age: 0, color: c._rapidKills >= 4 ? '#ff44ff' : c._rapidKills >= 3 ? '#ff8800' : '#ffcc00' });
                 addCombatLog(_rapidName + '! (' + c._rapidKills + ' rapid kills)', c._rapidKills >= 4 ? '#ff44ff' : '#ffcc00');
+                // Multi-kill bonus score — 3+ kills within rapid window = escalating bonus
+                if (c._rapidKills >= 3) {
+                  const _mkBonus = c._rapidKills * 50;
+                  c.score += _mkBonus;
+                  state.player.credits += Math.floor(_mkBonus * 0.3);
+                  c.dmgNumbers.push({ text: 'MULTI-KILL +' + _mkBonus, px: ship.position.x + 3, py: ship.position.y + 6, pz: ship.position.z, age: 0, color: '#ffaa00' });
+                }
                 // Combo finisher shockwave — 5+ rapid kills damages all nearby enemies
                 if (c._rapidKills >= 5) {
                   const _swDmg = 8 + c._rapidKills * 2;
@@ -13693,6 +13707,15 @@ function gameLoop() {
       b.group.position.addScaledVector(b.dir, b.speed * dt);
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
+        // Dodge counter — barrel roll reflects bolt back at nearest enemy
+        if (c._dodgeCounterUntil && performance.now() < c._dodgeCounterUntil) {
+          b.dir.negate(); b.speed *= 1.5;
+          let _refTarget = null, _refDist = 40;
+          c.enemies.forEach(_re => { const rd = _re.group.position.distanceTo(b.group.position); if (rd < _refDist) { _refDist = rd; _refTarget = _re; } });
+          if (_refTarget) { _refTarget.hp -= 15; _refTarget.hitFlash = 200; spawnImpactSparks(_refTarget.group.position, 0x44ddff); c.dmgNumbers.push({ text: 'REFLECT!', px: _refTarget.group.position.x, py: _refTarget.group.position.y + 3, pz: _refTarget.group.position.z, age: 0, color: '#44ddff' }); addCombatLog('Dodge counter — bolt reflected!', '#44ddff'); }
+          c._dodgeCounterUntil = 0;
+          continue;
+        }
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
           let dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
           // Streak damage resistance
