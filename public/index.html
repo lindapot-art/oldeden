@@ -2276,7 +2276,8 @@ function fireActiveGunRoomWeapon() {
   const _adjFireRate = c._traderFireBoost ? fireRate * 0.5 : fireRate;
   if (now - window._lastGunRoomShot < _adjFireRate) return;
   window._lastGunRoomShot = now;
-  c.heat = Math.min(1, c.heat + 0.08); // generic heat
+  const _heatOverload = (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) ? 3 : 1;
+  c.heat = Math.min(1, c.heat + 0.08 * _heatOverload); // generic heat
   c.playerHasAttacked = true;
   _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
   _laserOrigin.copy(camera.position).addScaledVector(_laserDir, 1);
@@ -2811,7 +2812,8 @@ function fireLaser() {
   const _laserRate = c._traderFireBoost ? LASER_FIRE_RATE * 0.5 : LASER_FIRE_RATE;
   if (now - lastLaserShot < _laserRate) return;
   lastLaserShot = now;
-  c.heat = Math.min(1, c.heat + LASER_HEAT_PER_SHOT);
+  const _laserHeatOverload = (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) ? 3 : 1;
+  c.heat = Math.min(1, c.heat + LASER_HEAT_PER_SHOT * _laserHeatOverload);
   c.playerHasAttacked = true;
   
   _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -8741,6 +8743,20 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('TAUNT — ' + _taunted + ' enemies aggro\'d, +50% score for 10s', '#ffaa00');
     AudioSFX.play('shield_break');
   }
+  // Stealth mode: F key — reduce enemy detection, drain fuel, break on firing
+  if ((e.key === 'f' || e.key === 'F') && c.active && !c.dead) {
+    if (c._stealthActive) { c._stealthActive = false; addComms('EDEN AI', '\u{1F50D} Stealth disengaged.'); }
+    else if (c.fuel > 5) { c._stealthActive = true; c._stealthStart = state.gameTime; addComms('EDEN AI', '\u{1F47B} STEALTH MODE — enemies cannot detect you (draining fuel)'); AudioSFX.play('shield_break'); }
+    else { addComms('EDEN AI', '\u26A0 Insufficient fuel for stealth mode'); }
+  }
+  // Weapon overload: L key — double fire rate for 5s, 3x heat, 30s cooldown
+  if ((e.key === 'l' || e.key === 'L') && c.active && !c.dead && (!c._overloadCooldown || state.gameTime > c._overloadCooldown)) {
+    c._weaponOverloadUntil = state.gameTime + 5000;
+    c._overloadCooldown = state.gameTime + 30000;
+    addComms('Weapons', '\u{1F525} WEAPON OVERLOAD! Double fire rate for 5s (3x heat!)');
+    addCombatLog('WEAPON OVERLOAD activated — 5s boost, 30s cooldown', '#ff6600');
+    AudioSFX.play('quest_complete');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -12496,9 +12512,10 @@ function gameLoop() {
       // Auto-fire at max overcharge (2x) OR fire on release
       // Last stand — 25% faster fire rate when hull < 10%
       const _lastStandMult = (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) ? 1.25 : 1;
+      const _overloadMult = (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) ? 2 : 1;
       if (c.chargeLevel >= 2) {
         const _overMult = 1 + c.chargeLevel; // 3x at full overcharge
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult);
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult * _overloadMult);
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
         railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
         spawnNail(weaponsMult * _overMult);
@@ -12506,7 +12523,7 @@ function gameLoop() {
       } else if (!mouseHeld && c.chargeLevel >= 1) {
         // Release fire at normal+ charge
         const _overMult = 1 + Math.max(0, c.chargeLevel - 1);
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult);
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult * _overloadMult);
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
         railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
         spawnNail(weaponsMult * _overMult);
@@ -12975,6 +12992,38 @@ function gameLoop() {
       hudCtx.textAlign = 'left';
       hudCtx.restore();
     }
+    // Stealth mode HUD indicator
+    if (c._stealthActive) {
+      hudCtx.save();
+      hudCtx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#44ddff';
+      hudCtx.globalAlpha = 0.4 + 0.3 * Math.sin(state.gameTime * 0.005);
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('\u{1F47B} STEALTH MODE — Enemies cannot detect you', W / 2, 58);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
+    // Weapon overload HUD indicator
+    if (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) {
+      const _olRemain = Math.ceil((c._weaponOverloadUntil - state.gameTime) / 1000);
+      hudCtx.save();
+      hudCtx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ff6600';
+      hudCtx.globalAlpha = 0.7;
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('\u{1F525} WEAPON OVERLOAD — 2x fire rate (' + _olRemain + 's)', W / 2, 76);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
+    // Damage absorption field HUD
+    if (c._absorbField > 0) {
+      hudCtx.save();
+      hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#aa66ff';
+      hudCtx.globalAlpha = 0.6;
+      hudCtx.fillText('\u{1F6E1} Absorb Field: ' + Math.round(c._absorbField), 20, H - 75);
+      hudCtx.restore();
+    }
     // Enemy threat lines — faint red lines from nearby enemies to HUD center
     {
       const _projV = new THREE.Vector3();
@@ -13193,6 +13242,9 @@ function gameLoop() {
               c._killCamTimer = 400;
               addCombatLog('MILESTONE — ' + _killRewards[c.kills].label, '#ffdd00');
             }
+            // Damage absorption field — each kill charges +2 absorb (max 30)
+            if (!c._absorbField) c._absorbField = 0;
+            if (c._absorbField < 30) { c._absorbField = Math.min(30, c._absorbField + 2); }
             // ── Random combat event every ~8 kills ──
             if (c.kills > 2 && c.kills % 8 === 0) {
               const _events = [
@@ -13650,7 +13702,9 @@ function gameLoop() {
       const MAX_BOLTS = 30;
       // Boss accuracy improves at higher cycles
       const _inaccuracy = e.isBoss ? Math.max(0.04, 0.15 - c.cycle * 0.01) : 0.15;
-      if (!isProtectedSpace() && (c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
+      // Stealth mode — enemies cannot detect player (70% range reduction, skip firing)
+      const _stealthRange = c._stealthActive ? SPAWN_RADIUS * 0.3 : SPAWN_RADIUS;
+      if (!isProtectedSpace() && (c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < _stealthRange) {
         e.lastShot = state.gameTime;
         _tmpV3b.copy(ship.position).sub(e.group.position).normalize();
         // Add slight inaccuracy
@@ -13738,6 +13792,13 @@ function gameLoop() {
           let dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
           // Streak damage resistance
           if (c._streakDR > 0) dmg *= (1 - c._streakDR);
+          // Damage absorption field — consume absorb buffer first
+          if (c._absorbField > 0) {
+            const _absorbed = Math.min(c._absorbField, dmg);
+            c._absorbField -= _absorbed;
+            dmg -= _absorbed;
+            if (dmg <= 0) { c.dmgNumbers.push({ text: 'ABSORBED', px: ship.position.x, py: ship.position.y + 2, pz: ship.position.z, age: 0, color: '#aa66ff' }); returnBoltToPool(b); c.enemyBolts.splice(i, 1); i--; continue; }
+          }
           const hadShield = state.ship.shield > 0;
           c._damageSources['Weapons fire'] = (c._damageSources['Weapons fire'] || 0) + dmg;
           // Damage direction indicator
@@ -14048,6 +14109,18 @@ function gameLoop() {
         addComms('EDEN AI', 'Shield overcharge expired.');
       }
     }
+    // Stealth mode — drain fuel 3/s, break on firing
+    if (c._stealthActive) {
+      c.fuel = Math.max(0, c.fuel - 3 * dt);
+      if (c.fuel <= 0) { c._stealthActive = false; addComms('EDEN AI', '\u26A0 Stealth disengaged — no fuel!'); }
+      if (mouseHeld || c.charging) { c._stealthActive = false; addComms('EDEN AI', '\u26A0 Stealth broken — weapons fired!'); }
+    }
+    // Weapon overload — 3x heat while active
+    if (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) {
+      c.heat = Math.min(1, c.heat + 0.04 * dt); // extra passive heat drain during overload
+    }
+    // Damage absorption field — kills charge buffer (max 30)
+    if (!c._absorbField) c._absorbField = 0;
     // Salvage crate collection + decay
     if (c._salvageCrates && c._salvageCrates.length > 0) {
       for (let _ci = c._salvageCrates.length - 1; _ci >= 0; _ci--) {
