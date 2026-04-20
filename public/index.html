@@ -12714,6 +12714,10 @@ function gameLoop() {
     if (state.ship.shield > state.ship.maxShield) {
       state.ship.shield = Math.max(state.ship.maxShield, state.ship.shield - dt * 2);
     }
+    // Thermal overload — heat > 80% drains 1 shield/s (tradeoff for +20% damage)
+    if (c.heat > 0.8 && state.ship.shield > 0) {
+      state.ship.shield = Math.max(0, state.ship.shield - dt * 1);
+    }
     // Emergency nanobots — very slow hull regen at critical levels (< 15%)
     if (state.ship.hull > 0 && state.ship.hull < state.ship.maxHull * 0.15 && !c.dead) {
       state.ship.hull = Math.min(state.ship.maxHull * 0.15, state.ship.hull + dt * 0.5);
@@ -13350,6 +13354,14 @@ function gameLoop() {
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) genomeDmg *= 1.15;
           // Shield harmonics — shield > 80% grants +10% damage (energy resonance)
           if (state.ship.shield > state.ship.maxShield * 0.8) genomeDmg *= 1.10;
+          // Thermal overload — heat > 80% grants +20% damage
+          if (c.heat > 0.8) genomeDmg *= 1.20;
+          // Lucky shot — 3% chance any hit deals 10x damage
+          if (Math.random() < 0.03) {
+            genomeDmg *= 10;
+            c.dmgNumbers.push({ text: '\u{1F3B0} JACKPOT!', px: e.group.position.x, py: e.group.position.y + 9, pz: e.group.position.z, age: 0, color: '#ffff00' });
+            addCombatLog('LUCKY SHOT — 10x damage!', '#ffff00');
+          }
           // Target painter — +30% damage to painted enemy
           if (e._painted && state.gameTime < e._painted) genomeDmg *= 1.30;
           // Enemy intel — +10% damage to types you've killed 5+ of
@@ -13805,6 +13817,11 @@ function gameLoop() {
               const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.30 ? 'credits' : r < 0.45 ? 'ammo' : r < 0.60 ? 'health' : r < 0.75 ? 'fuel' : r < 0.88 ? 'shield' : 'scoreboost';
               const _lootCreditVal = e.isBoss ? Math.ceil(e.points * 0.6) : Math.ceil((e.points || 50) * 0.4);
               spawnLootDrop(e.group.position, lootType, _lootCreditVal);
+            }
+            // Scrap collector — 20% chance destroyed enemies auto-repair 5 hull
+            if (Math.random() < 0.20) {
+              state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5);
+              c.dmgNumbers.push({ text: '+5 SCRAP REPAIR', px: e.group.position.x, py: e.group.position.y + 3, pz: e.group.position.z, age: 0, color: '#88ff88' });
             }
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
             // Ricochet — railgun kills bounce to nearest enemy within 30m
