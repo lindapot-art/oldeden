@@ -8807,6 +8807,16 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('TACTICAL RELOAD — ammo restored', '#44aaff');
     AudioSFX.play('reload');
   }
+  // Nano repair pulse: 6 key — +20 hull +10 shield, 30s cooldown
+  if (e.key === '6' && c.active && !c.dead && (!c._nanoRepairCD || state.gameTime > c._nanoRepairCD)) {
+    state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 20);
+    state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + 10);
+    c._nanoRepairCD = state.gameTime + 30000;
+    c.repairFlashTimer = 400;
+    addComms('Medical', '\u{1F489} Nano repair pulse! +20 hull, +10 shield.');
+    addCombatLog('NANO REPAIR PULSE — +20 hull +10 shield', '#44ff88');
+    AudioSFX.play('shield_regen');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -13264,6 +13274,11 @@ function gameLoop() {
           }
           e.hp -= genomeDmg;
           e.hitFlash = 150;
+          // Vampire rounds — 3% of damage dealt restores hull
+          const _vampHeal = genomeDmg * 0.03;
+          if (_vampHeal > 0.1) {
+            state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + _vampHeal);
+          }
           // Evasion: 20% chance to dodge sideways after being hit (interceptors/corvettes 35%)
           const _evasionChance = (e.type === 'interceptor' || e.type === 'corvette' || e.type === 'swarm') ? 0.35 : 0.2;
           if (Math.random() < _evasionChance && !e._evading) {
@@ -13379,6 +13394,13 @@ function gameLoop() {
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
+            // Danger close bonus — kills within 10m give +50% score
+            const _killDist = e.group.position.distanceTo(ship.position);
+            if (_killDist < 10) {
+              const _dcBonus = Math.floor(pts * 0.5);
+              c.score += _dcBonus;
+              c.dmgNumbers.push({ text: 'DANGER CLOSE +' + _dcBonus, px: e.group.position.x, py: e.group.position.y + 8, pz: e.group.position.z, age: 0, color: '#ff2200' });
+            }
             // Kill echo — every 10th kill creates ghost explosion damaging nearby enemies
             if (c.kills % 10 === 0) {
               let _echoHits = 0;
