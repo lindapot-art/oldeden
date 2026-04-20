@@ -1923,6 +1923,7 @@ const state = {
     barrelRoll: 0,          // barrel roll animation progress (0=none, -1..1 = direction*progress)
     barrelRollCooldown: 0,  // cooldown before next roll (ms)
     _lastTapA: 0, _lastTapD: 0, // double-tap detection timestamps
+    _killFeed: [],          // recent kill log [{text, time, color}]
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -7814,6 +7815,22 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
         hudCtx.textAlign = 'left';
       }
     }
+    // Railgun charge glow — growing energy sphere on crosshair
+    if (c.charging && c.chargeLevel > 0) {
+      hudCtx.save();
+      const _chR = 4 + c.chargeLevel * 18;
+      const _chGrad = hudCtx.createRadialGradient(cx, cy, 0, cx, cy, _chR);
+      _chGrad.addColorStop(0, 'rgba(100,180,255,' + (0.4 + c.chargeLevel * 0.4) + ')');
+      _chGrad.addColorStop(0.5, 'rgba(60,120,255,' + (0.2 + c.chargeLevel * 0.3) + ')');
+      _chGrad.addColorStop(1, 'rgba(40,80,255,0)');
+      hudCtx.fillStyle = _chGrad;
+      hudCtx.beginPath(); hudCtx.arc(cx, cy, _chR, 0, Math.PI * 2); hudCtx.fill();
+      // Charge ring
+      hudCtx.strokeStyle = '#88ccff'; hudCtx.lineWidth = 1.5;
+      hudCtx.globalAlpha = 0.5 + 0.3 * Math.sin(performance.now() * 0.02);
+      hudCtx.beginPath(); hudCtx.arc(cx, cy, _chR + 2, -Math.PI/2, -Math.PI/2 + Math.PI*2*c.chargeLevel); hudCtx.stroke();
+      hudCtx.restore();
+    }
     // Weapon mode label above crosshair
     hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
     hudCtx.textAlign = 'center'; hudCtx.globalAlpha = 0.45;
@@ -12386,6 +12403,10 @@ function gameLoop() {
             }
             // Kill confirmation feedback
             c.killConfirmTimer = 400;
+            // Kill feed entry
+            const _kfColor = e.isBoss ? '#ff2200' : c.streak >= 10 ? '#ffcc00' : c.streak >= 5 ? '#ff8800' : '#44ff88';
+            c._killFeed.unshift({ text: (e.isBoss ? '\u2605 BOSS ' : '') + (e.type || 'hostile').toUpperCase() + ' +' + pts, time: performance.now(), color: _kfColor });
+            if (c._killFeed.length > 5) c._killFeed.length = 5;
             AudioSFX.play('kill_confirm');
             // Earn Stellar Marks: +1 per 10 kills, +5 for bosses
             const _smKillAward = e.isBoss ? 5 : (c.kills % 10 === 0 ? 1 : 0);
@@ -12468,8 +12489,20 @@ function gameLoop() {
               }
             });
             AudioSFX.play('explode');
-            spawnExplosion(e.group.position, e.cfg.scale);
-            if (typeof spawnExplosionAt === 'function') spawnExplosionAt(e.group.position, 0xff6622, 12);
+            const _eScale = e.cfg.scale || 0.6;
+            spawnExplosion(e.group.position, _eScale);
+            if (typeof spawnExplosionAt === 'function') {
+              const _particleCount = _eScale >= 0.8 ? 20 : _eScale >= 0.6 ? 12 : 8;
+              const _expColor = _eScale >= 0.8 ? 0xff4400 : 0xff6622;
+              spawnExplosionAt(e.group.position, _expColor, _particleCount);
+              // Secondary delayed explosion for large enemies
+              if (_eScale >= 0.7) {
+                const _ep = e.group.position.clone();
+                _ep.x += (Math.random()-0.5) * 4; _ep.y += (Math.random()-0.5) * 4;
+                const _t = setTimeout(() => { if (c.active) { spawnExplosionAt(_ep, 0xffaa00, 8); spawnExplosion(_ep, _eScale * 0.8); } }, 200);
+                _deathTimeouts.push(_t);
+              }
+            }
             // Loot drop chance (hacking skill improves drop rate; pirate zone +20%)
             const _pirateBonus = c._pirateZone ? 0.2 : 0;
             const lootChance = Math.min(0.85, 0.4 * getSkillBonus('hacking') + _pirateBonus);
@@ -12944,6 +12977,25 @@ function gameLoop() {
       const angToTarget = Math.atan2(tgt.group.position.z - ship.position.z, tgt.group.position.x - ship.position.x);
       hudCtx.fillStyle = '#ff6666';
       hudCtx.fillText('\u25B6 ' + (angToTarget * 180 / Math.PI).toFixed(0) + '\u00B0', infoX + 100, infoY + 58);
+    }
+
+    // ── Kill Feed (right side, below target info) ──
+    if (c._killFeed && c._killFeed.length > 0) {
+      const _kfX = hudCanvas.width - 170, _kfBaseY = 160;
+      const now = performance.now();
+      hudCtx.font = '9px "Segoe UI", system-ui, sans-serif';
+      hudCtx.textAlign = 'left';
+      for (let ki = c._killFeed.length - 1; ki >= 0; ki--) {
+        const kf = c._killFeed[ki];
+        const age = now - kf.time;
+        if (age > 5000) { c._killFeed.splice(ki, 1); continue; }
+        const alpha = age < 200 ? age / 200 : age > 4000 ? 1 - (age - 4000) / 1000 : 1;
+        hudCtx.globalAlpha = alpha * 0.7;
+        hudCtx.fillStyle = kf.color;
+        hudCtx.fillText(kf.text, _kfX, _kfBaseY + ki * 13);
+      }
+      hudCtx.globalAlpha = 1;
+      hudCtx.textAlign = 'left';
     }
 
     // ── Speed readout on HUD ──
