@@ -1460,6 +1460,8 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <span><span style="color:var(--blue);">R</span> Reload</span>
         <span><span style="color:var(--blue);">Q</span> Swap weapon</span>
         <span><span style="color:var(--blue);">V</span> Fire missile</span>
+        <span><span style="color:var(--blue);">X</span> Call wingman</span>
+        <span><span style="color:var(--blue);">1-4</span> Power preset</span>
         <span><span style="color:var(--blue);">M</span> Mine</span>
         <span><span style="color:var(--blue);">T</span> AI Chat</span>
         <span><span style="color:var(--blue);">K</span> Skins</span>
@@ -1932,6 +1934,8 @@ const state = {
     _scoreMultiplier: 1,    // score multiplier from kill chains
     _lastKillTime: 0,       // timestamp of last kill for chain detection
     _cockpitWarning: 0,     // cockpit warning light intensity
+    _wingman: null,         // active wingman {mesh, hp, timer, target}
+    _wingmanCooldown: 0,    // cooldown before next wingman call
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -2842,6 +2846,33 @@ function fireMissile() {
   c._missiles.push({ mesh: mMesh, target: tgt, vel: initDir.multiplyScalar(120), age: 0, damage: 35, trailMat });
   addComms('Weapons', '\uD83D\uDE80 Missile away! ' + c.missiles + ' remaining');
   AudioSFX.play('boost');
+}
+
+// ── Wingman Call — summon a temporary NPC ally ──
+function callWingman() {
+  if (c.dead || c._wingman || c._wingmanCooldown > 0) {
+    if (c._wingman) showToast('Wingman already active');
+    else if (c._wingmanCooldown > 0) showToast('Wingman on cooldown');
+    return;
+  }
+  if (state.player.credits < 200) { showToast('Need 200 EC for wingman'); return; }
+  state.player.credits -= 200;
+  // Create wingman ship
+  const wGeo = new THREE.Group();
+  const srcModel = state.loadedModels['escort_ship'] || state.loadedModels['red_fighter'] || state.loadedModels['fighter_alpha'];
+  if (srcModel) {
+    wGeo.add(reskinModel(srcModel, 0.5, 0x4488ff, 0.5));
+  } else {
+    const box = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 3), new THREE.MeshBasicMaterial({ color: 0x4488ff }));
+    wGeo.add(box);
+  }
+  // Position near player
+  wGeo.position.copy(ship.position).add(new THREE.Vector3(15, 5, -10));
+  scene.add(wGeo);
+  c._wingman = { mesh: wGeo, hp: 30, timer: 30000, target: null, _lastShot: 0 };
+  c._wingmanCooldown = 60000;
+  addComms('Wingman', 'On station, commander. Covering your six.');
+  AudioSFX.play('dock');
 }
 
 // ================================================================
@@ -7946,6 +7977,29 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.restore();
   }
 
+  // ── Power allocation HUD ──
+  {
+    const _pa = state.powerAlloc || { weapons: 34, shields: 33, engines: 33 };
+    const _pax = hudCanvas.width - 170, _pay = hudCanvas.height - 75;
+    hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
+    hudCtx.textAlign = 'left'; hudCtx.globalAlpha = 0.5;
+    hudCtx.fillStyle = '#ff6644'; hudCtx.fillText('WPN', _pax, _pay);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(_pax + 24, _pay - 7, 60, 5);
+    hudCtx.fillStyle = '#ff6644'; hudCtx.fillRect(_pax + 24, _pay - 7, 60 * _pa.weapons / 100, 5);
+    hudCtx.fillStyle = '#44aaff'; hudCtx.fillText('SHD', _pax, _pay + 10);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(_pax + 24, _pay + 3, 60, 5);
+    hudCtx.fillStyle = '#44aaff'; hudCtx.fillRect(_pax + 24, _pay + 3, 60 * _pa.shields / 100, 5);
+    hudCtx.fillStyle = '#44ff88'; hudCtx.fillText('ENG', _pax, _pay + 20);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(_pax + 24, _pay + 13, 60, 5);
+    hudCtx.fillStyle = '#44ff88'; hudCtx.fillRect(_pax + 24, _pay + 13, 60 * _pa.engines / 100, 5);
+    hudCtx.fillStyle = '#667788'; hudCtx.fillText('[1-4]', _pax + 90, _pay + 10);
+    // Wingman status
+    hudCtx.fillStyle = c._wingman ? '#4488ff' : (c._wingmanCooldown > 0 ? '#555555' : '#667788');
+    const _wmLabel = c._wingman ? '\u2708 WINGMAN ' + Math.ceil(c._wingman.timer / 1000) + 's' : (c._wingmanCooldown > 0 ? '\u2708 CD ' + Math.ceil(c._wingmanCooldown / 1000) + 's' : '\u2708 WINGMAN [X] 200EC');
+    hudCtx.fillText(_wmLabel, _pax, _pay + 32);
+    hudCtx.globalAlpha = 1;
+  }
+
   // ── Score multiplier display ──
   if (c._scoreMultiplier > 1) {
     hudCtx.save();
@@ -8291,6 +8345,15 @@ document.addEventListener('keydown', (e) => {
   // Missile fire: F key
   // Missile fire: V key
   if ((e.key === 'v' || e.key === 'V') && c.active && !c.dead) { fireMissile(); }
+  // Power allocation presets: 1=balanced, 2=weapons, 3=shields, 4=engines
+  if (c.active && !c.dead) {
+    if (e.key === '1') { state.powerAlloc = { weapons: 34, shields: 33, engines: 33 }; showToast('\u26A1 Power: BALANCED'); addComms('Engineering', 'Power distribution balanced.'); }
+    if (e.key === '2') { state.powerAlloc = { weapons: 60, shields: 20, engines: 20 }; showToast('\u2694 Power: WEAPONS'); addComms('Engineering', 'Diverting power to weapons systems.'); }
+    if (e.key === '3') { state.powerAlloc = { weapons: 20, shields: 60, engines: 20 }; showToast('\uD83D\uDEE1 Power: SHIELDS'); addComms('Engineering', 'Boosting shield regeneration.'); }
+    if (e.key === '4') { state.powerAlloc = { weapons: 20, shields: 20, engines: 60 }; showToast('\uD83D\uDE80 Power: ENGINES'); addComms('Engineering', 'Full power to engines.'); }
+  }
+  // Wingman call: X key
+  if ((e.key === 'x' || e.key === 'X') && c.active && !c.dead) { callWingman(); }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -13082,6 +13145,37 @@ function gameLoop() {
       // Pulsing trail
       if (m.trailMat) m.trailMat.opacity = 0.3 + 0.3 * Math.sin(m.age * 0.02);
     }
+
+    // ── Wingman AI update ──
+    if (c._wingman) {
+      const wm = c._wingman;
+      wm.timer -= dtMs;
+      if (wm.timer <= 0 || wm.hp <= 0) {
+        addComms('Wingman', wm.hp <= 0 ? 'Wingman destroyed!' : 'Wingman disengaging. Good hunting.');
+        scene.remove(wm.mesh); disposeObject(wm.mesh);
+        c._wingman = null;
+      } else {
+        // Follow player at offset
+        const _wmTarget = ship.position.clone().add(new THREE.Vector3(15, 5, -10));
+        wm.mesh.position.lerp(_wmTarget, dt * 2);
+        wm.mesh.lookAt(ship.position.clone().add(new THREE.Vector3(0, 0, -50)));
+        // Find and shoot nearest enemy
+        let _wmClosest = null, _wmCD = 200;
+        c.enemies.forEach(e => {
+          const d = e.group.position.distanceTo(wm.mesh.position);
+          if (d < _wmCD) { _wmCD = d; _wmClosest = e; }
+        });
+        if (_wmClosest && state.gameTime - wm._lastShot > 1200) {
+          wm._lastShot = state.gameTime;
+          wm.mesh.lookAt(_wmClosest.group.position);
+          _wmClosest.hp -= 2.5;
+          _wmClosest.hitFlash = 100;
+          spawnImpactSparks(_wmClosest.group.position, 0x4488ff);
+          c.dmgNumbers.push({ text: '-2.5', px: _wmClosest.group.position.x, py: _wmClosest.group.position.y + 2, pz: _wmClosest.group.position.z, age: 0, color: '#4488ff' });
+        }
+      }
+      if (c._wingmanCooldown > 0) c._wingmanCooldown -= dtMs;
+    } else { if (c._wingmanCooldown > 0) c._wingmanCooldown -= dtMs; }
 
     // ── Shield regen visual pulse ──
     if (state.ship.shield < state.ship.maxShield && state.ship.shield > 0 && !c.dead) {
