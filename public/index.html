@@ -1463,6 +1463,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <span><span style="color:var(--blue);">X</span> Call wingman</span>
         <span><span style="color:var(--blue);">1-4</span> Power preset</span>
         <span><span style="color:var(--blue);">Z</span> Drop mine</span>
+        <span><span style="color:var(--blue);">N</span> EMP blast</span>
         <span><span style="color:var(--blue);">J</span> Combat log</span>
         <span><span style="color:var(--blue);">M</span> Mining</span>
         <span><span style="color:var(--blue);">T</span> AI Chat</span>
@@ -1932,6 +1933,9 @@ const state = {
     _autoTurretTimer: 0,    // auto-turret fire timer
     _combatLog: [],         // recent combat events (max 20)
     _showCombatLog: false,  // J key toggle
+    _empCooldown: 0,        // EMP blast cooldown (ms)
+    _empCharges: 2,         // EMP charges per life
+    _empMaxCharges: 2,      // max EMP charges
     repairFlashTimer: 0,    // green flash on hull/shield repair pickup
     subsystemDamage: { engine: 0, weapons: 0, sensors: 0 }, // 0=ok, >0 = malfunction timer (ms remaining)
     barrelRoll: 0,          // barrel roll animation progress (0=none, -1..1 = direction*progress)
@@ -2913,6 +2917,38 @@ function deployMine() {
   c._mines.push({ mesh: mine, age: 0, radius: 18, damage: 40, ringMat });
   addComms('Weapons', '\u2622 Mine deployed. ' + c._mines.length + '/' + c.maxMines);
   AudioSFX.play('click');
+}
+
+// ── EMP Blast — area stun that disables nearby enemies briefly ──
+function fireEMP() {
+  if (c.dead || c._empCooldown > 0) return;
+  if (c._empCharges <= 0) { showToast('No EMP charges remaining'); return; }
+  c._empCharges--;
+  c._empCooldown = 15000; // 15s cooldown
+  const empRange = 120;
+  let stunned = 0;
+  c.enemies.forEach(e => {
+    if (!e || !e.group) return;
+    const dist = e.group.position.distanceTo(ship.position);
+    if (dist < empRange) {
+      e._stunTimer = 3000; // 3 second stun
+      e._stunSparks = 0;
+      stunned++;
+    }
+  });
+  // Visual: expanding ring + screen flash
+  const empRingGeo = new THREE.RingGeometry(1, 3, 32);
+  const empRingMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.6, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+  const empRing = new THREE.Mesh(empRingGeo, empRingMat);
+  empRing.position.copy(ship.position);
+  scene.add(empRing);
+  c._empRing = { mesh: empRing, age: 0 };
+  // Screen flash
+  const _empEl = document.getElementById('emp-flash');
+  if (_empEl) { _empEl.classList.remove('active'); void _empEl.offsetWidth; _empEl.classList.add('active'); }
+  addCombatLog('EMP BLAST — ' + stunned + ' enemies stunned', '#00ccff');
+  addComms('Weapons', '\u26A1 EMP fired! ' + stunned + ' targets disabled. ' + c._empCharges + ' charges left.');
+  AudioSFX.play('boost');
 }
 
 // ================================================================
@@ -6007,13 +6043,29 @@ const LOOT_TYPES = [
   { name: 'Gold Alloy', value: 250, color: 0xffaa00, size: 0.5 },
 ];
 
+// Loot rarity tiers
+const LOOT_RARITIES = [
+  { name: 'Common',   chance: 0.55, mult: 1.0, color: '#aaaaaa', glowHex: 0xaaaaaa },
+  { name: 'Uncommon', chance: 0.25, mult: 1.5, color: '#44ff44', glowHex: 0x44ff44 },
+  { name: 'Rare',     chance: 0.13, mult: 2.5, color: '#4488ff', glowHex: 0x4488ff },
+  { name: 'Epic',     chance: 0.07, mult: 5.0, color: '#cc44ff', glowHex: 0xcc44ff },
+];
+function rollRarity() {
+  const r = Math.random();
+  let cum = 0;
+  for (const t of LOOT_RARITIES) { cum += t.chance; if (r < cum) return t; }
+  return LOOT_RARITIES[0];
+}
+
 // Drop loot when enemy dies
 function dropLootFromEnemy(pos) {
   if (Math.random() < 0.4) { // 40% drop chance
     const types = ['credits', 'ammo', 'health', 'fuel', 'shield', 'scoreboost'];
     const type = types[Math.floor(Math.random() * types.length)];
     const vals = { credits: 50, ammo: 25, health: 25, fuel: 25, shield: 25, scoreboost: 25 };
-    spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)), type, vals[type] || 50);
+    const rarity = rollRarity();
+    const baseVal = vals[type] || 50;
+    spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)), type, Math.ceil(baseVal * rarity.mult), rarity);
   }
 }
 
@@ -6450,7 +6502,7 @@ for (const [lt, lc] of Object.entries(_lootColors)) {
   _lootRingMatPool[lt] = new THREE.MeshBasicMaterial({ color: lc, transparent: true, opacity: 0.3, side: THREE.DoubleSide }); _lootRingMatPool[lt]._pooled = true;
   _lootGlowMatPool[lt] = new THREE.MeshBasicMaterial({ color: lc, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }); _lootGlowMatPool[lt]._pooled = true;
 }
-function spawnLootDrop(pos, type, creditValue) {
+function spawnLootDrop(pos, type, creditValue, rarity) {
   const g = new THREE.Group();
   const mesh = new THREE.Mesh(_lootOctGeo, _lootMatPool[type] || _lootMatPool.credits);
   g.add(mesh);
@@ -6465,8 +6517,17 @@ function spawnLootDrop(pos, type, creditValue) {
   g.position.copy(pos);
   g.userData.type = type;
   g.userData.age = 0;
+  // Rarity visual scaling
+  const _r = rarity || LOOT_RARITIES[0];
+  g.userData.rarity = _r;
+  if (_r.mult > 1) {
+    const sc = 1 + (_r.mult - 1) * 0.2; // slightly bigger for rare+
+    mesh.scale.setScalar(sc);
+    lootGlow.material.color.setHex(_r.glowHex);
+    lootGlow.material.opacity = 0.3 + _r.mult * 0.05;
+  }
   scene.add(g);
-  c.lootDrops.push({ group: g, type, age: 0, creditValue: creditValue || 50 });
+  c.lootDrops.push({ group: g, type, age: 0, creditValue: creditValue || 50, rarity: _r });
 }
 
 function exitGunnerMode(skipScreenChange) {
@@ -7084,6 +7145,10 @@ function renderHUD(dtMs) {
   hudCtx.fillText('\u2622 MNE: ' + c._mines.length + '/' + c.maxMines + '  [Z]', wrx, wry+122);
   // Auto-turret status
   if (c._autoTurret) { hudCtx.fillStyle = '#44ffaa'; hudCtx.fillText('\u2699 TURRET: ACTIVE', wrx, wry+136); }
+  // EMP blast status
+  hudCtx.fillStyle = c._empCharges > 0 && c._empCooldown <= 0 ? '#00ccff' : '#555555';
+  const _empCdSec = c._empCooldown > 0 ? ' (' + Math.ceil(c._empCooldown / 1000) + 's)' : '';
+  hudCtx.fillText('\u26A1 EMP: ' + c._empCharges + '/' + c._empMaxCharges + _empCdSec + '  [N]', wrx, wry+150);
 
   // Shield/Hull (top-left)
   const slx = 24, sly = 30;
@@ -7176,6 +7241,12 @@ function renderHUD(dtMs) {
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
   hudCtx.font = 'bold 22px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
+  // Survival timer
+  const _survSec = Math.floor(state.gameTime / 1000);
+  const _survMin = Math.floor(_survSec / 60);
+  const _survDisp = _survMin > 0 ? _survMin + 'm ' + (_survSec % 60) + 's' : _survSec + 's';
+  hudCtx.fillStyle = _survSec > 300 ? '#44ff88' : _survSec > 60 ? '#aaccff' : '#778899';
+  hudCtx.fillText('\u231A ' + _survDisp + ' alive', srx + 160, sry+44);
   // Age & Lives display
   hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
   // Kill streak — escalating visual drama
@@ -8485,6 +8556,8 @@ document.addEventListener('keydown', (e) => {
   if ((e.key === 'z' || e.key === 'Z') && c.active && !c.dead) { deployMine(); }
   // Combat log toggle: J key
   if ((e.key === 'j' || e.key === 'J') && c.active) { c._showCombatLog = !c._showCombatLog; }
+  // EMP blast: N key
+  if ((e.key === 'n' || e.key === 'N') && c.active && !c.dead) { fireEMP(); }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -12865,6 +12938,18 @@ function gameLoop() {
     for (let ei = c.enemies.length - 1; ei >= 0; ei--) {
       const e = c.enemies[ei];
       if (!e || !e.group || !e.group.parent) { c.enemies.splice(ei, 1); continue; }
+      // EMP stun check — skip movement & firing while stunned
+      if (e._stunTimer > 0) {
+        e._stunTimer -= dtMs;
+        e._stunSparks = (e._stunSparks || 0) + dtMs;
+        // Visual: blue emissive flash while stunned
+        if (Math.floor(e._stunSparks / 200) % 2 === 0) {
+          e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0x0088ff); ch.material.emissiveIntensity = 1.5; } });
+        } else {
+          e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0x000000); ch.material.emissiveIntensity = 0.3; } });
+        }
+        continue; // Skip all movement and firing
+      }
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
       // First life stays non-aggressive until the player engages.
@@ -13212,6 +13297,12 @@ function gameLoop() {
           }
         }
         else if (l.type === 'scoreboost') { const bonus = 100 + Math.floor(c.kills * 5); c.score += bonus; c.dmgNumbers.push({ text: '+' + bonus + ' SCORE', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#cc44ff' }); }
+        // Rarity announcement for uncommon+
+        const _lr = l.rarity || LOOT_RARITIES[0];
+        if (_lr.mult > 1) {
+          c.dmgNumbers.push({ text: _lr.name.toUpperCase() + '!', px: l.group.position.x, py: l.group.position.y + 3, pz: l.group.position.z, age: 0, color: _lr.color });
+          if (_lr.mult >= 2.5) addCombatLog(_lr.name + ' ' + l.type + ' drop!', _lr.color);
+        }
         AudioSFX.play('loot_' + l.type);
         // Quest collect objectives
         state.quests.forEach(q => {
@@ -13341,6 +13432,15 @@ function gameLoop() {
 
     // ── Proximity Mine update ──
     if (c._mineCooldown > 0) c._mineCooldown -= dtMs;
+    if (c._empCooldown > 0) c._empCooldown -= dtMs;
+    // EMP ring expansion visual
+    if (c._empRing) {
+      c._empRing.age += dtMs;
+      const empScale = 1 + c._empRing.age * 0.15;
+      c._empRing.mesh.scale.setScalar(empScale);
+      c._empRing.mesh.material.opacity = Math.max(0, 0.6 - c._empRing.age * 0.001);
+      if (c._empRing.age > 600) { scene.remove(c._empRing.mesh); c._empRing.mesh.geometry.dispose(); c._empRing.mesh.material.dispose(); c._empRing = null; }
+    }
     for (let mi = c._mines.length - 1; mi >= 0; mi--) {
       const mine = c._mines[mi];
       mine.age += dtMs;
