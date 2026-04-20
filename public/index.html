@@ -1920,6 +1920,9 @@ const state = {
     shieldBreakTimer: 0,    // shield break visual timer
     repairFlashTimer: 0,    // green flash on hull/shield repair pickup
     subsystemDamage: { engine: 0, weapons: 0, sensors: 0 }, // 0=ok, >0 = malfunction timer (ms remaining)
+    barrelRoll: 0,          // barrel roll animation progress (0=none, -1..1 = direction*progress)
+    barrelRollCooldown: 0,  // cooldown before next roll (ms)
+    _lastTapA: 0, _lastTapD: 0, // double-tap detection timestamps
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -6875,8 +6878,15 @@ function renderHUD(dtMs) {
   const slx = 24, sly = 30;
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SHIELD', slx, sly);
   hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(slx, sly+6, 180, 8);
-  hudCtx.fillStyle = state.ship.shield > 30 ? '#44aaff' : danger;
-  hudCtx.fillRect(slx, sly+6, 180*(state.ship.shield/state.ship.maxShield), 8);
+  const _shieldOvercharged = state.ship.shield > state.ship.maxShield;
+  hudCtx.fillStyle = _shieldOvercharged ? '#88eeff' : (state.ship.shield > 30 ? '#44aaff' : danger);
+  hudCtx.fillRect(slx, sly+6, Math.min(180, 180*(state.ship.shield/state.ship.maxShield)), 8);
+  // Overshield glow
+  if (_shieldOvercharged) {
+    hudCtx.save(); hudCtx.globalAlpha = 0.3 + 0.2 * Math.sin(performance.now() * 0.006);
+    hudCtx.fillStyle = '#aaeeff'; hudCtx.fillRect(slx, sly+4, 180, 12);
+    hudCtx.restore();
+  }
   // Shield recharge glow when regenerating
   if (state.ship.shield < state.ship.maxShield && state.ship.shield > 0) {
     hudCtx.save();
@@ -7205,6 +7215,23 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     const senBlink = Math.sin(performance.now() * 0.008) > 0;
     if (senBlink) hudCtx.fillText('SENSOR FAULT', mapCx, mapCy);
     hudCtx.textAlign = 'left';
+    hudCtx.restore();
+  }
+
+  // ── Damage direction indicator (red arc showing hit direction) ──
+  if (c._dmgDirTimer > 0) {
+    c._dmgDirTimer -= dtMs;
+    const dmgAlpha = Math.min(1, c._dmgDirTimer / 300) * 0.6;
+    hudCtx.save();
+    hudCtx.translate(cx, cy);
+    // Convert world-space angle to screen-space (relative to camera yaw)
+    const relAngle = (c._dmgDirAngle || 0) - c.yaw + Math.PI;
+    hudCtx.rotate(relAngle);
+    hudCtx.globalAlpha = dmgAlpha;
+    hudCtx.strokeStyle = '#ff2200'; hudCtx.lineWidth = 6;
+    hudCtx.beginPath();
+    hudCtx.arc(0, 0, Math.min(W, H) * 0.35, -0.4, 0.4);
+    hudCtx.stroke();
     hudCtx.restore();
   }
 
@@ -8080,6 +8107,18 @@ document.addEventListener('keydown', (e) => {
     state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
     showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '⚡ Railgun' : '◈ Laser'));
     addComms('System', `Switched to ${state.activeWeapon === 'railgun' ? 'Railgun — High damage, uses ammo' : 'Laser Turret — Fast fire, uses heat'}`);
+  }
+  // Barrel roll — double-tap A or D
+  if (c.active && !c.dead && c.barrelRoll === 0 && c.barrelRollCooldown <= 0) {
+    const now = performance.now();
+    if (e.key === 'a' || e.key === 'A') {
+      if (now - c._lastTapA < 300) { c.barrelRoll = -1; c.barrelRollCooldown = 2000; c.deathImmunityUntil = Math.max(c.deathImmunityUntil, now + 500); addComms('Flight', 'Barrel roll — evasive!'); AudioSFX.play('boost'); }
+      c._lastTapA = now;
+    }
+    if (e.key === 'd' || e.key === 'D') {
+      if (now - c._lastTapD < 300) { c.barrelRoll = 1; c.barrelRollCooldown = 2000; c.deathImmunityUntil = Math.max(c.deathImmunityUntil, now + 500); addComms('Flight', 'Barrel roll — evasive!'); AudioSFX.play('boost'); }
+      c._lastTapD = now;
+    }
   }
   keysDown.add(e.key.toLowerCase());
 });
@@ -11788,8 +11827,21 @@ function gameLoop() {
     // Visual bank on strafe
     ship.rotateZ(-fl.strafe * 0.15 * dt);
 
+    // ── Barrel roll animation ──
+    if (c.barrelRoll !== 0) {
+      const rollSpeed = dt * 8; // ~0.5s for full 360°
+      const rollDir = c.barrelRoll > 0 ? 1 : -1;
+      c._barrelRollAngle = (c._barrelRollAngle || 0) + rollSpeed * rollDir;
+      if (Math.abs(c._barrelRollAngle) >= Math.PI * 2) {
+        c._barrelRollAngle = 0;
+        c.barrelRoll = 0;
+      }
+    } else { c._barrelRollAngle = 0; }
+    if (c.barrelRollCooldown > 0) c.barrelRollCooldown -= dtMs;
+
     // ── Camera: world-space orientation from accumulated yaw/pitch + shake ──
-    _tmpEuler.set(-c.pitch + c.shakeY * 0.08 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.08, 0, 'YXZ');
+    const _rollZ = c._barrelRollAngle || 0;
+    _tmpEuler.set(-c.pitch + c.shakeY * 0.08 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.08, _rollZ, 'YXZ');
     camera.quaternion.setFromEuler(_tmpEuler);
 
     // Weapon charge (apply weapons power to charge time)
@@ -11825,6 +11877,14 @@ function gameLoop() {
     // Shield regen (apply shields power)
     if (state.ship.shield < state.ship.maxShield) {
       state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult() * shieldsMult);
+    }
+    // Overshield decay — shield above max slowly decays back to max
+    if (state.ship.shield > state.ship.maxShield) {
+      state.ship.shield = Math.max(state.ship.maxShield, state.ship.shield - dt * 2);
+    }
+    // Emergency nanobots — very slow hull regen at critical levels (< 15%)
+    if (state.ship.hull > 0 && state.ship.hull < state.ship.maxHull * 0.15 && !c.dead) {
+      state.ship.hull = Math.min(state.ship.maxHull * 0.15, state.ship.hull + dt * 0.5);
     }
     // Damage flash
     if (c.damageFlash > 0) c.damageFlash = Math.max(0, c.damageFlash - dtMs);
@@ -12246,17 +12306,19 @@ function gameLoop() {
         const e = c.enemies[j];
         const hitThreshSq = (3 * (e.cfg.scale || 1)) ** 2;
         if (p.group.position.distanceToSquared(e.group.position) < hitThreshSq) {
-          // Apply genome damage multiplier + weapon-specific damage
+          // Apply genome damage multiplier + weapon-specific damage + crit chance
           const baseDmg = p.isLaser ? (p.damage || 0.65) : 1.0;
-          const genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
+          let genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
+          const isCrit = Math.random() < 0.12; // 12% crit chance
+          if (isCrit) genomeDmg *= 2.0;
           e.hp -= genomeDmg;
           e.hitFlash = 150;
           AudioSFX.play('hit');
           AudioSFX.play('hit_marker');
           spawnImpactSparks(p.group.position, p.isLaser ? 0x44ffaa : 0xffaa44);
-          c.hitMarkerTimer = 150;
+          c.hitMarkerTimer = isCrit ? 300 : 150;
           c._shotsHit = (c._shotsHit || 0) + 1;
-          c.dmgNumbers.push({ text: '-' + genomeDmg.toFixed(1), px: p.group.position.x, py: p.group.position.y, pz: p.group.position.z, age: 0, color: '#ff6644' });
+          c.dmgNumbers.push({ text: (isCrit ? 'CRIT -' : '-') + genomeDmg.toFixed(1), px: p.group.position.x, py: p.group.position.y, pz: p.group.position.z, age: 0, color: isCrit ? '#ffee00' : '#ff6644' });
           if (e.hp <= 0) {
             // Kill streak
             c.streak++; c.streakTimer = 5000;
@@ -12532,6 +12594,9 @@ function gameLoop() {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
           const dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
           const hadShield = state.ship.shield > 0;
+          // Damage direction indicator
+          c._dmgDirAngle = Math.atan2(b.group.position.x - ship.position.x, b.group.position.z - ship.position.z);
+          c._dmgDirTimer = 600;
           if (state.ship.shield > 0) {
             const _absorbed = Math.min(state.ship.shield, dmg);
             state.ship.shield -= _absorbed;
@@ -12656,7 +12721,16 @@ function gameLoop() {
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); c.repairFlashTimer = 400; }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ff8844' }); }
-        else if (l.type === 'shield') { state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + 20); c.dmgNumbers.push({ text: '+20 SHIELD', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ccff' }); }
+        else if (l.type === 'shield') {
+          if (state.ship.shield >= state.ship.maxShield) {
+            // Overcharge — shield beyond max (up to 150%)
+            state.ship.shield = Math.min(state.ship.maxShield * 1.5, state.ship.shield + 20);
+            c.dmgNumbers.push({ text: '+20 OVERSHIELD', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#88eeff' });
+          } else {
+            state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + 20);
+            c.dmgNumbers.push({ text: '+20 SHIELD', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ccff' });
+          }
+        }
         else if (l.type === 'scoreboost') { const bonus = 100 + Math.floor(c.kills * 5); c.score += bonus; c.dmgNumbers.push({ text: '+' + bonus + ' SCORE', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#cc44ff' }); }
         AudioSFX.play('loot_' + l.type);
         // Quest collect objectives
