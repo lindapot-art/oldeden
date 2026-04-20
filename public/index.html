@@ -7655,11 +7655,20 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
   const boss = c.enemies.find(e => e.isBoss);
   if (boss) {
     const bw = 300, bh = 12, bx = cx - bw/2, by = 60;
+    const _bHpPct = boss.hp / boss.maxHp;
+    const _bPhaseLabel = _bHpPct < 0.25 ? ' \u2620 DESPERATE' : _bHpPct < 0.5 ? ' \u26a0 ENRAGED' : '';
+    const _bPhaseColor = _bHpPct < 0.25 ? '#ff0000' : _bHpPct < 0.5 ? '#ff6600' : '#ff2200';
     hudCtx.fillStyle = '#445566'; hudCtx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
-    hudCtx.fillText('\u26a0 BOSS', bx, by-6);
+    hudCtx.fillText('\u26a0 BOSS' + _bPhaseLabel, bx, by-6);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(bx, by, bw, bh);
-    hudCtx.fillStyle = '#ff2200'; hudCtx.fillRect(bx, by, bw*(boss.hp/boss.maxHp), bh);
+    hudCtx.fillStyle = _bPhaseColor; hudCtx.fillRect(bx, by, bw*_bHpPct, bh);
+    // Phase threshold markers at 50% and 25%
+    hudCtx.strokeStyle = '#ffffff33'; hudCtx.lineWidth = 1;
+    hudCtx.beginPath(); hudCtx.moveTo(bx + bw*0.5, by); hudCtx.lineTo(bx + bw*0.5, by+bh); hudCtx.stroke();
+    hudCtx.beginPath(); hudCtx.moveTo(bx + bw*0.25, by); hudCtx.lineTo(bx + bw*0.25, by+bh); hudCtx.stroke();
     hudCtx.strokeStyle = '#ff4422'; hudCtx.lineWidth = 1; hudCtx.strokeRect(bx, by, bw, bh);
+    // HP percentage text
+    hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#ffffff'; hudCtx.fillText(Math.ceil(_bHpPct*100) + '%', bx + bw + 8, by + 10);
   }
 
   // ── Compass / Bearing Indicator (top-center strip) ──
@@ -12174,6 +12183,10 @@ function gameLoop() {
     ship.position.z += fl.velocity.z * dt;
     // Update engine audio pitch/volume based on speed
     AudioSFX.updateEngineAudio(fl.speed, maxSpd, fl.afterburner);
+    // Dynamic FOV — widens at high speed for acceleration feel
+    const _targetFov = 75 + (fl.speed / Math.max(1, maxSpd)) * 12 + (fl.afterburner ? 5 : 0);
+    camera.fov += (_targetFov - camera.fov) * Math.min(1, dt * 4);
+    camera.updateProjectionMatrix();
     // Ship model tracks camera direction smoothly (fly where you look)
     _tmpV3b.set(0, 0, -1).applyQuaternion(camera.quaternion);
     _tmpV3c.copy(ship.position).add(_tmpV3b.multiplyScalar(50));
@@ -12986,7 +12999,14 @@ function gameLoop() {
       }
       // Enemy firing — sentinels shoot back when provoked
       if (!e.lastShot) e.lastShot = state.gameTime;
-      const fireInterval = e.isBoss ? Math.max(600, 1500 - (c.cycle - 1) * 100) : (e.shootRate || 3000);
+      // Boss phase behavior: enraged at 50%, desperate at 25%
+      let fireInterval = e.isBoss ? Math.max(600, 1500 - (c.cycle - 1) * 100) : (e.shootRate || 3000);
+      let _bossPhase = 0;
+      if (e.isBoss && e.maxHp) {
+        const _bossHpPct = e.hp / e.maxHp;
+        if (_bossHpPct < 0.25) { _bossPhase = 2; fireInterval *= 0.4; } // Desperate — very fast
+        else if (_bossHpPct < 0.5) { _bossPhase = 1; fireInterval *= 0.65; } // Enraged — faster
+      }
       const MAX_BOLTS = 30;
       // Boss accuracy improves at higher cycles
       const _inaccuracy = e.isBoss ? Math.max(0.04, 0.15 - c.cycle * 0.01) : 0.15;
@@ -13004,6 +13024,20 @@ function gameLoop() {
         boltObj.trail.position.set(0,0,0); boltObj.trail.quaternion.copy(boltObj.bolt.quaternion);
         scene.add(boltObj.group);
         c.enemyBolts.push({ group: boltObj.group, dir: _tmpV3b.clone(), speed: 120, age: 0, life: 4000, _poolRef: boltObj });
+        // Boss desperate phase: fire a second spread bolt
+        if (_bossPhase >= 2 && c.enemyBolts.length < MAX_BOLTS) {
+          const _spread = new THREE.Vector3().copy(ship.position).sub(e.group.position).normalize();
+          _spread.x += (Math.random() - 0.5) * 0.3; _spread.y += (Math.random() - 0.5) * 0.3; _spread.normalize();
+          const boltObj2 = getBoltFromPool();
+          boltObj2.group.position.copy(e.group.position); boltObj2.group.rotation.set(0,0,0);
+          boltObj2.bolt.position.set(0,0,0); boltObj2.bolt.quaternion.setFromUnitVectors(_upVec, _spread);
+          boltObj2.trail.position.set(0,0,0); boltObj2.trail.quaternion.copy(boltObj2.bolt.quaternion);
+          scene.add(boltObj2.group);
+          c.enemyBolts.push({ group: boltObj2.group, dir: _spread.clone(), speed: 130, age: 0, life: 4000, _poolRef: boltObj2 });
+        }
+        // Boss enraged phase announcement (once)
+        if (_bossPhase >= 1 && !e._announcedPhase1) { e._announcedPhase1 = true; addComms('EDEN AI', '\u26a0 Boss entering enraged phase!'); addCombatLog('BOSS ENRAGED — fire rate increased', '#ff4400'); }
+        if (_bossPhase >= 2 && !e._announcedPhase2) { e._announcedPhase2 = true; addComms('EDEN AI', '\u2620 Boss desperate — double shots!'); addCombatLog('BOSS DESPERATE — spread fire!', '#ff0000'); }
       }
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
