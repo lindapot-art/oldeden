@@ -2279,6 +2279,7 @@ function fireActiveGunRoomWeapon() {
   const _heatOverload = (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) ? 3 : 1;
   c.heat = Math.min(1, c.heat + 0.08 * _heatOverload); // generic heat
   c.playerHasAttacked = true;
+  c._lastFireTime = state.gameTime;
   _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
   _laserOrigin.copy(camera.position).addScaledVector(_laserDir, 1);
   const dir = _laserDir;
@@ -2815,6 +2816,7 @@ function fireLaser() {
   const _laserHeatOverload = (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) ? 3 : 1;
   c.heat = Math.min(1, c.heat + LASER_HEAT_PER_SHOT * _laserHeatOverload);
   c.playerHasAttacked = true;
+  c._lastFireTime = state.gameTime;
   
   _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
   _laserOrigin.copy(camera.position).addScaledVector(_laserDir, 1);
@@ -6913,6 +6915,8 @@ function spawnNail() {
   // Ammo echo — every 25th shot is free
   if (c._shotsFired % 25 !== 0) c.ammo--;
   c.heat = Math.min(1, c.heat + (c._ammoType === 'ap' ? 0.18 : 0.12));
+  c.playerHasAttacked = true;
+  c._lastFireTime = state.gameTime;
   c.recoilVel = -8;
   c.fireRecoilKick = 0.045; // Camera kick on fire
   // Fire shake impulse — makes railgun feel impactful
@@ -13569,6 +13573,19 @@ function gameLoop() {
               }
             } else { c._scoreMultiplier = 1; c._rapidKills = 0; }
             c._lastKillTime = _now;
+            // Magnetar burst — 3 kills within 2s triggers EMP stun (25m radius, 1s)
+            c._rapidKillTimes = c._rapidKillTimes || [];
+            c._rapidKillTimes.push(_now);
+            c._rapidKillTimes = c._rapidKillTimes.filter(_t => _now - _t < 2000);
+            if (c._rapidKillTimes.length >= 3 && (!c._magnetarCD || state.gameTime > c._magnetarCD)) {
+              c._magnetarCD = state.gameTime + 15000;
+              let _empHits = 0;
+              c.enemies.forEach(_emp => { if (_emp.hp > 0 && _emp.group.position.distanceTo(ship.position) < 25) { _emp._stunUntil = state.gameTime + 1000; _empHits++; } });
+              addComms('EDEN AI', '\u26A1 MAGNETAR BURST! EMP stunned ' + _empHits + ' enemies!');
+              addCombatLog('MAGNETAR EMP — ' + _empHits + ' stunned 1s', '#cc88ff');
+              c.dmgNumbers.push({ text: '\u26A1 MAGNETAR!', px: ship.position.x, py: ship.position.y + 7, pz: ship.position.z, age: 0, color: '#cc88ff' });
+              c._rapidKillTimes = [];
+            }
             // Adrenaline rush — 5+ kills in rapid succession triggers 3s slow-mo for enemies
             if (c._rapidKills >= 5 && (!c._adrenalineUntil || state.gameTime > c._adrenalineUntil)) {
               c._adrenalineUntil = state.gameTime + 3000;
@@ -13643,6 +13660,14 @@ function gameLoop() {
               c._revengeTarget = null;
             }
             state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
+            // Score cascade — score multiplier above 3x gives +1% credit bonus per 0.1x
+            if (c._scoreMultiplier > 3) {
+              const _cascadeBonus = Math.floor((c._scoreMultiplier - 3) * 10 * 0.01 * e.points * _creditStreakMult * 0.4);
+              if (_cascadeBonus > 0) {
+                state.player.credits += _cascadeBonus;
+                c.dmgNumbers.push({ text: 'CASCADE +' + _cascadeBonus, px: e.group.position.x, py: e.group.position.y + 11, pz: e.group.position.z, age: 0, color: '#ffdd44' });
+              }
+            }
             // Bounty hunter mark — 3x credits if killed enemy has bounty
             if (e._bounty) {
               const _bountyReward = Math.floor(e.points * _creditStreakMult * 0.4 * 2); // +2x on top of normal = 3x total
@@ -14273,6 +14298,14 @@ function gameLoop() {
       b.group.position.addScaledVector(b.dir, b.speed * dt);
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
+        // Cloaking pulse — not firing for 5s gives 30% enemy miss chance
+        if (!c.playerHasAttacked || (state.gameTime - (c._lastFireTime || 0)) > 5000) {
+          if (Math.random() < 0.30) {
+            returnBoltToPool(b); c.enemyBolts.splice(i, 1); i--;
+            c.dmgNumbers.push({ text: 'CLOAKED!', px: ship.position.x, py: ship.position.y + 3, pz: ship.position.z, age: 0, color: '#6644aa' });
+            continue;
+          }
+        }
         // Dodge counter — barrel roll reflects bolt back at nearest enemy
         if (c._dodgeCounterUntil && performance.now() < c._dodgeCounterUntil) {
           b.dir.negate(); b.speed *= 1.5;
