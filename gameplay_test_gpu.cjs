@@ -3,8 +3,10 @@ const fs = require("fs");
 const path = require("path");
 
 const DIR = "d:/antiruscist/oldeden/gameplay_screenshots";
-if (fs.existsSync(DIR)) fs.readdirSync(DIR).forEach(f => fs.unlinkSync(path.join(DIR, f)));
-else fs.mkdirSync(DIR, { recursive: true });
+if (!fs.existsSync(DIR)) fs.mkdirSync(DIR, { recursive: true });
+for (const entry of fs.readdirSync(DIR, { withFileTypes: true })) {
+  fs.rmSync(path.join(DIR, entry.name), { recursive: true, force: true });
+}
 
 const URL = "http://localhost:3847";
 const ERRORS = [];

@@ -605,6 +605,90 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   overflow: hidden;
   background: radial-gradient(circle at 50% 20%, rgba(68,170,255,0.08), transparent 28%), linear-gradient(180deg, rgba(7,12,20,0.96), rgba(5,8,14,0.98));
 }
+#interior-3d-view canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.interior-fallback-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 14%, rgba(82,174,255,0.18), transparent 28%),
+    linear-gradient(180deg, rgba(10,18,32,0.96), rgba(8,13,24,0.98));
+}
+.interior-fallback-scene::before {
+  content: '';
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: 12%;
+  height: 28%;
+  border-radius: 0 0 44px 44px;
+  border: 1px solid rgba(102,174,255,0.18);
+  background: linear-gradient(180deg, rgba(24,44,72,0.72), rgba(7,12,20,0.08));
+  box-shadow: 0 0 80px rgba(71,132,210,0.16);
+}
+.interior-fallback-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 26px 26px;
+  opacity: 0.2;
+}
+.interior-fallback-console {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  bottom: 24%;
+  height: 20%;
+  border-radius: 18px 18px 28px 28px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, rgba(28,38,52,0.96), rgba(12,18,28,0.98));
+  box-shadow: 0 18px 44px rgba(0,0,0,0.36);
+}
+.interior-fallback-console::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 16%;
+  height: 24%;
+  border-radius: 12px;
+  background: repeating-linear-gradient(90deg, rgba(44,209,171,0.42), rgba(44,209,171,0.42) 9%, rgba(18,38,46,0.3) 9%, rgba(18,38,46,0.3) 18%);
+  box-shadow: 0 0 26px rgba(33,198,159,0.18);
+}
+.interior-fallback-console::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 16%;
+  height: 12%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,186,92,0.06), rgba(255,186,92,0.45), rgba(255,186,92,0.06));
+}
+.interior-fallback-rib {
+  position: absolute;
+  top: 18%;
+  bottom: 26%;
+  width: 4px;
+  background: linear-gradient(180deg, rgba(98,116,142,0.85), rgba(35,44,59,0.2));
+  box-shadow: 0 0 14px rgba(131,169,225,0.08);
+}
+.interior-fallback-window-glow {
+  position: absolute;
+  left: 26%;
+  right: 26%;
+  top: 17%;
+  height: 10%;
+  background: radial-gradient(circle at 50% 50%, rgba(86,145,220,0.34), rgba(86,145,220,0));
+  filter: blur(10px);
+  opacity: 0.8;
+}
 #interior-controls-hint {
   position: absolute;
   top: 14px;
@@ -616,6 +700,57 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 6px;
   padding: 8px 10px;
+}
+.interior-room-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(8,12,20,0.82);
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.interior-room-panel {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(8,12,20,0.84), rgba(5,8,14,0.92));
+  backdrop-filter: blur(6px);
+}
+.interior-room-panel h3 {
+  margin: 0 0 6px;
+  color: var(--gold);
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+}
+.interior-room-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.interior-room-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+  font-size: 0.78rem;
+}
+.interior-room-meta span {
+  display: block;
 }
 
 /* ── Flight Utility Buttons ──────────────── */
@@ -765,7 +900,7 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 
 
 <!-- Power Management Panel -->
-<div id="power-mgmt-panel" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(12,18,32,0.97);border:2px solid var(--gold);border-radius:14px;box-shadow:0 0 24px 8px var(--gold);padding:18px 28px 12px 28px;display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:90vw;">
+<div id="power-mgmt-panel" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(12,18,32,0.97);border:2px solid var(--gold);border-radius:14px;box-shadow:0 0 24px 8px var(--gold);padding:18px 28px 12px 28px;display:none;flex-direction:column;align-items:center;min-width:320px;max-width:90vw;">
   <div style="font-size:1.05rem;color:var(--gold);font-weight:600;margin-bottom:10px;letter-spacing:0.08em;">POWER MANAGEMENT</div>
   <div style="width:100%;display:flex;gap:18px;justify-content:center;">
     <div style="display:flex;flex-direction:column;align-items:center;">
@@ -849,6 +984,7 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 <canvas id="game-canvas" tabindex="0" style="position:absolute;inset:0;z-index:1;"></canvas>
 <canvas id="hud-canvas" style="position:absolute;inset:0;z-index:15;pointer-events:none;display:none;"></canvas>
 <div id="lock-prompt" style="display:none;position:fixed;inset:0;z-index:20;justify-content:center;align-items:center;background:rgba(0,0,0,0.6);cursor:pointer;color:#fff;font-size:1.2rem;">Click to lock mouse for gunner controls</div>
+<div class="screen" id="screen-gunner" style="background:transparent;pointer-events:none;"></div>
 
 <div class="screen" id="screen-bridge">
   <div id="bridge-top">
@@ -1140,7 +1276,30 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
     <button class="interior-room-btn" data-room="quarters">Crew Quarters</button>
   </div>
   <div id="interior-3d-view">
+    <div class="interior-fallback-scene" aria-hidden="true">
+      <div class="interior-fallback-grid"></div>
+      <div class="interior-fallback-window-glow"></div>
+      <div class="interior-fallback-rib" style="left:18%;"></div>
+      <div class="interior-fallback-rib" style="left:30%;"></div>
+      <div class="interior-fallback-rib" style="left:42%;"></div>
+      <div class="interior-fallback-rib" style="right:42%;"></div>
+      <div class="interior-fallback-rib" style="right:30%;"></div>
+      <div class="interior-fallback-rib" style="right:18%;"></div>
+      <div class="interior-fallback-console"></div>
+    </div>
     <div id="interior-controls-hint">WASD to walk &bull; Mouse to look &bull; ESC to exit</div>
+    <div class="interior-room-badge" id="interior-room-badge">Bridge</div>
+    <div class="interior-room-panel" id="interior-room-panel">
+      <div>
+        <h3 id="interior-room-title">Command Deck</h3>
+        <p id="interior-room-description">Primary bridge station with direct access to the canopy, tactical glass, and helm data.</p>
+      </div>
+      <div class="interior-room-meta" id="interior-room-meta">
+        <span>Status: Helm online</span>
+        <span>Models: bridge consoles, space_suit</span>
+        <span>Mood: Combat-ready</span>
+      </div>
+    </div>
   </div>
 </div>
 <div class="screen" id="screen-quarters">
@@ -1750,6 +1909,27 @@ const EPITAPHS = [
   '"You were cosmic dust pretending to be a person. Now you\'re dust again."',
   '"In Old Eden, every graveyard is a nursery."',
 ];
+
+function storePastLife(deathCause) {
+  if (!state.pastLives) state.pastLives = [];
+  const systemName = state.starSystems?.[state.location.systemIndex]?.name || 'Unknown Station';
+  const genome = Array.isArray(state.player.genome)
+    ? [...state.player.genome]
+    : (state.player.genome && typeof state.player.genome === 'object' ? { ...state.player.genome } : state.player.genome);
+  state.pastLives.push({
+    name: state.player.name || 'Unknown Soul',
+    faction: state.player.faction || 'unclaimed',
+    genome,
+    credits: state.player.credits || 0,
+    kills: state.combat.kills || 0,
+    score: state.combat.score || 0,
+    deathCause: deathCause || 'Destroyed in combat',
+    station: systemName,
+    occupation: state.player.title || state.player.className || 'Pilot',
+    timestamp: Date.now(),
+  });
+  if (state.pastLives.length > 80) state.pastLives.shift();
+}
 
 function showEulogy(deathStats, deathCause) {
   // Store this life as a past life NPC before moving on
@@ -2424,6 +2604,7 @@ function updateServerStatus(online) {
 // ================================================================
 let _transitioning = false;
 function showScreen(name) {
+  const previousScreen = state.screen;
     // Cockpit power-up animation on entering gameplay
     if (name === 'gunner') {
       const cockpit = document.getElementById('cockpit-damage-overlay');
@@ -2445,26 +2626,23 @@ function showScreen(name) {
   }
   // Same-screen guard
   if (name === state.screen) return;
-    // Update quest overlay visibility on screen change
-    state.screen = name;
-    updateQuestOverlayVisibility();
-    updateQuestOverlay();
   const _overlay = document.getElementById('screen-transition-overlay');
   // Fade transition for ALL screen changes (150ms for gunner, 250ms for menus)
-  const dur = (name === 'gunner' || state.screen === 'gunner') ? 150 : 250;
+  const dur = (name === 'gunner' || previousScreen === 'gunner') ? 150 : 250;
   if (_overlay) {
     _transitioning = true;
     _overlay.classList.add('active');
-    setTimeout(() => { try { _showScreenInner(name); } finally { _overlay.classList.remove('active'); _transitioning = false; } }, dur);
+    setTimeout(() => { try { _showScreenInner(name, previousScreen); } finally { _overlay.classList.remove('active'); _transitioning = false; } }, dur);
     // Safety backstop — force unlock after 2s if something goes wrong
     setTimeout(() => { if (_transitioning) { _overlay.classList.remove('active'); _transitioning = false; } }, 2000);
     return;
   }
-  _showScreenInner(name);
+  _showScreenInner(name, previousScreen);
 }
-function _showScreenInner(name) {
+function _showScreenInner(name, previousScreen) {
   // Exit gunner if leaving it via nav
-  if (state.screen === 'gunner' && name !== 'gunner' && c.active) { exitGunnerMode(true); }
+  if (previousScreen === 'gunner' && name !== 'gunner' && c.active) { exitGunnerMode(true); }
+  if (previousScreen === 'interior' && name !== 'interior') destroyInterior();
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
@@ -2473,6 +2651,7 @@ function _showScreenInner(name) {
   document.getElementById('speed-control-panel')?.classList.toggle('visible', _inGame);
   document.getElementById('drone-bay')?.classList.toggle('visible', _inGame);
   document.getElementById('auto-target-btn')?.classList.toggle('visible', _inGame);
+  document.getElementById('power-mgmt-panel') && (document.getElementById('power-mgmt-panel').style.display = _inGame ? 'flex' : 'none');
   const _hasTarget = state.targetLock && state.targetLock.locked && state.targetLock.target;
   document.getElementById('warp-target-btn')?.classList.toggle('visible', _inGame && !!_hasTarget);
   if (name === 'gunroom') { try { initGunRoom(); } catch(e) { console.warn('[GunRoom] Init failed:', e.message); } }
@@ -2492,6 +2671,8 @@ function _showScreenInner(name) {
 
   state.screen = name;
   document.body.dataset.screen = name;
+  updateQuestOverlayVisibility();
+  updateQuestOverlay();
   const navBar = document.getElementById('nav-bar');
   const showNav = !['title','create','eulogy','karma','gunner'].includes(name);
   if (navBar) navBar.classList.toggle('visible', showNav);
@@ -2688,12 +2869,12 @@ function createCharacter() {
   saveGame();
   showScreen('bridge');
   addComms('EDEN AI', '\u2694 Click ENTER SPACE to launch into combat, pilot.');
-  // First life: create combat urgency to push player into the core loop FAST
+  // First life: reduce early pressure so the player can orient before combat ramps up.
   if ((state.player.rebirths || 0) === 0) {
-    setTimeout(() => addComms('EDEN AI', '\u26a0 ALERT: Hostile signatures detected in your sector! Launch immediately!'), 1200);
+    setTimeout(() => addComms('EDEN AI', 'Launch when ready. Your ship will hold a brief safety window while systems calibrate.'), 1200);
     setTimeout(() => {
       const launchBtn = document.getElementById('btn-launch');
-      if (launchBtn) { launchBtn.style.animation = 'pulse 1s ease infinite'; launchBtn.style.boxShadow = '0 0 20px rgba(255,100,0,0.6)'; }
+      if (launchBtn) { launchBtn.style.animation = 'none'; launchBtn.style.boxShadow = '0 0 14px rgba(212,168,86,0.35)'; }
     }, 1500);
   }
 }
@@ -2901,8 +3082,8 @@ function updateBridgeUI() {
     const qo = document.getElementById('quest-overlay');
     const mp = document.getElementById('mission-progress-overlay');
     if (!qo) return;
-    const gameScreens = ['bridge','gunner','starmap','station','character','market','quarters','armory'];
-    const show = gameScreens.includes(state.screen);
+    const questScreens = ['bridge','starmap','station','character','market','quarters','armory'];
+    const show = questScreens.includes(state.screen);
     qo.style.display = show ? 'block' : 'none';
     if (mp) mp.style.display = show ? 'block' : 'none';
     if (show) qo.classList.add('active');
@@ -2970,6 +3151,7 @@ function generateStarSystems() {
 }
 
 let smCanvas, smCtx;
+let _isJumping = false;
 function resizeStarMap() {
   smCanvas = document.getElementById('starmap-canvas');
   smCtx = smCanvas.getContext('2d');
@@ -3118,6 +3300,10 @@ function renderSystemDetail(idx) {
       ${!isCurrent ? `<p style="margin-top:8px;font-size:0.8rem;color:var(--muted);">Jump cost: <span style="color:${state.ship.fuel >= 5 ? 'var(--green)' : 'var(--danger)'}">5 fuel</span> (you have ${state.ship.fuel.toFixed(0)})</p>` : ''}
     </div>
   `;
+}
+
+function jumpToSystem(idx) {
+  if (idx === null || idx === undefined || _isJumping) return;
   // Enforce jump route connectivity BEFORE animation
   if (!state.inAltUniverse) {
     const _curSys = state.starSystems[state.location.systemIndex];
@@ -4586,8 +4772,9 @@ function enterGunnerMode() {
   c.playerHasAttacked = false;
   c.weaponReady = true; c.charging = false; c.cooling = false; c.chargeLevel = 0; c._reloading = false;
   c.sessionStartTime = state.gameTime; // Track when this combat session began
-  // Death immunity shield — 5 seconds of invulnerability after spawn (Jopa team recommendation)
-  c.deathImmunityUntil = performance.now() + 5000;
+  state.lastEnemySpawn = state.gameTime;
+  // First-life combat now starts with a longer grace period so the player can learn the space.
+  c.deathImmunityUntil = performance.now() + (state.player.rebirths === 0 ? 25000 : 5000);
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   AudioSFX.startEngineHum();
@@ -4983,9 +5170,9 @@ function createEnemy(type) {
   g.add(engineGlow);
 
   const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
-  // First life: spawn closer so players encounter enemies faster
+  // First life: spawn farther out so encounters read clearly instead of feeling like an ambush.
   const firstLife = state.player.rebirths === 0;
-  const r = firstLife ? (80 + Math.random()*80) : (SPAWN_RADIUS + Math.random()*100);
+  const r = firstLife ? (240 + Math.random()*140) : (SPAWN_RADIUS + Math.random()*100);
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
   g.lookAt(ship.position);
   scene.add(g);
@@ -6840,37 +7027,120 @@ function initQuarters() {
 // ════════════════════════════════════════════════════════════════
 let _intScene = null, _intCamera = null, _intRenderer = null, _intAnimId = null;
 let _intWalkState = { x: 0, z: 0, yaw: 0, pitch: 0 };
+let _intRoomBuildToken = 0;
+let _intCleanup = null;
 const _intMoveKeys = { w: false, a: false, s: false, d: false };
+
+function renderInteriorChrome(container) {
+  if (!container) return;
+  container.innerHTML = '' +
+    '<div class="interior-fallback-scene" aria-hidden="true"><div class="interior-fallback-grid"></div><div class="interior-fallback-window-glow"></div><div class="interior-fallback-rib" style="left:18%;"></div><div class="interior-fallback-rib" style="left:30%;"></div><div class="interior-fallback-rib" style="left:42%;"></div><div class="interior-fallback-rib" style="right:42%;"></div><div class="interior-fallback-rib" style="right:30%;"></div><div class="interior-fallback-rib" style="right:18%;"></div><div class="interior-fallback-console"></div></div>' +
+    '<div id="interior-controls-hint">WASD to walk &bull; Mouse to look &bull; ESC to exit</div>' +
+    '<div class="interior-room-badge" id="interior-room-badge">Bridge</div>' +
+    '<div class="interior-room-panel" id="interior-room-panel">' +
+      '<div><h3 id="interior-room-title">Command Deck</h3><p id="interior-room-description">Primary bridge station with direct access to the canopy, tactical glass, and helm data.</p></div>' +
+      '<div class="interior-room-meta" id="interior-room-meta"><span>Status: Helm online</span><span>Models: bridge consoles, space_suit</span><span>Mood: Combat-ready</span></div>' +
+    '</div>';
+}
+
+function updateInteriorOverlay(room) {
+  const roomData = {
+    bridge: {
+      badge: 'Bridge',
+      title: 'Command Deck',
+      description: 'Primary bridge station with the cockpit shell, tactical displays, and pilot staging suit.',
+      meta: ['Status: Helm online', 'Models: bridge consoles, space_suit', 'Mood: Combat-ready']
+    },
+    engine: {
+      badge: 'Engine',
+      title: 'Engine Room',
+      description: 'Reactor spine, coolant conduits, and service walkways for the ship core.',
+      meta: ['Status: Reactor stable', 'Lighting: Emergency accent strips', 'Access: Engineering crew only']
+    },
+    cargo: {
+      badge: 'Cargo',
+      title: 'Cargo Bay',
+      description: 'Freight staging area with stacked crates, loading gear, and a docked cargo shuttle silhouette.',
+      meta: ['Status: Cargo sealed', 'Models: cargo_small', 'Capacity: Frontier haul ready']
+    },
+    quarters: {
+      badge: 'Quarters',
+      title: 'Crew Quarters',
+      description: 'Compact bunks, lockers, and personal space for long-haul travel between systems.',
+      meta: ['Status: Rest cycle available', 'Layout: 3 bunk columns', 'Privacy: Minimal but functional']
+    }
+  };
+  const data = roomData[room] || roomData.bridge;
+  const badge = document.getElementById('interior-room-badge');
+  const title = document.getElementById('interior-room-title');
+  const description = document.getElementById('interior-room-description');
+  const meta = document.getElementById('interior-room-meta');
+  if (badge) badge.textContent = data.badge;
+  if (title) title.textContent = data.title;
+  if (description) description.textContent = data.description;
+  if (meta) meta.innerHTML = data.meta.map(line => '<span>' + line + '</span>').join('');
+}
+
+function destroyInterior() {
+  const container = document.getElementById('interior-3d-view');
+  if (_intAnimId) {
+    cancelAnimationFrame(_intAnimId);
+    _intAnimId = null;
+  }
+  if (_intCleanup) {
+    _intCleanup();
+    _intCleanup = null;
+  }
+  if (_intRenderer) {
+    _intRenderer.domElement?.remove();
+    try { _intRenderer.dispose(); } catch {}
+    _intRenderer = null;
+  }
+  _intScene = null;
+  _intCamera = null;
+  if (container) renderInteriorChrome(container);
+}
 
 function initInterior() {
   const container = document.getElementById('interior-3d-view');
   if (!container) return;
-  // Clean up previous
-  if (_intAnimId) cancelAnimationFrame(_intAnimId);
-  if (_intRenderer) { _intRenderer.dispose(); container.innerHTML = '<div id="interior-controls-hint">WASD to walk &bull; Mouse to look &bull; ESC to exit</div>'; }
+  destroyInterior();
+  renderInteriorChrome(container);
   _intScene = new THREE.Scene();
-  _intScene.background = new THREE.Color(0x0a0f14);
-  _intScene.fog = new THREE.Fog(0x0a0f14, 15, 40);
+  _intScene.background = null;
+  _intScene.fog = new THREE.Fog(0x09111c, 15, 40);
   _intCamera = new THREE.PerspectiveCamera(70, container.clientWidth / Math.max(1, container.clientHeight), 0.05, 80);
-  _intCamera.position.set(0, 1.7, 0); // Eye height
-  _intRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  _intCamera.position.set(0, 1.7, 6.5);
+  try {
+    _intRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+  } catch (e) {
+    console.warn('[Interior] WebGL fallback:', e.message);
+    updateInteriorOverlay('bridge');
+    return;
+  }
   _intRenderer.setSize(container.clientWidth || 800, container.clientHeight || 400);
   _intRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   _intRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-  _intRenderer.toneMappingExposure = 0.8;
+  _intRenderer.toneMappingExposure = 1.35;
+  _intRenderer.setClearColor(0x000000, 0);
+  _intRenderer.domElement.style.pointerEvents = 'auto';
   container.appendChild(_intRenderer.domElement);
+  _intCamera.lookAt(0, 1.6, -6.5);
 
   // Lighting
-  _intScene.add(new THREE.AmbientLight(0x334455, 0.8));
-  const ceilLight = new THREE.PointLight(0x88aacc, 1.5, 20);
+  _intScene.add(new THREE.AmbientLight(0x7aa6d8, 2.4));
+  const ceilLight = new THREE.PointLight(0xaad3ff, 4.2, 30);
   ceilLight.position.set(0, 3, 0);
   _intScene.add(ceilLight);
-  const redLight = new THREE.PointLight(0xff2200, 0.3, 12);
+  const redLight = new THREE.PointLight(0xff8a57, 1.35, 18);
   redLight.position.set(-3, 2.5, -4);
   _intScene.add(redLight);
-  const blueLight = new THREE.PointLight(0x2244ff, 0.4, 12);
+  const blueLight = new THREE.PointLight(0x6ec3ff, 1.65, 20);
   blueLight.position.set(3, 2.5, 4);
   _intScene.add(blueLight);
+  const keyLight = new THREE.DirectionalLight(0xf3fbff, 2.4);
+  keyLight.position.set(0, 4, 6);
+  _intScene.add(keyLight);
 
   // Build room
   buildInteriorRoom('bridge');
@@ -6885,7 +7155,7 @@ function initInterior() {
     _intWalkState.pitch = Math.max(-1.2, Math.min(1.2, _intWalkState.pitch - e.movementY * 0.002));
   };
   document.addEventListener('mousemove', onMM);
-  canvas._intCleanup = () => {
+  _intCleanup = () => {
     document.removeEventListener('mousemove', onMM);
     if (document.pointerLockElement === canvas) document.exitPointerLock();
   };
@@ -6897,7 +7167,7 @@ function initInterior() {
       btn.classList.add('active');
       buildInteriorRoom(btn.dataset.room);
       _intWalkState = { x: 0, z: 0, yaw: 0, pitch: 0 };
-      _intCamera.position.set(0, 1.7, 0);
+      _intCamera.position.set(0, 1.7, 6.5);
     });
   });
 
@@ -6926,6 +7196,8 @@ function initInterior() {
 }
 
 function buildInteriorRoom(room) {
+  const buildToken = ++_intRoomBuildToken;
+  updateInteriorOverlay(room);
   // Clear existing room objects (not lights)
   const toRemove = [];
   _intScene.traverse(ch => { if (ch.userData._room) toRemove.push(ch); });
@@ -6935,7 +7207,7 @@ function buildInteriorRoom(room) {
   const wallMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.7, metalness: 0.4 });
   const ceilMat = new THREE.MeshStandardMaterial({ color: 0x181822, roughness: 0.9, metalness: 0.2 });
   const pipeMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.3, metalness: 0.8 });
-  const screenMat = new THREE.MeshBasicMaterial({ color: 0x113322, emissive: 0x113322 });
+  const screenMat = new THREE.MeshStandardMaterial({ color: 0x225544, emissive: 0x1dd3a6, emissiveIntensity: 0.8, roughness: 0.2, metalness: 0.1 });
 
   // Floor
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 18), floorMat);
@@ -6967,18 +7239,42 @@ function buildInteriorRoom(room) {
     const desk = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 1.5), pipeMat);
     desk.position.set(0, 0.9, -7); desk.userData._room = true;
     _intScene.add(desk);
+    const consoleBase = new THREE.Mesh(new THREE.BoxGeometry(8.8, 1.6, 2.8), new THREE.MeshStandardMaterial({ color: 0x202633, roughness: 0.72, metalness: 0.46 }));
+    consoleBase.position.set(0, 0.8, -7.15); consoleBase.userData._room = true;
+    _intScene.add(consoleBase);
+    for (let i = 0; i < 5; i++) {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.14, 0.95), new THREE.MeshStandardMaterial({ color: 0x18222f, emissive: 0x0f7a68, emissiveIntensity: 0.4, roughness: 0.18, metalness: 0.4 }));
+      panel.position.set(-2.5 + i * 1.25, 1.38, -6.55);
+      panel.rotation.x = -0.72;
+      panel.userData._room = true;
+      _intScene.add(panel);
+    }
     // Holographic screens
     for (let i = 0; i < 3; i++) {
       const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1), screenMat);
       screen.position.set(-2 + i * 2, 1.8, -7.2); screen.userData._room = true;
       _intScene.add(screen);
     }
+    for (let i = 0; i < 6; i++) {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 0.12), new THREE.MeshStandardMaterial({ color: 0x3a4658, roughness: 0.58, metalness: 0.62 }));
+      rib.position.set(-4.8 + i * 1.92, 2.15, -8.15 + Math.abs(2.5 - i) * 0.18);
+      rib.rotation.z = (i - 2.5) * 0.05;
+      rib.userData._room = true;
+      _intScene.add(rib);
+    }
+    for (let i = 0; i < 4; i++) {
+      const floorStrip = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 3.8), new THREE.MeshBasicMaterial({ color: 0x1fbf9f, transparent: true, opacity: 0.16 }));
+      floorStrip.position.set(-2.7 + i * 1.8, 0.015, -4.4);
+      floorStrip.rotation.x = -Math.PI / 2;
+      floorStrip.userData._room = true;
+      _intScene.add(floorStrip);
+    }
     // Captain chair
     // Load space suit model (crew member standing near bridge)
     loadGLBModel('space_suit').then(model => {
-      if (!_intScene) return;
+      if (!_intScene || _intRoomBuildToken !== buildToken) return;
       const suit = model.clone();
-      suit.scale.setScalar(GLB_ASSETS.space_suit?.scale || 0.5);
+      suit.scale.setScalar((GLB_ASSETS.space_suit?.scale || 0.5) * 1.3);
       suit.position.set(3, 0, -4);
       suit.rotation.y = -0.5;
       suit.userData._room = true;
@@ -6987,11 +7283,17 @@ function buildInteriorRoom(room) {
     const chair = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.9, metalness: 0.1 }));
     chair.position.set(0, 0.6, -5); chair.userData._room = true;
     _intScene.add(chair);
+    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.18), new THREE.MeshStandardMaterial({ color: 0x4a2d1e, roughness: 0.82, metalness: 0.08 }));
+    chairBack.position.set(0, 1.25, -5.28); chairBack.userData._room = true;
+    _intScene.add(chairBack);
     // Window (viewport to space)
     const viewport = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.5),
-      new THREE.MeshBasicMaterial({ color: 0x000005, transparent: true, opacity: 0.9 }));
+      new THREE.MeshBasicMaterial({ color: 0x07111d, transparent: true, opacity: 0.92 }));
     viewport.position.set(0, 2, -8.9); viewport.userData._room = true;
     _intScene.add(viewport);
+    const nebula = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 1.8), new THREE.MeshBasicMaterial({ color: 0x2d5f96, transparent: true, opacity: 0.18 }));
+    nebula.position.set(0, 2.05, -8.82); nebula.userData._room = true;
+    _intScene.add(nebula);
     // Stars through viewport
     for (let s = 0; s < 30; s++) {
       const star = new THREE.Mesh(new THREE.SphereGeometry(0.02, 4, 4),
@@ -7018,6 +7320,18 @@ function buildInteriorRoom(room) {
     stripe.position.set(0, 0.01, -1); stripe.rotation.x = -Math.PI / 2; stripe.userData._room = true;
     _intScene.add(stripe);
   } else if (room === 'cargo') {
+    const addCargoModel = (model) => {
+      if (!_intScene || _intRoomBuildToken !== buildToken) return;
+      const cargoModel = model.clone();
+      cargoModel.position.set(3.8, 0, -2.5);
+      cargoModel.rotation.y = -0.85;
+      cargoModel.scale.setScalar(0.9);
+      cargoModel.userData._room = true;
+      _intScene.add(cargoModel);
+    };
+    const cachedCargoModel = state.loadedModels.cargo_small || state.loadedModels.container_shuttle;
+    if (cachedCargoModel) addCargoModel(cachedCargoModel);
+    else loadGLBModel('cargo_small').then(addCargoModel).catch(() => {});
     // Cargo crates
     const crateMat = new THREE.MeshStandardMaterial({ color: 0x445533, roughness: 0.8, metalness: 0.2 });
     for (let i = 0; i < 8; i++) {
@@ -9691,8 +10005,8 @@ function gameLoop() {
 
     // Spawn enemies (capped at MAX_ENEMIES for performance)
     const MAX_ENEMIES = 15;
-    // First life: enemies spawn faster and closer to ensure the 10-minute death loop
-    const spawnInterval = isFirstLife ? 1500 : SPAWN_INTERVAL;
+    // First life: keep the opening readable and delay the first wave.
+    const spawnInterval = isFirstLife ? 14000 : SPAWN_INTERVAL;
     // Wave pacing: 4-second breather every 10 kills
     if (!c._breatherStart) {
       const _brkAt = c._nextBreatherAt || 10;
@@ -9704,9 +10018,9 @@ function gameLoop() {
       state.lastEnemySpawn = state.gameTime;
       const types = ['scout','fighter','bomber','interceptor'];
       // First life: weight spawns toward easier enemies (scouts/interceptors)
-      const firstLifeTypes = ['scout','scout','scout','interceptor','interceptor','fighter'];
+      const firstLifeTypes = ['scout','scout','scout','scout','interceptor'];
       const spawnTypes = (isFirstLife && c.cycle <= 2) ? firstLifeTypes : types;
-      const spawnCount = Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
+      const spawnCount = isFirstLife ? 1 : Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
       for (let si = 0; si < spawnCount; si++) createEnemy(spawnTypes[Math.floor(Math.random()*spawnTypes.length)]);
       if (c.kills >= (c._nextCycleAt || 15)) { c._nextCycleAt = (c._nextCycleAt || 15) + 15; c.cycle++; addComms('AI Director', 'Cycle ' + c.cycle + ' — hostiles intensifying'); }
       // Boss spawn every 20 kills
@@ -9842,8 +10156,8 @@ function gameLoop() {
       if (!e || !e.group || !e.group.parent) { c.enemies.splice(ei, 1); continue; }
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
-      // On first life, auto-aggro after 15s to push players into combat quickly
-      const autoAggro = isFirstLife && state.gameTime > 15000;
+      // First life stays non-aggressive until the player engages.
+      const autoAggro = !isFirstLife && state.gameTime > 15000;
       if (c.playerHasAttacked || autoAggro) {
         const distToPlayer = e.group.position.distanceTo(ship.position);
         // Type-specific AI movement patterns
@@ -9939,7 +10253,7 @@ function gameLoop() {
       }
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
-        const _ramDmg = 0.5;
+        const _ramDmg = isFirstLife ? 0.2 : 0.5;
         if (state.ship.shield > 0) {
           const _absorbed = Math.min(state.ship.shield, _ramDmg);
           state.ship.shield -= _absorbed;
@@ -9967,7 +10281,7 @@ function gameLoop() {
       // Hit player ship?
       if (b.group.position.distanceTo(ship.position) < 6) {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
-          const dmg = isFirstLife ? (4 + Math.random() * 4) : (6 + Math.random() * 8);
+          const dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
           const hadShield = state.ship.shield > 0;
           if (state.ship.shield > 0) {
             const _absorbed = Math.min(state.ship.shield, dmg);
@@ -10389,13 +10703,24 @@ window.enableDevCheats = () => {
 <!-- Karma Wheel Screen -->
 <div class="screen" id="screen-karma" style="z-index:99998;background:radial-gradient(ellipse at center,#1a0a2e 0%,#080416 60%,#030308 90%);align-items:center;justify-content:center;">
   <h2 style="color:var(--gold);font-size:1.8rem;font-weight:200;letter-spacing:0.3em;">KARMA WHEEL</h2>
-  <div class="karma-subtitle">The wheel of fate spins...</div>
+  <div class="karma-subtitle" id="karma-subtitle">The wheel of fate spins...</div>
+  <div class="karma-aura" id="karma-aura"></div>
+  <div class="karma-spin-fx" id="karma-particles"></div>
   <div class="karma-spinner" id="karma-spinner"></div>
-  <div id="karma-result" style="color:var(--gold);font-size:1.2rem;margin-top:1rem;"></div>
-  <div class="btn-row" style="margin-top:2rem;">
+  <div class="karma-card" id="karma-card">
+    <div class="karma-rarity-badge" id="karma-rarity"></div>
+    <div class="karma-npc-name" id="karma-name">???</div>
+    <div class="karma-npc-title" id="karma-title">???</div>
+    <canvas id="karma-genome-canvas" width="96" height="96" style="display:block;margin:12px auto 6px;image-rendering:pixelated;"></canvas>
+    <div class="karma-genome-mini" id="karma-genes"></div>
+    <div class="karma-wealth" id="karma-wealth">Wealth: <span class="kw-val">???</span></div>
+    <div class="karma-faction" id="karma-faction"></div>
+    <div class="karma-backstory" id="karma-backstory"></div>
+  </div>
+  <div class="karma-actions" id="karma-actions">
     <button class="btn" id="btn-karma-accept">Accept Fate</button>
     <button class="btn" id="btn-karma-insure">Insure (10 credits)</button>
-    <button class="btn" id="btn-karma-reroll">Re-roll (25 credits)</button>
+    <button class="btn" id="btn-karma-reroll">Re-roll (<span id="reroll-cost">25</span> credits)</button>
   </div>
 </div>
 
