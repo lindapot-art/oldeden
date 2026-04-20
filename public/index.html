@@ -1918,6 +1918,7 @@ const state = {
     killConfirmTimer: 0,    // kill confirmation flash
     shieldBroken: false,    // shield break warning state
     shieldBreakTimer: 0,    // shield break visual timer
+    repairFlashTimer: 0,    // green flash on hull/shield repair pickup
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -7278,6 +7279,19 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     }
   }
 
+  // Repair pickup flash — green screen edge glow
+  if (c.repairFlashTimer > 0) {
+    hudCtx.save();
+    const rFlashA = c.repairFlashTimer / 400;
+    const rGrad = hudCtx.createRadialGradient(cx, cy, Math.min(W, H) * 0.4, cx, cy, Math.max(W, H) * 0.6);
+    rGrad.addColorStop(0, 'rgba(0,255,100,0)');
+    rGrad.addColorStop(1, 'rgba(0,255,100,' + (rFlashA * 0.15).toFixed(3) + ')');
+    hudCtx.globalAlpha = rFlashA;
+    hudCtx.fillStyle = rGrad;
+    hudCtx.fillRect(0, 0, W, H);
+    hudCtx.restore();
+  }
+
   // Boss HP bar (top-center)
   const boss = c.enemies.find(e => e.isBoss);
   if (boss) {
@@ -7684,6 +7698,47 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.globalAlpha = 0.03; hudCtx.fillStyle = '#44aaff';
     for (let sy = 0; sy < H; sy += 4) hudCtx.fillRect(0, sy, W, 1);
     hudCtx.globalAlpha = 1;
+  }
+
+  // ── Off-screen threat arrows — point toward enemies outside view ──
+  {
+    const margin = 40;
+    hudCtx.save();
+    c.enemies.forEach(e => {
+      if (!e.group) return;
+      _tmpV3a.copy(e.group.position).project(camera);
+      const sx = (_tmpV3a.x * 0.5 + 0.5) * W;
+      const sy2 = (-_tmpV3a.y * 0.5 + 0.5) * H;
+      // Skip if on-screen
+      if (_tmpV3a.z < 1 && sx > margin && sx < W - margin && sy2 > margin && sy2 < H - margin) return;
+      // Compute screen-edge position
+      const dx = e.group.position.x - ship.position.x;
+      const dz = e.group.position.z - ship.position.z;
+      const ang = Math.atan2(dz, dx);
+      // Map angle to camera-relative
+      const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      const camAng = Math.atan2(camDir.z, camDir.x);
+      const relAng = ang - camAng;
+      const edgeX = cx + Math.cos(relAng) * (cx - margin);
+      const edgeY = cy + Math.sin(relAng) * (cy - margin);
+      const clampX = Math.max(margin, Math.min(W - margin, edgeX));
+      const clampY = Math.max(margin, Math.min(H - margin, clampX === edgeX ? edgeY : edgeY));
+      // Arrow triangle
+      const dist = e.group.position.distanceTo(ship.position);
+      const arrowAlpha = dist < 50 ? 0.8 : dist < 150 ? 0.5 : 0.3;
+      hudCtx.globalAlpha = arrowAlpha;
+      hudCtx.fillStyle = e.isBoss ? '#ff2200' : '#ff4444';
+      hudCtx.beginPath();
+      hudCtx.moveTo(clampX + Math.cos(relAng) * 8, clampY + Math.sin(relAng) * 8);
+      hudCtx.lineTo(clampX + Math.cos(relAng + 2.5) * 6, clampY + Math.sin(relAng + 2.5) * 6);
+      hudCtx.lineTo(clampX + Math.cos(relAng - 2.5) * 6, clampY + Math.sin(relAng - 2.5) * 6);
+      hudCtx.fill();
+      // Distance label
+      if (dist < 200) {
+        hudCtx.font = '7px "Segoe UI"'; hudCtx.fillText(Math.round(dist) + 'm', clampX + 10, clampY + 3);
+      }
+    });
+    hudCtx.restore();
   }
 
   // ── Age + Character Skills (right side, below score) ──
@@ -11710,6 +11765,7 @@ function gameLoop() {
     if (_warnLock) _warnLock.classList.toggle('active', _enemyClose);
     if (c.killConfirmTimer > 0) c.killConfirmTimer = Math.max(0, c.killConfirmTimer - dtMs);
     if (c.shieldBreakTimer > 0) c.shieldBreakTimer = Math.max(0, c.shieldBreakTimer - dtMs);
+    if (c.repairFlashTimer > 0) c.repairFlashTimer = Math.max(0, c.repairFlashTimer - dtMs);
     // Bonus credit multiplier countdown
     if (c._bonusTimer && c._bonusTimer > 0) {
       c._bonusTimer -= dtMs;
@@ -12488,7 +12544,7 @@ function gameLoop() {
         } else {
         if (l.type === 'credits') { const lootAmt = l.creditValue || 50; state.player.credits += lootAmt; c.dmgNumbers.push({ text: '+' + lootAmt + ' EC', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ffd700' }); }
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44aaff' }); }
-        else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); }
+        else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); c.repairFlashTimer = 400; }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ff8844' }); }
         AudioSFX.play('loot_' + l.type);
         // Quest collect objectives
