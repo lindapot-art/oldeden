@@ -6685,7 +6685,17 @@ function createEnemy(type) {
   g.lookAt(ship.position);
   scene.add(g);
     const diffScale = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
-  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)) });
+  const _isBounty = Math.random() < 0.10; // 10% chance bounty target
+  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)), _isBounty });
+  if (_isBounty) {
+    // Gold ring marker on bounty targets
+    const _ringGeo = createEnemy._bountyRingGeo || (createEnemy._bountyRingGeo = new THREE.RingGeometry(2.5, 3.0, 16));
+    const _ringMat = createEnemy._bountyRingMat || (createEnemy._bountyRingMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false }));
+    const ring = new THREE.Mesh(_ringGeo, _ringMat);
+    ring.name = '_bountyRing';
+    g.add(ring);
+    addComms('Bounty Board', '\uD83C\uDFAF Bounty target detected — ' + type.toUpperCase() + '! 3x credit reward.');
+  }
 }
 
 // ── Formation spawn: spawn a wing of enemies in a V or line pattern ──
@@ -12850,7 +12860,15 @@ function gameLoop() {
             const _now = performance.now();
             if (_now - c._lastKillTime < 5000) {
               c._scoreMultiplier = Math.min(4, c._scoreMultiplier + 0.25);
-            } else { c._scoreMultiplier = 1; }
+              // Rapid kill announcements
+              c._rapidKills = (c._rapidKills || 0) + 1;
+              const _rapidNames = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL', 4: 'QUAD KILL', 5: 'PENTA KILL' };
+              const _rapidName = c._rapidKills >= 5 ? 'PENTA KILL' : _rapidNames[c._rapidKills];
+              if (_rapidName) {
+                c.dmgNumbers.push({ text: _rapidName + '!', px: ship.position.x, py: ship.position.y + 8, pz: ship.position.z, age: 0, color: c._rapidKills >= 4 ? '#ff44ff' : c._rapidKills >= 3 ? '#ff8800' : '#ffcc00' });
+                addCombatLog(_rapidName + '! (' + c._rapidKills + ' rapid kills)', c._rapidKills >= 4 ? '#ff44ff' : '#ffcc00');
+              }
+            } else { c._scoreMultiplier = 1; c._rapidKills = 0; }
             c._lastKillTime = _now;
             const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult * c._scoreMultiplier);
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
@@ -12889,6 +12907,15 @@ function gameLoop() {
               state.player.stellarMarks += 3;
               addComms('EDEN AI', '\u2B50 COMMANDER DOWN! +' + cmdBonus + ' EC bonus, +3 SM');
               addCombatLog('Fleet Commander destroyed — bonus +' + cmdBonus + ' EC', '#ffcc00');
+              AudioSFX.play('quest_complete');
+            }
+            // Bounty target kill bonus — 3x credits
+            if (e._isBounty) {
+              const bountyReward = Math.floor(e.points * _creditStreakMult * 0.4 * 2); // 2x extra (total 3x)
+              state.player.credits += bountyReward;
+              state.player.stellarMarks += 2;
+              addComms('Bounty Board', '\uD83C\uDFAF BOUNTY COLLECTED! +' + bountyReward + ' EC, +2 SM');
+              addCombatLog('Bounty collected — +' + bountyReward + ' EC bonus', '#ffcc00');
               AudioSFX.play('quest_complete');
             }
             // Earn Stellar Marks: +1 per 10 kills, +5 for bosses
@@ -13018,12 +13045,15 @@ function gameLoop() {
             c.dmgNumbers.push({ text: 'MINING', px: a.position.x, py: a.position.y + 2, pz: a.position.z, age: 0, color: '#88ccff' });
             if (a._mineHp <= 0) {
               const _mCredits = 15 + Math.floor(Math.random() * 35);
+              const _mFuel = 3 + Math.floor(Math.random() * 7); // fuel scoop: 3-10 fuel
               state.player.credits += _mCredits;
+              state.ship.fuel = Math.min(state.ship.maxFuel || 100, (state.ship.fuel || 0) + _mFuel);
               c.dmgNumbers.push({ text: '+' + _mCredits + ' EC', px: a.position.x, py: a.position.y + 4, pz: a.position.z, age: 0, color: '#ffcc44' });
+              c.dmgNumbers.push({ text: '+' + _mFuel + ' FUEL', px: a.position.x, py: a.position.y + 6, pz: a.position.z, age: 0, color: '#44ff88' });
               gainSkillXP('engineering', 0.02);
               if (typeof spawnExplosionAt === 'function') spawnExplosionAt(a.position, 0x88aacc, 6);
               scene.remove(a); c.asteroids.splice(ai, 1);
-              addCombatLog('Asteroid mined — +' + _mCredits + ' EC', '#88ccff');
+              addCombatLog('Asteroid mined — +' + _mCredits + ' EC, +' + _mFuel + ' fuel', '#88ccff');
             }
             hit = true; break;
           }
