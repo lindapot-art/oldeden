@@ -6222,6 +6222,13 @@ function enterGunnerMode() {
     c.ammo = Math.min(c.maxAmmo, c.ammo + 5);
     if (!c._veteranAnnounced) { addComms('EDEN AI', '\uD83C\uDF96\uFE0F Veteran perk: +10% hull, +5 ammo'); c._veteranAnnounced = true; }
   }
+  // Hull plating upgrade — 5+ rebirths: +20% max hull
+  if ((state.player.rebirths || 0) >= 5 && !c._hullPlatingApplied) {
+    c._hullPlatingApplied = true;
+    state.ship.maxHull = Math.floor(state.ship.maxHull * 1.2);
+    state.ship.hull = state.ship.maxHull;
+    addComms('EDEN AI', '\u{1F6E1} Hull Plating Upgrade: +20% max hull (veteran bonus)');
+  }
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   AudioSFX.startEngineHum();
@@ -8756,6 +8763,18 @@ document.addEventListener('keydown', (e) => {
     addComms('Weapons', '\u{1F525} WEAPON OVERLOAD! Double fire rate for 5s (3x heat!)');
     addCombatLog('WEAPON OVERLOAD activated — 5s boost, 30s cooldown', '#ff6600');
     AudioSFX.play('quest_complete');
+  }
+  // Target painter: U key — mark closest enemy, +30% damage for 8s, 25s CD
+  if ((e.key === 'u' || e.key === 'U') && c.active && !c.dead && (!c._targetPaintCD || state.gameTime > c._targetPaintCD)) {
+    let _closest = null, _closestD = 120;
+    c.enemies.forEach(en => { const d = en.group.position.distanceTo(ship.position); if (d < _closestD) { _closestD = d; _closest = en; } });
+    if (_closest) {
+      _closest._painted = state.gameTime + 8000;
+      c._targetPaintCD = state.gameTime + 25000;
+      addComms('Targeting', '\u{1F3AF} Target painted! +30% damage for 8s');
+      addCombatLog('TARGET PAINTED — ' + (_closest.type || 'hostile').toUpperCase() + ' marked', '#ffaa00');
+      AudioSFX.play('lock_on');
+    } else { addComms('Targeting', '\u26A0 No targets in range (120m)'); }
   }
   // Scavenger drone: O key — collect distant loot, 20s cooldown
   if ((e.key === 'o' || e.key === 'O') && c.active && !c.dead && (!c._scavDroneCooldown || state.gameTime > c._scavDroneCooldown)) {
@@ -13095,6 +13114,16 @@ function gameLoop() {
       hudCtx.fillText('\u{1F6E1} Shield Harmonics: +10% damage', 20, H - 105);
       hudCtx.restore();
     }
+    // Target painter cooldown HUD
+    if (c._targetPaintCD && state.gameTime < c._targetPaintCD) {
+      const _tpCD = Math.ceil((c._targetPaintCD - state.gameTime) / 1000);
+      hudCtx.save();
+      hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ffaa00';
+      hudCtx.globalAlpha = 0.5;
+      hudCtx.fillText('\uD83C\uDFAF Paint CD: ' + _tpCD + 's', 20, H - 120);
+      hudCtx.restore();
+    }
     // Enemy threat lines — faint red lines from nearby enemies to HUD center
     {
       const _projV = new THREE.Vector3();
@@ -13203,6 +13232,8 @@ function gameLoop() {
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) genomeDmg *= 1.15;
           // Shield harmonics — shield > 80% grants +10% damage (energy resonance)
           if (state.ship.shield > state.ship.maxShield * 0.8) genomeDmg *= 1.10;
+          // Target painter — +30% damage to painted enemy
+          if (e._painted && state.gameTime < e._painted) genomeDmg *= 1.30;
           // Shield break bonus — +25% damage after breaking enemy shield
           if (c._shieldBreakBonus) { genomeDmg *= 1.25; c._shieldBreakBonus = false; c.dmgNumbers.push({ text: 'BREAK BONUS +25%', px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#00eeff' }); }
           // Enemy shield absorbs damage first
@@ -14201,6 +14232,12 @@ function gameLoop() {
     if (!c._lastHullDmgTime) c._lastHullDmgTime = 0;
     if (state.gameTime - c._lastHullDmgTime > 10000 && state.ship.hull < state.ship.maxHull && state.ship.hull > 0) {
       state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 0.5 * dt);
+    }
+    // Ammo fabricator — generate +1 ammo every 15s when below 50% ammo
+    if (!c._ammoFabTimer) c._ammoFabTimer = state.gameTime + 15000;
+    if (c.ammo < c.maxAmmo * 0.5 && state.gameTime > c._ammoFabTimer) {
+      c.ammo = Math.min(c.maxAmmo, c.ammo + 1);
+      c._ammoFabTimer = state.gameTime + 15000;
     }
     // Overshield timer decay
     if (c._overshieldTimer > 0) {
