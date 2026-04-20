@@ -8746,6 +8746,8 @@ document.addEventListener('keydown', (e) => {
       state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
       c._weaponSwapping = false;
       c.weaponReady = true;
+      // Tactical reload — switching weapons grants +5 ammo
+      c.ammo = Math.min(c.maxAmmo, c.ammo + 5);
       // Weapon switch bonus — +20% damage for 3s when switching mid-combat
       if (c.streak > 0) { c._weaponSwitchBonus = state.gameTime + 3000; addCombatLog('WEAPON SWITCH — +20% damage for 3s', '#88ccff'); }
       showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '\u26A1 Railgun' : '\u25C8 Laser'));
@@ -12493,6 +12495,10 @@ function playerDeathSequence(cause) {
   if (_deathSequenceActive) return;
   _deathSequenceActive = true;
   c.dead = true;
+  // Vengeful spirit — on death, explode dealing 100 damage within 50m
+  let _vengefulHits = 0;
+  c.enemies.forEach(_ve => { if (_ve.hp > 0 && _ve.group.position.distanceTo(ship.position) < 50) { _ve.hp -= 100; _ve.hitFlash = 500; spawnImpactSparks(_ve.group.position, 0xff2244); _vengefulHits++; } });
+  if (_vengefulHits > 0) addCombatLog('VENGEFUL SPIRIT — death explosion hit ' + _vengefulHits + ' enemies!', '#ff2244');
   // Revenge tracking — extract enemy type from cause string
   const _revMatch = cause.match(/Rammed by hostile (\w+)|enemy weapons fire/i);
   if (_revMatch) c._revengeTarget = _revMatch[1] || c._lastHitByType || null;
@@ -14317,6 +14323,8 @@ function gameLoop() {
         }
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
           let dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
+          // Hardened hull — 3+ rebirths = 10% damage reduction
+          if ((state.player.rebirths || 0) >= 3) dmg *= 0.90;
           // Streak damage resistance
           if (c._streakDR > 0) dmg *= (1 - c._streakDR);
           // Adaptive armor — same enemy type hits reduce damage by 5% per hit (cap 25%)
