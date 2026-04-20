@@ -7051,6 +7051,18 @@ function renderHUD(dtMs) {
     }
   }
 
+  // Live session stats (compact, right side)
+  {
+    const _ssY = sry + (c.streak >= 3 ? 155 : 130);
+    const _liveAcc = c._shotsFired > 0 ? Math.round(c._shotsHit / c._shotsFired * 100) : 0;
+    const _sessionSec = c.sessionStartTime ? Math.floor((state.gameTime - c.sessionStartTime) / 1000) : 0;
+    const _sessionMin = Math.floor(_sessionSec / 60);
+    const _sessionRemSec = _sessionSec % 60;
+    hudCtx.font = '8px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.globalAlpha = 0.6;
+    hudCtx.fillText('ACC ' + _liveAcc + '%  |  TIME ' + _sessionMin + ':' + String(_sessionRemSec).padStart(2, '0'), srx, _ssY);
+    hudCtx.globalAlpha = 1;
+  }
+
   // Credits (bottom-left)
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('CREDITS', 24, H-60);
   hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(state.player.credits.toLocaleString() + ' EC', 24, H-42);
@@ -7233,6 +7245,20 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.arc(0, 0, Math.min(W, H) * 0.35, -0.4, 0.4);
     hudCtx.stroke();
     hudCtx.restore();
+  }
+
+  // ── Incoming fire warning (when bolts are very close) ──
+  {
+    const closeBolts = c.enemyBolts.filter(b => b.group && b.group.position.distanceToSquared(ship.position) < 900).length;
+    if (closeBolts >= 2) {
+      hudCtx.save();
+      hudCtx.globalAlpha = 0.5 + 0.3 * Math.sin(performance.now() * 0.015);
+      hudCtx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ff6600'; hudCtx.textAlign = 'center';
+      hudCtx.fillText('\u26a0 INCOMING FIRE (' + closeBolts + ')', cx, cy + Math.min(W, H) * 0.28);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
   }
 
   // ── Vignette overlay (depth-of-field hint) ──
@@ -12513,6 +12539,56 @@ function gameLoop() {
               e.group.position.addScaledVector(_tmpV3a, orbitPull * dt * e.speed);
               e.group.position.y += Math.sin(e._aiTimer * 2) * dt * 5;
             }
+            break;
+          case 'cruiser':
+            // Cruisers: slow advance, hold at medium range, rock side-to-side
+            if (distToPlayer > 70) {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 0.9);
+            } else {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 0.1);
+              _tmpV3d.set(-_tmpV3a.z, 0, _tmpV3a.x);
+              e.group.position.addScaledVector(_tmpV3d, Math.sin(e._aiTimer * 1.2) * e.speed * dt * 0.5);
+            }
+            break;
+          case 'corvette':
+            // Corvettes: aggressive close-range, zigzag approach
+            _tmpV3d.set(-_tmpV3a.z, 0, _tmpV3a.x);
+            e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            e.group.position.addScaledVector(_tmpV3d, Math.sin(e._aiTimer * 4) * e.speed * dt * 0.6);
+            break;
+          case 'destroyer':
+            // Destroyers: slow menacing advance, slight wobble
+            e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 0.8);
+            e.group.position.y += Math.sin(e._aiTimer * 0.8) * dt * 1.5;
+            e.group.position.x += Math.cos(e._aiTimer * 0.5) * dt * 2;
+            break;
+          case 'gunship':
+            // Gunships: aggressive strafe + approach, keep firing distance
+            if (distToPlayer > 50) {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            } else {
+              _tmpV3d.set(-_tmpV3a.z, 0, _tmpV3a.x);
+              const gunSway = Math.sin(e._aiTimer * 5) * 0.9;
+              e.group.position.addScaledVector(_tmpV3d, e.speed * dt * gunSway);
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt * -0.2); // back off slightly
+            }
+            break;
+          case 'frigate':
+            // Frigates: broadside approach then hold range
+            if (distToPlayer > 60) {
+              e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
+            } else {
+              _tmpV3d.set(-_tmpV3a.z, 0, _tmpV3a.x);
+              e.group.position.addScaledVector(_tmpV3d, e.speed * dt * 0.6);
+              e.group.position.y += Math.sin(e._aiTimer * 1.8) * dt * 3;
+            }
+            break;
+          case 'swarm':
+            // Swarm: erratic fast movement, converge then scatter
+            e.group.position.addScaledVector(_tmpV3a, e.speed * dt * (distToPlayer > 40 ? 1.2 : 0.5));
+            e.group.position.x += Math.sin(e._aiTimer * 8 + e.group.id) * dt * 8;
+            e.group.position.y += Math.cos(e._aiTimer * 6 + e.group.id * 2) * dt * 6;
+            e.group.position.z += Math.sin(e._aiTimer * 7 + e.group.id * 3) * dt * 5;
             break;
           default: // fighter — classic beeline but with slight weave
             e.group.position.addScaledVector(_tmpV3a, e.speed * dt);
