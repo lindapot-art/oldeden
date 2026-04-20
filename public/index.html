@@ -6696,6 +6696,13 @@ function createEnemy(type) {
     g.add(ring);
     addComms('Bounty Board', '\uD83C\uDFAF Bounty target detected — ' + type.toUpperCase() + '! 3x credit reward.');
   }
+  // First encounter announcement
+  if (!c._encounteredTypes) c._encounteredTypes = new Set();
+  if (!c._encounteredTypes.has(type)) {
+    c._encounteredTypes.add(type);
+    const _typeDescs = { fighter: 'Standard fighter', scout: 'Fast scout', interceptor: 'Agile interceptor', destroyer: 'Heavy destroyer', cruiser: 'Armored cruiser', corvette: 'Swift corvette', bomber: 'Slow bomber', gunship: 'Heavy gunship', frigate: 'Frigate-class', swarm: 'Swarm unit' };
+    addComms('Tactical', '\uD83D\uDCCB NEW CONTACT: ' + type.toUpperCase() + ' — ' + (_typeDescs[type] || 'Unknown class'));
+  }
 }
 
 // ── Formation spawn: spawn a wing of enemies in a V or line pattern ──
@@ -7295,6 +7302,12 @@ function renderHUD(dtMs) {
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
   hudCtx.font = 'bold 22px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#d4a856'; hudCtx.fillText(c.score.toLocaleString(), srx, sry+26);
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('KILLS ' + c.kills + '  |  CYCLE ' + c.cycle, srx, sry+44);
+  // Active multipliers display
+  if (c._scoreMultiplier > 1 || c.streakMultiplier > 1) {
+    const _mStr = (c._scoreMultiplier > 1 ? '\u26A1' + c._scoreMultiplier.toFixed(1) + 'x ' : '') + (c.streakMultiplier > 1 ? '\uD83D\uDD25' + c.streakMultiplier + 'x' : '');
+    hudCtx.fillStyle = c._scoreMultiplier >= 3 ? '#ff44ff' : c._scoreMultiplier >= 2 ? '#ffaa00' : '#aaccee';
+    hudCtx.fillText(_mStr, srx, sry+56);
+  }
   // Survival timer
   const _survSec = Math.floor(state.gameTime / 1000);
   const _survMin = Math.floor(_survSec / 60);
@@ -13045,6 +13058,23 @@ function gameLoop() {
               spawnLootDrop(e.group.position, lootType, _lootCreditVal);
             }
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
+            // Ricochet — railgun kills bounce to nearest enemy within 30m
+            if (!p.isLaser && !p._ricocheted) {
+              let _ricTarget = null, _ricDist = 30;
+              const _deathPos = p.group.position.clone();
+              c.enemies.forEach(_re => {
+                const rd = _re.group.position.distanceTo(_deathPos);
+                if (rd < _ricDist) { _ricDist = rd; _ricTarget = _re; }
+              });
+              if (_ricTarget) {
+                const _ricDmg = genomeDmg * 0.5; // 50% damage ricochet
+                _ricTarget.hp -= _ricDmg;
+                _ricTarget.hitFlash = 150;
+                spawnImpactSparks(_ricTarget.group.position, 0xffaa44);
+                c.dmgNumbers.push({ text: 'RICOCHET -' + _ricDmg.toFixed(0), px: _ricTarget.group.position.x, py: _ricTarget.group.position.y + 2, pz: _ricTarget.group.position.z, age: 0, color: '#ffaa44' });
+                addCombatLog('Ricochet hit ' + (_ricTarget.type || 'hostile') + '!', '#ffaa44');
+              }
+            }
           }
           hit = true; break;
         }
