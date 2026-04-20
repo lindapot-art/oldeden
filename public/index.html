@@ -8757,6 +8757,29 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('WEAPON OVERLOAD activated — 5s boost, 30s cooldown', '#ff6600');
     AudioSFX.play('quest_complete');
   }
+  // Scavenger drone: O key — collect distant loot, 20s cooldown
+  if ((e.key === 'o' || e.key === 'O') && c.active && !c.dead && (!c._scavDroneCooldown || state.gameTime > c._scavDroneCooldown)) {
+    let _collected = 0;
+    if (c.lootDrops && c.lootDrops.length > 0) {
+      for (let _li = c.lootDrops.length - 1; _li >= 0; _li--) {
+        const _ld = c.lootDrops[_li];
+        if (_ld.mesh && _ld.mesh.position.distanceTo(ship.position) < 100) {
+          // Auto-collect
+          if (_ld.type === 'credits') { state.player.credits += (_ld.value || 10); }
+          else if (_ld.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 3); }
+          else if (_ld.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 5); }
+          else if (_ld.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5); }
+          scene.remove(_ld.mesh); if (_ld.mesh.geometry) _ld.mesh.geometry.dispose(); if (_ld.mesh.material) _ld.mesh.material.dispose();
+          c.lootDrops.splice(_li, 1); _collected++;
+        }
+      }
+    }
+    if (_collected > 0) {
+      c._scavDroneCooldown = state.gameTime + 20000;
+      addComms('Drone', '\uD83E\uDD16 Scavenger drone deployed! Collected ' + _collected + ' items.');
+      AudioSFX.play('pickup');
+    } else { addComms('Drone', '\u26A0 No loot in drone range (100m).'); }
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -13024,6 +13047,31 @@ function gameLoop() {
       hudCtx.fillText('\u{1F6E1} Absorb Field: ' + Math.round(c._absorbField), 20, H - 75);
       hudCtx.restore();
     }
+    // HUD glitch effect — visual distortion when critical systems failing
+    if (c._hudGlitch > 0) {
+      c._hudGlitch -= dtMs;
+      hudCtx.save();
+      hudCtx.fillStyle = '#ff0000';
+      hudCtx.globalAlpha = 0.15 + 0.1 * Math.sin(state.gameTime * 0.05);
+      hudCtx.fillRect(0, Math.random() * H, W, 3);
+      hudCtx.fillRect(0, Math.random() * H, W, 2);
+      hudCtx.font = 'bold 16px monospace';
+      hudCtx.globalAlpha = 0.6;
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('⚠ SYSTEMS CRITICAL ⚠', W / 2, H / 2 - 30 + Math.random() * 6);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
+    // Scavenger drone cooldown HUD
+    if (c._scavDroneCooldown && state.gameTime < c._scavDroneCooldown) {
+      const _scavCD = Math.ceil((c._scavDroneCooldown - state.gameTime) / 1000);
+      hudCtx.save();
+      hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#88ccff';
+      hudCtx.globalAlpha = 0.5;
+      hudCtx.fillText('\uD83E\uDD16 Drone CD: ' + _scavCD + 's', 20, H - 90);
+      hudCtx.restore();
+    }
     // Enemy threat lines — faint red lines from nearby enemies to HUD center
     {
       const _projV = new THREE.Vector3();
@@ -13130,6 +13178,8 @@ function gameLoop() {
           if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
           // Last stand — below 10% hull, +15% damage
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) genomeDmg *= 1.15;
+          // Shield break bonus — +25% damage after breaking enemy shield
+          if (c._shieldBreakBonus) { genomeDmg *= 1.25; c._shieldBreakBonus = false; c.dmgNumbers.push({ text: 'BREAK BONUS +25%', px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#00eeff' }); }
           // Enemy shield absorbs damage first
           if (e._shield > 0) {
             if (genomeDmg <= e._shield) {
@@ -13140,6 +13190,8 @@ function gameLoop() {
               genomeDmg -= e._shield;
               c.dmgNumbers.push({ text: '\uD83D\uDEE1\uFE0F SHIELD BROKEN', px: e.group.position.x, py: e.group.position.y + 3, pz: e.group.position.z, age: 0, color: '#00eeff' });
               e._shield = 0;
+              // Enemy shield break bonus — +25% damage on next hit
+              c._shieldBreakBonus = true;
             }
           }
           e.hp -= genomeDmg;
@@ -14094,6 +14146,17 @@ function gameLoop() {
     if (c._mineCooldown > 0) c._mineCooldown -= dtMs;
     if (c._empCooldown > 0) c._empCooldown -= dtMs;
     if (c._eJumpCooldown > 0) c._eJumpCooldown -= dtMs;
+    // Critical system failure — random subsystem glitches below 15% hull
+    if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.15) {
+      if (!c._nextGlitch) c._nextGlitch = state.gameTime + 3000 + Math.random() * 4000;
+      if (state.gameTime > c._nextGlitch) {
+        c._nextGlitch = state.gameTime + 3000 + Math.random() * 5000;
+        const _glitchType = Math.floor(Math.random() * 3);
+        if (_glitchType === 0) { c._hudGlitch = 800; addComms('EDEN AI', '\u26A0 HUD malfunction — systems critical!'); }
+        else if (_glitchType === 1) { c.cooling = true; c.coolEnd = performance.now() + 1000; addComms('Weapons', '\u26A0 Weapon jam — systems failing!'); }
+        else { c._shieldRegenPause = state.gameTime + 2000; addComms('Engineering', '\u26A0 Shield regen offline — hull critical!'); }
+      }
+    } else { c._nextGlitch = 0; }
     // Passive hull regen — 0.5 HP/s when not hit for 10s
     if (!c._lastHullDmgTime) c._lastHullDmgTime = 0;
     if (state.gameTime - c._lastHullDmgTime > 10000 && state.ship.hull < state.ship.maxHull && state.ship.hull > 0) {
