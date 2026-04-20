@@ -1921,6 +1921,8 @@ const state = {
     killConfirmTimer: 0,    // kill confirmation flash
     shieldBroken: false,    // shield break warning state
     shieldBreakTimer: 0,    // shield break visual timer
+    shieldGateTimer: 0,     // brief invulnerability on shield break (ms)
+    _damageSources: {},     // tracks total damage by source type
     repairFlashTimer: 0,    // green flash on hull/shield repair pickup
     subsystemDamage: { engine: 0, weapons: 0, sensors: 0 }, // 0=ok, >0 = malfunction timer (ms remaining)
     barrelRoll: 0,          // barrel roll animation progress (0=none, -1..1 = direction*progress)
@@ -2405,6 +2407,10 @@ function showEulogy(deathStats, deathCause) {
   const _survT = deathStats.longestLife || 0;
   const _rating = _k >= 100 ? 'S' : _k >= 50 ? 'A' : _k >= 25 ? 'B' : _k >= 10 ? 'C' : _k >= 3 ? 'D' : 'F';
   const _ratingColor = {S:'#ffd700',A:'#44ff88',B:'#44aaff',C:'#ffaa44',D:'#ff6644',F:'#ff2222'}[_rating];
+  // Top damage source
+  const _dmgSrc = deathStats.damageSources || {};
+  const _topDmg = Object.keys(_dmgSrc).sort((a,b) => _dmgSrc[b] - _dmgSrc[a])[0] || 'Unknown';
+  const _totalDmg = Object.values(_dmgSrc).reduce((s,v) => s+v, 0);
   const statItems = [
     { val: _k, lbl: 'Enemies Slain' },
     { val: deathStats.score || 0, lbl: 'Score' },
@@ -2412,6 +2418,8 @@ function showEulogy(deathStats, deathCause) {
     { val: _acc + '%', lbl: 'Accuracy' },
     { val: _survT + 's', lbl: 'Time Survived' },
     { val: (deathStats.credits || 0).toLocaleString(), lbl: 'Credits Lost' },
+    { val: _topDmg, lbl: 'Top Threat' },
+    { val: Math.round(_totalDmg), lbl: 'Total Dmg Taken' },
     { val: faction?.name || 'None', lbl: 'Faction' },
     { val: state.player.rebirths, lbl: 'Lives Lived' },
     { val: `<span style="color:${_ratingColor};font-size:1.6em">${_rating}</span>`, lbl: 'Rating' },
@@ -4646,6 +4654,10 @@ function renderStation() {
       <button class="trade-buy" onclick="window._refuel()" ${state.ship.fuel >= state.ship.maxFuel ? 'disabled style="opacity:0.4"' : ''}>${Math.ceil((state.ship.maxFuel - state.ship.fuel) * 0.5)} EC</button></div>
     <div class="trade-row"><span>Rearm Missiles (${c.maxMissiles - c.missiles})</span>
       <button class="trade-buy" onclick="window._rearmMissiles()" ${c.missiles >= c.maxMissiles ? 'disabled style="opacity:0.4"' : ''}>${(c.maxMissiles - c.missiles) * 50} EC</button></div>
+    <div class="trade-row"><span>\u2B06 Tractor Range (${state.lootMagnet.range}m)</span>
+      <button class="trade-buy" onclick="window._upgradeTractor()" ${state.lootMagnet.range >= 200 ? 'disabled style="opacity:0.4"' : ''}>500 EC</button></div>
+    <div class="trade-row"><span>\u2B06 Missile Capacity (${c.maxMissiles})</span>
+      <button class="trade-buy" onclick="window._upgradeMissiles()" ${c.maxMissiles >= 8 ? 'disabled style="opacity:0.4"' : ''}>800 EC</button></div>
     <div style="color:var(--muted);font-size:0.7rem;margin-top:8px">Docking fee: ${state.economy.dockingFee} EC (auto-paid)</div>`;
 
   // ── Past Lives — Your dead characters as station NPCs ──
@@ -4957,6 +4969,25 @@ window._rearmMissiles = () => {
   c.missiles = c.maxMissiles;
   AudioSFX.play('reload');
   addComms('Station', `Missiles rearmed. (-${cost} EC)`);
+  renderStation();
+};
+window._upgradeTractor = () => {
+  if (state.lootMagnet.range >= 200) { addComms('Station', 'Tractor range maxed.'); return; }
+  if (state.player.credits < 500) { addComms('Station', 'Insufficient credits.'); return; }
+  state.player.credits -= 500;
+  state.lootMagnet.range = Math.min(200, state.lootMagnet.range + 30);
+  AudioSFX.play('charge');
+  addComms('Station', `Tractor beam upgraded to ${state.lootMagnet.range}m range. (-500 EC)`);
+  renderStation();
+};
+window._upgradeMissiles = () => {
+  if (c.maxMissiles >= 8) { addComms('Station', 'Missile capacity maxed.'); return; }
+  if (state.player.credits < 800) { addComms('Station', 'Insufficient credits.'); return; }
+  state.player.credits -= 800;
+  c.maxMissiles += 2;
+  c.missiles = c.maxMissiles;
+  AudioSFX.play('charge');
+  addComms('Station', `Missile capacity upgraded to ${c.maxMissiles}. (-800 EC)`);
   renderStation();
 };
 window._acceptQuest = (id) => {
@@ -7036,6 +7067,11 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = '#44ccff';
     hudCtx.shadowColor = '#44ccff'; hudCtx.shadowBlur = 12;
     hudCtx.fillText('\u26A0 SHIELDS DOWN', slx, sly + 60);
+    if (c.shieldGateTimer > 0) {
+      hudCtx.globalAlpha = 0.7 + 0.3 * Math.sin(performance.now() * 0.02);
+      hudCtx.fillStyle = '#00ffcc';
+      hudCtx.fillText('SHIELD GATE ' + Math.ceil(c.shieldGateTimer) + 'ms', slx, sly + 78);
+    }
     hudCtx.restore();
   }
   // HULL CRITICAL warning — flashing text + alarm beep
@@ -7238,7 +7274,7 @@ function renderHUD(dtMs) {
   // Player dot
   hudCtx.globalAlpha = 0.9; hudCtx.fillStyle = '#00ff88';
   hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, 3, 0, Math.PI*2); hudCtx.fill();
-  // Enemy dots
+  // Enemy dots (type-based colors)
   c.enemies.forEach(e => {
     const dx = e.group.position.x - ship.position.x;
     const dz = e.group.position.z - ship.position.z;
@@ -7247,8 +7283,15 @@ function renderHUD(dtMs) {
     const mx = mapCx + dx * mapScale;
     const my = mapCy + dz * mapScale;
     if (Math.abs(mx-mapCx) < mapR && Math.abs(my-mapCy) < mapR) {
-      hudCtx.fillStyle = e.isBoss ? '#ff2200' : '#ff4444';
-      hudCtx.beginPath(); hudCtx.arc(mx, my, e.isBoss ? 4 : 2, 0, Math.PI*2); hudCtx.fill();
+      const _eColor = e.isBoss ? '#ff2200' : e.type === 'destroyer' ? '#ff1100' : e.type === 'cruiser' ? '#ff3300' : e.type === 'bomber' ? '#ff4400' : e.type === 'swarm' ? '#aa22ff' : e.type === 'corvette' ? '#ff6622' : e.type === 'interceptor' ? '#ff8844' : '#ff4444';
+      hudCtx.fillStyle = _eColor;
+      const _eSize = e.isBoss ? 4 : (e.type === 'destroyer' || e.type === 'cruiser') ? 3 : e.type === 'swarm' ? 1.5 : 2;
+      hudCtx.beginPath(); hudCtx.arc(mx, my, _eSize, 0, Math.PI*2); hudCtx.fill();
+      // Formation indicator — diamond shape
+      if (e._formation) {
+        hudCtx.strokeStyle = _eColor; hudCtx.lineWidth = 0.5;
+        hudCtx.beginPath(); hudCtx.moveTo(mx, my-4); hudCtx.lineTo(mx+3, my); hudCtx.lineTo(mx, my+4); hudCtx.lineTo(mx-3, my); hudCtx.closePath(); hudCtx.stroke();
+      }
     }
   });
   // Incoming bolt dots (orange)
@@ -7296,6 +7339,19 @@ function renderHUD(dtMs) {
       }
     });
   }
+  // Wingman on radar (blue triangle)
+  if (c._wingman && c._wingman.mesh) {
+    const dx = c._wingman.mesh.position.x - ship.position.x;
+    const dz = c._wingman.mesh.position.z - ship.position.z;
+    const mapScale = mapR / (SPAWN_RADIUS + 200);
+    const mx = mapCx + dx * mapScale;
+    const my = mapCy + dz * mapScale;
+    if (Math.abs(mx - mapCx) < mapR && Math.abs(my - mapCy) < mapR) {
+      hudCtx.fillStyle = '#4488ff'; hudCtx.globalAlpha = 0.8;
+      hudCtx.beginPath(); hudCtx.moveTo(mx, my - 3); hudCtx.lineTo(mx + 2.5, my + 2); hudCtx.lineTo(mx - 2.5, my + 2); hudCtx.closePath(); hudCtx.fill();
+      hudCtx.globalAlpha = 1;
+    }
+  }
   // Criminal ships on radar (orange-red)
   if (typeof criminalShips !== 'undefined') {
     const mapScale = mapR / (SPAWN_RADIUS + 200);
@@ -7337,6 +7393,8 @@ function renderHUD(dtMs) {
     });
   }
 hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
+  // Enemy count on radar
+  hudCtx.fillStyle = '#ff4444'; hudCtx.fillText(c.enemies.length + ' hostile' + (c.enemies.length !== 1 ? 's' : ''), mapCx + 20, mapCy + mapR + 12);
   // Sensor damage — noise overlay on radar
   if (c.subsystemDamage.sensors > 0) {
     hudCtx.save();
@@ -11924,7 +11982,7 @@ function playerDeathSequence(cause) {
   c.dead = true;
   if (window._clearMobileFireInterval) window._clearMobileFireInterval();
   AudioSFX.stopEngineHum();
-  c.deathStats = { accuracy: c._shotsHit ? Math.round(c._shotsHit / Math.max(1, c._shotsFired) * 100) : 0, longestLife: Math.floor(state.gameTime / 1000), kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits };
+  c.deathStats = { accuracy: c._shotsHit ? Math.round(c._shotsHit / Math.max(1, c._shotsFired) * 100) : 0, longestLife: Math.floor(state.gameTime / 1000), kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits, damageSources: Object.assign({}, c._damageSources) };
   let frag;
   try { frag = createSoulFragment(); } catch (_e) { frag = { id: 'ERR', powerLevel: 0 }; console.error('[Death] Fragment creation failed:', _e); }
   addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
@@ -12159,6 +12217,7 @@ function gameLoop() {
     if (_warnLock) _warnLock.classList.toggle('active', _enemyClose);
     if (c.killConfirmTimer > 0) c.killConfirmTimer = Math.max(0, c.killConfirmTimer - dtMs);
     if (c.shieldBreakTimer > 0) c.shieldBreakTimer = Math.max(0, c.shieldBreakTimer - dtMs);
+    if (c.shieldGateTimer > 0) c.shieldGateTimer = Math.max(0, c.shieldGateTimer - dtMs);
     if (c.repairFlashTimer > 0) c.repairFlashTimer = Math.max(0, c.repairFlashTimer - dtMs);
     // Bonus credit multiplier countdown
     if (c._bonusTimer && c._bonusTimer > 0) {
@@ -12884,14 +12943,15 @@ function gameLoop() {
       if (e.group.position.distanceTo(ship.position) < 5 && !c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
         const hadShield = state.ship.shield > 0;
         const _ramDmg = isFirstLife ? 0.2 : 0.5;
+        c._damageSources['Ram (' + e.type + ')'] = (c._damageSources['Ram (' + e.type + ')'] || 0) + _ramDmg;
         if (state.ship.shield > 0) {
           const _absorbed = Math.min(state.ship.shield, _ramDmg);
           state.ship.shield -= _absorbed;
           const _overflow = _ramDmg - _absorbed;
           if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.6);
           AudioSFX.play('shield_hit'); triggerShieldShimmer();
-        } else { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); AudioSFX.play('hull_hit'); }
-        if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
+        } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); AudioSFX.play('hull_hit'); }
+        if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); }
         c.damageFlash = 200;
         if (typeof triggerShieldFlash === 'function') triggerShieldFlash(state.ship.shield <= 0);
         if (typeof triggerScreenShake === 'function') triggerScreenShake();
@@ -12913,6 +12973,7 @@ function gameLoop() {
         if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
           const dmg = isFirstLife ? (2 + Math.random() * 2) : (6 + Math.random() * 8);
           const hadShield = state.ship.shield > 0;
+          c._damageSources['Weapons fire'] = (c._damageSources['Weapons fire'] || 0) + dmg;
           // Damage direction indicator
           c._dmgDirAngle = Math.atan2(b.group.position.x - ship.position.x, b.group.position.z - ship.position.z);
           c._dmgDirTimer = 600;
@@ -12922,8 +12983,8 @@ function gameLoop() {
             const _overflow = dmg - _absorbed;
             if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
             AudioSFX.play('shield_hit'); triggerShieldShimmer();
-          } else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
-          if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
+          } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
+          if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); }
           c.damageFlash = 300;
           // Subsystem malfunction chance when hull < 40%
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.4 && Math.random() < 0.15) {
@@ -13087,13 +13148,14 @@ function gameLoop() {
             _astHit = true;
             const dmg = 15 + Math.random() * 10;
             const hadShield = state.ship.shield > 0;
+            c._damageSources['Asteroid'] = (c._damageSources['Asteroid'] || 0) + dmg;
             if (state.ship.shield > 0) {
               const _absorbed = Math.min(state.ship.shield, dmg);
               state.ship.shield -= _absorbed;
               const _overflow = dmg - _absorbed;
               if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
-            } else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); }
-            if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
+            } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); }
+            if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); }
             c.damageFlash = 350;
             if (hadShield) { AudioSFX.play('shield_hit'); triggerShieldShimmer(); } else { AudioSFX.play('hull_hit'); }
             c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
