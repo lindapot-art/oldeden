@@ -3,6 +3,18 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 
+const DEVELOPER_TEST_ACCOUNT = {
+  id: 'dev-tester-kakababa',
+  email: 'kakababa@oldeden.dev',
+  pilotName: 'kakababa',
+  password: '1234',
+  walletAddress: '',
+  loginMode: 'developer',
+  premiumUntil: 0,
+  premiumTier: 'developer',
+  createdAt: 1,
+};
+
 function sanitizeEmail(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -14,6 +26,10 @@ function sanitizeWallet(value) {
 
 function hashPassword(password) {
   return createHash('sha256').update(String(password || '')).digest('hex');
+}
+
+function sanitizeLoginId(value) {
+  return String(value || '').trim().toLowerCase();
 }
 
 async function ensureFile(filePath) {
@@ -41,6 +57,34 @@ async function writeAccounts(filePath, accounts) {
   await fs.writeFile(filePath, JSON.stringify(accounts, null, 2), 'utf8');
 }
 
+async function ensureDeveloperTestAccount(filePath) {
+  const accounts = await readAccounts(filePath);
+  const loginKeys = new Set([
+    sanitizeLoginId(DEVELOPER_TEST_ACCOUNT.email),
+    sanitizeLoginId(DEVELOPER_TEST_ACCOUNT.pilotName),
+  ]);
+  const seededAccount = {
+    ...DEVELOPER_TEST_ACCOUNT,
+    passwordHash: hashPassword(DEVELOPER_TEST_ACCOUNT.password),
+  };
+  const existingIndex = accounts.findIndex((account) => loginKeys.has(sanitizeLoginId(account.email)) || loginKeys.has(sanitizeLoginId(account.pilotName)));
+
+  if (existingIndex >= 0) {
+    const current = accounts[existingIndex];
+    accounts[existingIndex] = {
+      ...current,
+      ...seededAccount,
+      id: current.id || seededAccount.id,
+      createdAt: current.createdAt || seededAccount.createdAt,
+    };
+  } else {
+    accounts.unshift(seededAccount);
+  }
+
+  await writeAccounts(filePath, accounts);
+  return accounts;
+}
+
 function publicAccount(account) {
   return {
     id: account.id,
@@ -56,6 +100,15 @@ function publicAccount(account) {
 
 export function createAuthRouter({ dataFile = path.resolve('saves', 'accounts.json') } = {}) {
   const router = express.Router();
+
+  router.use(async (_req, _res, next) => {
+    try {
+      await ensureDeveloperTestAccount(dataFile);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   router.post('/signup', async (req, res) => {
     const email = sanitizeEmail(req.body?.email);
@@ -93,10 +146,14 @@ export function createAuthRouter({ dataFile = path.resolve('saves', 'accounts.js
   });
 
   router.post('/login', async (req, res) => {
-    const email = sanitizeEmail(req.body?.email);
+    const loginId = sanitizeLoginId(req.body?.email || req.body?.username || req.body?.pilotName);
     const passwordHash = hashPassword(req.body?.password);
-    const accounts = await readAccounts(dataFile);
-    const account = accounts.find((entry) => entry.email === email && entry.passwordHash === passwordHash);
+    const accounts = await ensureDeveloperTestAccount(dataFile);
+    const account = accounts.find((entry) => {
+      const email = sanitizeLoginId(entry.email);
+      const pilotName = sanitizeLoginId(entry.pilotName);
+      return passwordHash === entry.passwordHash && (loginId === email || loginId === pilotName);
+    });
     if (!account) {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }

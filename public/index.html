@@ -7,17 +7,19 @@
   <style>
     :root {
         --bg: #0a0a0f;
-        --gold: #d4a856;
-        --blue: #44aaff;
+      --gold: #e0b15f;
+      --blue: #6bc4ff;
         --green: #00ff88;
-        --muted: #888fa6;
-        --panel-solid: #181c24;
-        --panel: #23283a;
-        --border: #2e3448;
-        --text: #e6e6e6;
+      --muted: #96a3bc;
+      --panel-solid: #121925;
+      --panel: #1c2535;
+      --border: #314157;
+      --text: #eef4ff;
         --warn: #ffaa00;
         --danger: #ff4444;
         --hud: #44aaff;
+      --panel-glass: linear-gradient(180deg, rgba(16,24,38,0.92), rgba(8,12,20,0.88));
+      --chrome-shadow: 0 24px 64px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     /* ── Screen System ───────────────────────── */
@@ -159,21 +161,38 @@ body[data-screen="settings"] #warp-target-btn {
   display:none !important;
 }
 
+/* ── Hazard Overlay Effects ───────────────── */
+#hazard-overlay{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity 0.5s ease;}
+#hazard-overlay.radiation{opacity:1;background:radial-gradient(ellipse at center,rgba(0,255,0,0.04) 0%,rgba(0,255,0,0.12) 100%);box-shadow:inset 0 0 80px rgba(0,255,0,0.15);animation:hazPulse 3s ease-in-out infinite;}
+#hazard-overlay.storm{opacity:1;background:radial-gradient(ellipse at center,rgba(100,140,255,0.04) 0%,rgba(80,120,255,0.10) 100%);box-shadow:inset 0 0 60px rgba(100,140,255,0.12);animation:hazFlicker 0.15s steps(2) infinite;}
+#hazard-overlay.pirate{opacity:1;background:radial-gradient(ellipse at center,rgba(255,60,30,0.03) 0%,rgba(255,40,20,0.08) 100%);box-shadow:inset 0 0 50px rgba(255,40,20,0.10);animation:hazPulse 4s ease-in-out infinite;}
+#hazard-overlay.temporal{opacity:1;background:radial-gradient(ellipse at center,rgba(200,100,255,0.05) 0%,rgba(160,60,220,0.10) 100%);box-shadow:inset 0 0 70px rgba(180,80,255,0.12);animation:hazWarp 5s ease-in-out infinite;}
+@keyframes hazPulse{0%,100%{opacity:0.7;}50%{opacity:1;}}
+@keyframes hazFlicker{0%{opacity:0.6;}50%{opacity:1;}100%{opacity:0.8;}}
+@keyframes hazWarp{0%{opacity:0.6;filter:hue-rotate(0deg);}50%{opacity:1;filter:hue-rotate(30deg);}100%{opacity:0.6;filter:hue-rotate(0deg);}}
+
 /* ── Music Player ─────────────────────────── */
-#music-player-panel{position:fixed;top:18px;right:18px;z-index:120;background:linear-gradient(180deg,rgba(10,18,30,0.94),rgba(5,9,16,0.9));border:1px solid rgba(68,170,255,0.24);border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,0.34),0 0 24px rgba(68,170,255,0.08);padding:14px 16px 12px;width:min(340px,calc(100vw - 28px));backdrop-filter:blur(14px);}
+#music-player-panel{position:fixed;top:18px;right:18px;z-index:120;background:linear-gradient(180deg,rgba(8,16,28,0.96),rgba(4,8,14,0.92));border:1px solid rgba(107,196,255,0.24);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.42),0 0 28px rgba(107,196,255,0.08);padding:14px 16px 12px;width:min(360px,calc(100vw - 28px));backdrop-filter:blur(18px);transition:max-height 0.28s ease,padding 0.28s ease,transform 0.28s ease,border-color 0.28s ease;overflow:hidden;}
+#music-player-panel:hover{transform:translateY(-2px);border-color:rgba(224,177,95,0.34);}
+#music-player-panel .music-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+#music-player-panel .music-header-main{min-width:0;flex:1;}
 #music-player-panel .music-kicker{color:var(--gold);font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;}
 #music-player-panel .music-title{font-size:0.98rem;color:var(--text);font-weight:600;line-height:1.35;}
 #music-player-panel .music-sub{font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;}
 #music-player-panel .music-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;}
-#music-player-panel .music-btn{background:rgba(20,32,48,0.92);border:1px solid rgba(68,170,255,0.22);color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-size:0.8rem;letter-spacing:0.06em;}
+#music-player-panel .music-btn{background:rgba(15,26,40,0.94);border:1px solid rgba(107,196,255,0.24);color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-size:0.8rem;letter-spacing:0.06em;transition:transform 0.2s ease,border-color 0.2s ease,color 0.2s ease,background 0.2s ease;}
 #music-player-panel .music-btn:hover{border-color:var(--gold);color:var(--gold);}
 #music-player-panel .music-progress{margin-top:12px;height:6px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;}
 #music-player-panel .music-progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--blue));transition:width 0.15s linear;}
 #music-player-panel .music-playlist{margin-top:10px;display:grid;gap:6px;max-height:140px;overflow:auto;padding-right:4px;}
 #music-player-panel .music-track{background:rgba(255,255,255,0.03);border:1px solid transparent;border-radius:10px;padding:8px 10px;color:var(--muted);font-size:0.78rem;cursor:pointer;line-height:1.35;}
 #music-player-panel .music-track.active{border-color:rgba(212,168,86,0.5);color:var(--text);background:rgba(212,168,86,0.08);}
-body[data-screen="gunner"] #music-player-panel{opacity:0.55;transform:scale(0.96);}
-body[data-screen="gunner"] #music-player-panel:hover{opacity:1;transform:scale(1);}
+#music-player-panel .music-btn-ghost{padding:6px 10px;min-width:44px;background:rgba(255,255,255,0.04);}
+#music-player-panel.collapsed{padding-bottom:14px;max-height:92px;}
+#music-player-panel.collapsed .music-controls,
+#music-player-panel.collapsed .music-progress,
+#music-player-panel.collapsed .music-playlist{display:none;}
+body[data-screen="gunner"] #music-player-panel{display:none;}
 
 /* ── Reduced Motion ──────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -240,26 +259,29 @@ body[data-screen="gunner"] #music-player-panel:hover{opacity:1;transform:scale(1
 
 /* ── Base Reset ──────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variable Display', 'Trebuchet MS', sans-serif; background: radial-gradient(circle at top, #162132 0%, #090d15 48%, #04070c 100%); color: var(--text); min-height: 100vh; }
 
 /* ── Button Styles ───────────────────────── */
 .btn {
-  background: transparent;
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(19,30,46,0.92), rgba(11,18,28,0.92));
+  border: 1px solid rgba(107,196,255,0.22);
   color: var(--text);
   padding: 10px 24px;
-  border-radius: 6px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 0.95rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   transition: all 0.25s ease;
   font-family: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .btn:hover {
   border-color: var(--gold);
   color: var(--gold);
-  background: rgba(212,168,86,0.08);
-  box-shadow: 0 0 12px rgba(212,168,86,0.15);
+  background: linear-gradient(180deg, rgba(40,31,16,0.94), rgba(17,12,7,0.94));
+  box-shadow: 0 0 18px rgba(224,177,95,0.18);
+  transform: translateY(-1px);
 }
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
@@ -269,12 +291,12 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 /* ── Panel Title ─────────────────────────── */
 .panel-title {
   color: var(--gold);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   margin-bottom: 10px;
-  border-bottom: 1px solid rgba(212,168,86,0.15);
+  border-bottom: 1px solid rgba(224,177,95,0.16);
   padding-bottom: 6px;
 }
 
@@ -284,20 +306,22 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  background: rgba(24,28,36,0.9);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 12px 18px;
+  background: var(--panel-glass);
+  border: 1px solid rgba(107,196,255,0.18);
+  border-radius: 16px;
   margin-bottom: 8px;
+  box-shadow: var(--chrome-shadow);
 }
 .bridge-location { color: var(--gold); font-size: 0.95rem; letter-spacing: 0.1em; }
 .bridge-connection { color: var(--green); font-size: 0.8rem; }
 .bridge-panel {
-  background: rgba(24,28,36,0.85);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--panel-glass);
+  border: 1px solid rgba(107,196,255,0.16);
+  border-radius: 18px;
+  padding: 18px;
   flex: 1;
+  box-shadow: var(--chrome-shadow);
 }
 #bridge-left { max-width: 320px; }
 #bridge-right { flex: 2; }
@@ -316,21 +340,22 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   padding: 12px 0;
 }
 #btn-launch {
-  background: rgba(0,255,136,0.08);
-  border: 2px solid var(--green);
-  color: var(--green);
-  padding: 12px 32px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,255,136,0.14), rgba(0,132,255,0.14));
+  border: 1px solid rgba(0,255,136,0.55);
+  color: #9fffd5;
+  padding: 14px 34px;
+  border-radius: 999px;
   font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.16em;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
+  box-shadow: 0 14px 30px rgba(0,255,136,0.14);
 }
 #btn-launch:hover {
-  background: rgba(0,255,136,0.18);
-  box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  background: linear-gradient(135deg, rgba(0,255,136,0.22), rgba(0,132,255,0.18));
+  box-shadow: 0 0 22px rgba(0,255,136,0.22);
   transform: scale(1.03);
 }
 #comms-feed {
@@ -373,10 +398,11 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   width: 100%;
   max-width: 800px;
   margin-bottom: 24px;
-  background: rgba(24,28,36,0.6);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 20px;
+  background: linear-gradient(180deg, rgba(16,24,38,0.9), rgba(9,14,24,0.88));
+  border: 1px solid rgba(107,196,255,0.15);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: var(--chrome-shadow);
 }
 .create-section h3 {
   font-size: 1rem;
@@ -463,22 +489,28 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 .title-stack { width:min(1080px, calc(100vw - 36px)); padding:32px 20px 96px; display:grid; gap:22px; }
 .title-grid { display:grid; grid-template-columns: 1.2fr 0.9fr; gap:18px; align-items:start; }
 .title-card, .account-card, .notice-card, .atlas-card {
-  background: rgba(14,20,32,0.78);
-  border: 1px solid rgba(68,170,255,0.16);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 14px 40px rgba(0,0,0,0.28);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(14,22,35,0.92), rgba(8,13,21,0.92));
+  border: 1px solid rgba(107,196,255,0.18);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: var(--chrome-shadow);
+  backdrop-filter: blur(14px);
 }
 .title-card h1 { margin: 0 0 10px; }
 .title-badges { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px; }
-.title-badge { border:1px solid rgba(212,168,86,0.24); border-radius:999px; padding:6px 12px; font-size:0.74rem; color:var(--muted); letter-spacing:0.08em; }
+.title-badge { border:1px solid rgba(224,177,95,0.24); border-radius:999px; padding:8px 14px; font-size:0.74rem; color:#d2dcec; letter-spacing:0.11em; background:rgba(255,255,255,0.03); }
 .title-scene-note { margin: 14px auto 0; max-width: 640px; padding: 10px 14px; border: 1px solid rgba(68,170,255,0.18); border-radius: 12px; background: rgba(5,12,22,0.46); color: #c9d8eb; font-size: 0.84rem; line-height: 1.55; }
 .title-scene-note strong { color: var(--gold); }
-.account-card input { width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:8px; font-size:0.92rem; }
+.title-cinematic { margin:14px auto 0; max-width:640px; padding:16px 18px; border:1px solid rgba(224,177,95,0.18); border-radius:18px; background:linear-gradient(180deg, rgba(12,18,28,0.8), rgba(6,10,16,0.92)); text-align:left; box-shadow:inset 0 0 24px rgba(68,170,255,0.06), 0 16px 34px rgba(0,0,0,0.24); }
+.title-cinematic-top { display:flex; justify-content:space-between; gap:12px; align-items:center; color:var(--muted); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; }
+.title-cinematic-line { margin-top:8px; color:var(--text); font-size:1.05rem; letter-spacing:0.05em; }
+.title-cinematic-sub { margin-top:6px; color:#a9c2da; font-size:0.82rem; line-height:1.5; min-height:2.5em; }
+.title-cinematic-bar { margin-top:12px; height:6px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.08); }
+.title-cinematic-fill { height:100%; width:0%; background:linear-gradient(90deg, rgba(212,168,86,0.88), rgba(68,170,255,0.88)); transition:width 0.28s ease; }
+.account-card input { width:100%; background:rgba(255,255,255,0.045); border:1px solid rgba(107,196,255,0.14); color:var(--text); padding:12px 14px; border-radius:12px; font-size:0.92rem; }
 .account-grid { display:grid; gap:10px; }
-.account-status { font-size:0.78rem; color:var(--muted); line-height:1.5; min-height:40px; }
-.wallet-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(68,170,255,0.08); color:var(--blue); font-size:0.74rem; }
+.account-status { font-size:0.78rem; color:var(--muted); line-height:1.5; min-height:40px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); border-radius:12px; padding:10px 12px; }
+.wallet-pill { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; background:rgba(68,170,255,0.08); color:var(--blue); font-size:0.74rem; border:1px solid rgba(107,196,255,0.14); }
 .notice-card { border-color: rgba(234,179,8,0.28); background: linear-gradient(180deg, rgba(30,24,10,0.92), rgba(16,14,8,0.9)); }
 .notice-card strong { color: var(--gold); }
 .donation-strip { font-size:0.86rem; line-height:1.6; color:var(--text); }
@@ -502,6 +534,11 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 .premium-note { color:var(--muted); font-size:0.76rem; line-height:1.55; }
 .premium-offer { display:grid; gap:6px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
 .premium-offer:last-child { border-bottom:none; }
+.ops-kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-top:14px; }
+.ops-kpi { background:rgba(9,15,24,0.92); border:1px solid rgba(68,170,255,0.12); border-radius:12px; padding:12px; text-align:left; }
+.ops-kpi .ops-kpi-label { color:var(--muted); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; }
+.ops-kpi .ops-kpi-value { color:var(--text); font-size:1rem; margin-top:8px; }
+.ops-kpi .ops-kpi-meta { color:#87a3c4; font-size:0.74rem; margin-top:6px; line-height:1.45; }
 .market-ops-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:14px; }
 .market-op-card { background:rgba(12,18,28,0.88); border:1px solid rgba(68,170,255,0.14); border-radius:12px; padding:12px; text-align:left; }
 .market-op-card strong { color:var(--text); display:block; margin-bottom:4px; }
@@ -509,7 +546,13 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 .market-op-card .btn { margin-top:10px; }
 .buyer-strip { display:grid; gap:10px; margin-top:14px; }
 .buyer-strip .buyer-card { background:rgba(18,24,38,0.88); border:1px solid rgba(212,168,86,0.18); border-radius:12px; padding:12px; text-align:left; }
+.buyer-topline { display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; }
+.buyer-portrait { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 30% 30%, rgba(212,168,86,0.4), rgba(68,170,255,0.18)); border:1px solid rgba(212,168,86,0.24); color:var(--gold); font-size:0.84rem; font-weight:700; letter-spacing:0.08em; }
 .buyer-strip .buyer-card strong { color:var(--gold); }
+.buyer-role { color:var(--muted); font-size:0.72rem; margin-top:2px; letter-spacing:0.08em; text-transform:uppercase; }
+.buyer-price { color:var(--green); font-size:0.9rem; font-weight:600; white-space:nowrap; }
+.sale-flash { margin-top:14px; padding:12px 14px; border-radius:12px; background:linear-gradient(90deg, rgba(10,42,26,0.9), rgba(10,22,36,0.9)); border:1px solid rgba(34,197,94,0.28); color:#d4ffe6; text-align:left; box-shadow:0 0 24px rgba(34,197,94,0.12); }
+.sale-flash strong { color:#9dffbe; }
 .premium-offer-top { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
 .premium-offer-title { color:var(--text); font-weight:600; }
 .premium-offer-price { color:var(--gold); font-size:0.78rem; white-space:nowrap; }
@@ -1005,9 +1048,14 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 <div id="webgl-lost-overlay"><div class="wl-title">&#9888; GPU CONNECTION LOST</div><div class="wl-sub">The WebGL context was lost. This may be a driver issue.</div><button class="wl-btn" onclick="location.reload()">&#8635; Reload Game</button></div>
 <div id="glb-loading-overlay">LOADING ASSETS <span id="glb-load-count">0/0</span><div class="glb-bar"><div class="glb-fill" id="glb-load-fill"></div></div></div>
 <div id="music-player-panel" aria-label="Music Player">
-  <div class="music-kicker">Music Deck</div>
-  <div class="music-title" id="music-track-title">Mercury Mouthpiece (1)</div>
-  <div class="music-sub" id="music-track-subtitle">Opening song queued from the local soundtrack.</div>
+  <div class="music-header">
+    <div class="music-header-main">
+      <div class="music-kicker">Music Deck</div>
+      <div class="music-title" id="music-track-title">Mercury Mouthpiece (1)</div>
+      <div class="music-sub" id="music-track-subtitle">Opening song queued from the local soundtrack.</div>
+    </div>
+    <button class="music-btn music-btn-ghost" id="music-collapse" aria-label="Collapse music deck">—</button>
+  </div>
   <div class="music-controls">
     <button class="music-btn" id="music-prev">◀ Prev</button>
     <button class="music-btn" id="music-toggle">▶ Play</button>
@@ -1154,6 +1202,12 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
           <span class="title-badge">Day / Night Sector Cycle Live</span>
         </div>
         <div class="title-scene-note" id="title-scene-note">Live title approach camera online. A default ship is holding near the station while the sector cycle rolls through daybreak, highsun, dusk, and night.</div>
+        <div class="title-cinematic" id="title-cinematic">
+          <div class="title-cinematic-top"><span id="title-cinematic-phase">Station Approach</span><span id="title-cinematic-timer">00:00</span></div>
+          <div class="title-cinematic-line" id="title-cinematic-line">Inbound traffic clears the station ring while the camera settles into formation.</div>
+          <div class="title-cinematic-sub" id="title-cinematic-sub">Ambient intro sequence online. The title camera now runs a directed fly-in before shifting into a long orbit.</div>
+          <div class="title-cinematic-bar"><div class="title-cinematic-fill" id="title-cinematic-fill"></div></div>
+        </div>
         <div class="specials-marquee" id="specials-marquee"></div>
         <div style="text-align:center;color:var(--muted);font-size:0.9rem;margin-top:1rem;">v0.9.7 &mdash; Free-to-play, play-to-own</div>
         <div id="server-status" style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:0.5rem;"></div>
@@ -1161,15 +1215,15 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
       <div class="account-card">
         <div class="panel-title">Pilot Account</div>
         <div class="account-grid">
-          <input type="email" id="account-email" placeholder="pilot@oldeden.space">
-          <input type="password" id="account-password" placeholder="Minimum 6 characters">
+          <input type="text" id="account-email" placeholder="Email or tester username (kakababa)">
+          <input type="password" id="account-password" placeholder="Password or tester code 1234">
           <input type="text" id="account-pilot-name" maxlength="24" placeholder="Preferred pilot name">
           <div class="btn-row">
             <button class="btn btn-sm" id="btn-signup-account">Sign Up</button>
             <button class="btn btn-sm" id="btn-login-account">Log In</button>
             <button class="btn btn-sm" id="btn-connect-wallet">Connect Wallet</button>
           </div>
-          <div id="account-status" class="account-status">Create an account, or connect a wallet first and fly as a wallet-linked pilot.</div>
+          <div id="account-status" class="account-status">Create an account, or use tester login kakababa / 1234 for developer verification before connecting a wallet.</div>
           <div class="wallet-pill" id="wallet-pill">No wallet connected</div>
         </div>
       </div>
@@ -1959,6 +2013,7 @@ const state = {
     sensitivity: 5,
     scanlines: true,
     screenShake: true,
+    musicCollapsed: false,
   },
   stationPrices: null,
   factionRep: {},
@@ -2032,7 +2087,7 @@ const state = {
     dockingFee: 25,         // Credits per station dock
   },
   // ── Market ──
-  market: { orders: [], history: [], npcBuyers: [], lastBuyerRefresh: 0, teleports: 0 },
+  market: { orders: [], history: [], npcBuyers: [], lastBuyerRefresh: 0, teleports: 0, lastRemoteSale: null },
   // ── AI Chatbot ──
   chatbot: { visible: false, messages: [], autoTarget: false, autoMine: false },
   // ── Skins ──
@@ -2183,7 +2238,8 @@ function fireActiveGunRoomWeapon() {
   let rof = 3;
   if (activeWep.rof && activeWep.rof.includes('/s')) rof = parseFloat(activeWep.rof);
   const fireRate = 1000 / rof;
-  if (now - window._lastGunRoomShot < fireRate) return;
+  const _adjFireRate = c._traderFireBoost ? fireRate * 0.5 : fireRate;
+  if (now - window._lastGunRoomShot < _adjFireRate) return;
   window._lastGunRoomShot = now;
   c.heat = Math.min(1, c.heat + 0.08); // generic heat
   c.playerHasAttacked = true;
@@ -2689,7 +2745,8 @@ const _laserOrigin = new THREE.Vector3();
 function fireLaser() {
   if (c.dead || c.heat >= 0.95) return; // dead or overheated
   const now = performance.now();
-  if (now - lastLaserShot < LASER_FIRE_RATE) return;
+  const _laserRate = c._traderFireBoost ? LASER_FIRE_RATE * 0.5 : LASER_FIRE_RATE;
+  if (now - lastLaserShot < _laserRate) return;
   lastLaserShot = now;
   c.heat = Math.min(1, c.heat + LASER_HEAT_PER_SHOT);
   c.playerHasAttacked = true;
@@ -3069,7 +3126,7 @@ function _showScreenInner(name, previousScreen) {
   document.body.style.cursor = (name === 'gunner' && !shouldUseMobileFlightUI()) ? 'none' : 'default';
 
   if (name === 'bridge') updateBridgeUI();
-  if (name === 'title') { primeTitleScene(); updateTitleSceneStatus(); }
+  if (name === 'title') { resetTitleSceneIntro(); primeTitleScene(); updateTitleSceneStatus(); updateTitleCinematicUI(true); }
   if (name === 'starmap') { resizeStarMap(); if (!_starMapAnimActive) { _starMapAnimActive = true; starMapAnimLoop(); } }
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
@@ -3126,6 +3183,35 @@ function ensureMiningAutomationState() {
   if (!state.market.npcBuyers) state.market.npcBuyers = [];
   state.market.lastBuyerRefresh ||= 0;
   state.market.teleports ||= 0;
+  if (!state.market.lastRemoteSale) state.market.lastRemoteSale = null;
+}
+
+const TITLE_CINEMATIC_CUES = [
+  { phase: 'Station Approach', line: 'Inbound traffic clears the station ring while the camera settles into formation.', sub: 'Civilian haulers and dock drones are peeling away from the main berth.' },
+  { phase: 'Flight Sweep', line: 'Autopilot banks across the hull to frame the station and the frontier sky.', sub: 'The opening move now rides a directed fly-in before yielding to the slower orbit.' },
+  { phase: 'Mining Brief', line: 'Prospector channels are tracking remote buyers and richer ore lots in-system.', sub: 'Mining Ops is supposed to read like a live commerce board, not a spreadsheet tab.' },
+  { phase: 'War Signal', line: 'Defense chatter stays low while the sector cycle shifts the light across the hull plating.', sub: 'The scene is meant to feel inhabited before the player ever clicks New Game.' },
+];
+
+function resetTitleSceneIntro() {
+  primeTitleScene._introStartedAt = performance.now();
+  updateTitleCinematicUI._lastCueIndex = -1;
+}
+
+function getTitleCinematicState() {
+  if (!primeTitleScene._introStartedAt) primeTitleScene._introStartedAt = performance.now();
+  const elapsedMs = Math.max(0, performance.now() - primeTitleScene._introStartedAt);
+  const cueDurationMs = 5200;
+  const cueIndex = Math.floor(elapsedMs / cueDurationMs) % TITLE_CINEMATIC_CUES.length;
+  const cueProgress = (elapsedMs % cueDurationMs) / cueDurationMs;
+  return {
+    elapsedMs,
+    cueIndex,
+    cueProgress,
+    cue: TITLE_CINEMATIC_CUES[cueIndex],
+    flyInProgress: Math.min(1, elapsedMs / 11000),
+    introMode: elapsedMs < 12000 ? 'flyin' : 'orbit',
+  };
 }
 
 function updateWorldCycleVisuals(forceUi = false) {
@@ -3161,6 +3247,7 @@ function updateWorldCycleVisuals(forceUi = false) {
     updateWorldCycleVisuals._lastUi = Date.now();
     syncAccountWidgets();
     updateTitleSceneStatus();
+    updateTitleCinematicUI();
   }
 }
 
@@ -3172,9 +3259,31 @@ function updateTitleSceneStatus() {
   note.innerHTML = `<strong>Live title approach:</strong> ${_escHtml(sys.name)} with the player ship holding near the station. Sector phase: <strong>${_escHtml(state.world.phaseName)}</strong> at ${Math.round((state.world.lightLevel || 0) * 100)}% light. Frontier drill package is tracking ${_escHtml(oreLabel)} and remote buyers.`;
 }
 
+function updateTitleCinematicUI(force = false) {
+  const stateNow = getTitleCinematicState();
+  const phase = document.getElementById('title-cinematic-phase');
+  const timer = document.getElementById('title-cinematic-timer');
+  const line = document.getElementById('title-cinematic-line');
+  const sub = document.getElementById('title-cinematic-sub');
+  const fill = document.getElementById('title-cinematic-fill');
+  if (!phase || !timer || !line || !sub || !fill) return;
+  if (force || updateTitleCinematicUI._lastCueIndex !== stateNow.cueIndex) {
+    updateTitleCinematicUI._lastCueIndex = stateNow.cueIndex;
+    phase.textContent = stateNow.cue.phase;
+    line.textContent = stateNow.cue.line;
+    sub.textContent = stateNow.cue.sub;
+  }
+  const totalSeconds = Math.floor(stateNow.elapsedMs / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  timer.textContent = `${minutes}:${seconds}`;
+  fill.style.width = `${Math.round(stateNow.cueProgress * 100)}%`;
+}
+
 function primeTitleScene() {
   ensureMiningAutomationState();
   if (!state.starSystems?.length) return;
+  if (!primeTitleScene._introStartedAt) primeTitleScene._introStartedAt = performance.now();
   state.location.systemIndex = 0;
   state.starSystems[0].hasStation = true;
   ship.position.set(0, 0, 0);
@@ -3185,10 +3294,13 @@ function primeTitleScene() {
     spawnSystemStar();
   }
   if (stationModels.length === 0) spawnStationModel();
+  if (state.npcShips.length < 4) spawnSystemNPCs();
 }
 
 function updateTitleScene(dt) {
   primeTitleScene();
+  const intro = getTitleCinematicState();
+  updateTitleCinematicUI();
   const anchor = stationModels[0]?.position;
   const focusX = anchor ? anchor.x : -58;
   const focusY = anchor ? anchor.y : 10;
@@ -3197,8 +3309,18 @@ function updateTitleScene(dt) {
   ship.position.set(focusX + 24 + Math.cos(camT * 2.3) * 9, focusY + Math.sin(camT * 2.1) * 3.5, focusZ + 22 + Math.sin(camT * 2.0) * 10);
   _tmpV3a.set(focusX, focusY + 1, focusZ);
   ship.lookAt(_tmpV3a);
-  camera.position.set(focusX + Math.cos(camT * 0.7) * 86, focusY + 24 + Math.sin(camT * 1.1) * 8, focusZ + Math.sin(camT * 0.7) * 86);
-  camera.lookAt(focusX + 8, focusY + 6, focusZ + 4);
+  if (intro.introMode === 'flyin') {
+    const eased = 1 - Math.pow(1 - intro.flyInProgress, 3);
+    camera.position.set(
+      focusX + (190 * (1 - eased)) + 78,
+      focusY + 54 - eased * 26 + Math.sin(camT * 0.8) * 4,
+      focusZ + 166 - eased * 92,
+    );
+    camera.lookAt(focusX + 18 - eased * 12, focusY + 8 - eased * 2, focusZ + 6);
+  } else {
+    camera.position.set(focusX + Math.cos(camT * 0.7) * 86, focusY + 24 + Math.sin(camT * 1.1) * 8, focusZ + Math.sin(camT * 0.7) * 86);
+    camera.lookAt(focusX + 8, focusY + 6, focusZ + 4);
+  }
   stationModels.forEach((model, index) => {
     model.rotation.y += dt * (0.08 + index * 0.02);
   });
@@ -3382,6 +3504,15 @@ function createCharacter() {
   state.player.name = name;
   state.player.genome = Array.from(createGenome);
   state.player.age = 20 + Math.floor(Math.random() * 15);
+  state.ship.hull = state.ship.maxHull;
+  state.ship.shield = state.ship.maxShield;
+  state.ship.fuel = state.ship.maxFuel;
+  c.ammo = c.maxAmmo;
+  c.heat = 0;
+  c.enemies = [];
+  c.enemyBolts = [];
+  c.dead = false;
+  c.playerHasAttacked = false;
 
   // Emit to server for authoritative character creation
   if (state.socket) {
@@ -4041,6 +4172,9 @@ function getPremiumRemainingMs() {
 }
 
 function getPremiumStatusLabel() {
+  if (state.account?.premiumTier === 'developer' || state.account?.loginMode === 'developer') {
+    return 'Developer tester';
+  }
   const remainingMs = getPremiumRemainingMs();
   if (remainingMs <= 0) return 'Free pilot';
   const days = Math.max(1, Math.ceil(remainingMs / 86400000));
@@ -4531,6 +4665,7 @@ const MusicPlayer = {
     this.buildPlaylist();
     this.setTrack(0, false);
     this.syncVolume();
+    this.applyPanelState();
   },
   buildPlaylist() {
     const list = document.getElementById('music-playlist');
@@ -4591,8 +4726,20 @@ const MusicPlayer = {
   },
   renderControls() {
     const toggle = document.getElementById('music-toggle');
+    const collapse = document.getElementById('music-collapse');
     if (!toggle || !this.audio) return;
     toggle.textContent = this.audio.paused ? '▶ Play' : '❚❚ Pause';
+    if (collapse) collapse.textContent = state.settings.musicCollapsed ? '+' : '—';
+  },
+  applyPanelState() {
+    const panel = document.getElementById('music-player-panel');
+    if (!panel) return;
+    panel.classList.toggle('collapsed', !!state.settings.musicCollapsed);
+    this.renderControls();
+  },
+  togglePanel() {
+    state.settings.musicCollapsed = !state.settings.musicCollapsed;
+    this.applyPanelState();
   },
   renderPlaylist() {
     const list = document.getElementById('music-playlist');
@@ -4611,6 +4758,42 @@ const MusicPlayer = {
       this.unlocked = true;
       this.setTrack(0, true);
     }
+  },
+};
+window.__oldEdenQA = {
+  snapshot() {
+    return {
+      screen: state.screen,
+      combatActive: !!c.active,
+      player: {
+        hull: state.ship.hull,
+        maxHull: state.ship.maxHull,
+        shield: state.ship.shield,
+        maxShield: state.ship.maxShield,
+        fuel: state.ship.fuel,
+      },
+      combat: {
+        ammo: c.ammo,
+        maxAmmo: c.maxAmmo,
+        kills: c.kills,
+        score: c.score,
+        dead: !!c.dead,
+        enemies: Array.isArray(c.enemies) ? c.enemies.length : 0,
+        hostileNpcShips: Array.isArray(state.npcShips) ? state.npcShips.filter((npc) => !npc.friendly).length : 0,
+        safeSeconds: Math.max(0, Math.ceil(((c.safeZoneUntil || 0) - performance.now()) / 1000)),
+      },
+      traffic: {
+        npcShips: Array.isArray(state.npcShips) ? state.npcShips.length : 0,
+        policeShips: Array.isArray(policeShips) ? policeShips.length : 0,
+        criminalShips: Array.isArray(criminalShips) ? criminalShips.length : 0,
+        stargateShips: Array.isArray(stargateShips) ? stargateShips.length : 0,
+      },
+      glb: {
+        loadingVisible: document.getElementById('glb-loading-overlay')?.classList.contains('active') || false,
+        counter: document.getElementById('glb-load-count')?.textContent || '',
+      },
+      comms: Array.from(document.querySelectorAll('#comms-feed > *')).slice(0, 6).map((node) => (node.textContent || '').trim()).filter(Boolean),
+    };
   },
 };
 window._sell = (name, price) => {
@@ -5664,6 +5847,9 @@ function spawnSystemLoot() {
 
 const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
 const CHARGE_TIME = 350, COOLDOWN_TIME = 200, MOUSE_SENS = 0.002;
+const FIRST_LAUNCH_SAFE_MS = 45000;
+const RETURN_LAUNCH_SAFE_MS = 12000;
+const STATION_SAFE_RADIUS = 150;
 
 // ---- SHARED GEOMETRIES & MATERIALS (reused, never re-created) ----
 const _boltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4); _boltGeo._pooled = true;
@@ -5682,6 +5868,18 @@ const _tmpMat4 = new THREE.Matrix4();
 const _tmpQuat = new THREE.Quaternion();
 const _tmpQuatB = new THREE.Quaternion();
 const _tmpEuler = new THREE.Euler();
+
+function isLaunchSafeWindow() {
+  return performance.now() < (c.safeZoneUntil || 0);
+}
+
+function isStationSafeZone() {
+  return stationModels.some((model) => model?.position && model.position.distanceTo(ship.position) < STATION_SAFE_RADIUS);
+}
+
+function isProtectedSpace() {
+  return isLaunchSafeWindow() || isStationSafeZone();
+}
 
 // ---- BOLT OBJECT POOL (avoids new Mesh/Group per shot) ----
 const _boltPool = [];
@@ -5739,7 +5937,8 @@ function enterGunnerMode() {
   c.sessionStartTime = state.gameTime; // Track when this combat session began
   state.lastEnemySpawn = state.gameTime;
   // First-life combat now starts with a longer grace period so the player can learn the space.
-  c.deathImmunityUntil = performance.now() + (state.player.rebirths === 0 ? 25000 : 5000);
+  c.safeZoneUntil = performance.now() + (state.player.rebirths === 0 ? FIRST_LAUNCH_SAFE_MS : RETURN_LAUNCH_SAFE_MS);
+  c.deathImmunityUntil = c.safeZoneUntil;
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   AudioSFX.startEngineHum();
@@ -5781,6 +5980,7 @@ function enterGunnerMode() {
   addComms('EDEN AI', shouldUseMobileFlightUI() ? 'Touch flight online. Left pad moves, right pad aims, GYRO can tilt-steer the turret.' : 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
   addComms('System', shouldUseMobileFlightUI() ? 'Gunner mode — Drag AIM zone, FIRE shoots, BOOST afterburns, GYRO toggles tilt steering.' : 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
+  addComms('Traffic Control', `Station shield corridor active for ${Math.ceil((c.safeZoneUntil - performance.now()) / 1000)}s. Civilian lanes are open, hostiles are held outside the berth.`);
   // Rebirth flavor — remind player of their journey
   if (state.player.rebirths > 0 && state.pastLives.length > 0) {
     const prevLife = state.pastLives[state.pastLives.length - 1];
@@ -5817,7 +6017,7 @@ function enterGunnerMode() {
 function spawnAsteroids() {
   const sys = state.starSystems[state.location.systemIndex];
   const hasAsteroidHazard = sys?.hazards?.some(h => h.includes('Asteroid'));
-  const baseCount = hasAsteroidHazard ? 50 : 30;
+  const baseCount = hasAsteroidHazard ? 56 : 34;
   const tints = { 'Titanite Ore': 0x665544, 'Dark Matter Crystals': 0x332255, 'Hydrogen Fuel': 0x334455, 'Rare Earth Compounds': 0x556633, 'Ancient Artefacts': 0x554422, 'Quantum Processors': 0x335566 };
   const resTint = tints[sys?.resources?.[0]] || 0x554433;
   const fogColors = { hegemony_vanguard: 0x050a14, free_traders: 0x050f08, void_cult: 0x0a0512, iron_syndicate: 0x0f0a05, eden_remnants: 0x0a0a08, stellar_church: 0x0f050a, autonomous_collective: 0x050a0f, rogue_ai_network: 0x100508 };
@@ -5866,6 +6066,8 @@ function spawnAsteroids() {
     });
     const mesh = new THREE.Mesh(_astGeoPool[i % 8], mat);
     mesh.scale.setScalar(size);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     g.add(mesh);
     const angle = Math.random() * Math.PI * 2;
     const dist = 80 + Math.random() * 350;
@@ -5873,6 +6075,60 @@ function spawnAsteroids() {
     g.position.set(Math.cos(angle) * dist, h, Math.sin(angle) * dist);
     g.rotation.set(Math.random()*6, Math.random()*6, Math.random()*6);
     g.userData.rotSpeed = new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3);
+    g.userData.coreSize = size;
+
+    const shardCount = 1 + Math.floor(Math.random() * 3);
+    for (let shardIndex = 0; shardIndex < shardCount; shardIndex++) {
+      const shard = new THREE.Mesh(
+        _astGeoPool[(i + shardIndex + 1) % 8],
+        new THREE.MeshStandardMaterial({
+          color: randomAsteroidColor(resTint),
+          roughness: 0.84,
+          metalness: 0.18,
+          emissive: 0x050505,
+          emissiveIntensity: 0.04,
+        })
+      );
+      const orbitRadius = size * (0.75 + Math.random() * 0.8);
+      shard.position.set(
+        (Math.random() - 0.5) * orbitRadius,
+        (Math.random() - 0.5) * orbitRadius * 0.45,
+        (Math.random() - 0.5) * orbitRadius
+      );
+      shard.scale.setScalar(size * (0.16 + Math.random() * 0.22));
+      g.add(shard);
+    }
+
+    if (Math.random() < 0.55) {
+      const nodeGeo = new THREE.SphereGeometry(Math.max(0.22, size * 0.08), 8, 8);
+      const nodeMat = new THREE.MeshStandardMaterial({
+        color: 0xa7d7ff,
+        emissive: 0x2266aa,
+        emissiveIntensity: 0.45,
+        roughness: 0.22,
+        metalness: 0.78,
+      });
+      const nodeCount = 1 + Math.floor(Math.random() * 3);
+      for (let nodeIndex = 0; nodeIndex < nodeCount; nodeIndex++) {
+        const node = new THREE.Mesh(nodeGeo, nodeMat);
+        node.position.set(
+          (Math.random() - 0.5) * size * 1.2,
+          (Math.random() - 0.5) * size * 0.8,
+          (Math.random() - 0.5) * size * 1.2
+        );
+        g.add(node);
+      }
+    }
+
+    if (Math.random() < 0.3) {
+      const belt = new THREE.Mesh(
+        new THREE.TorusGeometry(size * (0.9 + Math.random() * 0.2), Math.max(0.08, size * 0.08), 8, 28),
+        new THREE.MeshBasicMaterial({ color: 0x7a8c96, transparent: true, opacity: 0.24, depthWrite: false })
+      );
+      belt.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      g.add(belt);
+    }
+
     scene.add(g);
     c.asteroids.push(g);
     // 25% chance of crystal vein asteroid (glowing cracks)
@@ -6047,6 +6303,7 @@ function exitGunnerMode(skipScreenChange) {
   paradePhase = "idle"; paradeLabels = []; paradeTimer = 0;
   // Clean up new systems
   if (state.npcShips) { state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); state.npcShips = []; }
+  stargateShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); stargateShips = [];
   if (stargateGroup) { scene.remove(stargateGroup); disposeObject(stargateGroup); stargateGroup = null; stargatePortalMat = null; }
   if (railgunModel) { cockpit.remove(railgunModel); disposeObject(railgunModel); railgunModel = null; }
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); disposeObject(cockpitGLBModel); cockpitGLBModel = null; }
@@ -6061,6 +6318,12 @@ function exitGunnerMode(skipScreenChange) {
   gyroControl.zero = null;
   _materialCache.forEach(m => { m._pooled = false; m.dispose(); }); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
+  // Clean up ambient objects (debris, creatures, convoys)
+  scene.children.slice().forEach(ch => {
+    if (ch.userData._debris || ch.userData._creature || ch.userData._convoy) { scene.remove(ch); disposeObject(ch); }
+  });
+  // Reset encounter/boost state
+  state._activeEncounter = null; c._traderFireBoost = false; c._bonusMult = 1; c._bonusTimer = 0;
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
   if (playerShipGLB) { ship.remove(playerShipGLB); disposeObject(playerShipGLB); playerShipGLB = null; }
   // Reset fog and background to default ambient values (combat sets dense fog)
@@ -6085,10 +6348,24 @@ function exitGunnerMode(skipScreenChange) {
 
 // Enemy type configs — each type uses a distinct GLB model
 const ENEMY_CONFIGS = {
-  scout:       { scale: 0.4, hp: 6, points: 10, speed: 1.3, shootRate: 5000, model: 'fighter_alpha',    tint: 0xff2200 },
-  fighter:     { scale: 0.6, hp: 12, points: 25, speed: 1.0, shootRate: 3000, model: 'iron_sentinel',    tint: 0xff2200 },
-  bomber:      { scale: 0.9, hp: 24, points: 50, speed: 0.7, shootRate: 2500, model: 'alien_battleship', tint: 0xff4400 },
-  interceptor: { scale: 0.5, hp: 9, points: 15, speed: 1.6, shootRate: 4000, model: 'fighter_beta', tint: 0xff8844 },
+  scout:       { scale: 0.4, hp: 6,  points: 10,  speed: 1.3, shootRate: 5000, model: 'scout_ship',       tint: 0xff2200 },
+  fighter:     { scale: 0.6, hp: 12, points: 25,  speed: 1.0, shootRate: 3000, model: 'iron_sentinel',    tint: 0xff2200 },
+  bomber:      { scale: 0.9, hp: 24, points: 50,  speed: 0.7, shootRate: 2500, model: 'alien_battleship', tint: 0xff4400 },
+  interceptor: { scale: 0.5, hp: 9,  points: 15,  speed: 1.6, shootRate: 4000, model: 'fighter_beta',     tint: 0xff8844 },
+  cruiser:     { scale: 0.7, hp: 30, points: 60,  speed: 0.8, shootRate: 2200, model: 'cruiser_alpha',    tint: 0xff3300 },
+  corvette:    { scale: 0.7, hp: 20, points: 35,  speed: 1.1, shootRate: 2800, model: 'corvette_alpha',   tint: 0xff6622 },
+  destroyer:   { scale: 0.8, hp: 40, points: 80,  speed: 0.6, shootRate: 2000, model: 'destroyer_alpha',  tint: 0xff1100 },
+  gunship:     { scale: 0.7, hp: 18, points: 30,  speed: 1.2, shootRate: 1800, model: 'gunship_alpha',    tint: 0xff5500 },
+  frigate:     { scale: 0.7, hp: 28, points: 45,  speed: 0.9, shootRate: 2400, model: 'frigate_alpha',    tint: 0xdd4400 },
+  swarm:       { scale: 0.35, hp: 4, points: 8,   speed: 1.8, shootRate: 6000, model: 'alien_insect',     tint: 0xaa22ff },
+};
+const ENEMY_TYPES_BY_TIER = {
+  // tier 0: new players (rebirths=0, early cycles)
+  easy:   ['scout', 'fighter', 'interceptor'],
+  // tier 1: mid progression
+  medium: ['scout', 'fighter', 'interceptor', 'corvette', 'gunship', 'swarm'],
+  // tier 2: high cycle / rebirth players
+  hard:   ['fighter', 'interceptor', 'corvette', 'cruiser', 'frigate', 'gunship', 'bomber', 'destroyer', 'swarm'],
 };
 
 const _materialCache = new Map();
@@ -6125,10 +6402,11 @@ function createEnemy(type) {
   if (srcModel) {
     g.add(reskinModel(srcModel, cfg.scale, cfg.tint || 0xff2200));
   } else {
-    // Minimal fallback — pooled geo+mat per type if no model loaded yet
-    if (!createEnemy._fbGeos) { createEnemy._fbGeos = {}; createEnemy._fbMat = new THREE.MeshStandardMaterial({ color: 0xff4422, roughness: 0.4, metalness: 0.7, emissive: 0xff2200, emissiveIntensity: 0.3 }); createEnemy._fbMat._pooled = true; }
-    if (!createEnemy._fbGeos[type]) { createEnemy._fbGeos[type] = new THREE.BoxGeometry(2*cfg.scale, 0.6*cfg.scale, 3*cfg.scale); createEnemy._fbGeos[type]._pooled = true; }
-    g.add(new THREE.Mesh(createEnemy._fbGeos[type], createEnemy._fbMat));
+    // Use vector fallback model (visible enemy ship shape) instead of tiny box
+    const asset = GLB_ASSETS[modelKey] || GLB_ASSETS['iron_sentinel'] || { role: 'enemy', scale: cfg.scale };
+    const vecModel = _buildVectorModel(modelKey || 'enemy_ship', asset);
+    vecModel.scale.setScalar(cfg.scale);
+    g.add(vecModel);
   }
 
   // Engine glow — pooled geo+mat per scale tier (avoids per-enemy GPU alloc)
@@ -6142,8 +6420,14 @@ function createEnemy(type) {
   const theta = Math.random()*Math.PI*2, phi = Math.acos(2*Math.random()-1);
   // First life: spawn farther out so encounters read clearly instead of feeling like an ambush.
   const firstLife = state.player.rebirths === 0;
-  const r = firstLife ? (240 + Math.random()*140) : (SPAWN_RADIUS + Math.random()*100);
+  const r = firstLife ? (320 + Math.random()*180) : (SPAWN_RADIUS + 80 + Math.random()*140);
   g.position.set(ship.position.x + r*Math.sin(phi)*Math.cos(theta), ship.position.y + r*Math.sin(phi)*Math.sin(theta)*0.3, ship.position.z + r*Math.cos(phi));
+  const stationAnchor = stationModels[0]?.position;
+  if (stationAnchor && g.position.distanceTo(stationAnchor) < STATION_SAFE_RADIUS * 1.8) {
+    _tmpV3d.copy(g.position).sub(stationAnchor).normalize();
+    if (_tmpV3d.lengthSq() < 0.01) _tmpV3d.set(1, 0, 0);
+    g.position.copy(stationAnchor).addScaledVector(_tmpV3d, STATION_SAFE_RADIUS * 1.8 + Math.random() * 60);
+  }
   g.lookAt(ship.position);
   scene.add(g);
     const diffScale = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
@@ -6151,10 +6435,24 @@ function createEnemy(type) {
 }
 
 // Preload all combat-relevant models (enemies, bosses, NPCs)
-const COMBAT_MODELS = ['iron_sentinel', 'fighter_alpha', 'fighter_beta', 'alien_battleship',
-  'cargo_shuttle', 'shuttle', 'evac_pod_b', 'freighter',
-  'titan_a', 'titan_b', 'demon_battleship'];
-let _combatModelIdx = 0;
+const COMBAT_MODELS = [
+  // Enemies
+  'iron_sentinel', 'fighter_alpha', 'fighter_beta', 'alien_battleship',
+  'scout_ship', 'cruiser_alpha', 'corvette_alpha', 'destroyer_alpha',
+  'gunship_alpha', 'frigate_alpha', 'alien_insect',
+  // NPC civilian
+  'cargo_shuttle', 'shuttle', 'evac_pod_b', 'freighter', 'cargo_cruiser',
+  'escort_ship', 'shuttle_b', 'container_shuttle', 'cyborg_ship',
+  'home_module', 'evac_pod_a', 'red_fighter', 'cruiser_beta',
+  // Bosses
+  'titan_a', 'titan_b', 'demon_battleship', 'red_battleship', 'demon_cruiser',
+  // Police
+  'patrol_alpha', 'patrol_beta', 'patrol_gamma',
+  // Criminal
+  'red_cruiser',
+  // Ambient props
+  'space_body', 'space_suit',
+];let _combatModelIdx = 0;
 async function preloadEnemyModel() {
   // Load iron_sentinel first (most common) — blocks
   try { await loadGLBModel('iron_sentinel'); } catch(e) { /* fallback to box */ }
@@ -6285,11 +6583,13 @@ function spawnImpactSparks(position, color) {
   c.explosions.push({ group: g, age: 0, maxAge: 250 });
 }
 
-const BOSS_MODELS = ['titan_a', 'titan_b', 'demon_battleship'];
+const BOSS_MODELS = ['titan_a', 'titan_b', 'demon_battleship', 'red_battleship', 'demon_cruiser'];
 const BOSS_TINTS = [
   { tint: 0xff2200, emissive: 0.6, name: 'Titan Warlord' },
   { tint: 0x8800ff, emissive: 0.5, name: 'Void Titan' },
   { tint: 0xff4400, emissive: 0.7, name: 'Demon Dreadnought' },
+  { tint: 0xcc0000, emissive: 0.6, name: 'Crimson Flagship' },
+  { tint: 0xff00aa, emissive: 0.5, name: 'Infernal Cruiser' },
 ];
 
 function createBossEnemy() {
@@ -7059,7 +7359,7 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
         hzOverlay.className = 'radiation';
         hazardActive = true;
         // Only apply if in gunner mode and alive
-        if (state.screen === 'gunner' && !c.dead) {
+        if (state.screen === 'gunner' && !c.dead && !isProtectedSpace()) {
           // Drain shield first, then hull
           const radDmg = 0.08 * (dtMs ? dtMs/1000 : 1); // 8% per second
           if (state.ship.shield > 0) {
@@ -7091,10 +7391,34 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
           // Prevent shield recharge this frame
           c._stormShieldBlock = true;
         }
+      } else if (hazards.some(h => h.includes('Pirate'))) {
+        hzOverlay.className = 'pirate';
+        hazardActive = true;
+        // Pirate Territory: enemies spawn faster, but drops are better
+        if (state.screen === 'gunner' && !c.dead) {
+          c._pirateZone = true;
+          if (!c._hazardWarnTimer || performance.now() - c._hazardWarnTimer > 8000) {
+            addComms('Hazard', 'Pirate Territory: Hostile activity increased. Loot quality improved.');
+            c._hazardWarnTimer = performance.now();
+          }
+        }
+      } else if (hazards.some(h => h.includes('Temporal') || h.includes('Anomaly'))) {
+        hzOverlay.className = 'temporal';
+        hazardActive = true;
+        // Temporal Anomaly: score multiplier +25%, but controls feel sluggish (reduced turn speed)
+        if (state.screen === 'gunner' && !c.dead) {
+          c._temporalZone = true;
+          if (!c._hazardWarnTimer || performance.now() - c._hazardWarnTimer > 5000) {
+            addComms('Hazard', 'Temporal Anomaly: Time distortion — score +25%, controls sluggish.');
+            c._hazardWarnTimer = performance.now();
+          }
+        }
       } else {
         hzOverlay.className = '';
         c._hazardWarnTimer = 0;
         c._stormShieldBlock = false;
+        c._pirateZone = false;
+        c._temporalZone = false;
       }
     }
   }
@@ -7427,8 +7751,9 @@ document.addEventListener('pointerlockchange', () => {
 document.addEventListener('mousemove', (e) => {
   if ((!c.locked && !shouldUseMobileFlightUI()) || !c.active) return;
   // Full 360° turret — no clamping, free rotation (inverted Y — flight sim style)
-  c.yaw += e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5);
-  c.pitch += e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5);
+  const _temporalDrag = c._temporalZone ? 0.6 : 1;
+  c.yaw += e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5) * _temporalDrag;
+  c.pitch += e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5) * _temporalDrag;
   // Clamp pitch to prevent flipping (±85°)
   c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
 });
@@ -7521,6 +7846,9 @@ _on('btn-continue', 'click', () => {
     showScreen('bridge');
   }
 });
+_on('btn-signup-account', 'click', signupAccount);
+_on('btn-login-account', 'click', loginAccount);
+_on('btn-connect-wallet', 'click', () => connectWallet());
 
 // Settings button (title screen)
 _on('btn-settings', 'click', () => showScreen('settings'));
@@ -7535,6 +7863,7 @@ _on('btn-back-title', 'click', () => showScreen('title'));
 _on('music-toggle', 'click', () => MusicPlayer.toggle());
 _on('music-prev', 'click', () => MusicPlayer.prev());
 _on('music-next', 'click', () => MusicPlayer.next(true));
+_on('music-collapse', 'click', () => MusicPlayer.togglePanel());
 
 // Leaderboard
 _on('btn-leaderboard', 'click', () => { renderLeaderboard(); showScreen('leaderboard'); });
@@ -8498,7 +8827,7 @@ document.getElementById('btn-quarters-back')?.addEventListener('click', () => sh
 // ================================================================
 //  GLB MODEL LOADER — Asset Registry
 // ================================================================
-const GLB_ASSETS = {
+var GLB_ASSETS = {
   // ── Original models ──
   cyborg_ship:       { path: '/3d/glb/optimized/cyborg_ship.glb',       role: 'npc',     scale: 0.5 },
   station_a:         { path: '/3d/glb/optimized/station_a.glb',         role: 'station', scale: 1.0 },
@@ -8580,44 +8909,82 @@ const GLB_ASSETS = {
   space_insect:      { path: '/3d/glb/optimized/space_insect.glb',      role: 'creature', scale: 0.6 },
 };
 
-// Set up DRACO decoder for compressed GLBs
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
-const gltfLoader = new GLTFLoader();
-gltfLoader.setDRACOLoader(dracoLoader);
-gltfLoader.setMeshoptDecoder(MeshoptDecoder);
-const modelLoadQueue = [];
-let modelsLoading = 0;
-const MAX_CONCURRENT_LOADS = 3;
+// Lazy-init GLTFLoader — module-init instance hangs on parse; fresh instance works
+var _glbParser = null;
+function _getGLBParser() {
+  if (!_glbParser) {
+    const d = new DRACOLoader();
+    d.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
+    _glbParser = new GLTFLoader();
+    _glbParser.setDRACOLoader(d);
+    _glbParser.setMeshoptDecoder(MeshoptDecoder);
+  }
+  return _glbParser;
+}
+var _glbLoadingPromises = {}; // dedup concurrent loads of same key
 
 function loadGLBModel(key) {
-  return new Promise((resolve, reject) => {
-    if (state.loadedModels[key]) { resolve(state.loadedModels[key]); return; }
-    const asset = GLB_ASSETS[key];
-    if (!asset) { reject(new Error('Unknown asset: ' + key)); return; }
-    gltfLoader.load(asset.path,
-      (gltf) => {
-        const model = gltf.scene;
-        model.scale.setScalar(asset.scale);
-        model.traverse(child => {
-          if (child.isMesh) {
-            child.frustumCulled = true;
-            if (child.material) child.material.precision = 'mediump';
+  // Return cached model immediately
+  if (state.loadedModels[key]) return Promise.resolve(state.loadedModels[key]);
+  // Guard: GLB_ASSETS may not be populated yet (title screen init before asset registry)
+  if (!GLB_ASSETS || !GLB_ASSETS[key]) return Promise.reject(new Error('Unknown asset: ' + key));
+  // Dedup: if already loading this key, piggyback on existing promise
+  if (_glbLoadingPromises[key]) return _glbLoadingPromises[key];
+  const asset = GLB_ASSETS[key];
+
+  _glbLoadingPromises[key] = new Promise((resolve) => {
+    const _loadTimeout = setTimeout(() => {
+      console.warn('[GLB] Timeout loading', key, '— using vector fallback');
+      const model = _buildVectorModel(key, asset);
+      model.scale.setScalar(asset.scale);
+      state.loadedModels[key] = model;
+      delete _glbLoadingPromises[key];
+      resolve(model);
+    }, 20000);
+
+    fetch(asset.path)
+      .then(resp => {
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.arrayBuffer();
+      })
+      .then(buffer => {
+        _getGLBParser().parse(buffer, asset.path.replace(/[^/]+$/, ''),
+          (gltf) => {
+            clearTimeout(_loadTimeout);
+            const model = gltf.scene;
+            model.scale.setScalar(asset.scale);
+            model.traverse(child => {
+              if (child.isMesh) {
+                child.frustumCulled = true;
+                if (child.material) child.material.precision = 'mediump';
+              }
+            });
+            state.loadedModels[key] = model;
+            delete _glbLoadingPromises[key];
+            resolve(model);
+          },
+          (err) => {
+            clearTimeout(_loadTimeout);
+            console.warn('[GLB] Parse failed for', key, '— using vector fallback:', err);
+            const model = _buildVectorModel(key, asset);
+            model.scale.setScalar(asset.scale);
+            state.loadedModels[key] = model;
+            delete _glbLoadingPromises[key];
+            resolve(model);
           }
-        });
-        state.loadedModels[key] = model;
-        resolve(model);
-      },
-      undefined,
-      (err) => {
+        );
+      })
+      .catch(err => {
+        clearTimeout(_loadTimeout);
         console.warn('[GLB] Failed to load', key, '— using vector fallback:', err);
         const model = _buildVectorModel(key, asset);
         model.scale.setScalar(asset.scale);
         state.loadedModels[key] = model;
+        delete _glbLoadingPromises[key];
         resolve(model);
-      }
-    );
+      });
   });
+  return _glbLoadingPromises[key];
 }
 
 function _buildVectorModel(key, asset) {
@@ -8694,8 +9061,8 @@ const PARADE_SHIPS = [
   'cruiser_beta', 'gunship_alpha', 'red_fighter', 'red_cruiser',
   'container_shuttle', 'shuttle_b', 'home_module',
   'titan_a', 'titan_b', 'demon_battleship', 'red_battleship', 'demon_cruiser',
-  'cargo_shuttle', 'shuttle', 'freighter',
-  'interceptor', 'scout_ship', 'cargo_small',
+  'cargo_shuttle', 'shuttle', 'freighter', 'cargo_small', 'station_light',
+  'interceptor', 'scout_ship', 'cyborg_ship',
 ];
 
 async function spawnShipLibrary() {
@@ -8935,11 +9302,11 @@ function updateLibraryRotation(dt) {
 // ================================================================
 const policeShips = [];        // active police ship objects
 const MAX_POLICE = 3;          // max simultaneous patrol ships
-const POLICE_MODELS = ["patrol_alpha", "patrol_beta", "patrol_gamma"];
+const POLICE_MODELS = ["patrol_alpha", "patrol_beta", "patrol_gamma", "escort_ship", "interceptor"];
 // ── Criminal Fleet ──
 const criminalShips = [];
 const MAX_CRIMINALS = 2;
-const CRIMINAL_MODELS = ["red_fighter", "red_cruiser", "demon_cruiser", "red_battleship"];
+const CRIMINAL_MODELS = ["red_fighter", "red_cruiser", "demon_cruiser", "red_battleship", "alien_battleship", "cruiser_beta", "gunship_alpha"];
 let _criminalSpawnTimer = 0;
 const CRIMINAL_SPAWN_INTERVAL = 25000;
 const CRIMINAL_PATROL_RADIUS = 250;
@@ -9095,11 +9462,7 @@ async function spawnCriminalShip() {
 }
 
 function updateCriminalFleet(dt, dtMs) {
-  // ── Ambient cargo convoy pass-through (visual only — every 60s) ──
-  if (!state._convoyTimer) state._convoyTimer = 0;
-  state._convoyTimer += dtMs;
-  if (state._convoyTimer > 60000 && Math.random() < 0.01) {
-  // Ambient radio chatter (every ~45s)
+  // ── Ambient radio chatter (every ~45s) ──
   if (!state._chatterTimer) state._chatterTimer = 0;
   state._chatterTimer += dtMs;
   if (state._chatterTimer > 45000) {
@@ -9115,12 +9478,29 @@ function updateCriminalFleet(dt, dtMs) {
       'Mining Corp: "Ore yields dropping. Moving operations to outer ring."',
       'Navigator: "Warp gate alignment nominal. Safe travels."',
       'Unknown: "Did you see that? Something moved near the stargate..."',
+      'Courier: "Package en route to Alpha sector. ETA 12 minutes."',
+      'Salvager: "Found an intact reactor core in the debris field. Jackpot!"',
+      'Medical: "Evac pod recovered. Pilot is alive — barely."',
+      'Colony Ship: "Colonist manifest confirmed. 2,400 souls on board."',
+      'Pirate: "This is OUR territory. Leave or be left behind."',
+      'EDEN Police: "All vessels — routine scan in progress. Hold position."',
+      'Mechanic: "That warp drive is held together with hope and solder."',
+      'Scientist: "Energy readings off the charts near the anomaly. Fascinating."',
+      'Bartender: "Station bar is open. First drink free for combat veterans."',
+      'Bounty Hunter: "Target acquired. Closing in."',
     ];
     addComms('Radio', _chatter[Math.floor(Math.random() * _chatter.length)]);
   }
+
+  // ── Ambient cargo convoy pass-through (visual only — every 60s) ──
+  if (!state._convoyTimer) state._convoyTimer = 0;
+  state._convoyTimer += dtMs;
+  if (state._convoyTimer > 60000 && Math.random() < 0.01) {
     state._convoyTimer = 0;
-    // Spawn 3-ship convoy at distance, fly past
-    const convoyModels = ['cargo_cruiser', 'freighter', 'cargo_small'];
+    // Spawn 3-ship convoy at distance, fly past — randomized composition
+    const _convoyPool = ['cargo_cruiser', 'freighter', 'cargo_small', 'container_shuttle', 'cargo_shuttle', 'shuttle_b'];
+    const convoyModels = [];
+    for (let ci = 0; ci < 3; ci++) convoyModels.push(_convoyPool[Math.floor(Math.random() * _convoyPool.length)]);
     const startAngle = Math.random() * Math.PI * 2;
     const convoyPos = new THREE.Vector3(
       ship.position.x + Math.cos(startAngle) * 300,
@@ -9172,6 +9552,139 @@ function updateCriminalFleet(dt, dtMs) {
       // Auto-remove after 45s
       setTimeout(() => { if (creature.parent) { scene.remove(creature); disposeObject(creature); } }, 45000);
     }).catch(() => {});
+  }
+
+  // ── Ambient space debris / wreckage (space_body, space_suit) — every ~120s, 8% chance ──
+  if (!state._debrisTimer) state._debrisTimer = 0;
+  state._debrisTimer += dtMs;
+  if (state._debrisTimer > 120000 && Math.random() < 0.08) {
+    state._debrisTimer = 0;
+    const _debrisPool = ['space_body', 'space_suit'];
+    const dk = _debrisPool[Math.floor(Math.random() * _debrisPool.length)];
+    loadGLBModel(dk).then(model => {
+      if (!c.active) return;
+      const debris = model.clone();
+      debris.scale.setScalar((GLB_ASSETS[dk]?.scale || 0.5) * (0.8 + Math.random() * 0.6));
+      const dAng = Math.random() * Math.PI * 2;
+      debris.position.set(
+        ship.position.x + Math.cos(dAng) * (80 + Math.random() * 100),
+        ship.position.y + (Math.random() - 0.5) * 30,
+        ship.position.z + Math.sin(dAng) * (80 + Math.random() * 100)
+      );
+      // Tumble rotation
+      debris.userData._tumble = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 0.3
+      );
+      debris.userData._drift = new THREE.Vector3(
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 2
+      );
+      debris.userData._debris = true;
+      scene.add(debris);
+      const msgs = [
+        'Scanner: Wreckage detected — remains of a lost pilot.',
+        'Scanner: Floating debris field. Exercise caution.',
+        'Scanner: Derelict detected. No life signs.',
+      ];
+      addComms('Scanner', msgs[Math.floor(Math.random() * msgs.length)]);
+      setTimeout(() => { if (debris.parent) { scene.remove(debris); disposeObject(debris); } }, 60000);
+    }).catch(() => {});
+  }
+
+  // ── Random Space Encounters — timed events during combat ──
+  if (!state._encounterTimer) state._encounterTimer = 0;
+  if (!state._encounterCooldown) state._encounterCooldown = 0;
+  state._encounterTimer += dtMs;
+  state._encounterCooldown = Math.max(0, state._encounterCooldown - dtMs);
+  // Trigger every 90-180s (after initial 45s), only when no active encounter and cooldown elapsed
+  if (state._encounterTimer > 45000 && state._encounterCooldown <= 0 && !state._activeEncounter && Math.random() < 0.005) {
+    state._encounterTimer = 0;
+    state._encounterCooldown = 90000; // 90s cooldown between encounters
+    const _encTypes = [
+      { type: 'distress', weight: 3 },
+      { type: 'ambush',  weight: 2 },
+      { type: 'trader',  weight: 2 },
+      { type: 'derelict', weight: 2 },
+      { type: 'patrol',  weight: 1 },
+    ];
+    const _totalW = _encTypes.reduce((s, e) => s + e.weight, 0);
+    let _rw = Math.random() * _totalW;
+    let _picked = _encTypes[0].type;
+    for (const et of _encTypes) { _rw -= et.weight; if (_rw <= 0) { _picked = et.type; break; } }
+
+    state._activeEncounter = { type: _picked, startTime: performance.now(), duration: 30000 };
+
+    if (_picked === 'distress') {
+      addComms('Emergency', 'DISTRESS SIGNAL: Civilian freighter under attack! Destroy nearby hostiles for bonus credits.');
+      AudioSFX.play('alert');
+      // Mark current enemies — killing 3 within 30s completes the encounter
+      state._activeEncounter.killsNeeded = 3;
+      state._activeEncounter.killsGot = 0;
+    } else if (_picked === 'ambush') {
+      addComms('Warning', 'PIRATE AMBUSH! Hostile reinforcements dropping out of warp!');
+      AudioSFX.play('alert');
+      // Spawn 3-5 extra enemies from medium/hard tiers
+      const _ambushCount = 3 + Math.floor(Math.random() * 3);
+      for (let ai = 0; ai < _ambushCount; ai++) {
+        setTimeout(() => {
+          if (c.active && typeof spawnEnemy === 'function') spawnEnemy();
+        }, ai * 800);
+      }
+      state._activeEncounter.duration = 20000; // shorter — just survive
+    } else if (_picked === 'trader') {
+      addComms('Comms', 'ROAMING TRADER: "Greetings pilot! Shields boosted, weapons overcharged for 25s. Fly safe!"');
+      AudioSFX.play('powerup');
+      // Temporary boost: +30 shield, double fire rate for 25s
+      state.ship.shield = Math.min(state.ship.maxShield || 100, (state.ship.shield || 0) + 30);
+      c._traderFireBoost = true;
+      state._activeEncounter.duration = 25000;
+    } else if (_picked === 'derelict') {
+      addComms('Scanner', 'DERELICT VESSEL: Scanning wreckage... data cores recovered.');
+      AudioSFX.play('scan');
+      // Immediate rewards: credits + XP
+      const _derelictCredits = 80 + Math.floor(Math.random() * 120);
+      state.player.credits += _derelictCredits;
+      gainSkillXP('hacking', 0.12);
+      gainSkillXP('navigation', 0.08);
+      addComms('Scanner', `Salvage complete: +${_derelictCredits} EC, +hacking XP, +navigation XP.`);
+      state._activeEncounter = null; // instant — no tracking needed
+    } else if (_picked === 'patrol') {
+      addComms('Police', 'SECTOR PATROL: Police cruiser on station. Hostiles marked — bonus rep for kills.');
+      AudioSFX.play('comm');
+      state._activeEncounter.duration = 30000;
+      state._activeEncounter.repBonus = true;
+    }
+  }
+
+  // ── Encounter resolution timers ──
+  if (state._activeEncounter) {
+    const enc = state._activeEncounter;
+    const elapsed = performance.now() - enc.startTime;
+    if (elapsed > enc.duration) {
+      // Time expired
+      if (enc.type === 'distress') {
+        if (enc.killsGot >= enc.killsNeeded) {
+          const _rescueReward = 200 + Math.floor(Math.random() * 100);
+          state.player.credits += _rescueReward;
+          addComms('Emergency', `Freighter rescued! +${_rescueReward} EC bounty.`);
+          AudioSFX.play('quest_complete');
+        } else {
+          addComms('Emergency', 'Freighter lost... the signal went dark.');
+        }
+      } else if (enc.type === 'trader') {
+        c._traderFireBoost = false;
+        addComms('Comms', 'Trader moves on. Weapon boost expired.');
+      } else if (enc.type === 'ambush') {
+        addComms('Warning', 'Pirate reinforcements retreating. Well fought!');
+        state.player.credits += 100;
+      } else if (enc.type === 'patrol') {
+        addComms('Police', 'Patrol moving to next sector. Stay safe, pilot.');
+      }
+      state._activeEncounter = null;
+    }
   }
 
   _criminalSpawnTimer += dtMs;
@@ -9242,6 +9755,7 @@ function renderPoliceLabels() {
 // ================================================================
 let stargateGroup = null;
 let stargatePortalMat = null;
+let stargateShips = [];
 
 async function createStargate() {
   // Try to load GLB stargate model and add it to the group
@@ -9300,8 +9814,8 @@ async function createStargate() {
   const particleMat = new THREE.PointsMaterial({ color: 0x44aaff, size: 0.5, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
   stargateGroup.add(new THREE.Points(particleGeo, particleMat));
 
-  // Position the stargate in current system
-  stargateGroup.position.set(80, 20, -150);
+  // Position the stargate near the player ship so it's always visible
+  stargateGroup.position.set(ship.position.x + 80, ship.position.y + 20, ship.position.z - 150);
   stargateGroup.rotation.y = Math.PI * 0.3;
   scene.add(stargateGroup);
 
@@ -9312,14 +9826,17 @@ async function createStargate() {
 // Spawns 3-4 ships near the stargate and stores them in state.npcShips
 async function spawnShipsNearStargate() {
   if (!stargateGroup) return;
-  // Clean up any previous ships
-  if (state.npcShips) { state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); }); state.npcShips = []; }
+  // Clean up only stargate traffic without touching the main NPC lanes.
+  stargateShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); });
+  stargateShips = [];
+  const anchor = stargateGroup.position.clone();
   const SHIP_MODELS = [
     'iron_sentinel', 'fighter_alpha', 'fighter_beta', 'alien_battleship',
     'patrol_alpha', 'cruiser_alpha', 'cargo_cruiser', 'escort_ship',
     'frigate_alpha', 'corvette_alpha', 'destroyer_alpha', 'gunship_alpha',
     'red_fighter', 'red_cruiser', 'container_shuttle', 'shuttle', 'freighter',
-    'interceptor', 'scout_ship', 'cargo_small',
+    'interceptor', 'scout_ship', 'cargo_small', 'cargo_shuttle', 'shuttle_b',
+    'home_module', 'cyborg_ship', 'patrol_beta', 'patrol_gamma',
   ];
   // Pick 3-4 unique random ships
   const count = 3 + Math.floor(Math.random() * 2);
@@ -9332,6 +9849,7 @@ async function spawnShipsNearStargate() {
   for (let i = 0; i < picked.length; i++) {
     try {
       const model = await loadGLBModel(picked[i]);
+      if (!stargateGroup) break;
       const asset = GLB_ASSETS[picked[i]];
       const ship = model.clone();
       ship.scale.setScalar((asset ? asset.scale : 0.7) * 2.2);
@@ -9339,14 +9857,14 @@ async function spawnShipsNearStargate() {
       const angle = Math.PI * 0.5 + (i - (picked.length-1)/2) * 0.5;
       const dist = 28 + Math.random() * 8;
       ship.position.set(
-        stargateGroup.position.x + Math.cos(angle) * dist,
-        stargateGroup.position.y - 2 + (Math.random()-0.5)*4,
-        stargateGroup.position.z + Math.sin(angle) * dist
+        anchor.x + Math.cos(angle) * dist,
+        anchor.y - 2 + (Math.random()-0.5)*4,
+        anchor.z + Math.sin(angle) * dist
       );
       ship.rotation.y = Math.PI * 0.3 + (Math.random()-0.5)*0.7;
       scene.add(ship);
       // Store for cleanup
-      state.npcShips.push({ group: ship, type: picked[i] });
+      stargateShips.push({ group: ship, type: picked[i] });
     } catch (e) {
       console.warn('[Stargate Ships] Failed to load', picked[i], e);
     }
@@ -9542,12 +10060,23 @@ function stopMining() {
 //  NPC SHIPS — Friendly & Enemy with behaviours
 // ================================================================
 const NPC_TYPES = [
-  { type: 'trader',    color: 0x22cc66, speed: 8,  hp: 5,  friendly: true,  name: 'Trader',    model: 'cargo_shuttle' },
-  { type: 'patrol',    color: 0x4488ff, speed: 12, hp: 8,  friendly: true,  name: 'Patrol',    model: 'fighter_beta' },
-  { type: 'freighter', color: 0x88aa44, speed: 5,  hp: 15, friendly: true,  name: 'Freighter', model: 'freighter' },
-  { type: 'pirate',    color: 0xff4444, speed: 15, hp: 6,  friendly: false, name: 'Pirate',    model: 'fighter_alpha' },
-  { type: 'raider',    color: 0xff8800, speed: 18, hp: 4,  friendly: false, name: 'Raider',    model: 'shuttle' },
-  { type: 'smuggler',  color: 0xcc44cc, speed: 20, hp: 3,  friendly: false, name: 'Smuggler',  model: 'evac_pod_b' },
+  // ── Friendly civilian traffic ──
+  { type: 'trader',    color: 0x22cc66, speed: 8,  hp: 5,  friendly: true,  name: 'Trader',        model: 'cargo_shuttle' },
+  { type: 'patrol',    color: 0x4488ff, speed: 12, hp: 8,  friendly: true,  name: 'Patrol',        model: 'patrol_gamma' },
+  { type: 'freighter', color: 0x88aa44, speed: 5,  hp: 15, friendly: true,  name: 'Freighter',     model: 'freighter' },
+  { type: 'hauler',    color: 0x66c8ff, speed: 7,  hp: 12, friendly: true,  name: 'Hauler',        model: 'cargo_cruiser' },
+  { type: 'courier',   color: 0xaaddff, speed: 16, hp: 4,  friendly: true,  name: 'Courier',       model: 'escort_ship' },
+  { type: 'shuttle',   color: 0xffdd88, speed: 11, hp: 6,  friendly: true,  name: 'Shuttle',       model: 'shuttle_b' },
+  { type: 'transport', color: 0x77ccaa, speed: 6,  hp: 10, friendly: true,  name: 'Transport',     model: 'container_shuttle' },
+  { type: 'liner',     color: 0xddddff, speed: 9,  hp: 8,  friendly: true,  name: 'Liner',         model: 'shuttle' },
+  { type: 'salvager',  color: 0xccaa44, speed: 10, hp: 7,  friendly: true,  name: 'Salvager',      model: 'cyborg_ship' },
+  { type: 'colonist',  color: 0x88ff88, speed: 4,  hp: 18, friendly: true,  name: 'Colony Ship',   model: 'home_module' },
+  { type: 'medic',     color: 0xffffff, speed: 14, hp: 6,  friendly: true,  name: 'Medical',       model: 'evac_pod_a' },
+  // ── Hostile NPCs (non-combatant enemies) ──
+  { type: 'pirate',    color: 0xff4444, speed: 15, hp: 6,  friendly: false, name: 'Pirate',        model: 'fighter_alpha' },
+  { type: 'raider',    color: 0xff8800, speed: 18, hp: 4,  friendly: false, name: 'Raider',        model: 'red_fighter' },
+  { type: 'smuggler',  color: 0xcc44cc, speed: 20, hp: 3,  friendly: false, name: 'Smuggler',      model: 'evac_pod_b' },
+  { type: 'enforcer',  color: 0xff2200, speed: 14, hp: 10, friendly: false, name: 'Enforcer',      model: 'cruiser_beta' },
 ];
 
 function spawnNPCShip(type) {
@@ -9560,8 +10089,19 @@ function spawnNPCShip(type) {
   if (npcSrc) {
     g.add(reskinModel(npcSrc, 0.5, npcDef.color, 0.25));
   } else {
-    const mat = new THREE.MeshStandardMaterial({ color: npcDef.color, roughness: 0.5, metalness: 0.6, emissive: npcDef.color, emissiveIntensity: 0.15 });
-    g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 3), mat));
+    // Use vector fallback model (visible ship shape) instead of tiny box
+    const asset = GLB_ASSETS[npcModelKey] || GLB_ASSETS['iron_sentinel'] || { role: 'npc', scale: 0.5 };
+    const vecModel = _buildVectorModel(npcModelKey || 'npc_ship', asset);
+    vecModel.scale.setScalar(0.5);
+    // Tint vector model with faction color
+    vecModel.traverse(child => {
+      if (child.isMesh && child.material && !child.material.isMeshBasicMaterial) {
+        child.material = child.material.clone();
+        child.material.emissive = new THREE.Color(npcDef.color);
+        child.material.emissiveIntensity = 0.25;
+      }
+    });
+    g.add(vecModel);
   }
   // Engine glow (shared geometry + materials)
   if (!window._npcEngineGeo) {
@@ -9577,12 +10117,16 @@ function spawnNPCShip(type) {
   const npcName = names[Math.floor(Math.random() * names.length)] + '-' + Math.floor(Math.random() * 999);
 
   const theta = Math.random() * Math.PI * 2;
-  const dist = 60 + Math.random() * 200;
+  const friendlyLane = npcDef.friendly ? 110 : 220;
+  const dist = friendlyLane + Math.random() * (npcDef.friendly ? 160 : 180);
   g.position.set(
     ship.position.x + Math.cos(theta) * dist,
     (Math.random() - 0.5) * 40,
     ship.position.z + Math.sin(theta) * dist
   );
+  if (npcDef.friendly && stationModels[0]?.position) {
+    g.position.lerp(stationModels[0].position, 0.28);
+  }
   g.lookAt(ship.position);
   scene.add(g);
 
@@ -9607,10 +10151,22 @@ function spawnSystemNPCs() {
   // Clear existing
   state.npcShips.forEach(n => { scene.remove(n.group); disposeObject(n.group); });
   state.npcShips = [];
-  // Spawn only 2-3 NPCs to prevent crashes (1 friendly, 1-2 hostile)
-  spawnNPCShip('patrol');
-  spawnNPCShip('pirate');
-  if (Math.random() > 0.5) spawnNPCShip('raider');
+  const openingProtected = state.player.rebirths === 0 || isLaunchSafeWindow();
+  // Core civilian traffic — always present
+  ['patrol', 'trader', 'freighter', 'hauler', 'courier', 'shuttle'].forEach(type => spawnNPCShip(type));
+  // Extra civilian diversity — randomly pick 2-3 bonus types each system
+  const bonusCivilian = ['transport', 'liner', 'salvager', 'colonist', 'medic'];
+  const numBonus = 2 + Math.floor(Math.random() * 2); // 2–3 extras
+  for (let b = 0; b < numBonus; b++) {
+    const pick = bonusCivilian[Math.floor(Math.random() * bonusCivilian.length)];
+    spawnNPCShip(pick);
+  }
+  if (!openingProtected) {
+    spawnNPCShip('pirate');
+    if (Math.random() > 0.45) spawnNPCShip('raider');
+    if (Math.random() > 0.7) spawnNPCShip('smuggler');
+    if (Math.random() > 0.8) spawnNPCShip('enforcer');
+  }
   // Past life ghost NPC — haunt the player with their former selves
   if (state.pastLives.length > 0 && Math.random() > 0.4) {
     const ghost = state.pastLives[Math.floor(Math.random() * state.pastLives.length)];
@@ -9653,7 +10209,7 @@ function updateNPCShips(dt) {
       npc.group.lookAt(target);
     }
     // Hostile NPCs shoot at player if close (only if player has attacked)
-    if (c.playerHasAttacked && !npc.friendly && c.enemyBolts.length < 30 && npc.group.position.distanceTo(ship.position) < 120) {
+    if (c.playerHasAttacked && !npc.friendly && !isProtectedSpace() && c.enemyBolts.length < 30 && npc.group.position.distanceTo(ship.position) < 120) {
       if (state.gameTime - npc.lastShot > 4000) {
         npc.lastShot = state.gameTime;
         _tmpV3b.copy(ship.position).sub(npc.group.position).normalize();
@@ -9678,23 +10234,59 @@ let glbSceneObjects = [];   // GLB models added to scene (cleaned up on exit gun
 let libraryLabels = [];     // Ship library HUD labels (cleaned up on exit gunner)
 
 async function spawnStationModel() {
+  if (spawnStationModel._busy) return; // guard re-entry from per-frame calls
+  spawnStationModel._busy = true;
   // Remove old station models
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); });
   stationModels = [];
   const sys = state.starSystems[state.location.systemIndex];
-  if (!sys || !sys.hasStation) return;
+  if (!sys || !sys.hasStation) { spawnStationModel._busy = false; return; }
   // Try GLB station model first, procedural fallback
   const _stationPool = ['station_a','station_b','station_massive','station_sphere','station_light','station_facility','station_zorgus'];
   const stationKey = _stationPool[state.location.systemIndex % _stationPool.length];
+  // Secondary station for systems with index > 3 (larger systems get an outpost)
+  const _spawnSecondary = state.location.systemIndex > 3 && _stationPool.length > 1;
+  const _secondaryKey = _spawnSecondary ? _stationPool[(state.location.systemIndex * 3 + 2) % _stationPool.length] : null;
+  const deployMessage = `${stationKey.replace(/_/g,' ')} deployed.`;
   try {
     const model = await loadGLBModel(stationKey);
-    if (!c.active && state.screen !== 'title') return; // Guard: player exited during async load
+    if (!c.active && state.screen !== 'title') { spawnStationModel._busy = false; return; } // Guard: player exited during async load
     const inst = model.clone();
-    inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+    // Place station near stargate so the player sees a proper hub
+    if (stargateGroup?.position) {
+      inst.position.set(stargateGroup.position.x - 40, stargateGroup.position.y - 10, stargateGroup.position.z + 50);
+    } else {
+      inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+    }
     scene.add(inst);
     stationModels.push(inst);
-    addComms('System', `${stationKey.replace(/_/g,' ')} deployed.`);
+    if (state._lastStationDeployMessage !== deployMessage) {
+      state._lastStationDeployMessage = deployMessage;
+      addComms('System', deployMessage);
+    }
     addStationBeacons(inst);
+    // ── Secondary outpost station for larger systems ──
+    if (_spawnSecondary && _secondaryKey && _secondaryKey !== stationKey) {
+      try {
+        const secModel = await loadGLBModel(_secondaryKey);
+        if (c.active || state.screen === 'title') {
+          const secInst = secModel.clone();
+          secInst.scale.setScalar(0.6); // outpost is smaller
+          // Place 120 units away from main station in a random direction
+          const secAngle = Math.random() * Math.PI * 2;
+          secInst.position.set(
+            inst.position.x + Math.cos(secAngle) * 120,
+            inst.position.y + (Math.random() - 0.5) * 20,
+            inst.position.z + Math.sin(secAngle) * 120
+          );
+          scene.add(secInst);
+          stationModels.push(secInst);
+          addStationBeacons(secInst);
+          addComms('System', `Outpost ${_secondaryKey.replace(/_/g, ' ')} online.`);
+        }
+      } catch(e2) { /* secondary is optional */ }
+    }
+    spawnStationModel._busy = false;
     return;
   } catch(e) { /* fallback to procedural */ }
   const g = new THREE.Group();
@@ -9733,10 +10325,16 @@ async function spawnStationModel() {
     light.position.set(Math.cos(angle)*12, 0, Math.sin(angle)*12);
     g.add(light);
   }
-  g.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+  // Place procedural station near stargate
+  if (stargateGroup?.position) {
+    g.position.set(stargateGroup.position.x - 40, stargateGroup.position.y - 10, stargateGroup.position.z + 50);
+  } else {
+    g.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+  }
   scene.add(g);
   if (typeof addStationBeacons === 'function') addStationBeacons(g);
   stationModels.push(g);
+  spawnStationModel._busy = false;
 }
 
 // ═══ STATION APPROACH NAV BEACONS ═══
@@ -9847,6 +10445,16 @@ function getBestRemoteBuyer(itemName) {
   return state.market.npcBuyers.filter(buyer => buyer.item === itemName).sort((a, b) => b.price - a.price)[0] || null;
 }
 
+function getBuyerPortraitLabel(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  return (parts[0]?.[0] || 'O') + (parts[1]?.[0] || parts[0]?.[1] || 'E');
+}
+
+function getEnabledMiningFeatureCount() {
+  ensureMiningAutomationState();
+  return Object.values(state.mining.operations).filter(Boolean).length;
+}
+
 function pushMarketHistory(item, type, price, quantity, trader) {
   state.market.history.push({ item, type, price, quantity, trader, time: Date.now() });
   if (state.market.history.length > 100) state.market.history.splice(0, state.market.history.length - 100);
@@ -9904,8 +10512,10 @@ function grantMiningYield({ source = 'manual', asteroid = null } = {}) {
       const saleCredits = buyer.price * quantity;
       state.player.credits += saleCredits;
       state.market.teleports += quantity;
+      state.market.lastRemoteSale = { ore, quantity, credits: saleCredits, buyer: buyer.buyer, location: buyer.location, at: Date.now(), mode: 'auto-route' };
       pushMarketHistory(ore, 'sell', buyer.price, quantity, buyer.buyer + ' remote');
       addComms('Market', `Remote buyer ${buyer.buyer} accepted ${quantity}x ${ore} for ${saleCredits} EC.`);
+      if (state.screen === 'market') renderMarketScreen();
       return { ore, quantity, credits: credits + saleCredits, soldRemotely: true };
     }
   }
@@ -9916,13 +10526,17 @@ function grantMiningYield({ source = 'manual', asteroid = null } = {}) {
 
 function renderMiningOpsPanel() {
   const buyers = state.market.npcBuyers.slice(0, 4);
+  const bestBuyer = state.mining.lastYield?.ore ? getBestRemoteBuyer(state.mining.lastYield.ore) : buyers[0];
+  const lastSale = state.market.lastRemoteSale;
+  const saleFresh = lastSale && Date.now() - lastSale.at < 180000;
   const featureCards = MINING_OPERATION_FEATURES.map(feature => {
     const active = !!state.mining.operations[feature.id];
     return `<div class="market-op-card"><strong>${_escHtml(feature.label)}</strong><p>${_escHtml(feature.desc)} ${_escHtml(feature.effect)}</p><button class="btn btn-sm" onclick="window._toggleMiningFeature('${feature.id}')">${active ? 'Disable' : 'Enable'}</button></div>`;
   }).join('');
-  const buyerCards = buyers.length ? buyers.map(buyer => `<div class="buyer-card"><strong>${_escHtml(buyer.buyer)}</strong><div>${_escHtml(buyer.item)} · ${buyer.price} EC</div><div style="color:var(--muted);font-size:0.76rem;">${_escHtml(buyer.location)} · ${_escHtml(buyer.note)}</div></div>`).join('') : '<p style="color:var(--muted)">No NPC buyers online yet.</p>';
+  const buyerCards = buyers.length ? buyers.map(buyer => `<div class="buyer-card"><div class="buyer-topline"><div class="buyer-portrait">${_escHtml(getBuyerPortraitLabel(buyer.buyer))}</div><div><strong>${_escHtml(buyer.buyer)}</strong><div class="buyer-role">${_escHtml(buyer.note)}</div></div><div class="buyer-price">${buyer.price} EC</div></div><div style="margin-top:10px;color:var(--text);font-size:0.84rem;">${_escHtml(buyer.item)}</div><div style="color:var(--muted);font-size:0.76rem;margin-top:4px;">${_escHtml(buyer.location)} remote relay</div></div>`).join('') : '<p style="color:var(--muted)">No NPC buyers online yet.</p>';
   const lastYield = state.mining.lastYield ? `${state.mining.lastYield.quantity}x ${state.mining.lastYield.ore} (${state.mining.lastYield.source})` : 'No completed mining run yet.';
-  return `<div class="premium-card"><div class="panel-title">Frontier Mining Automation</div><div class="premium-note">14 automation features are now wired into the existing mining loop. Enable autodrilling near belts, hold a buyer route in space, and teleport ore to NPC buyers without docking.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-sm" onclick="window._miningPreset('profit')">Profit Preset</button><button class="btn btn-sm" onclick="window._miningPreset('safety')">Safety Preset</button><button class="btn btn-sm" onclick="window._teleportCargoSale()">Teleport Ore Sale</button><button class="btn btn-sm" onclick="window._summonNpcBuyer()">Summon NPC Buyer</button></div><div style="margin-top:10px;color:var(--muted);font-size:0.78rem;">Last haul: ${_escHtml(lastYield)}. Completed runs: ${state.mining.completedRuns || 0}. Remote teleports: ${state.market.teleports || 0} lots.</div><div class="market-ops-grid">${featureCards}</div><div class="buyer-strip">${buyerCards}</div></div>`;
+  const saleFlash = saleFresh ? `<div class="sale-flash"><strong>Remote sale confirmed.</strong> ${lastSale.quantity}x ${_escHtml(lastSale.ore)} routed to ${_escHtml(lastSale.buyer)} in ${_escHtml(lastSale.location)} for ${lastSale.credits.toLocaleString()} EC.</div>` : '';
+  return `<div class="premium-card"><div class="panel-title">Frontier Mining Automation</div><div class="premium-note">14 automation features are now wired into the existing mining loop. Enable autodrilling near belts, hold a buyer route in space, and teleport ore to NPC buyers without docking.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-sm" onclick="window._miningPreset('profit')">Profit Preset</button><button class="btn btn-sm" onclick="window._miningPreset('safety')">Safety Preset</button><button class="btn btn-sm" onclick="window._teleportCargoSale()">Teleport Ore Sale</button><button class="btn btn-sm" onclick="window._summonNpcBuyer()">Summon NPC Buyer</button></div>${saleFlash}<div class="ops-kpis"><div class="ops-kpi"><div class="ops-kpi-label">Last Haul</div><div class="ops-kpi-value">${_escHtml(lastYield)}</div><div class="ops-kpi-meta">Completed runs: ${state.mining.completedRuns || 0}</div></div><div class="ops-kpi"><div class="ops-kpi-label">Remote Network</div><div class="ops-kpi-value">${state.market.teleports || 0} transfers</div><div class="ops-kpi-meta">${bestBuyer ? `Best buyer: ${_escHtml(bestBuyer.buyer)} for ${bestBuyer.price} EC` : 'No buyer route locked yet.'}</div></div><div class="ops-kpi"><div class="ops-kpi-label">Automation</div><div class="ops-kpi-value">${getEnabledMiningFeatureCount()} active features</div><div class="ops-kpi-meta">${state.chatbot.autoMine ? 'Autodrilling stands by for clear belts.' : 'Manual control still has priority.'}</div></div></div><div class="market-ops-grid">${featureCards}</div><div class="buyer-strip">${buyerCards}</div></div>`;
 }
 
 function generateNPCMarketOrders() {
@@ -10052,19 +10666,27 @@ window._teleportCargoSale = () => {
   const sellable = state.inventory.filter(item => ['ore', 'material', 'rare'].includes(getMarketItemMeta(item.name).category) && (item.quantity || 0) > 0);
   if (sellable.length === 0) { addComms('Market', 'No ore cargo available for remote sale.'); return; }
   let totalCredits = 0;
+  let totalLots = 0;
+  let leadBuyer = null;
+  let leadItem = '';
   sellable.forEach(item => {
     const buyer = getBestRemoteBuyer(item.name);
     if (!buyer) return;
     const quantity = item.quantity || 1;
     const credits = buyer.price * quantity;
     totalCredits += credits;
+    totalLots += quantity;
+    leadBuyer ||= buyer;
+    if (!leadItem) leadItem = item.name;
     pushMarketHistory(item.name, 'sell', buyer.price, quantity, buyer.buyer + ' remote');
     item.quantity = 0;
   });
   state.inventory = state.inventory.filter(item => (item.quantity || 0) > 0);
   state.player.credits += totalCredits;
   state.market.teleports += 1;
+  state.market.lastRemoteSale = { ore: leadItem || 'Bulk ore', quantity: totalLots || 0, credits: totalCredits, buyer: leadBuyer?.buyer || 'Remote exchange', location: leadBuyer?.location || (state.starSystems?.[state.location.systemIndex]?.name || 'Old Eden'), at: Date.now(), mode: 'teleport-sale' };
   addComms('Market', `Cargo teleported to NPC buyers. +${totalCredits} EC credited to your wallet.`);
+  showToast(`Remote sale +${totalCredits} EC`);
   if (state.screen === 'market') renderMarketScreen();
 };
 
@@ -10515,12 +11137,27 @@ function createProceduralRailgun() {
 //  PLAYER SHIP GLB REPLACEMENT
 // ================================================================
 let playerShipGLB = null;
-const PLAYER_SHIP_MODEL = 'iron_sentinel'; // our ship model
+// Faction-specific ship models — each faction starts with a thematic hull
+const FACTION_SHIP_MAP = {
+  hegemony_vanguard:     'iron_sentinel',
+  free_traders:          'cargo_shuttle',
+  void_cult:             'cyborg_ship',
+  iron_syndicate:        'corvette_alpha',
+  eden_remnants:         'fighter_beta',
+  stellar_church:        'escort_ship',
+  autonomous_collective: 'scout_ship',
+  rogue_ai_network:      'interceptor',
+};
+function getPlayerShipModel() {
+  const fId = state.player.faction?.id || state.player.faction;
+  return FACTION_SHIP_MAP[fId] || 'iron_sentinel';
+}
 
 async function replaceShipWithGLB() {
   if (playerShipGLB) { ship.remove(playerShipGLB); playerShipGLB = null; }
+  const shipKey = getPlayerShipModel();
   try {
-    const model = await loadGLBModel(PLAYER_SHIP_MODEL);
+    const model = await loadGLBModel(shipKey);
     if (!c.active) { disposeObject(model); return; } // Guard: player exited during async load
     playerShipGLB = model.clone();
     playerShipGLB.scale.setScalar(1.5);
@@ -10530,7 +11167,7 @@ async function replaceShipWithGLB() {
       if (ch !== turretMount && ch !== playerShipGLB && ch.isMesh) ch.visible = false;
     });
     ship.add(playerShipGLB);
-    addComms('System', 'Ship hull loaded: ' + PLAYER_SHIP_MODEL.replace(/_/g,' ').toUpperCase());
+    addComms('System', 'Ship hull loaded: ' + shipKey.replace(/_/g,' ').toUpperCase());
   } catch(e) {
     // Keep procedural ship
     addComms('System', 'Using procedural ship hull (GLB unavailable).');
@@ -10919,6 +11556,11 @@ function gameLoop() {
     if (_warnLock) _warnLock.classList.toggle('active', _enemyClose);
     if (c.killConfirmTimer > 0) c.killConfirmTimer = Math.max(0, c.killConfirmTimer - dtMs);
     if (c.shieldBreakTimer > 0) c.shieldBreakTimer = Math.max(0, c.shieldBreakTimer - dtMs);
+    // Bonus credit multiplier countdown
+    if (c._bonusTimer && c._bonusTimer > 0) {
+      c._bonusTimer -= dtMs;
+      if (c._bonusTimer <= 0) { c._bonusTimer = 0; c._bonusMult = 1; addComms('Bounty Board', 'Bounty bonus expired.'); }
+    }
     // Fire recoil kick (recovers over time — framerate-independent)
     if (c.fireRecoilKick > 0) {
       c.fireRecoilKick *= Math.pow(0.88, dt * 60);
@@ -11151,6 +11793,11 @@ function gameLoop() {
       });
     }
 
+    // ── Rotate landmarks (Dyson Sphere, etc.) ──
+    scene.children.forEach(ch => {
+      if (ch.userData._landmark) ch.rotation.y += dt * 0.05;
+    });
+
     // ── Pulse station nav beacons ──
     stationModels.forEach(sm => {
       sm.traverse(ch => {
@@ -11167,6 +11814,17 @@ function gameLoop() {
       if (ch.userData._creature && ch.userData._wander) {
         ch.position.addScaledVector(ch.userData._wander, dt * 8);
         ch.rotation.y += dt * 0.5;
+      }
+      // ── Update floating debris (tumble + drift) ──
+      if (ch.userData._debris) {
+        if (ch.userData._tumble) {
+          ch.rotation.x += ch.userData._tumble.x * dt;
+          ch.rotation.y += ch.userData._tumble.y * dt;
+          ch.rotation.z += ch.userData._tumble.z * dt;
+        }
+        if (ch.userData._drift) {
+          ch.position.addScaledVector(ch.userData._drift, dt);
+        }
       }
     });
 
@@ -11236,7 +11894,7 @@ function gameLoop() {
     // Spawn enemies (capped at MAX_ENEMIES for performance)
     const MAX_ENEMIES = 15;
     // First life: keep the opening readable and delay the first wave.
-    const spawnInterval = isFirstLife ? 14000 : SPAWN_INTERVAL;
+    const spawnInterval = isFirstLife ? 20000 : (c._pirateZone ? SPAWN_INTERVAL * 0.65 : SPAWN_INTERVAL);
     // Wave pacing: 4-second breather every 10 kills
     if (!c._breatherStart) {
       const _brkAt = c._nextBreatherAt || 10;
@@ -11244,12 +11902,12 @@ function gameLoop() {
     }
     const _inBreather = c._breatherStart > 0 && (state.gameTime - c._breatherStart < 4000);
     if (c._breatherStart > 0 && !_inBreather) c._breatherStart = 0;
-    if (!_inBreather && c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > spawnInterval) {
+    if (!isProtectedSpace() && !_inBreather && c.enemies.length < MAX_ENEMIES && state.gameTime - state.lastEnemySpawn > spawnInterval) {
       state.lastEnemySpawn = state.gameTime;
-      const types = ['scout','fighter','bomber','interceptor'];
-      // First life: weight spawns toward easier enemies (scouts/interceptors)
-      const firstLifeTypes = ['scout','scout','scout','scout','interceptor'];
-      const spawnTypes = (isFirstLife && c.cycle <= 2) ? firstLifeTypes : types;
+      // Tier-based enemy selection using ENEMY_TYPES_BY_TIER
+      const tier = (isFirstLife && c.cycle <= 2) ? 'easy' :
+                   (c.cycle < 6 || state.player.rebirths === 0) ? 'medium' : 'hard';
+      const spawnTypes = ENEMY_TYPES_BY_TIER[tier];
       const spawnCount = isFirstLife ? 1 : Math.min(1 + Math.floor(c.cycle / 3), MAX_ENEMIES - c.enemies.length);
       for (let si = 0; si < spawnCount; si++) createEnemy(spawnTypes[Math.floor(Math.random()*spawnTypes.length)]);
       if (c.kills >= (c._nextCycleAt || 15)) { c._nextCycleAt = (c._nextCycleAt || 15) + 15; c.cycle++; addComms('AI Director', 'Cycle ' + c.cycle + ' — hostiles intensifying'); }
@@ -11305,11 +11963,29 @@ function gameLoop() {
               c._streakBannerTimeout = setTimeout(() => _streakBanner.classList.remove('active'), 2500);
             }
             if (c.streak > c.bestStreak) c.bestStreak = c.streak;
-            const pts = Math.floor(e.points * c.streakMultiplier);
+            const _temporalMult = c._temporalZone ? 1.25 : 1;
+            const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult);
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
             state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
+            // ── Random combat event every ~8 kills ──
+            if (c.kills > 2 && c.kills % 8 === 0) {
+              const _events = [
+                { msg: 'Bounty Board: Kill bonus active! +50% credits for 20s.', effect: () => { c._bonusMult = 1.5; c._bonusTimer = 20000; addComms('Bounty Board', 'BOUNTY ACTIVE — +50% credits for 20s!'); } },
+                { msg: 'Supply drop inbound!', effect: () => { state.player.ammo = Math.min(state.player.maxAmmo || 30, (state.player.ammo || 0) + 6); state.player.shield = Math.min(state.player.maxShield || 100, (state.player.shield || 0) + 15); addComms('Supply', 'Emergency supply crate: +6 ammo, +15 shield.'); } },
+                { msg: 'Salvage detected!', effect: () => { const ec = 50 + Math.floor(Math.random() * 150); state.player.credits += ec; addComms('Salvage', `Wreckage salvaged: +${ec} EC.`); } },
+                { msg: 'Nanobot swarm deployed!', effect: () => { state.player.hull = Math.min(state.player.maxHull || 100, (state.player.hull || 0) + 12); addComms('Medical', 'Nanobot repair: +12 hull integrity.'); } },
+                { msg: 'Fuel recovery!', effect: () => { state.player.fuel = Math.min(state.player.maxFuel || 100, (state.player.fuel || 0) + 20); addComms('Engineering', 'Fuel siphoned from wreckage: +20 fuel.'); } },
+                { msg: 'Intel burst!', effect: () => { gainSkillXP('navigation', 0.15); gainSkillXP('gunnery', 0.05); addComms('Intel', 'Combat data analyzed. Navigation +XP, Gunnery +XP.'); } },
+              ];
+              const ev = _events[Math.floor(Math.random() * _events.length)];
+              ev.effect();
+            }
+            // Apply bonus multiplier if active
+            if (c._bonusTimer && c._bonusTimer > 0) {
+              state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4 * ((c._bonusMult || 1) - 1));
+            }
             // Kill confirmation feedback
             c.killConfirmTimer = 400;
             AudioSFX.play('kill_confirm');
@@ -11347,6 +12023,21 @@ function gameLoop() {
             }
             // Report kill to server for economy credit + quest progress
             if (state.socket) state.socket.emit('combat:kill', { enemyType: e.type, points: e.points });
+            // ── Encounter hooks — distress rescue + patrol rep bonus ──
+            if (state._activeEncounter) {
+              if (state._activeEncounter.type === 'distress') {
+                state._activeEncounter.killsGot = (state._activeEncounter.killsGot || 0) + 1;
+                if (state._activeEncounter.killsGot >= state._activeEncounter.killsNeeded) {
+                  const _rescueReward = 200 + Math.floor(Math.random() * 100);
+                  state.player.credits += _rescueReward;
+                  addComms('Emergency', `Freighter rescued! +${_rescueReward} EC bounty.`);
+                  AudioSFX.play('quest_complete');
+                  state._activeEncounter = null;
+                }
+              } else if (state._activeEncounter.repBonus && sys && sys.controllingFaction) {
+                state.factionRep[sys.controllingFaction] = Math.min(1000, (state.factionRep[sys.controllingFaction] || 0) + 3);
+              }
+            }
             // Offline quest progress tracking
             state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
               q.objectives.forEach(o => {
@@ -11364,8 +12055,9 @@ function gameLoop() {
             AudioSFX.play('explode');
             spawnExplosion(e.group.position, e.cfg.scale);
             if (typeof spawnExplosionAt === 'function') spawnExplosionAt(e.group.position, 0xff6622, 12);
-            // Loot drop chance (hacking skill improves drop rate)
-            const lootChance = Math.min(0.7, 0.4 * getSkillBonus('hacking'));
+            // Loot drop chance (hacking skill improves drop rate; pirate zone +20%)
+            const _pirateBonus = c._pirateZone ? 0.2 : 0;
+            const lootChance = Math.min(0.85, 0.4 * getSkillBonus('hacking') + _pirateBonus);
             if (e.isBoss || Math.random() < lootChance) {
               gainSkillXP('hacking', 0.1);
               const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel';
@@ -11387,7 +12079,7 @@ function gameLoop() {
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
       // First life stays non-aggressive until the player engages.
-      const autoAggro = !isFirstLife && state.gameTime > 15000;
+      const autoAggro = !isFirstLife && !isProtectedSpace() && state.gameTime > 15000;
       if (c.playerHasAttacked || autoAggro) {
         const distToPlayer = e.group.position.distanceTo(ship.position);
         // Type-specific AI movement patterns
@@ -11466,7 +12158,7 @@ function gameLoop() {
       const MAX_BOLTS = 30;
       // Boss accuracy improves at higher cycles
       const _inaccuracy = e.isBoss ? Math.max(0.04, 0.15 - c.cycle * 0.01) : 0.15;
-      if ((c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
+      if (!isProtectedSpace() && (c.playerHasAttacked || autoAggro) && c.enemyBolts.length < MAX_BOLTS && state.gameTime - e.lastShot > fireInterval && e.group.position.distanceTo(ship.position) < SPAWN_RADIUS) {
         e.lastShot = state.gameTime;
         _tmpV3b.copy(ship.position).sub(e.group.position).normalize();
         // Add slight inaccuracy
