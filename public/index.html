@@ -1919,6 +1919,7 @@ const state = {
     shieldBroken: false,    // shield break warning state
     shieldBreakTimer: 0,    // shield break visual timer
     repairFlashTimer: 0,    // green flash on hull/shield repair pickup
+    subsystemDamage: { engine: 0, weapons: 0, sensors: 0 }, // 0=ok, >0 = malfunction timer (ms remaining)
     fireRecoilKick: 0,      // camera recoil on fire
     lootDrops: [],
     spaceDust: [],
@@ -2225,6 +2226,7 @@ function fireActiveGunRoomWeapon() {
   if (activeWep.key === 'railgun_turret') {
     // Use railgun projectile
     if (c.ammo <= 0 || !c.weaponReady) return;
+    if (c.subsystemDamage.weapons > 0) { addComms('DAMAGE', 'Weapons jammed! Repairs in progress...'); return; }
     c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
     c.playerHasAttacked = true;
     AudioSFX.play('charge');
@@ -2766,6 +2768,7 @@ const _laserDir = new THREE.Vector3();
 const _laserOrigin = new THREE.Vector3();
 function fireLaser() {
   if (c.dead || c.heat >= 0.95) return; // dead or overheated
+  if (c.subsystemDamage.weapons > 0) return;
   const now = performance.now();
   const _laserRate = c._traderFireBoost ? LASER_FIRE_RATE * 0.5 : LASER_FIRE_RATE;
   if (now - lastLaserShot < _laserRate) return;
@@ -5840,9 +5843,9 @@ const LOOT_TYPES = [
 // Drop loot when enemy dies
 function dropLootFromEnemy(pos) {
   if (Math.random() < 0.4) { // 40% drop chance
-    const types = ['credits', 'ammo', 'health', 'fuel'];
+    const types = ['credits', 'ammo', 'health', 'fuel', 'shield', 'scoreboost'];
     const type = types[Math.floor(Math.random() * types.length)];
-    const vals = { credits: 50, ammo: 25, health: 25, fuel: 25 };
+    const vals = { credits: 50, ammo: 25, health: 25, fuel: 25, shield: 25, scoreboost: 25 };
     spawnLootDrop(pos.clone().add(new THREE.Vector3((Math.random()-0.5)*5, 2, (Math.random()-0.5)*5)), type, vals[type] || 50);
   }
 }
@@ -6271,7 +6274,7 @@ function spawnSystemStar() {
 // spawnSpaceDust implementation restored above
 
 // Pooled loot materials (one set per type — reused across drops)
-const _lootColors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844 };
+const _lootColors = { credits: 0xffd700, ammo: 0x44aaff, health: 0x44ff44, fuel: 0xff8844, shield: 0x44ccff, scoreboost: 0xcc44ff };
 const _lootMatPool = {};
 const _lootRingMatPool = {};
 const _lootGlowMatPool = {};
@@ -6496,6 +6499,7 @@ function _loadNextCombatBatch() {
 
 function fireRailgun() {
   if (c.dead || !c.weaponReady || c.ammo <= 0) return;
+  if (c.subsystemDamage.weapons > 0) return;
   c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
   c.playerHasAttacked = true;
   AudioSFX.play('charge');
@@ -6919,6 +6923,28 @@ function renderHUD(dtMs) {
     }
   }
 
+  // Subsystem damage warnings (below hull bar)
+  {
+    const subY = sly + 54;
+    const subs = [['ENG', c.subsystemDamage.engine], ['WPN', c.subsystemDamage.weapons], ['SEN', c.subsystemDamage.sensors]];
+    subs.forEach(([label, timer], idx) => {
+      const sx2 = slx + idx * 62;
+      if (timer > 0) {
+        hudCtx.font = 'bold 9px "Segoe UI", system-ui, sans-serif';
+        hudCtx.fillStyle = '#ff4444'; hudCtx.globalAlpha = 0.5 + 0.5 * Math.sin(state.gameTime * 0.012);
+        hudCtx.fillText('\u26a0' + label, sx2, subY);
+        hudCtx.globalAlpha = 0.3; hudCtx.fillStyle = '#ff2222';
+        hudCtx.fillRect(sx2, subY + 2, 50 * (timer / 7000), 3);
+        hudCtx.globalAlpha = 1;
+      } else {
+        hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
+        hudCtx.fillStyle = '#334455'; hudCtx.globalAlpha = 0.4;
+        hudCtx.fillText(label, sx2 + 2, subY);
+        hudCtx.globalAlpha = 1;
+      }
+    });
+  }
+
   // Score (top-right)
   const srx = W-200, sry = 30;
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('SCORE', srx, sry);
@@ -7163,6 +7189,24 @@ function renderHUD(dtMs) {
     });
   }
 hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
+  // Sensor damage — noise overlay on radar
+  if (c.subsystemDamage.sensors > 0) {
+    hudCtx.save();
+    hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, mapR, 0, Math.PI*2); hudCtx.clip();
+    hudCtx.globalAlpha = 0.35;
+    for (let ni = 0; ni < 40; ni++) {
+      const nx = mapCx + (Math.random() - 0.5) * mapR * 2;
+      const ny = mapCy + (Math.random() - 0.5) * mapR * 2;
+      hudCtx.fillStyle = Math.random() > 0.5 ? '#44aaff' : '#002244';
+      hudCtx.fillRect(nx, ny, Math.random() * 8 + 2, 1);
+    }
+    hudCtx.globalAlpha = 0.7; hudCtx.font = 'bold 10px "Segoe UI"';
+    hudCtx.fillStyle = '#ff4444'; hudCtx.textAlign = 'center';
+    const senBlink = Math.sin(performance.now() * 0.008) > 0;
+    if (senBlink) hudCtx.fillText('SENSOR FAULT', mapCx, mapCy);
+    hudCtx.textAlign = 'left';
+    hudCtx.restore();
+  }
 
   // ── Vignette overlay (depth-of-field hint) ──
   {
@@ -7698,6 +7742,22 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
         hudCtx.fillStyle = '#ff2222'; hudCtx.textAlign = 'center';
         hudCtx.globalAlpha = 0.6 + 0.4 * Math.sin(state.gameTime * 0.015);
         hudCtx.fillText('OVERHEAT', cx, cy + crSize + 32);
+        hudCtx.textAlign = 'left';
+      }
+      // WEAPONS JAMMED warning
+      if (c.subsystemDamage.weapons > 0) {
+        hudCtx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
+        hudCtx.fillStyle = '#ff6600'; hudCtx.textAlign = 'center';
+        hudCtx.globalAlpha = 0.5 + 0.5 * Math.sin(performance.now() * 0.01);
+        hudCtx.fillText('\u26a0 WEAPONS JAMMED', cx, cy + crSize + 46);
+        hudCtx.textAlign = 'left';
+      }
+      // ENGINE DAMAGE warning
+      if (c.subsystemDamage.engine > 0) {
+        hudCtx.font = '9px "Segoe UI", system-ui, sans-serif';
+        hudCtx.fillStyle = '#ff8844'; hudCtx.textAlign = 'center';
+        hudCtx.globalAlpha = 0.6;
+        hudCtx.fillText('ENG DMG — SPD REDUCED', cx, cy + crSize + 58);
         hudCtx.textAlign = 'left';
       }
     }
@@ -11680,7 +11740,8 @@ function gameLoop() {
     const speedMult = (fl.afterburner ? fl.afterburnerMult : 1) * enginesMult;
     // Fuel penalty: when empty, max speed reduced by 70% (emergency power only)
     const fuelPenalty = state.ship.fuel <= 0 ? 0.3 : 1;
-    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult() * fuelPenalty;
+    const engineDmgPen = c.subsystemDamage.engine > 0 ? 0.4 : 1;
+    const maxSpd = fl.maxSpeed * speedMult * state.upgrades.engineSpeed * getPlayerSpeedMult() * fuelPenalty * engineDmgPen;
     // Apply engines power to acceleration
     fl._powerAccelMult = enginesMult;
     // Thrust direction = camera look direction (fly where you're looking)
@@ -11783,6 +11844,10 @@ function gameLoop() {
 
     // Combat feedback timers
     if (c.hitMarkerTimer > 0) c.hitMarkerTimer = Math.max(0, c.hitMarkerTimer - dtMs);
+    // Subsystem damage timers + effects
+    if (c.subsystemDamage.engine > 0) { c.subsystemDamage.engine -= dtMs; if (c.subsystemDamage.engine <= 0) { c.subsystemDamage.engine = 0; addComms('Systems', 'Engine systems restored.'); } }
+    if (c.subsystemDamage.weapons > 0) { c.subsystemDamage.weapons -= dtMs; if (c.subsystemDamage.weapons <= 0) { c.subsystemDamage.weapons = 0; addComms('Systems', 'Weapon systems back online.'); } }
+    if (c.subsystemDamage.sensors > 0) { c.subsystemDamage.sensors -= dtMs; if (c.subsystemDamage.sensors <= 0) { c.subsystemDamage.sensors = 0; addComms('Systems', 'Sensor array recalibrated.'); } }
     // Achievement checks (every 60 frames to reduce overhead)
     if (state._frameCount % 60 === 0 && typeof checkAchievements === 'function') checkAchievements();
 
@@ -12322,7 +12387,7 @@ function gameLoop() {
             const lootChance = Math.min(0.85, 0.4 * getSkillBonus('hacking') + _pirateBonus);
             if (e.isBoss || Math.random() < lootChance) {
               gainSkillXP('hacking', 0.1);
-              const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.35 ? 'credits' : r < 0.55 ? 'ammo' : r < 0.75 ? 'health' : 'fuel';
+              const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.30 ? 'credits' : r < 0.45 ? 'ammo' : r < 0.60 ? 'health' : r < 0.75 ? 'fuel' : r < 0.88 ? 'shield' : 'scoreboost';
               const _lootCreditVal = e.isBoss ? Math.ceil(e.points * 0.6) : Math.ceil((e.points || 50) * 0.4);
               spawnLootDrop(e.group.position, lootType, _lootCreditVal);
             }
@@ -12476,6 +12541,16 @@ function gameLoop() {
           } else { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
           if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; AudioSFX.play('shield_break'); }
           c.damageFlash = 300;
+          // Subsystem malfunction chance when hull < 40%
+          if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.4 && Math.random() < 0.15) {
+            const subs = ['engine', 'weapons', 'sensors'];
+            const damaged = subs[Math.floor(Math.random() * 3)];
+            if (c.subsystemDamage[damaged] <= 0) {
+              c.subsystemDamage[damaged] = 3000 + Math.random() * 4000;
+              const labels = { engine: 'Engine stuttering!', weapons: 'Weapon systems jammed!', sensors: 'Sensor array disrupted!' };
+              addComms('DAMAGE', '\u26a0 ' + labels[damaged]);
+            }
+          }
         }
         if (b._poolRef) returnBoltToPool(b._poolRef); else scene.remove(b.group);
         c.enemyBolts.splice(i, 1);
@@ -12581,6 +12656,8 @@ function gameLoop() {
         else if (l.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); c.dmgNumbers.push({ text: '+6 AMMO', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44aaff' }); }
         else if (l.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); c.dmgNumbers.push({ text: '+15 HULL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ff44' }); c.repairFlashTimer = 400; }
         else if (l.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel, state.ship.fuel + 20); c.dmgNumbers.push({ text: '+20 FUEL', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#ff8844' }); }
+        else if (l.type === 'shield') { state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + 20); c.dmgNumbers.push({ text: '+20 SHIELD', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#44ccff' }); }
+        else if (l.type === 'scoreboost') { const bonus = 100 + Math.floor(c.kills * 5); c.score += bonus; c.dmgNumbers.push({ text: '+' + bonus + ' SCORE', px: l.group.position.x, py: l.group.position.y, pz: l.group.position.z, age: 0, color: '#cc44ff' }); }
         AudioSFX.play('loot_' + l.type);
         // Quest collect objectives
         state.quests.forEach(q => {
