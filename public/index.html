@@ -8760,7 +8760,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
     else if (action === 'exit') { exitGunnerMode(); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } addComms('Station', 'Docking clearance granted. Initiating approach...'); AudioSFX.play('dock'); const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => { addComms('Station', 'Docking clamps engaged. Welcome aboard.'); /* Docking bonus — free hull repair + credit bonus */ const _dockBonus = 10 + c.cycle * 5; c.credits += _dockBonus; const _repairAmt = Math.min(5, c.maxHull - c.hull); c.hull = Math.min(c.maxHull, c.hull + _repairAmt); c.fuel = Math.min(c.maxFuel, c.fuel + 10); addComms('Station', '\uD83D\uDD27 Hull patched (+' + _repairAmt + '), fuel topped (+10), docking bonus +' + _dockBonus + ' EC'); }, 1200); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } addComms('Station', 'Docking clearance granted. Initiating approach...'); AudioSFX.play('dock'); const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => { addComms('Station', 'Docking clamps engaged. Welcome aboard.'); /* Docking bonus — free hull repair + credit bonus */ const _dockBonus = 10 + c.cycle * 5; c.credits += _dockBonus; const _repairAmt = Math.min(5, c.maxHull - c.hull); c.hull = Math.min(c.maxHull, c.hull + _repairAmt); c.fuel = Math.min(c.maxFuel, c.fuel + 10); addComms('Station', '\uD83D\uDD27 Hull patched (+' + _repairAmt + '), fuel topped (+10), docking bonus +' + _dockBonus + ' EC'); /* Shield overcharge — docking with full shield grants +30 overshield for 30s */ if (state.ship.shield >= state.ship.maxShield * 0.95) { c._overshieldBonus = 30; c._overshieldTimer = 30000; state.ship.shield += 30; addComms('Station', '\u26A1 Shield overcharge! +30 bonus shield (30s)'); } }, 1200); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -13108,6 +13108,20 @@ function gameLoop() {
               c._revengeTarget = null;
             }
             state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4);
+            // Kill milestone rewards — special bonuses at key kill counts
+            if (!c._milestonesClaimed) c._milestonesClaimed = {};
+            const _killRewards = {
+              25: { label: '25 KILLS', fn: () => { c.ammo = c.maxAmmo; addComms('Supply', '\uD83C\uDFAF 25 Kills! Full ammo reload!'); } },
+              50: { label: '50 KILLS', fn: () => { state.ship.hull = state.ship.maxHull; addComms('Medical', '\uD83C\uDFAF 50 Kills! Full hull repair!'); } },
+              100: { label: '100 KILLS', fn: () => { state.player.credits += 500; addComms('Command', '\uD83C\uDFAF 100 Kills! +500 credits bonus!'); } },
+              200: { label: '200 KILLS', fn: () => { c.deathImmunityUntil = performance.now() + 5000; addComms('Command', '\uD83C\uDFAF 200 Kills! 5s invincibility!'); } },
+            };
+            if (_killRewards[c.kills] && !c._milestonesClaimed[c.kills]) {
+              c._milestonesClaimed[c.kills] = true;
+              _killRewards[c.kills].fn();
+              c._killCamTimer = 400;
+              addCombatLog('MILESTONE — ' + _killRewards[c.kills].label, '#ffdd00');
+            }
             // ── Random combat event every ~8 kills ──
             if (c.kills > 2 && c.kills % 8 === 0) {
               const _events = [
@@ -13287,20 +13301,26 @@ function gameLoop() {
             }
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
             // Ricochet — railgun kills bounce to nearest enemy within 30m
-            if (!p.isLaser && !p._ricocheted) {
+            // Ricochet chain — railgun kills bounce up to 3 enemies
+            if (!p.isLaser && (!p._ricochetCount || p._ricochetCount < 3)) {
               let _ricTarget = null, _ricDist = 30;
               const _deathPos = p.group.position.clone();
+              const _ricCount = (p._ricochetCount || 0) + 1;
+              const _ricMult = [0.5, 0.3, 0.15][_ricCount - 1] || 0.15;
               c.enemies.forEach(_re => {
                 const rd = _re.group.position.distanceTo(_deathPos);
                 if (rd < _ricDist) { _ricDist = rd; _ricTarget = _re; }
               });
               if (_ricTarget) {
-                const _ricDmg = genomeDmg * 0.5; // 50% damage ricochet
+                const _ricDmg = genomeDmg * _ricMult;
                 _ricTarget.hp -= _ricDmg;
                 _ricTarget.hitFlash = 150;
                 spawnImpactSparks(_ricTarget.group.position, 0xffaa44);
-                c.dmgNumbers.push({ text: 'RICOCHET -' + _ricDmg.toFixed(0), px: _ricTarget.group.position.x, py: _ricTarget.group.position.y + 2, pz: _ricTarget.group.position.z, age: 0, color: '#ffaa44' });
-                addCombatLog('Ricochet hit ' + (_ricTarget.type || 'hostile') + '!', '#ffaa44');
+                c.dmgNumbers.push({ text: 'RICOCHET x' + _ricCount + ' -' + _ricDmg.toFixed(0), px: _ricTarget.group.position.x, py: _ricTarget.group.position.y + 2, pz: _ricTarget.group.position.z, age: 0, color: '#ffaa44' });
+                addCombatLog('Ricochet x' + _ricCount + ' hit ' + (_ricTarget.type || 'hostile') + '!', '#ffaa44');
+                // Mark projectile for continued chaining
+                p._ricochetCount = _ricCount;
+                p._ricocheted = false; // allow further chains
               }
             }
             // Salvage crate drop — 12% chance, contains random bonus
@@ -13913,6 +13933,16 @@ function gameLoop() {
     if (!c._lastHullDmgTime) c._lastHullDmgTime = 0;
     if (state.gameTime - c._lastHullDmgTime > 10000 && state.ship.hull < state.ship.maxHull && state.ship.hull > 0) {
       state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 0.5 * dt);
+    }
+    // Overshield timer decay
+    if (c._overshieldTimer > 0) {
+      c._overshieldTimer -= dtMs;
+      if (c._overshieldTimer <= 0) {
+        // Remove bonus shield
+        state.ship.shield = Math.min(state.ship.shield, state.ship.maxShield);
+        c._overshieldBonus = 0;
+        addComms('EDEN AI', 'Shield overcharge expired.');
+      }
     }
     // Salvage crate collection + decay
     if (c._salvageCrates && c._salvageCrates.length > 0) {
