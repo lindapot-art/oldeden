@@ -12660,7 +12660,8 @@ function gameLoop() {
     }
 
     // Kill streak decay — active combat (firing) slows decay
-    if (c.streak > 0) {
+    // Score decay immunity — docked at station freezes streak timer
+    if (c.streak > 0 && !isProtectedSpace()) {
       const _firingPause = (mouseHeld || c.charging) ? 0.3 : 1; // 70% slower decay while firing
       c.streakTimer -= dtMs * _firingPause;
       if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; c._scoreMultiplier = 1; c._streakDR = 0; }
@@ -13337,6 +13338,20 @@ function gameLoop() {
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
+            // Kill echo — every 10th kill creates ghost explosion damaging nearby enemies
+            if (c.kills % 10 === 0) {
+              let _echoHits = 0;
+              c.enemies.forEach(_ee => {
+                if (_ee === e) return;
+                if (_ee.group.position.distanceTo(e.group.position) < 30) {
+                  _ee.hp -= 5; _ee.hitFlash = 150; spawnImpactSparks(_ee.group.position, 0xaa44ff); _echoHits++;
+                }
+              });
+              if (_echoHits > 0) {
+                c.dmgNumbers.push({ text: 'KILL ECHO x' + _echoHits, px: e.group.position.x, py: e.group.position.y + 6, pz: e.group.position.z, age: 0, color: '#aa44ff' });
+                addCombatLog('Kill Echo — ' + _echoHits + ' enemies hit', '#aa44ff');
+              }
+            }
             // Revenge kill — 3x points if killing the type that killed you last life
             if (c._revengeTarget && e.type === c._revengeTarget) {
               c.score += pts * 2; // total 3x (original + 2x bonus)
@@ -13675,6 +13690,12 @@ function gameLoop() {
           addCombatLog('Enemy escaped the sector', '#888888');
         }
         continue;
+      }
+      // Combat tether — enemies beyond 200m get pulled back toward player
+      const _tetherDist = e.group.position.distanceTo(ship.position);
+      if (_tetherDist > 200 && !e._retreating) {
+        _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
+        e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 2);
       }
       // Enemies only chase if player has attacked (passive until provoked)
       // First life stays non-aggressive until the player engages.
