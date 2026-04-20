@@ -12443,9 +12443,23 @@ document.addEventListener('keydown', (e) => {
       addComms('System', 'No stargate in range. Fly closer to the portal.');
     }
   }
-  // C = collect artifact
+  // C = collect artifact / heat sink burst
   if (e.key === 'c' || e.key === 'C') {
     if (state.inAltUniverse) collectArtifact();
+    else if (c.active && !c.dead && c.heat > 0.1) {
+      // Heat sink burst — dump all heat instantly (30s CD, costs 10 shield)
+      if (!c._heatSinkCD || state.gameTime > c._heatSinkCD) {
+        c._heatSinkCD = state.gameTime + 30000;
+        const _heatDumped = c.heat;
+        c.heat = 0;
+        state.ship.shield = Math.max(0, state.ship.shield - 10);
+        addCombatLog('HEAT SINK BURST — dumped ' + Math.floor(_heatDumped * 100) + '% heat (−10 shield)', '#44ddff');
+        c.dmgNumbers.push({ text: '\u2744 HEAT DUMP!', px: ship.position.x, py: ship.position.y + 4, pz: ship.position.z, age: 0, color: '#44ddff' });
+      } else {
+        const _cdLeft = Math.ceil((c._heatSinkCD - state.gameTime) / 1000);
+        addCombatLog('Heat sink on cooldown (' + _cdLeft + 's)', '#888888');
+      }
+    }
   }
   // F = warp (exit gunner first so 3D scene is cleaned)
   if (e.key === 'f' || e.key === 'F') {
@@ -13727,9 +13741,9 @@ function gameLoop() {
               addCombatLog('Bounty collected — +' + bountyReward + ' EC bonus (' + _bhRank + ')', '#ffcc00');
               AudioSFX.play('quest_complete');
             }
-            // Elite kill bonus — 2x credits + combat log
+            // Elite kill bonus — bounty hunter: 3x credits + combat log
             if (e._isElite) {
-              const _eliteBonus = Math.floor(e.points * _creditStreakMult * 0.3);
+              const _eliteBonus = Math.floor(e.points * _creditStreakMult * 0.5);
               state.player.credits += _eliteBonus;
               addComms('EDEN AI', '\uD83D\uDD25 ELITE ' + (e.type || 'hostile').toUpperCase() + ' DESTROYED! +' + _eliteBonus + ' EC bonus');
               addCombatLog('Elite eliminated — bonus +' + _eliteBonus + ' EC', '#ff4422');
@@ -14851,7 +14865,7 @@ function gameLoop() {
     updateAging(dtMs);
     // Fuel consumption while flying (afterburner uses 3× fuel)
     if (fl.speed > 5) {
-      const _fuelEfficiency = c.kills >= 50 ? 0.7 : 1; // 30% cheaper afterburner after 50 kills
+      const _fuelEfficiency = c.kills >= 100 ? 0.5 : c.kills >= 50 ? 0.7 : 1; // Fuel efficiency tiers: 30% at 50 kills, 50% at 100
       const fuelBurn = dt * 0.08 * (fl.afterburner ? 3 * _fuelEfficiency : 1);
       state.ship.fuel = Math.max(0, state.ship.fuel - fuelBurn);
       if (state.ship.fuel <= 0) { fl.afterburner = false; }
