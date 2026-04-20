@@ -1732,6 +1732,7 @@ const AudioSFX = {
             case 'warp_depart': osc.type='sawtooth'; osc.frequency.setValueAtTime(80,now); osc.frequency.exponentialRampToValueAtTime(2000,now+0.5); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.7); osc.start(now); osc.stop(now+0.7); break;
 case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc.frequency.exponentialRampToValueAtTime(200,now+0.6); gain.gain.setValueAtTime(0.1*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
       case 'laser_fire': osc.type='sawtooth'; osc.frequency.setValueAtTime(1200,now); osc.frequency.exponentialRampToValueAtTime(3000,now+0.06); gain.gain.setValueAtTime(0.07*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.08); osc.start(now); osc.stop(now+0.08); break;
+      case 'scanPulse': osc.type='sine'; osc.frequency.setValueAtTime(600,now); osc.frequency.linearRampToValueAtTime(1800,now+0.3); osc.frequency.exponentialRampToValueAtTime(400,now+0.8); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.linearRampToValueAtTime(0.12*vol,now+0.3); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
       case 'reload': { osc.disconnect(); const dur3=0.15; const buf3=ctx.createBuffer(1,ctx.sampleRate*dur3,ctx.sampleRate); const d3=buf3.getChannelData(0); for(let i=0;i<d3.length;i++) d3[i]=(Math.random()*2-1)*(1-i/d3.length)*0.5; const src3=ctx.createBufferSource(); src3.buffer=buf3; const lp3=ctx.createBiquadFilter(); lp3.type='lowpass'; lp3.frequency.value=400; src3.connect(lp3); lp3.connect(gain); gain.gain.setValueAtTime(0.12*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur3); src3.start(now); return; }
     }
   },
@@ -6268,6 +6269,7 @@ function enterGunnerMode() {
   if (state.currentSkin) setTimeout(() => applySkin(state.currentSkin), 100);
   // Initialize new systems
   createStargate();
+  spawnNebulaClouds();
   spawnSystemNPCs();
   spawnStationModel();
   // Spawn planets + loot for current system
@@ -8912,6 +8914,13 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('GRAVITY WELL — 3s pull radius 40m', '#aa44ff');
     AudioSFX.play('explosion');
   }
+  // Scanner ping: Tab key
+  if (e.key === 'Tab' && c.active && !c.dead && (!c._scannerPingT || c._scannerPingT <= 0)) {
+    e.preventDefault();
+    c._scannerPingT = 3000;
+    AudioSFX.play('scanPulse');
+    addComms('Scanner', 'Pulse scan initiated...');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -10934,12 +10943,49 @@ async function createStargate() {
   stargateGroup.add(new THREE.Points(particleGeo, particleMat));
 
   // Position the stargate near the player ship so it's always visible
-  stargateGroup.position.set(ship.position.x + 80, ship.position.y + 20, ship.position.z - 150);
+  stargateGroup.position.set(ship.position.x + 35, ship.position.y + 5, ship.position.z - 55);
   stargateGroup.rotation.y = Math.PI * 0.3;
   scene.add(stargateGroup);
 
   // Spawn a few ships near the stargate
   await spawnShipsNearStargate();
+  await spawnWelcomeFleet();
+}
+
+// ── Welcome Fleet — parade formation of diverse GLB ships ──
+async function spawnWelcomeFleet() {
+  if (!stargateGroup) return;
+  const anchor = stargateGroup.position.clone();
+  const PARADE_SHIPS = ['freighter','cargo_cruiser','escort_ship','shuttle','cargo_shuttle',
+    'shuttle_b','container_shuttle','home_module','cargo_small','patrol_alpha','patrol_beta'];
+  const count = 5 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) {
+    const key = PARADE_SHIPS[Math.floor(Math.random() * PARADE_SHIPS.length)];
+    try {
+      const model = await loadGLBModel(key);
+      if (!stargateGroup) break;
+      const inst = model.clone();
+      const asset = GLB_ASSETS[key];
+      inst.scale.setScalar((asset ? asset.scale : 0.6) * 1.8);
+      const side = (i % 2 === 0) ? 1 : -1;
+      const row = Math.floor(i / 2);
+      inst.position.set(
+        anchor.x + side * (15 + row * 12),
+        anchor.y + (Math.random()-0.5) * 6,
+        anchor.z - 40 - row * 18
+      );
+      inst.rotation.y = Math.PI * 0.8 + (Math.random()-0.5) * 0.3;
+      const trailGeo = new THREE.CylinderGeometry(0.1, 0.8, 4, 6);
+      const trailMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+      trailMat._pooled = true;
+      const trail = new THREE.Mesh(trailGeo, trailMat);
+      trail.position.set(0, 0, 2);
+      trail.rotation.x = Math.PI / 2;
+      inst.add(trail);
+      scene.add(inst);
+      stargateShips.push({ group: inst, type: key });
+    } catch(e) { /* skip on fail */ }
+  }
 }
 
 // Spawns 3-4 ships near the stargate and stores them in state.npcShips
@@ -10998,6 +11044,70 @@ function animateStargate(time) {
     const hue = (time * 0.0002) % 1;
     stargatePortalMat.color.setHSL(0.6 + hue * 0.1, 0.8, 0.4);
   }
+  // ── Pulsing beacon lights on chevrons ──
+  stargateGroup.children.forEach(child => {
+    if (child.isMesh && child.geometry?.type === 'BoxGeometry') {
+      const pulse = 0.5 + Math.sin(time * 0.005 + child.position.x * 2) * 0.5;
+      if (child.material && child.material.opacity !== undefined) child.material.opacity = 0.4 + pulse * 0.6;
+    }
+  });
+  // ── Energy crackle — random lightning arcs around ring (HUD overlay) ──
+  if (Math.random() < 0.03 && typeof hudCtx !== 'undefined' && hudCtx) {
+    const sgScreen = _tmpV3a.copy(stargateGroup.position).project(camera);
+    if (sgScreen.z > 0 && sgScreen.z < 1) {
+      const sx = (sgScreen.x * 0.5 + 0.5) * hudCanvas.width;
+      const sy = (-sgScreen.y * 0.5 + 0.5) * hudCanvas.height;
+      hudCtx.save();
+      hudCtx.strokeStyle = 'rgba(100,180,255,0.5)';
+      hudCtx.lineWidth = 1;
+      hudCtx.beginPath();
+      const arcLen = 4;
+      let ax = sx + (Math.random()-0.5)*40, ay = sy + (Math.random()-0.5)*40;
+      hudCtx.moveTo(ax, ay);
+      for (let seg = 0; seg < arcLen; seg++) {
+        ax += (Math.random()-0.5)*25;
+        ay += (Math.random()-0.5)*25;
+        hudCtx.lineTo(ax, ay);
+      }
+      hudCtx.stroke();
+      hudCtx.restore();
+    }
+  }
+}
+
+// ── Nebula backdrop clouds — soft coloured gas in the far background ──
+let _nebulaClouds = [];
+function spawnNebulaClouds() {
+  if (_nebulaClouds.length > 0) return;
+  const nebulaColors = [0x332266, 0x223355, 0x442244, 0x224433, 0x553322, 0x225544];
+  const cloudGeo = new THREE.SphereGeometry(1, 8, 8);
+  cloudGeo._pooled = true;
+  for (let i = 0; i < 12; i++) {
+    const mat = new THREE.MeshBasicMaterial({
+      color: nebulaColors[i % nebulaColors.length],
+      transparent: true, opacity: 0.04 + Math.random() * 0.03,
+      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const cloud = new THREE.Mesh(cloudGeo, mat);
+    const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.5;
+    const dist = 600 + Math.random() * 400;
+    cloud.position.set(
+      ship.position.x + Math.cos(angle) * dist,
+      (Math.random()-0.5) * 200,
+      ship.position.z + Math.sin(angle) * dist
+    );
+    const cloudScale = 80 + Math.random() * 120;
+    cloud.scale.set(cloudScale, cloudScale * 0.4, cloudScale);
+    cloud.userData._driftAngle = angle;
+    scene.add(cloud);
+    _nebulaClouds.push(cloud);
+  }
+}
+function animateNebulaClouds(dt) {
+  _nebulaClouds.forEach(cl => {
+    cl.rotation.y += 0.00005 * dt;
+    cl.material.opacity = 0.03 + Math.sin(state.gameTime * 0.0003 + cl.userData._driftAngle) * 0.015;
+  });
 }
 
 // ================================================================
@@ -11390,9 +11500,9 @@ async function spawnStationModel() {
     const inst = model.clone();
     // Place station near stargate so the player sees a proper hub
     if (stargateGroup?.position) {
-      inst.position.set(stargateGroup.position.x - 40, stargateGroup.position.y - 10, stargateGroup.position.z + 50);
+      inst.position.set(stargateGroup.position.x - 25, stargateGroup.position.y - 5, stargateGroup.position.z + 30);
     } else {
-      inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
+      inst.position.set(ship.position.x - 30, ship.position.y + 5, ship.position.z - 40);
     }
     scene.add(inst);
     stationModels.push(inst);
@@ -14929,7 +15039,61 @@ function gameLoop() {
     if (fl.speed > 10) gainSkillXP('piloting', 0.002 * dt);
     if (state.ship.shield < state.ship.maxShield) gainSkillXP('engineering', 0.003 * dt);
     if (stargateGroup) animateStargate(state.gameTime);
+    animateNebulaClouds(dt);
+    // ── Scanner Ping animation ──
+    if (c._scannerPingT > 0) {
+      c._scannerPingT -= dtMs;
+      const progress = 1 - (c._scannerPingT / 3000);
+      const radius = progress * 300;
+      if (hudCtx) {
+        const cx = hudCanvas.width / 2, cy = hudCanvas.height / 2;
+        const screenR = Math.min(hudCanvas.width, hudCanvas.height) * 0.5 * progress;
+        hudCtx.save();
+        hudCtx.strokeStyle = "rgba(0,200,255," + (0.6 * (1-progress)).toFixed(2) + ")";
+        hudCtx.lineWidth = 2;
+        hudCtx.beginPath();
+        hudCtx.arc(cx, cy, screenR, 0, Math.PI*2);
+        hudCtx.stroke();
+        hudCtx.strokeStyle = "rgba(0,200,255," + (0.3 * (1-progress)).toFixed(2) + ")";
+        hudCtx.beginPath();
+        hudCtx.arc(cx, cy, screenR * 0.7, 0, Math.PI*2);
+        hudCtx.stroke();
+        hudCtx.restore();
+      }
+      const pulseFront = radius;
+      const pulseBack = Math.max(0, radius - 40);
+      c.enemies.forEach(en => {
+        const d = en.group.position.distanceTo(ship.position);
+        if (d > pulseBack && d < pulseFront && !en._scanRevealed) {
+          en._scanRevealed = true;
+          en.hitFlash = 400;
+          addComms('Scanner', 'Contact: ' + (en.type || 'enemy') + ' — ' + Math.round(d) + 'm');
+        }
+      });
+      state.npcShips.forEach(npc => {
+        const d = npc.group.position.distanceTo(ship.position);
+        if (d > pulseBack && d < pulseFront && !npc._scanRevealed) {
+          npc._scanRevealed = true;
+          addComms('Scanner', (npc.friendly ? 'Friendly' : 'Hostile') + ': ' + npc.name + ' — ' + Math.round(d) + 'm');
+        }
+      });
+      if (c._scannerPingT <= 0) {
+        c.enemies.forEach(en => { en._scanRevealed = false; });
+        state.npcShips.forEach(npc => { npc._scanRevealed = false; });
+      }
+    }
     updateShipParade(dt, dtMs); updatePolicePatrol(dt, dtMs);
+    // ── Station beacon pulsing ──
+    stationModels.forEach(sm => {
+      if (sm.children) sm.children.forEach(ch => {
+        if (ch.userData?._beacon && ch.userData?._pulse) {
+          const pScale = 0.8 + Math.sin(state.gameTime * 0.004) * 0.4;
+          ch.scale.setScalar(pScale);
+        } else if (ch.userData?._beacon && ch.material) {
+          ch.material.opacity = 0.5 + Math.sin(state.gameTime * 0.003 + ch.position.x) * 0.3;
+        }
+      });
+    });
     updateAutopilot(dt);
 
     // ── Ambient radio chatter — immersive random comms ──
