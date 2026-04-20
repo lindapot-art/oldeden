@@ -13215,10 +13215,11 @@ function gameLoop() {
           // Close-range bonus — 50% extra damage within 20m
           const _hitDist = p.group.position.distanceTo(ship.position);
           if (_hitDist < 20) genomeDmg *= 1.5;
-          // Weapon mastery damage bonus — +5% per 25 kills (max +20%)
+          // Weapon mastery damage bonus — +5% at 50 kills per weapon
           if (c._weaponMastery) {
-            const _mKills = c._weaponMastery[p.isLaser ? 'laser' : 'railgun'] || 0;
-            genomeDmg *= 1 + Math.min(0.20, Math.floor(_mKills / 25) * 0.05);
+            const _mKey = state.activeGunRoomWeapon || 'pistol_chrome';
+            const _mKills = c._weaponMastery[_mKey] || 0;
+            if (_mKills >= 50) genomeDmg *= 1.05;
           }
           // Headshot bonus — hit within 2m of enemy center = +75% damage
           const _headDist = p.group.position.distanceTo(e.group.position);
@@ -13394,6 +13395,24 @@ function gameLoop() {
             // Apply bonus multiplier if active
             if (c._bonusTimer && c._bonusTimer > 0) {
               state.player.credits += Math.floor(e.points * _creditStreakMult * 0.4 * ((c._bonusMult || 1) - 1));
+            }
+            // Weapon mastery — track kills per weapon, +5% damage at 50 kills
+            if (!c._weaponMastery) c._weaponMastery = {};
+            const _wepKey = state.activeGunRoomWeapon || 'pistol_chrome';
+            if (!c._weaponMastery[_wepKey]) c._weaponMastery[_wepKey] = 0;
+            c._weaponMastery[_wepKey]++;
+            if (c._weaponMastery[_wepKey] === 50) {
+              addComms('EDEN AI', '🏆 WEAPON MASTERY: ' + _wepKey.replace(/_/g, ' ').toUpperCase() + ' — +5% damage permanently!');
+              addCombatLog('Weapon Mastery: ' + _wepKey + ' (50 kills)', '#ffcc00');
+            }
+            // Salvage bonus — +15% credits when killing near existing loot drops
+            if (c.lootDrops && c.lootDrops.length > 0) {
+              const _nearLoot = c.lootDrops.some(ld => ld.group && ld.group.position.distanceTo(e.group.position) < 25);
+              if (_nearLoot) {
+                const _salvBonus = Math.floor(e.points * _creditStreakMult * 0.4 * 0.15);
+                state.player.credits += _salvBonus;
+                c.dmgNumbers.push({ text: 'SALVAGE +' + _salvBonus, px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#88ccff' });
+              }
             }
             // Kill confirmation feedback
             c.killConfirmTimer = 400;
@@ -14259,6 +14278,25 @@ function gameLoop() {
     if (c.ammo < c.maxAmmo * 0.5 && state.gameTime > c._ammoFabTimer) {
       c.ammo = Math.min(c.maxAmmo, c.ammo + 1);
       c._ammoFabTimer = state.gameTime + 15000;
+    }
+    // Proximity alarm — warn when enemy within 15m behind player
+    if (!c._proxAlarmCD) c._proxAlarmCD = 0;
+    if (state.gameTime > c._proxAlarmCD) {
+      const _camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      let _proxTriggered = false;
+      for (let _pi = 0; _pi < c.enemies.length; _pi++) {
+        const _pe = c.enemies[_pi];
+        if (_pe.hp <= 0) continue;
+        const _toE = _pe.group.position.clone().sub(camera.position);
+        const _dist = _toE.length();
+        if (_dist < 15 && _toE.normalize().dot(_camDir) < -0.3) {
+          c.dmgNumbers.push({ text: '⚠ BEHIND YOU!', px: camera.position.x, py: camera.position.y + 3, pz: camera.position.z, age: 0, color: '#ff4400' });
+          addComms('EDEN AI', '⚠ Hostile detected in blind spot — ' + Math.round(_dist) + 'm!');
+          c._proxAlarmCD = state.gameTime + 3000;
+          _proxTriggered = true;
+          break;
+        }
+      }
     }
     // Overshield timer decay
     if (c._overshieldTimer > 0) {
