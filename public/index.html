@@ -6686,7 +6686,10 @@ function createEnemy(type) {
   scene.add(g);
     const diffScale = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
   const _isBounty = Math.random() < 0.10; // 10% chance bounty target
-  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)), _isBounty });
+  // Enemy shield — 15% chance on cycle 2+, absorbs damage before HP
+  const _hasShield = c.cycle >= 2 && Math.random() < 0.15;
+  const _shieldHp = _hasShield ? Math.ceil(cfg.hp * diffScale * 0.4) : 0;
+  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)), _isBounty, _shield: _shieldHp, _maxShield: _shieldHp });
   if (_isBounty) {
     // Gold ring marker on bounty targets
     const _ringGeo = createEnemy._bountyRingGeo || (createEnemy._bountyRingGeo = new THREE.RingGeometry(2.5, 3.0, 16));
@@ -7308,6 +7311,12 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = c._scoreMultiplier >= 3 ? '#ff44ff' : c._scoreMultiplier >= 2 ? '#ffaa00' : '#aaccee';
     hudCtx.fillText(_mStr, srx, sry+56);
   }
+  // Active multipliers display
+  if (c._scoreMultiplier > 1 || c.streakMultiplier > 1) {
+    const _mStr = (c._scoreMultiplier > 1 ? '\u26A1' + c._scoreMultiplier.toFixed(1) + 'x ' : '') + (c.streakMultiplier > 1 ? '\uD83D\uDD25' + c.streakMultiplier + 'x' : '');
+    hudCtx.fillStyle = c._scoreMultiplier >= 3 ? '#ff44ff' : c._scoreMultiplier >= 2 ? '#ffaa00' : '#aaccee';
+    hudCtx.fillText(_mStr, srx, sry+56);
+  }
   // Survival timer
   const _survSec = Math.floor(state.gameTime / 1000);
   const _survMin = Math.floor(_survSec / 60);
@@ -7719,6 +7728,11 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.fillRect(ex - barW/2, ey - barH/2, barW, barH);
     hudCtx.fillStyle = barColor;
     hudCtx.fillRect(ex - barW/2, ey - barH/2, barW * hpPct, barH);
+    // Shield bar overlay (cyan, on top of HP bar)
+    if (e._shield > 0 && e._maxShield > 0) {
+      hudCtx.fillStyle = 'rgba(68,221,255,0.7)';
+      hudCtx.fillRect(ex - barW/2, ey - barH/2 - 3, barW * (e._shield / e._maxShield), 2);
+    }
     hudCtx.strokeStyle = 'rgba(255,68,68,0.4)';
     hudCtx.lineWidth = 0.5;
     hudCtx.strokeRect(ex - barW/2, ey - barH/2, barW, barH);
@@ -8671,7 +8685,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     else if (action === 'reload') { if (c.ammo < c.maxAmmo && !c._reloading) { c._reloading = true; c.weaponReady = false; addComms('System', 'Reloading...'); setTimeout(() => { if (!c.active || c.dead) { c._reloading = false; return; } c.ammo = c.maxAmmo; c._reloading = false; c.weaponReady = true; AudioSFX.play('reload'); addComms('System', 'Ammo replenished.'); }, 1500); } }
     else if (action === 'warp') { showScreen('starmap'); }
     else if (action === 'exit') { exitGunnerMode(); }
-    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } addComms('Station', 'Docking clearance granted. Initiating approach...'); AudioSFX.play('dock'); const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => addComms('Station', 'Docking clamps engaged. Welcome aboard.'), 1200); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
+    else if (action === 'dock') { const sys = state.starSystems[state.location.systemIndex]; if (sys && sys.hasStation) { const stationInRange = stationModels.length === 0 || stationModels.some(m => ship.position.distanceTo(m.position) < 80); if (!stationInRange) { addComms('Navigation', 'Station out of docking range. Fly closer.'); return; } addComms('Station', 'Docking clearance granted. Initiating approach...'); AudioSFX.play('dock'); const _dockOv = document.getElementById('dock-overlay'); if (_dockOv) { _dockOv.classList.remove('active'); void _dockOv.offsetWidth; _dockOv.classList.add('active'); setTimeout(() => { addComms('Station', 'Docking clamps engaged. Welcome aboard.'); /* Docking bonus — free hull repair + credit bonus */ const _dockBonus = 10 + c.cycle * 5; c.credits += _dockBonus; const _repairAmt = Math.min(5, c.maxHull - c.hull); c.hull = Math.min(c.maxHull, c.hull + _repairAmt); c.fuel = Math.min(c.maxFuel, c.fuel + 10); addComms('Station', '\uD83D\uDD27 Hull patched (+' + _repairAmt + '), fuel topped (+10), docking bonus +' + _dockBonus + ' EC'); }, 1200); setTimeout(() => { _dockOv.classList.remove('active'); showScreen('station'); }, 2000); } else showScreen('station'); } else addComms('System', 'No station in this system.'); }
   });
 });
 
@@ -12849,9 +12863,26 @@ function gameLoop() {
           // Close-range bonus — 50% extra damage within 20m
           const _hitDist = p.group.position.distanceTo(ship.position);
           if (_hitDist < 20) genomeDmg *= 1.5;
+          // Weapon mastery damage bonus — +5% per 25 kills (max +20%)
+          if (c._weaponMastery) {
+            const _mKills = c._weaponMastery[p.isLaser ? 'laser' : 'railgun'] || 0;
+            genomeDmg *= 1 + Math.min(0.20, Math.floor(_mKills / 25) * 0.05);
+          }
           // Focus fire bonus — every 5th hit on same enemy does 2x
           e._hitCount = (e._hitCount || 0) + 1;
           if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
+          // Enemy shield absorbs damage first
+          if (e._shield > 0) {
+            if (genomeDmg <= e._shield) {
+              e._shield -= genomeDmg;
+              c.dmgNumbers.push({ text: 'SHIELD -' + genomeDmg.toFixed(0), px: e.group.position.x, py: e.group.position.y + 3, pz: e.group.position.z, age: 0, color: '#44ddff' });
+              genomeDmg = 0;
+            } else {
+              genomeDmg -= e._shield;
+              c.dmgNumbers.push({ text: '\uD83D\uDEE1\uFE0F SHIELD BROKEN', px: e.group.position.x, py: e.group.position.y + 3, pz: e.group.position.z, age: 0, color: '#00eeff' });
+              e._shield = 0;
+            }
+          }
           e.hp -= genomeDmg;
           e.hitFlash = 150;
           // Evasion: 20% chance to dodge sideways after being hit (interceptors/corvettes 35%)
@@ -12952,6 +12983,18 @@ function gameLoop() {
             // Skill XP: combat actions level gunnery + piloting
             gainSkillXP('gunnery', 0.03);
             gainSkillXP('piloting', 0.01);
+            // Weapon mastery — track kills per weapon type for damage bonus
+            if (!c._weaponMastery) c._weaponMastery = { laser: 0, railgun: 0 };
+            const _wType = p.isLaser ? 'laser' : 'railgun';
+            c._weaponMastery[_wType]++;
+            // Mastery milestones: +5% damage per 25 kills (max +20%)
+            const _mKills = c._weaponMastery[_wType];
+            if (_mKills > 0 && _mKills % 25 === 0 && _mKills <= 100) {
+              const _mLevel = Math.floor(_mKills / 25);
+              addComms('EDEN AI', '\u2B50 ' + _wType.toUpperCase() + ' MASTERY ' + _mLevel + ' — +' + (_mLevel * 5) + '% damage!');
+              addCombatLog(_wType + ' mastery level ' + _mLevel, '#d4a856');
+              AudioSFX.play('quest_complete');
+            }
             // Ammo scavenger — 20% chance to recover 1 ammo per kill
             if (Math.random() < 0.20 && c.ammo < c.maxAmmo) {
               c.ammo = Math.min(c.maxAmmo, c.ammo + 1);
