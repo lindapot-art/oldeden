@@ -123,9 +123,57 @@ body[data-screen]:not([data-screen="title"]) #qa-unverified-banner{display:none;
 
 /* ── GLB Loading Overlay ─────────────────── */
 #glb-loading-overlay{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:50;padding:6px 18px;background:rgba(10,10,15,0.85);border:1px solid rgba(68,170,255,0.3);border-radius:6px;color:rgba(68,170,255,0.8);font-size:0.75rem;letter-spacing:0.1em;pointer-events:none;opacity:0;transition:opacity 0.3s ease;}
-#glb-loading-overlay.active{opacity:1;}
+#glb-loading-overlay{display:none;}
+#glb-loading-overlay.active{display:block;opacity:1;}
 #glb-loading-overlay .glb-bar{width:120px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:4px;overflow:hidden;}
 #glb-loading-overlay .glb-fill{height:100%;background:rgba(68,170,255,0.6);border-radius:2px;transition:width 0.2s ease;width:0%;}
+
+/* ── Gameplay Overlay Gates ───────────────── */
+#proximity-warning,
+#loot-magnet-indicator,
+#warp-target-btn {
+  display:none;
+}
+#proximity-warning.active,
+#loot-magnet-indicator.active,
+#warp-target-btn.visible {
+  display:block;
+}
+body[data-screen="title"] #proximity-warning,
+body[data-screen="title"] #loot-magnet-indicator,
+body[data-screen="title"] #warp-target-btn,
+body[data-screen="title"] #glb-loading-overlay,
+body[data-screen="create"] #proximity-warning,
+body[data-screen="create"] #loot-magnet-indicator,
+body[data-screen="create"] #warp-target-btn,
+body[data-screen="create"] #glb-loading-overlay,
+body[data-screen="station"] #proximity-warning,
+body[data-screen="station"] #loot-magnet-indicator,
+body[data-screen="station"] #warp-target-btn,
+body[data-screen="market"] #proximity-warning,
+body[data-screen="market"] #loot-magnet-indicator,
+body[data-screen="market"] #warp-target-btn,
+body[data-screen="settings"] #proximity-warning,
+body[data-screen="settings"] #loot-magnet-indicator,
+body[data-screen="settings"] #warp-target-btn {
+  display:none !important;
+}
+
+/* ── Music Player ─────────────────────────── */
+#music-player-panel{position:fixed;top:18px;right:18px;z-index:120;background:linear-gradient(180deg,rgba(10,18,30,0.94),rgba(5,9,16,0.9));border:1px solid rgba(68,170,255,0.24);border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,0.34),0 0 24px rgba(68,170,255,0.08);padding:14px 16px 12px;width:min(340px,calc(100vw - 28px));backdrop-filter:blur(14px);}
+#music-player-panel .music-kicker{color:var(--gold);font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;}
+#music-player-panel .music-title{font-size:0.98rem;color:var(--text);font-weight:600;line-height:1.35;}
+#music-player-panel .music-sub{font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;}
+#music-player-panel .music-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;}
+#music-player-panel .music-btn{background:rgba(20,32,48,0.92);border:1px solid rgba(68,170,255,0.22);color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-size:0.8rem;letter-spacing:0.06em;}
+#music-player-panel .music-btn:hover{border-color:var(--gold);color:var(--gold);}
+#music-player-panel .music-progress{margin-top:12px;height:6px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;}
+#music-player-panel .music-progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--blue));transition:width 0.15s linear;}
+#music-player-panel .music-playlist{margin-top:10px;display:grid;gap:6px;max-height:140px;overflow:auto;padding-right:4px;}
+#music-player-panel .music-track{background:rgba(255,255,255,0.03);border:1px solid transparent;border-radius:10px;padding:8px 10px;color:var(--muted);font-size:0.78rem;cursor:pointer;line-height:1.35;}
+#music-player-panel .music-track.active{border-color:rgba(212,168,86,0.5);color:var(--text);background:rgba(212,168,86,0.08);}
+body[data-screen="gunner"] #music-player-panel{opacity:0.55;transform:scale(0.96);}
+body[data-screen="gunner"] #music-player-panel:hover{opacity:1;transform:scale(1);}
 
 /* ── Reduced Motion ──────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -411,7 +459,68 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 }
 
 /* ── Title Screen ────────────────────────── */
-#screen-title { align-items: center; justify-content: center; text-align: center; }
+#screen-title { align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle at top, rgba(6,14,28,0.34), rgba(4,6,10,0.82) 55%, rgba(1,2,4,0.94)); }
+.title-stack { width:min(1080px, calc(100vw - 36px)); padding:32px 20px 96px; display:grid; gap:22px; }
+.title-grid { display:grid; grid-template-columns: 1.2fr 0.9fr; gap:18px; align-items:start; }
+.title-card, .account-card, .notice-card, .atlas-card {
+  background: rgba(14,20,32,0.78);
+  border: 1px solid rgba(68,170,255,0.16);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.28);
+  backdrop-filter: blur(8px);
+}
+.title-card h1 { margin: 0 0 10px; }
+.title-badges { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px; }
+.title-badge { border:1px solid rgba(212,168,86,0.24); border-radius:999px; padding:6px 12px; font-size:0.74rem; color:var(--muted); letter-spacing:0.08em; }
+.title-scene-note { margin: 14px auto 0; max-width: 640px; padding: 10px 14px; border: 1px solid rgba(68,170,255,0.18); border-radius: 12px; background: rgba(5,12,22,0.46); color: #c9d8eb; font-size: 0.84rem; line-height: 1.55; }
+.title-scene-note strong { color: var(--gold); }
+.account-card input { width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:8px; font-size:0.92rem; }
+.account-grid { display:grid; gap:10px; }
+.account-status { font-size:0.78rem; color:var(--muted); line-height:1.5; min-height:40px; }
+.wallet-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(68,170,255,0.08); color:var(--blue); font-size:0.74rem; }
+.notice-card { border-color: rgba(234,179,8,0.28); background: linear-gradient(180deg, rgba(30,24,10,0.92), rgba(16,14,8,0.9)); }
+.notice-card strong { color: var(--gold); }
+.donation-strip { font-size:0.86rem; line-height:1.6; color:var(--text); }
+.specials-marquee { margin-top:12px; font-size:0.8rem; color:var(--muted); }
+.create-help { font-size:0.8rem; color:var(--muted); margin-top:8px; line-height:1.5; }
+
+/* ── Atlas / Expansion UI ────────────────── */
+#screen-atlas { padding:24px 20px 96px; }
+.atlas-toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+.atlas-toolbar input, .atlas-toolbar select { background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px 12px; font-size:0.86rem; }
+.atlas-hero { display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px; margin-bottom:16px; }
+.atlas-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
+.atlas-entry { background:rgba(18,24,38,0.84); border:1px solid rgba(68,170,255,0.14); border-radius:14px; padding:14px; display:grid; gap:8px; }
+.atlas-entry .atlas-type { color:var(--gold); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; }
+.atlas-entry .atlas-name { color:var(--text); font-size:0.98rem; font-weight:600; }
+.atlas-entry .atlas-tag { color:var(--muted); font-size:0.8rem; line-height:1.45; }
+.atlas-entry .atlas-meta { font-size:0.74rem; color:var(--blue); line-height:1.4; }
+
+/* ── Premium / Crypto UI ─────────────────── */
+.premium-card { background:rgba(10,18,30,0.9); border:1px solid rgba(168,85,247,0.18); border-radius:14px; padding:14px; margin-top:14px; }
+.premium-note { color:var(--muted); font-size:0.76rem; line-height:1.55; }
+.premium-offer { display:grid; gap:6px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.premium-offer:last-child { border-bottom:none; }
+.market-ops-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:14px; }
+.market-op-card { background:rgba(12,18,28,0.88); border:1px solid rgba(68,170,255,0.14); border-radius:12px; padding:12px; text-align:left; }
+.market-op-card strong { color:var(--text); display:block; margin-bottom:4px; }
+.market-op-card p { margin:0; color:var(--muted); font-size:0.78rem; line-height:1.5; }
+.market-op-card .btn { margin-top:10px; }
+.buyer-strip { display:grid; gap:10px; margin-top:14px; }
+.buyer-strip .buyer-card { background:rgba(18,24,38,0.88); border:1px solid rgba(212,168,86,0.18); border-radius:12px; padding:12px; text-align:left; }
+.buyer-strip .buyer-card strong { color:var(--gold); }
+.premium-offer-top { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+.premium-offer-title { color:var(--text); font-weight:600; }
+.premium-offer-price { color:var(--gold); font-size:0.78rem; white-space:nowrap; }
+.premium-active { color:var(--green); font-size:0.75rem; }
+
+/* ── World Cycle UI ──────────────────────── */
+.cycle-chip { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.04); color:var(--muted); font-size:0.74rem; letter-spacing:0.08em; }
+
+@media (max-width: 960px) {
+  .title-grid, .atlas-hero { grid-template-columns: 1fr; }
+}
 
 /* ── Quest/Mission Overlays ──────────────── */
 #quest-overlay {
@@ -895,6 +1004,19 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 <div id="muzzle-flash-overlay"></div>
 <div id="webgl-lost-overlay"><div class="wl-title">&#9888; GPU CONNECTION LOST</div><div class="wl-sub">The WebGL context was lost. This may be a driver issue.</div><button class="wl-btn" onclick="location.reload()">&#8635; Reload Game</button></div>
 <div id="glb-loading-overlay">LOADING ASSETS <span id="glb-load-count">0/0</span><div class="glb-bar"><div class="glb-fill" id="glb-load-fill"></div></div></div>
+<div id="music-player-panel" aria-label="Music Player">
+  <div class="music-kicker">Music Deck</div>
+  <div class="music-title" id="music-track-title">Mercury Mouthpiece (1)</div>
+  <div class="music-sub" id="music-track-subtitle">Opening song queued from the local soundtrack.</div>
+  <div class="music-controls">
+    <button class="music-btn" id="music-prev">◀ Prev</button>
+    <button class="music-btn" id="music-toggle">▶ Play</button>
+    <button class="music-btn" id="music-next">Next ▶</button>
+  </div>
+  <div class="music-progress"><div class="music-progress-fill" id="music-progress-fill"></div></div>
+  <div class="music-playlist" id="music-playlist"></div>
+</div>
+<audio id="bgm-player" preload="metadata"></audio>
 
 <!-- Screen transition fade overlay (moved from broken <style> location) -->
 <div id="screen-transition-overlay"></div>
@@ -909,6 +1031,7 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   <button class="nav-btn" id="nav-starmap" data-screen="starmap" aria-label="Star Map">Map</button>
   <button class="nav-btn" id="nav-station" data-screen="station" aria-label="Station">Station</button>
   <button class="nav-btn" id="nav-character" data-screen="character" aria-label="Character">Pilot</button>
+  <button class="nav-btn" id="nav-atlas" data-screen="atlas" aria-label="Atlas">Atlas</button>
   <button class="nav-btn" id="nav-market" data-screen="market" aria-label="Market">Market</button>
   <button class="nav-btn" id="nav-ship" data-screen="interior" aria-label="Interior">Ship</button>
   <button class="nav-btn" id="nav-settings" data-screen="settings" aria-label="Settings">Settings</button>
@@ -1015,15 +1138,49 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 <!-- ════════════════════════════════════════════ -->
 <div class="screen active" id="screen-title">
   <div id="title-stars" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;"></div>
-  <h1 style="color:var(--gold);font-size:3.2rem;font-weight:400;letter-spacing:0.18em;margin-bottom:1.5rem;text-align:center;">OLD EDEN</h1>
-  <div style="text-align:center;margin-bottom:2.5rem;color:var(--muted);font-size:1.1rem;">Blockchain Space MMO</div>
-  <div style="display:flex;justify-content:center;gap:24px;margin-bottom:2.5rem;">
-    <button class="btn" id="btn-new">New Game</button>
-    <button class="btn" id="btn-continue">Continue</button>
-    <button class="btn" id="btn-settings">Settings</button>
+  <div class="title-stack">
+    <div class="title-grid">
+      <div class="title-card">
+        <h1 style="color:var(--gold);font-size:3.2rem;font-weight:400;letter-spacing:0.18em;text-align:center;">OLD EDEN</h1>
+        <div style="text-align:center;margin-bottom:1.4rem;color:var(--muted);font-size:1.1rem;">Blockchain Space MMO with living skies, wallet-linked premium gear, and a 100-entry frontier atlas.</div>
+        <div style="display:flex;justify-content:center;gap:24px;margin-bottom:1.2rem;flex-wrap:wrap;">
+          <button class="btn" id="btn-new">New Game</button>
+          <button class="btn" id="btn-continue">Continue</button>
+          <button class="btn" id="btn-settings">Settings</button>
+        </div>
+        <div class="title-badges">
+          <span class="title-badge">Free-to-play remains intact</span>
+          <span class="title-badge">Wallet optional, premium optional</span>
+          <span class="title-badge">Day / Night Sector Cycle Live</span>
+        </div>
+        <div class="title-scene-note" id="title-scene-note">Live title approach camera online. A default ship is holding near the station while the sector cycle rolls through daybreak, highsun, dusk, and night.</div>
+        <div class="specials-marquee" id="specials-marquee"></div>
+        <div style="text-align:center;color:var(--muted);font-size:0.9rem;margin-top:1rem;">v0.9.7 &mdash; Free-to-play, play-to-own</div>
+        <div id="server-status" style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:0.5rem;"></div>
+      </div>
+      <div class="account-card">
+        <div class="panel-title">Pilot Account</div>
+        <div class="account-grid">
+          <input type="email" id="account-email" placeholder="pilot@oldeden.space">
+          <input type="password" id="account-password" placeholder="Minimum 6 characters">
+          <input type="text" id="account-pilot-name" maxlength="24" placeholder="Preferred pilot name">
+          <div class="btn-row">
+            <button class="btn btn-sm" id="btn-signup-account">Sign Up</button>
+            <button class="btn btn-sm" id="btn-login-account">Log In</button>
+            <button class="btn btn-sm" id="btn-connect-wallet">Connect Wallet</button>
+          </div>
+          <div id="account-status" class="account-status">Create an account, or connect a wallet first and fly as a wallet-linked pilot.</div>
+          <div class="wallet-pill" id="wallet-pill">No wallet connected</div>
+        </div>
+      </div>
+    </div>
+    <div class="notice-card">
+      <div class="panel-title">Donation & Premium Notice</div>
+      <div class="donation-strip">
+        <strong>Premium purchases are optional.</strong> Unique premium weapons and premium time route <strong>90%</strong> of the payment to the project wallet <span id="premium-wallet-inline">0x75B30d0dE751D9628510f3cb273F09f7137f9E3F</span> and <strong>10%</strong> to the Ukrainian army support wallet <span id="donation-wallet-inline">0x165CD37b4C644C2921454429E7F9358d18A45e14</span>. This split is surfaced here, in station specials, and before every wallet purchase.
+      </div>
+    </div>
   </div>
-  <div style="text-align:center;color:var(--muted);font-size:0.9rem;">v0.9.7 &mdash; Free-to-play, play-to-own</div>
-  <div id="server-status" style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:0.5rem;"></div>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
@@ -1048,6 +1205,7 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   <div class="create-section">
     <label style="color:var(--muted);display:block;margin-bottom:0.5rem;">Pilot Name</label>
     <input type="text" id="pilot-name" maxlength="24" placeholder="Enter pilot name..." style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;width:200px;font-size:1rem;">
+    <div class="create-help" id="create-account-summary">No account linked yet. You can still play free, or return to the title screen to sign up and connect a wallet.</div>
   </div>
   <div class="btn-row" style="justify-content:center;margin-top:1rem;">
     <button class="btn" id="btn-back-title">&larr; Back</button>
@@ -1066,6 +1224,7 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
 <div class="screen" id="screen-bridge">
   <div id="bridge-top">
     <span class="bridge-location" id="bridge-location">Sol Sector</span>
+    <span class="cycle-chip" id="bridge-cycle">Daybreak cycle 00%</span>
     <span class="bridge-connection" id="bridge-conn">&#9679; Online</span>
   </div>
 
@@ -1171,6 +1330,32 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   <div class="btn-row" style="margin-top:1.5rem;">
     <button class="btn" id="btn-char-back">&larr; Back to Bridge</button>
   </div>
+</div>
+
+<div class="screen" id="screen-atlas">
+  <h2 style="color:var(--gold);font-size:1.8rem;font-weight:300;letter-spacing:0.14em;margin-bottom:1rem;">Frontier Atlas</h2>
+  <div class="atlas-hero">
+    <div class="atlas-card">
+      <div class="panel-title">Frontier Expansion</div>
+      <div style="color:var(--text);line-height:1.7;font-size:0.92rem;">The Atlas tracks 100 new frontier elements across anomalies, contract chains, discovery events, relic markets, premium prototypes, living weather, and sector rituals. It is meant to make the game feel denser, stranger, and less empty immediately.</div>
+    </div>
+    <div class="atlas-card">
+      <div class="panel-title">Daily Specials</div>
+      <div id="atlas-specials" style="display:grid;gap:8px;color:var(--muted);font-size:0.82rem;"></div>
+    </div>
+  </div>
+  <div class="atlas-toolbar">
+    <input type="text" id="atlas-search" placeholder="Search anomalies, weapons, sectors, contracts...">
+    <select id="atlas-filter">
+      <option value="all">All Categories</option>
+      <option value="anomaly">Anomalies</option>
+      <option value="weapon">Weapons</option>
+      <option value="contract">Contracts</option>
+      <option value="sector">Sectors</option>
+      <option value="ritual">Experiences</option>
+    </select>
+  </div>
+  <div class="atlas-grid" id="atlas-grid"></div>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
@@ -1319,6 +1504,7 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
     <button class="btn btn-sm" id="market-tab-sell" onclick="window._marketTab('sell')">Sell Orders</button>
     <button class="btn btn-sm" id="market-tab-history" onclick="window._marketTab('history')">History</button>
     <button class="btn btn-sm" id="market-tab-place" onclick="window._marketTab('place')">Place Order</button>
+    <button class="btn btn-sm" id="market-tab-ops" onclick="window._marketTab('ops')">Mining Ops</button>
   </div>
   <div id="market-content" style="width:100%;max-width:900px;"></div>
   <div class="btn-row" style="margin-top:1.5rem;"><button class="btn" id="btn-market-back">&larr; Back</button></div>
@@ -1444,6 +1630,7 @@ const AudioSFX = {
     if (this.ambience?.gain?.gain) this.ambience.gain.gain.value = this.getSfxMix();
     if (this.bgm?.masterGain?.gain) this.bgm.masterGain.gain.value = this.getBgmMix();
     if (this.engineHum?.gain?.gain) this.engineHum.gain.gain.value = (this.engineHum.baseGain || 0) * this.getSfxMix();
+    if (typeof MusicPlayer !== 'undefined') MusicPlayer.syncVolume();
   },
   play(type) {
     if (!this.ctx) return;
@@ -1506,6 +1693,7 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
   },
   startBGM() {
     if (!this.ctx || this.bgm) return;
+    if (typeof MusicPlayer !== 'undefined' && MusicPlayer.audio && !MusicPlayer.audio.paused) return;
     this.ensure();
     const ctx = this.ctx;
     const masterGain = ctx.createGain();
@@ -1732,6 +1920,30 @@ const state = {
   selectedSystem: null,
   quests: [],
   inventory: [],
+  account: {
+    email: '',
+    pilotName: '',
+    walletAddress: '',
+    loginMode: 'guest',
+    accountId: '',
+    premiumTier: 'free',
+  },
+  premium: {
+    weaponsUnlocked: [],
+    activeWeapon: 'standard',
+    premiumUntil: 0,
+    purchaseLog: [],
+  },
+  world: {
+    cycleDurationMs: 360000,
+    cycleOffsetMs: 0,
+    phaseName: 'Daybreak',
+    lightLevel: 0.5,
+  },
+  atlas: {
+    filter: 'all',
+    search: '',
+  },
   upgrades: {
     railgunDmg: 1,     // multiplier
     shieldRegen: 3,    // per sec
@@ -1757,7 +1969,32 @@ const state = {
   altUniverse: null,        // { systems:[], artifacts:[], artifactsCollected:0, artifactsNeeded:3, returnPortal:null }
   inAltUniverse: false,
   // ── Mining ──
-  mining: { active: false, target: null, progress: 0, laserBeam: null },
+  mining: {
+    active: false,
+    target: null,
+    progress: 0,
+    laserBeam: null,
+    targetOre: 'Asteroid',
+    completedRuns: 0,
+    lastYield: null,
+    operations: {
+      autoScan: true,
+      autoClaim: true,
+      autoDrill: false,
+      beamFocus: true,
+      fracturePulse: false,
+      yieldOptimizer: true,
+      droneSwarm: false,
+      cargoPress: false,
+      autoRefine: false,
+      oreSorting: true,
+      hazardPing: true,
+      tractorScoop: true,
+      routeToBuyer: false,
+      remoteSell: false,
+      marketBeacon: false,
+    },
+  },
   // ── Soul Memory (persists across deaths — subtle passive bonuses) ──
   soulMemory: {
     tradeInsight: 0,    // +1% better prices per life with trading, caps at 15%
@@ -1795,7 +2032,7 @@ const state = {
     dockingFee: 25,         // Credits per station dock
   },
   // ── Market ──
-  market: { orders: [], history: [] },
+  market: { orders: [], history: [], npcBuyers: [], lastBuyerRefresh: 0, teleports: 0 },
   // ── AI Chatbot ──
   chatbot: { visible: false, messages: [], autoTarget: false, autoMine: false },
   // ── Skins ──
@@ -1877,16 +2114,16 @@ function getGenomeMult(geneIndex, soulBonus = 0) {
   return base * (1 + Math.min(soulBonus, 0.15));
 }
 function getPlayerDamageMult() {
-  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * state.upgrades.railgunDmg * getSkillBonus('gunnery');
+  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * state.upgrades.railgunDmg * getSkillBonus('gunnery') * getPremiumWeaponProfile().railgunMult;
 }
 function getPlayerLaserDamageMult() {
-  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * (state.upgrades.laserDmg || 1) * getSkillBonus('gunnery');
+  return getGenomeMult(32, state.soulMemory.combatInstinct / 100) * (state.upgrades.laserDmg || 1) * getSkillBonus('gunnery') * getPremiumWeaponProfile().laserMult;
 }
 function getPlayerSpeedMult() {
-  return getGenomeMult(33) * getSkillBonus('piloting');
+  return getGenomeMult(33) * getSkillBonus('piloting') * getPremiumWeaponProfile().speedMult;
 }
 function getPlayerShieldRegenMult() {
-  return getGenomeMult(34, state.soulMemory.shieldMemory / 100) * getSkillBonus('engineering');
+  return getGenomeMult(34, state.soulMemory.shieldMemory / 100) * getSkillBonus('engineering') * getPremiumWeaponProfile().shieldRegenMult;
 }
 function getPlayerTradeMult() {
   return getGenomeMult(35, state.soulMemory.tradeInsight / 100) * getSkillBonus('trading');
@@ -2709,6 +2946,9 @@ function loadFromServerData(data) {
   if (data.currentSkin) { state.currentSkin = data.currentSkin; }
   if (data.market) state.market = data.market;
   if (data.insuredItemId) state.insuredItemId = data.insuredItemId;
+  if (data.account) Object.assign(state.account, data.account);
+  if (data.premium) Object.assign(state.premium, data.premium);
+  if (data.world) Object.assign(state.world, data.world);
   if (data.purchasedUpgrades && Array.isArray(data.purchasedUpgrades)) state.purchasedUpgrades = data.purchasedUpgrades;
   if (data.flight && data.flight.maxSpeed) state.flight.maxSpeed = data.flight.maxSpeed;
   // Soul Fracture migration for old saves
@@ -2718,6 +2958,7 @@ function loadFromServerData(data) {
   if (!state.player.lifetimeStats) state.player.lifetimeStats = { totalKills: 0, totalScore: 0, totalDeaths: 0, totalCredits: 0, bossKills: 0, peakStreak: 0 };
   if (!state.player.milestonesClaimed) state.player.milestonesClaimed = [];
   if (state.player.edenTokens === undefined) state.player.edenTokens = 0;
+  syncAccountWidgets();
   applyUpgrades();
   state.combat.ammo = state.combat.maxAmmo;
 }
@@ -2828,6 +3069,7 @@ function _showScreenInner(name, previousScreen) {
   document.body.style.cursor = (name === 'gunner' && !shouldUseMobileFlightUI()) ? 'none' : 'default';
 
   if (name === 'bridge') updateBridgeUI();
+  if (name === 'title') { primeTitleScene(); updateTitleSceneStatus(); }
   if (name === 'starmap') { resizeStarMap(); if (!_starMapAnimActive) { _starMapAnimActive = true; starMapAnimLoop(); } }
   if (name === 'station') renderStation();
   if (name === 'character') renderCharSheet();
@@ -2857,6 +3099,180 @@ function _showScreenInner(name, previousScreen) {
     container.appendChild(star);
   }
 })();
+
+function ensureMiningAutomationState() {
+  if (!state.mining.operations) state.mining.operations = {};
+  const defaults = {
+    autoScan: true,
+    autoClaim: true,
+    autoDrill: false,
+    beamFocus: true,
+    fracturePulse: false,
+    yieldOptimizer: true,
+    droneSwarm: false,
+    cargoPress: false,
+    autoRefine: false,
+    oreSorting: true,
+    hazardPing: true,
+    tractorScoop: true,
+    routeToBuyer: false,
+    remoteSell: false,
+    marketBeacon: false,
+  };
+  Object.entries(defaults).forEach(([key, value]) => {
+    if (typeof state.mining.operations[key] !== 'boolean') state.mining.operations[key] = value;
+  });
+  state.mining.completedRuns ||= 0;
+  if (!state.market.npcBuyers) state.market.npcBuyers = [];
+  state.market.lastBuyerRefresh ||= 0;
+  state.market.teleports ||= 0;
+}
+
+function updateWorldCycleVisuals(forceUi = false) {
+  if (!state.world) state.world = { cycleDurationMs: 360000, cycleOffsetMs: 0, phaseName: 'Daybreak', lightLevel: 0.5 };
+  const duration = Math.max(120000, state.world.cycleDurationMs || 360000);
+  const cycle = ((Date.now() + (state.world.cycleOffsetMs || 0)) % duration) / duration;
+  const sunCurve = 0.5 + 0.5 * Math.sin(cycle * Math.PI * 2 - Math.PI / 2);
+  const lightLevel = Math.max(0.14, Math.min(1, 0.16 + sunCurve * 0.84));
+  let phaseName = 'Night';
+  if (cycle >= 0.18 && cycle < 0.45) phaseName = 'Highsun';
+  else if (cycle >= 0.45 && cycle < 0.7) phaseName = 'Dusk';
+  else if (cycle >= 0.7 || cycle < 0.08) phaseName = 'Night';
+  else phaseName = 'Daybreak';
+  state.world.lightLevel = lightLevel;
+  state.world.phaseName = phaseName;
+
+  scene.fog.color.setHSL(0.62 - lightLevel * 0.08, 0.45, 0.06 + lightLevel * 0.12);
+  scene.fog.density = 0.00055 - lightLevel * 0.00022;
+  renderer.toneMappingExposure = 1.05 + lightLevel * 0.95;
+  scene.children.forEach(ch => {
+    if (ch.isAmbientLight) ch.intensity = 0.55 + lightLevel * 1.8;
+  });
+  starLight.intensity = 1.3 + lightLevel * 3.3;
+  fillLight.intensity = 0.45 + (1 - lightLevel) * 1.2;
+  rimLight.intensity = 0.5 + lightLevel * 0.9;
+  hemiLight.intensity = 0.45 + lightLevel * 1.2;
+  starLight.color.setHSL(0.11, 0.65, 0.72 - lightLevel * 0.12);
+  fillLight.color.setHSL(0.6, 0.5, 0.55 - lightLevel * 0.12);
+  hemiLight.color.setHSL(0.58, 0.5, 0.45 + lightLevel * 0.28);
+  hemiLight.groundColor.setHSL(0.62, 0.32, 0.12 + lightLevel * 0.08);
+
+  if (forceUi || !updateWorldCycleVisuals._lastUi || Date.now() - updateWorldCycleVisuals._lastUi > 800) {
+    updateWorldCycleVisuals._lastUi = Date.now();
+    syncAccountWidgets();
+    updateTitleSceneStatus();
+  }
+}
+
+function updateTitleSceneStatus() {
+  const note = document.getElementById('title-scene-note');
+  if (!note) return;
+  const sys = state.starSystems?.[state.location.systemIndex] || { name: 'Old Eden Approach', resources: [] };
+  const oreLabel = state.mining.lastYield?.ore || sys.resources?.[0] || 'Titanite Ore';
+  note.innerHTML = `<strong>Live title approach:</strong> ${_escHtml(sys.name)} with the player ship holding near the station. Sector phase: <strong>${_escHtml(state.world.phaseName)}</strong> at ${Math.round((state.world.lightLevel || 0) * 100)}% light. Frontier drill package is tracking ${_escHtml(oreLabel)} and remote buyers.`;
+}
+
+function primeTitleScene() {
+  ensureMiningAutomationState();
+  if (!state.starSystems?.length) return;
+  state.location.systemIndex = 0;
+  state.starSystems[0].hasStation = true;
+  ship.position.set(0, 0, 0);
+  ship.rotation.set(0, 0, 0);
+  if (c.asteroids.length === 0) spawnAsteroids();
+  if (typeof spawnSystemStar === 'function' && !primeTitleScene._starSpawned) {
+    primeTitleScene._starSpawned = true;
+    spawnSystemStar();
+  }
+  if (stationModels.length === 0) spawnStationModel();
+}
+
+function updateTitleScene(dt) {
+  primeTitleScene();
+  const anchor = stationModels[0]?.position;
+  const focusX = anchor ? anchor.x : -58;
+  const focusY = anchor ? anchor.y : 10;
+  const focusZ = anchor ? anchor.z : -78;
+  const camT = state.gameTime * 0.00016;
+  ship.position.set(focusX + 24 + Math.cos(camT * 2.3) * 9, focusY + Math.sin(camT * 2.1) * 3.5, focusZ + 22 + Math.sin(camT * 2.0) * 10);
+  _tmpV3a.set(focusX, focusY + 1, focusZ);
+  ship.lookAt(_tmpV3a);
+  camera.position.set(focusX + Math.cos(camT * 0.7) * 86, focusY + 24 + Math.sin(camT * 1.1) * 8, focusZ + Math.sin(camT * 0.7) * 86);
+  camera.lookAt(focusX + 8, focusY + 6, focusZ + 4);
+  stationModels.forEach((model, index) => {
+    model.rotation.y += dt * (0.08 + index * 0.02);
+  });
+  c.asteroids.forEach(a => {
+    if (!a?.userData?.rotSpeed) return;
+    a.rotation.x += a.userData.rotSpeed.x * dt * 0.3;
+    a.rotation.y += a.userData.rotSpeed.y * dt * 0.3;
+    a.rotation.z += a.userData.rotSpeed.z * dt * 0.3;
+  });
+}
+
+const UI_VOICE_LABELS = {
+  'nav-bridge': 'Bridge controls',
+  'nav-starmap': 'Star map',
+  'nav-station': 'Station services',
+  'nav-market': 'Space market',
+  'nav-ship': 'Ship interior',
+  'auto-target-btn': 'Autopilot targeting',
+  'btn-battle-drone': 'Deploy battle drone',
+  'btn-mining-drone': 'Deploy mining drone',
+  'btn-auto-target': 'Auto target',
+  'btn-auto-mine': 'Start autodrilling',
+  mine: 'Mining laser',
+  reload: 'Reload railgun',
+  chat: 'Cockpit assistant',
+  gate: 'Stargate jump',
+  warp: 'Star map',
+  dock: 'Dock at station',
+  skins: 'Ship skins',
+  exit: 'Return to bridge',
+};
+
+function getVoiceLabelForElement(target) {
+  const el = target?.closest?.('.nav-btn,.action-btn,.drone-btn,.btn,[data-voice-label]');
+  if (!el) return '';
+  if (el.dataset.voiceLabel) return el.dataset.voiceLabel;
+  if (el.id && UI_VOICE_LABELS[el.id]) return UI_VOICE_LABELS[el.id];
+  if (el.dataset?.action && UI_VOICE_LABELS[el.dataset.action]) return UI_VOICE_LABELS[el.dataset.action];
+  if (el.getAttribute('aria-label')) return el.getAttribute('aria-label');
+  if (el.title) {
+    const parenIndex = el.title.indexOf(String.fromCharCode(40));
+    return (parenIndex >= 0 ? el.title.slice(0, parenIndex) : el.title).trim();
+  }
+  return (el.textContent || '').trim().replace(/\s+/g, ' ');
+}
+
+const VoiceUI = {
+  lastAt: 0,
+  lastText: '',
+  speak(text) {
+    if (!text || !('speechSynthesis' in window) || shouldUseMobileFlightUI()) return;
+    const now = performance.now();
+    if (now - this.lastAt < 450 && text === this.lastText) return;
+    this.lastAt = now;
+    this.lastText = text;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.02;
+    utterance.pitch = 0.92;
+    utterance.volume = Math.max(0, Math.min(1, (state.settings.masterVol || 0.7) * 0.5));
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  },
+};
+
+function initUiVoiceLabels() {
+  if (initUiVoiceLabels._bound) return;
+  initUiVoiceLabels._bound = true;
+  const handler = (event) => {
+    const label = getVoiceLabelForElement(event.target);
+    if (label) VoiceUI.speak(label);
+  };
+  document.addEventListener('pointerenter', handler, true);
+  document.addEventListener('focusin', handler, true);
+}
 
 // Server health check
 fetch('/health').then(r => r.json()).then(d => {
@@ -3101,6 +3517,7 @@ function updateBridgeUI() {
   document.getElementById('bridge-location').textContent = sys ? sys.name : 'Unknown Sector';
   document.getElementById('bridge-conn').textContent = state.connected ? '\u25CF Online' : '\u25CB Offline';
   document.getElementById('bridge-conn').style.color = state.connected ? 'var(--green)' : 'var(--warn)';
+  syncAccountWidgets();
 
   // Inventory on bridge
   const invEl = document.getElementById('bridge-inventory');
@@ -3586,6 +4003,270 @@ const STARTER_QUESTS_CLIENT = [
   { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 350 } },
 ];
 
+const PREMIUM_TREASURY_WALLET = '0x75B30d0dE751D9628510f3cb273F09f7137f9E3F';
+const PREMIUM_DONATION_WALLET = '0x165CD37b4C644C2921454429E7F9358d18A45e14';
+const PREMIUM_OFFERS = [
+  { id: 'aurora_lance', type: 'weapon', name: 'Aurora Lance', pricePol: '0.080', description: 'Precision premium beam lattice. +35% laser damage, +10% shield regen.', perk: 'Laser burst platform' },
+  { id: 'graviton_fork', type: 'weapon', name: 'Graviton Fork', pricePol: '0.095', description: 'Heavy gravitic rail package. +45% railgun damage, +8% flight speed.', perk: 'Railgun bruiser' },
+  { id: 'choir_of_mars', type: 'weapon', name: 'Choir of Mars', pricePol: '0.125', description: 'Experimental choir cannon. +20% all weapon damage, +15% loot magnet range.', perk: 'Jack-of-all pressure frame' },
+  { id: 'premium_7d', type: 'time', days: 7, name: 'Premium Time: 7 Days', pricePol: '0.060', description: 'Seven days of premium status with faster credit flow and prestige routing.', perk: '7-day premium pass' },
+  { id: 'premium_30d', type: 'time', days: 30, name: 'Premium Time: 30 Days', pricePol: '0.180', description: 'Thirty days of premium status with stronger persistence and frontier perks.', perk: '30-day premium pass' },
+];
+
+const GALACTIC_ATLAS = (() => {
+  const anomalies = ['Solar Choir', 'Grief Halo', 'Magnet Bloom', 'Ash Cathedral', 'Mirror Reef', 'Ion Orchard', 'Null Choir', 'Ghost Vineyard', 'Plasma Fen', 'Clockstorm'];
+  const anomalies2 = ['Anomaly', 'Field', 'Cascade', 'Rift', 'Tide', 'Garden', 'Vault', 'Spiral', 'Wake', 'Cathedral'];
+  const weapons = ['Aether', 'Vanta', 'Pilgrim', 'Feral', 'Cinder', 'Marrow', 'Nebula', 'Thorn', 'Lattice', 'Oracle'];
+  const weaponTypes = ['Lance', 'Rail', 'Fork', 'Emitter', 'Crown', 'Repeater', 'Pulse', 'Breaker', 'Harpoon', 'Spindle'];
+  const contracts = ['Black Sun', 'Salt Crown', 'Red Choir', 'Signal Mother', 'First Orbit', 'Hollow Trade', 'Nine Lanterns', 'Glass Debt', 'Lost Signal', 'Bone Archive'];
+  const sectors = ['Viridian Shelf', 'Morrow Reach', 'Blue Ossuary', 'Relic Span', 'Frost Belt', 'Amber Verge', 'Cinder Basin', 'Noctis Rise', 'Helix Coast', 'Echo Delta'];
+  const rituals = ['wake', 'trial', 'convocation', 'rite', 'hunt', 'procession', 'festival', 'parley', 'survey', 'signal'];
+  const entries = [];
+  for (let i = 0; i < 20; i++) {
+    entries.push({ id: `anomaly-${i}`, category: 'anomaly', name: `${anomalies[i % anomalies.length]} ${anomalies2[i % anomalies2.length]}`, tag: 'Strange sector weather, light warps, and hazard pulses reshaping local combat and mining routes.', meta: `Effect band ${i + 1} · Best scanned at ${(i % 4) + 1}:00 cycle` });
+    entries.push({ id: `weapon-${i}`, category: 'weapon', name: `${weapons[i % weapons.length]} ${weaponTypes[i % weaponTypes.length]}`, tag: 'Prototype unlock path added to the frontier armory; some versions are purchasable as premium crypto weapons.', meta: `Prototype tier ${(i % 3) + 1} · Sync bonus ${(i % 5) * 3 + 6}%` });
+    entries.push({ id: `contract-${i}`, category: 'contract', name: `${contracts[i % contracts.length]} Contract ${i + 1}`, tag: 'Dynamic job chain with rotating mission hooks for escorts, salvage, debt collection, rescues, and reconnaissance.', meta: `Contract arc ${(i % 4) + 1} · Reward class ${String.fromCharCode(65 + (i % 5))}` });
+    entries.push({ id: `sector-${i}`, category: 'sector', name: `${sectors[i % sectors.length]} Node ${i + 1}`, tag: 'New travel identity with a distinct sky palette, station rumor pool, and local specials sourced by the atlas.', meta: `Sector mood ${(i % 2) ? 'Nocturne' : 'Dayfire'} · Dock score ${40 + i}` });
+    entries.push({ id: `ritual-${i}`, category: 'ritual', name: `${sectors[(i + 3) % sectors.length]} ${rituals[i % rituals.length]}`, tag: 'Experiential encounters meant to make space feel inhabited: cult vigils, AI choruses, convoy wakes, shrine markets, and memorial parades.', meta: `Encounter band ${(i % 5) + 1} · Social weight ${(i % 4) + 2}/5` });
+  }
+  return entries.slice(0, 100);
+})();
+
+function truncateWallet(addr) {
+  return addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : 'No wallet connected';
+}
+
+function getPremiumRemainingMs() {
+  return Math.max(0, (state.premium.premiumUntil || 0) - Date.now());
+}
+
+function getPremiumStatusLabel() {
+  const remainingMs = getPremiumRemainingMs();
+  if (remainingMs <= 0) return 'Free pilot';
+  const days = Math.max(1, Math.ceil(remainingMs / 86400000));
+  return `Premium active · ${days}d remaining`;
+}
+
+function getPremiumWeaponProfile() {
+  switch (state.premium.activeWeapon) {
+    case 'aurora_lance': return { railgunMult: 1, laserMult: 1.35, shieldRegenMult: 1.10, speedMult: 1, lootMult: 1 };
+    case 'graviton_fork': return { railgunMult: 1.45, laserMult: 1, shieldRegenMult: 1, speedMult: 1.08, lootMult: 1 };
+    case 'choir_of_mars': return { railgunMult: 1.20, laserMult: 1.20, shieldRegenMult: 1.05, speedMult: 1.03, lootMult: 1.15 };
+    default: return { railgunMult: 1, laserMult: 1, shieldRegenMult: 1, speedMult: 1, lootMult: 1 };
+  }
+}
+
+function syncAccountWidgets(message) {
+  const statusEl = document.getElementById('account-status');
+  const walletPill = document.getElementById('wallet-pill');
+  const summary = document.getElementById('create-account-summary');
+  const cycleChip = document.getElementById('bridge-cycle');
+  const linkedEmail = state.account.email ? `Account: ${state.account.email}` : 'Guest pilot';
+  const walletText = state.account.walletAddress ? `Wallet ${truncateWallet(state.account.walletAddress)}` : 'No wallet connected';
+  if (statusEl) statusEl.textContent = message || `${linkedEmail}. ${walletText}. ${getPremiumStatusLabel()}.`;
+  if (walletPill) walletPill.textContent = walletText;
+  if (summary) summary.textContent = state.account.email
+    ? `${state.account.email} linked${state.account.walletAddress ? ` · ${truncateWallet(state.account.walletAddress)}` : ''} · ${getPremiumStatusLabel()}.`
+    : 'No account linked yet. You can still play free, or return to the title screen to sign up and connect a wallet.';
+  if (cycleChip) {
+    const pct = Math.round((state.world.lightLevel || 0) * 100);
+    cycleChip.textContent = `${state.world.phaseName} cycle ${pct}%`;
+  }
+  const marquee = document.getElementById('specials-marquee');
+  if (marquee) marquee.textContent = 'Station specials rotate with the sky. Premium split remains 90% treasury / 10% Ukraine support.';
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+  return data;
+}
+
+function mergeAccountState(account) {
+  if (!account) return;
+  state.account.accountId = account.id || state.account.accountId;
+  state.account.email = account.email || state.account.email;
+  state.account.pilotName = account.pilotName || state.account.pilotName;
+  state.account.walletAddress = account.walletAddress || state.account.walletAddress;
+  state.account.loginMode = account.loginMode || state.account.loginMode;
+  state.account.premiumTier = account.premiumTier || state.account.premiumTier;
+  if (account.premiumUntil) state.premium.premiumUntil = Math.max(state.premium.premiumUntil || 0, account.premiumUntil);
+  if (account.pilotName && !document.getElementById('pilot-name').value) document.getElementById('pilot-name').value = account.pilotName;
+  const accountPilotName = document.getElementById('account-pilot-name');
+  if (accountPilotName && account.pilotName) accountPilotName.value = account.pilotName;
+  syncAccountWidgets();
+}
+
+async function signupAccount() {
+  const email = document.getElementById('account-email')?.value.trim() || '';
+  const password = document.getElementById('account-password')?.value || '';
+  const pilotName = document.getElementById('account-pilot-name')?.value.trim() || document.getElementById('pilot-name')?.value.trim() || '';
+  try {
+    const result = await postJson('/api/auth/signup', { email, password, pilotName, walletAddress: state.account.walletAddress || '' });
+    mergeAccountState(result.account);
+    showToast('Account created');
+    addComms('Registry', `Signed up as ${result.account.email}`);
+    saveGame();
+    syncAccountWidgets('Account created. You can continue as a free pilot or buy premium later.');
+  } catch (error) {
+    syncAccountWidgets(error.message);
+    showToast(error.message);
+  }
+}
+
+async function loginAccount() {
+  const email = document.getElementById('account-email')?.value.trim() || '';
+  const password = document.getElementById('account-password')?.value || '';
+  try {
+    const result = await postJson('/api/auth/login', { email, password });
+    mergeAccountState(result.account);
+    showToast('Logged in');
+    addComms('Registry', `Welcome back, ${result.account.email}`);
+    saveGame();
+    syncAccountWidgets('Account loaded. Wallet and premium state restored.');
+  } catch (error) {
+    syncAccountWidgets(error.message);
+    showToast(error.message);
+  }
+}
+
+function amountToWeiHex(amountString) {
+  const [wholeRaw, fracRaw = ''] = String(amountString).split('.');
+  const whole = wholeRaw && /^\d+$/.test(wholeRaw) ? wholeRaw : '0';
+  const frac = (fracRaw.replace(/\D/g, '') + '000000000000000000').slice(0, 18);
+  const wei = (BigInt(whole) * (10n ** 18n)) + BigInt(frac || '0');
+  return `0x${wei.toString(16)}`;
+}
+
+async function ensurePolygonWallet() {
+  if (!window.ethereum) throw new Error('No browser wallet found. Install MetaMask or a compatible wallet.');
+  try {
+    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x89' }] });
+  } catch (error) {
+    if (error.code !== 4902) throw error;
+    await window.ethereum.request({
+      method: 'wallet_addEthereumChain',
+      params: [{
+        chainId: '0x89',
+        chainName: 'Polygon Mainnet',
+        rpcUrls: ['https://polygon-rpc.com'],
+        nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+        blockExplorerUrls: ['https://polygonscan.com'],
+      }],
+    });
+  }
+}
+
+async function connectWallet(options = {}) {
+  try {
+    await ensurePolygonWallet();
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const walletAddress = accounts && accounts[0];
+    if (!walletAddress) throw new Error('Wallet connection was cancelled.');
+    state.account.walletAddress = walletAddress;
+    state.account.loginMode = state.account.email ? 'wallet+email' : 'wallet';
+    if (options.linkAccount !== false && state.account.email) {
+      try {
+        const result = await postJson('/api/auth/link-wallet', { email: state.account.email, walletAddress });
+        mergeAccountState(result.account);
+      } catch (error) {
+        addComms('Wallet', error.message);
+      }
+    }
+    saveGame();
+    syncAccountWidgets('Wallet linked. Premium purchases will disclose the 90/10 split before each transaction.');
+    showToast('Wallet connected');
+    addComms('Wallet', `Connected ${truncateWallet(walletAddress)}`);
+    return walletAddress;
+  } catch (error) {
+    syncAccountWidgets(error.message);
+    showToast(error.message);
+    throw error;
+  }
+}
+
+function hasPremiumOffer(offerId) {
+  return state.premium.weaponsUnlocked.includes(offerId);
+}
+
+function grantPremiumOffer(offer) {
+  if (offer.type === 'weapon') {
+    if (!state.premium.weaponsUnlocked.includes(offer.id)) state.premium.weaponsUnlocked.push(offer.id);
+    state.premium.activeWeapon = offer.id;
+    addComms('Armory', `${offer.name} unlocked and activated.`);
+  }
+  if (offer.type === 'time') {
+    const base = Math.max(Date.now(), state.premium.premiumUntil || 0);
+    state.premium.premiumUntil = base + (offer.days * 86400000);
+    state.account.premiumTier = offer.days >= 30 ? 'vanguard' : 'pioneer';
+    addComms('Premium', `${offer.name} activated. ${getPremiumStatusLabel()}.`);
+  }
+  state.premium.purchaseLog.unshift({ id: offer.id, at: Date.now(), pricePol: offer.pricePol });
+  syncAccountWidgets();
+  saveGame();
+}
+
+async function purchasePremiumOffer(offerId) {
+  const offer = PREMIUM_OFFERS.find((entry) => entry.id === offerId);
+  if (!offer) return;
+  const walletAddress = state.account.walletAddress || await connectWallet();
+  const donationValue = amountToWeiHex((Number(offer.pricePol) * 0.10).toFixed(18));
+  const treasuryValue = amountToWeiHex((Number(offer.pricePol) * 0.90).toFixed(18));
+  const confirmText = `${offer.name}\n\n90% of ${offer.pricePol} POL goes to ${PREMIUM_TREASURY_WALLET}\n10% goes to ${PREMIUM_DONATION_WALLET}\n\nContinue?`;
+  if (!window.confirm(confirmText)) return;
+  try {
+    await ensurePolygonWallet();
+    await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: PREMIUM_TREASURY_WALLET, value: treasuryValue }] });
+    await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: PREMIUM_DONATION_WALLET, value: donationValue }] });
+    grantPremiumOffer(offer);
+    showToast(`${offer.name} purchased`);
+  } catch (error) {
+    addComms('Wallet', `Purchase failed: ${error.message}`);
+    showToast(error.message);
+  }
+}
+
+function activatePremiumWeapon(offerId) {
+  if (!hasPremiumOffer(offerId)) return;
+  state.premium.activeWeapon = offerId;
+  syncAccountWidgets(`Active premium prototype: ${PREMIUM_OFFERS.find((offer) => offer.id === offerId)?.name || offerId}`);
+  saveGame();
+  if (state.screen === 'station') renderStation();
+}
+
+window._purchasePremiumOffer = purchasePremiumOffer;
+window._activatePremiumWeapon = activatePremiumWeapon;
+
+function getAtlasSpecials() {
+  const baseIndex = (state.location.systemIndex || 0) * 3 + Math.floor(((Date.now() + (state.world.cycleOffsetMs || 0)) / 60000) % 10);
+  return [0, 1, 2, 3].map((offset) => GALACTIC_ATLAS[(baseIndex + offset) % GALACTIC_ATLAS.length]);
+}
+
+function renderAtlasScreen() {
+  const grid = document.getElementById('atlas-grid');
+  const specials = document.getElementById('atlas-specials');
+  if (!grid || !specials) return;
+  const search = (state.atlas.search || '').trim().toLowerCase();
+  const filter = state.atlas.filter || 'all';
+  const items = GALACTIC_ATLAS.filter((entry) => {
+    if (filter !== 'all' && entry.category !== filter) return false;
+    if (!search) return true;
+    return `${entry.name} ${entry.tag} ${entry.meta}`.toLowerCase().includes(search);
+  });
+  grid.innerHTML = items.map((entry) => `<div class="atlas-entry">
+    <div class="atlas-type">${_escHtml(entry.category)}</div>
+    <div class="atlas-name">${_escHtml(entry.name)}</div>
+    <div class="atlas-tag">${_escHtml(entry.tag)}</div>
+    <div class="atlas-meta">${_escHtml(entry.meta)}</div>
+  </div>`).join('');
+  specials.innerHTML = getAtlasSpecials().map((entry) => `<div><span style="color:var(--gold)">${_escHtml(entry.name)}</span><br><span>${_escHtml(entry.tag)}</span></div>`).join('');
+}
+
 function renderStation() {
   const sys = state.starSystems[state.location.systemIndex];
   document.getElementById('station-name').innerHTML = `&#9968; ${_escHtml(sys ? sys.name : 'Unknown')} Station`;
@@ -3667,7 +4348,39 @@ function renderStation() {
   }
   walletPanel.innerHTML = `<div class="panel-title">Wallet</div>
     <div style="font-size:1.1rem;color:var(--gold);font-weight:600">${state.player.credits.toLocaleString()} EC</div>
-    <div style="font-size:0.8rem;color:var(--muted)">${state.player.stellarMarks} SM</div>`;
+    <div style="font-size:0.8rem;color:var(--muted)">${state.player.stellarMarks} SM</div>
+    <div style="font-size:0.76rem;color:var(--blue);margin-top:8px">${_escHtml(truncateWallet(state.account.walletAddress))}</div>
+    <div style="font-size:0.76rem;color:var(--muted);margin-top:4px">${_escHtml(getPremiumStatusLabel())}</div>`;
+
+  let premiumPanel = document.getElementById('premium-panel');
+  if (!premiumPanel) {
+    premiumPanel = document.createElement('div');
+    premiumPanel.id = 'premium-panel';
+    premiumPanel.className = 'station-panel';
+    stationGrid.appendChild(premiumPanel);
+  }
+  premiumPanel.innerHTML = `<div class="panel-title">Premium Arsenal & Time</div>
+    <div class="premium-note">Premium is optional. Each purchase displays the split again before transaction: 90% treasury wallet, 10% Ukraine support wallet.</div>
+    <div class="premium-card">
+      ${PREMIUM_OFFERS.map((offer) => {
+        const owned = offer.type === 'weapon' && hasPremiumOffer(offer.id);
+        const active = offer.type === 'weapon' && state.premium.activeWeapon === offer.id;
+        return `<div class="premium-offer">
+          <div class="premium-offer-top">
+            <div>
+              <div class="premium-offer-title">${_escHtml(offer.name)}</div>
+              <div class="premium-note">${_escHtml(offer.description)}</div>
+            </div>
+            <div class="premium-offer-price">${_escHtml(offer.pricePol)} POL</div>
+          </div>
+          <div class="btn-row">
+            <button class="trade-buy" onclick="window._purchasePremiumOffer('${offer.id}')">Buy</button>
+            ${offer.type === 'weapon' && owned ? `<button class="trade-sell" onclick="window._activatePremiumWeapon('${offer.id}')">${active ? 'Active' : 'Activate'}</button>` : ''}
+          </div>
+          ${active ? '<div class="premium-active">Active prototype equipped</div>' : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
 
   // Ship upgrades panel
   let upgradePanel = document.getElementById('upgrade-panel');
@@ -3790,6 +4503,115 @@ window._buy = (name, price) => {
     addComms('Station', `Purchased ${name} for ${discountedPrice} EC${discountedPrice < price ? ' (trade discount!)' : ''}.`);
     renderStation();
   }
+};
+
+const MUSIC_TRACKS = [
+  { title: 'Mercury Mouthpiece (1)', file: 'Mercury Mouthpiece (1).mp3', note: 'Opening song for the title screen and first launch.' },
+  { title: 'Bronze Orbitals (1)', file: 'Bronze Orbitals (1).mp3', note: 'Cruising track for bridge and starmap time.' },
+  { title: 'Is There Any Way Out_ (1)', file: 'Is There Any Way Out_ (1).mp3', note: 'Pressure track for deep-space runs.' },
+  { title: 'Saviors of the Universe (1)', file: 'Saviors of the Universe (1).mp3', note: 'Big-moment anthem for victories and risk.' },
+  { title: 'Void Receipt (1)', file: 'Void Receipt (1).mp3', note: 'Late-night drift track for exploration.' },
+];
+
+const MusicPlayer = {
+  audio: null,
+  currentIndex: 0,
+  unlocked: false,
+  init() {
+    if (this.audio) return;
+    this.audio = document.getElementById('bgm-player');
+    if (!this.audio) return;
+    this.audio.preload = 'metadata';
+    this.audio.loop = false;
+    this.audio.addEventListener('ended', () => this.next(true));
+    this.audio.addEventListener('timeupdate', () => this.renderProgress());
+    this.audio.addEventListener('loadedmetadata', () => this.renderProgress());
+    this.audio.addEventListener('play', () => this.renderControls());
+    this.audio.addEventListener('pause', () => this.renderControls());
+    this.buildPlaylist();
+    this.setTrack(0, false);
+    this.syncVolume();
+  },
+  buildPlaylist() {
+    const list = document.getElementById('music-playlist');
+    if (!list) return;
+    list.innerHTML = '';
+    MUSIC_TRACKS.forEach((track, index) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'music-track';
+      btn.textContent = track.title;
+      btn.addEventListener('click', () => this.setTrack(index, true));
+      list.appendChild(btn);
+    });
+    this.renderPlaylist();
+  },
+  setTrack(index, shouldPlay) {
+    if (!this.audio) return;
+    this.currentIndex = (index + MUSIC_TRACKS.length) % MUSIC_TRACKS.length;
+    const track = MUSIC_TRACKS[this.currentIndex];
+    this.audio.src = '/musicgame/' + encodeURIComponent(track.file);
+    this.audio.dataset.trackIndex = String(this.currentIndex);
+    const title = document.getElementById('music-track-title');
+    const subtitle = document.getElementById('music-track-subtitle');
+    if (title) title.textContent = track.title;
+    if (subtitle) subtitle.textContent = track.note;
+    this.renderPlaylist();
+    this.renderControls();
+    this.renderProgress();
+    if (shouldPlay) this.play();
+  },
+  play() {
+    if (!this.audio) return;
+    this.unlocked = true;
+    AudioSFX.stopBGM();
+    this.syncVolume();
+    this.audio.play().catch(() => {});
+    this.renderControls();
+  },
+  pause() {
+    if (!this.audio) return;
+    this.audio.pause();
+    this.renderControls();
+  },
+  toggle() {
+    if (!this.audio) return;
+    if (this.audio.paused) this.play();
+    else this.pause();
+  },
+  next(autoPlay = true) {
+    this.setTrack(this.currentIndex + 1, autoPlay);
+  },
+  prev() {
+    this.setTrack(this.currentIndex - 1, true);
+  },
+  syncVolume() {
+    if (!this.audio) return;
+    this.audio.volume = Math.max(0, Math.min(1, (state.settings.masterVol || 0) * (state.settings.bgmVol != null ? state.settings.bgmVol : 0.6)));
+  },
+  renderControls() {
+    const toggle = document.getElementById('music-toggle');
+    if (!toggle || !this.audio) return;
+    toggle.textContent = this.audio.paused ? '▶ Play' : '❚❚ Pause';
+  },
+  renderPlaylist() {
+    const list = document.getElementById('music-playlist');
+    if (!list) return;
+    [...list.children].forEach((node, index) => node.classList.toggle('active', index === this.currentIndex));
+  },
+  renderProgress() {
+    const fill = document.getElementById('music-progress-fill');
+    if (!fill || !this.audio) return;
+    const ratio = this.audio.duration ? Math.max(0, Math.min(1, this.audio.currentTime / this.audio.duration)) : 0;
+    fill.style.width = Math.round(ratio * 100) + '%';
+  },
+  unlockAndStartOpeningSong() {
+    if (!this.audio) this.init();
+    if (!this.unlocked) {
+      this.unlocked = true;
+      this.setTrack(0, true);
+    }
+  },
 };
 window._sell = (name, price) => {
   const idx = state.inventory.findIndex(i => i.name === name);
@@ -4261,7 +5083,7 @@ function initSettingsScreen() {
   if (volB) {
     volB.value = (state.settings.bgmVol || 0.6) * 100;
     document.getElementById('vol-bgm-val').textContent = Math.round((state.settings.bgmVol || 0.6) * 100) + '%';
-    volB.oninput = () => { state.settings.bgmVol = volB.value / 100; document.getElementById('vol-bgm-val').textContent = volB.value + '%'; AudioSFX.refreshMix(); };
+    volB.oninput = () => { state.settings.bgmVol = volB.value / 100; document.getElementById('vol-bgm-val').textContent = volB.value + '%'; AudioSFX.refreshMix(); MusicPlayer.syncVolume(); };
   }
   sens.oninput = () => { state.settings.sensitivity = parseInt(sens.value); document.getElementById('setting-sens-val').textContent = sens.value; };
   scan.onchange = () => { state.settings.scanlines = scan.checked; };
@@ -4339,6 +5161,9 @@ function saveGame() {
     insuredItemId: state.insuredItemId,
     chatbot: { autoTarget: state.chatbot.autoTarget, autoMine: state.chatbot.autoMine },
     purchasedUpgrades: state.purchasedUpgrades || [],
+    account: state.account,
+    premium: state.premium,
+    world: state.world,
   };
   try { localStorage.setItem('oe-save', JSON.stringify(data)); }
   catch (e) { addComms('System', 'Save failed — storage full.'); }
@@ -4361,6 +5186,10 @@ function loadGame() {
     if (!state.soulMemory) state.soulMemory = { tradeInsight:0, combatInstinct:0, shieldMemory:0 };
     if (state.soulMemory.fuelConservation !== undefined) { state.soulMemory.tradeInsight = state.soulMemory.tradeInsight || 0; delete state.soulMemory.fuelConservation; delete state.soulMemory.lootSense; delete state.soulMemory.spatialAwareness; }
     if (!state.purchasedUpgrades) state.purchasedUpgrades = [];
+    if (!state.account) state.account = { email:'', pilotName:'', walletAddress:'', loginMode:'guest', accountId:'', premiumTier:'free' };
+    if (!state.premium) state.premium = { weaponsUnlocked: [], activeWeapon: 'standard', premiumUntil: 0, purchaseLog: [] };
+    if (!state.world) state.world = { cycleDurationMs: 360000, cycleOffsetMs: 0, phaseName: 'Daybreak', lightLevel: 0.5 };
+    syncAccountWidgets();
     return true;
   } catch(e) { return false; }
 }
@@ -4373,6 +5202,7 @@ const hudCanvas = document.getElementById('hud-canvas');
 const hudCtx = hudCanvas.getContext('2d');
 const c = state.combat;
 let renderer, scene, camera, ship, turretMount, cockpit, composer;
+let starLight, fillLight, rimLight, hemiLight;
 let railGlowMatL, railGlowMatR, muzzleMat, railL, railR;
 let threeReady = false;
 let shieldShimmerMat, shieldShimmerGeo, shieldShimmer;
@@ -4432,18 +5262,18 @@ scene.add(new THREE.AmbientLight(0x667799, 2.0));
 // Persistent muzzle flash point light (reused per shot)
 window._mfLight = new THREE.PointLight(0x88ccff, 0, 20);
 scene.add(window._mfLight);
-const starLight = new THREE.DirectionalLight(0xfff8e8, 4.0);
+starLight = new THREE.DirectionalLight(0xfff8e8, 4.0);
 starLight.position.set(500, 400, 300);
 starLight.castShadow = false;
 scene.add(starLight);
-const fillLight = new THREE.DirectionalLight(0x88aadd, 1.5);
+fillLight = new THREE.DirectionalLight(0x88aadd, 1.5);
 fillLight.position.set(-400, 200, -300);
 scene.add(fillLight);
-const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
 rimLight.position.set(0, -200, 500);
 scene.add(rimLight);
 // Hemisphere light for natural sky/ground ambient
-const hemiLight = new THREE.HemisphereLight(0x88bbff, 0x224466, 1.2);
+hemiLight = new THREE.HemisphereLight(0x88bbff, 0x224466, 1.2);
 
 // ── Cockpit interior spot light (warm glow) ──
 const cockpitSpot = new THREE.SpotLight(0xffddaa, 0.6, 10, Math.PI / 4, 0.5, 1);
@@ -6670,7 +7500,7 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
     ev.stopPropagation();
     if (!c.active) return;
     const action = btn.dataset.action;
-    if (action === 'mine') { if (state.mining.active) stopMining(); else if (c.asteroids.length > 0) startMining(0); }
+    if (action === 'mine') { if (state.mining.active) stopMining(); else if (c.asteroids.length > 0) startMining(getNearestAsteroidIndex()); }
     else if (action === 'chat') { const panel = document.getElementById('chatbot-panel'); panel.classList.toggle('open'); state.chatbot.visible = panel.classList.contains('open'); if (state.chatbot.visible) { if (document.pointerLockElement) document.exitPointerLock(); setTimeout(() => document.getElementById('chatbot-input').focus(), 100); } }
     else if (action === 'skins') { document.getElementById('skin-panel').classList.toggle('open'); }
     else if (action === 'gate') { if (stargateGroup && ship.position.distanceTo(stargateGroup.position) < 40) { if (state.inAltUniverse) exitAltUniverse(); else enterAltUniverse(); } else addComms('System', 'No stargate in range.'); }
@@ -6702,6 +7532,9 @@ _on('btn-settings-back', 'click', () => {
 _on('btn-reroll', 'click', randomizeGenome);
 _on('btn-create-char', 'click', createCharacter);
 _on('btn-back-title', 'click', () => showScreen('title'));
+_on('music-toggle', 'click', () => MusicPlayer.toggle());
+_on('music-prev', 'click', () => MusicPlayer.prev());
+_on('music-next', 'click', () => MusicPlayer.next(true));
 
 // Leaderboard
 _on('btn-leaderboard', 'click', () => { renderLeaderboard(); showScreen('leaderboard'); });
@@ -8627,6 +9460,8 @@ let miningLaserBeam = null;
 
 function startMining(asteroidIndex) {
   if (state.mining.active || c.dead || state.location.docked) return;
+  ensureMiningAutomationState();
+  if (state.mining.operations.autoScan && (asteroidIndex == null || asteroidIndex < 0)) asteroidIndex = getNearestAsteroidIndex();
   const asteroid = c.asteroids[asteroidIndex];
   if (!asteroid) return;
   state.mining.active = true;
@@ -8645,10 +9480,16 @@ function startMining(asteroidIndex) {
 
 function updateMining(dt) {
   if (!state.mining.active) return;
+  const miningProfile = getMiningYieldProfile('manual');
+  if (state.mining.operations.hazardPing && c.enemies.length > 0) {
+    addComms('Mining Ops', 'Hazard ping triggered. Hostiles detected, drilling paused.');
+    stopMining();
+    return;
+  }
   const asteroid = state.mining.targetRef;
   if (!asteroid || !asteroid.parent) { stopMining(); return; }
 
-  state.mining.progress += dt * 20; // 5 seconds to mine
+  state.mining.progress += dt * 20 * miningProfile.progressMult; // 5 seconds baseline
 
   // Update laser beam visual
   if (miningLaserBeam) {
@@ -8664,26 +9505,13 @@ function updateMining(dt) {
   }
 
   if (state.mining.progress >= 100) {
-    // Mining complete — yield resources
-    const ores = ['Titanite Ore', 'Iron Fragments', 'Dark Matter Crystals', 'Rare Earth Compounds', 'Platinum Dust'];
-    const ore = ores[Math.floor(Math.random() * ores.length)];
-    const qty = 1 + Math.floor(Math.random() * 3);
-    const existing = state.inventory.find(i => i.name === ore);
-    if (existing) existing.quantity += qty;
-    else state.inventory.push({ name: ore, quantity: qty });
-    const _miningScale = Math.max(1, 1 + (state.player.rebirths || 0) * 0.15 + ((c.cycle || 1) - 1) * 0.08);
-    const _miningUpgradeMult = state.upgrades.miningYield || 1;
-    const credits = Math.floor((20 + Math.floor(Math.random() * 40)) * _miningScale * _miningUpgradeMult);
-    state.player.credits += credits;
-    gainSkillXP('mining', 0.06);
-    c.dmgNumbers.push({ text: '+' + ore, px: asteroid.position.x, py: asteroid.position.y, pz: asteroid.position.z, age: 0, color: '#00ff88' });
-    addComms('Mining', `Extracted ${qty}x ${ore} (+${credits} EC)`);
+    grantMiningYield({ source: 'manual', asteroid });
     AudioSFX.play('quest_complete');
     // Offline collect quest progress
     state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
       q.objectives.forEach(o => {
-        if (o.type === 'collect' && (o.target === '*' || o.target === ore)) {
-          o.current = (o.current || 0) + qty;
+        if (o.type === 'collect' && (o.target === '*' || o.target === state.mining.lastYield?.ore)) {
+          o.current = (o.current || 0) + (state.mining.lastYield?.quantity || 1);
         }
       });
       if (q.objectives.every(o => (o.current || 0) >= o.required)) {
@@ -8860,7 +9688,7 @@ async function spawnStationModel() {
   const stationKey = _stationPool[state.location.systemIndex % _stationPool.length];
   try {
     const model = await loadGLBModel(stationKey);
-    if (!c.active) return; // Guard: player exited during async load
+    if (!c.active && state.screen !== 'title') return; // Guard: player exited during async load
     const inst = model.clone();
     inst.position.set(ship.position.x - 60, ship.position.y + 10, ship.position.z - 80);
     scene.add(inst);
@@ -8952,6 +9780,151 @@ const MARKET_ITEMS = [
   { name: 'Temporal Shard',        category: 'artifact', basePrice: 4500 },
 ];
 
+const MINING_OPERATION_FEATURES = [
+  { id: 'autoScan', label: 'Auto Scan', desc: 'Prioritises the nearest viable asteroid instead of the first lock.', effect: 'Cleaner target selection.' },
+  { id: 'autoClaim', label: 'Auto Claim', desc: 'Pulls extracted ore directly into cargo without extra clicks.', effect: 'No manual pickup step.' },
+  { id: 'autoDrill', label: 'Auto Drill', desc: 'Starts autodrilling when the belt is clear.', effect: 'Continuous belt uptime.' },
+  { id: 'beamFocus', label: 'Beam Focus', desc: 'Tightens the mining beam for faster cuts.', effect: '+20% mining speed.' },
+  { id: 'fracturePulse', label: 'Fracture Pulse', desc: 'Breaks richer veins loose from dense asteroids.', effect: 'Bonus ore spikes.' },
+  { id: 'yieldOptimizer', label: 'Yield Optimizer', desc: 'Tunes the cut profile for more sellable mass.', effect: '+25% credits.' },
+  { id: 'droneSwarm', label: 'Drone Swarm', desc: 'Turns the mining drone into a serious extractor.', effect: 'Drone drops real ore.' },
+  { id: 'cargoPress', label: 'Cargo Press', desc: 'Compresses bulk ore for better hold efficiency.', effect: 'Occasional extra cargo lot.' },
+  { id: 'autoRefine', label: 'Auto Refine', desc: 'Refines part of the haul instantly into extra cash value.', effect: 'Flat credit bonus.' },
+  { id: 'oreSorting', label: 'Ore Sorting', desc: 'Separates clean lots for premium buyer rates.', effect: '+10% sale price.' },
+  { id: 'hazardPing', label: 'Hazard Ping', desc: 'Pauses drilling when hostiles close in.', effect: 'Keeps miners alive.' },
+  { id: 'tractorScoop', label: 'Tractor Scoop', desc: 'Assists ore collection around the ship.', effect: 'Faster cargo intake.' },
+  { id: 'routeToBuyer', label: 'Route To Buyer', desc: 'Keeps a buyer route ready while you mine in space.', effect: 'Best buyer stays surfaced.' },
+  { id: 'remoteSell', label: 'Remote Sell', desc: 'Teleports ore lots to an NPC buyer without docking.', effect: 'Instant ore liquidation.' },
+  { id: 'marketBeacon', label: 'Market Beacon', desc: 'Pings better buyers into the current sector.', effect: 'Stronger remote rates.' },
+];
+
+function getMarketItemMeta(itemName) {
+  return MARKET_ITEMS.find(item => item.name === itemName) || { name: itemName, category: 'material', basePrice: 100 };
+}
+
+function addInventoryItem(name, quantity) {
+  const existing = state.inventory.find(item => item.name === name);
+  if (existing) existing.quantity = (existing.quantity || 1) + quantity;
+  else state.inventory.push({ name, quantity });
+}
+
+function getNearestAsteroidIndex() {
+  let bestIndex = -1;
+  let bestDistance = Infinity;
+  c.asteroids.forEach((asteroid, index) => {
+    if (!asteroid?.position) return;
+    const distance = asteroid.position.distanceToSquared(ship.position);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  });
+  return bestIndex;
+}
+
+function refreshNPCBuyers(force = false) {
+  ensureMiningAutomationState();
+  if (!force && state.market.npcBuyers.length && Date.now() - state.market.lastBuyerRefresh < 45000) return;
+  const names = ['Helix Prospectors', 'Noctis Bulk Exchange', 'Eden Remnants Broker', 'Viridian Relay', 'Orbital Sink Market'];
+  const sysName = state.starSystems?.[state.location.systemIndex]?.name || 'Old Eden Approach';
+  state.market.npcBuyers = MARKET_ITEMS.filter(item => item.category === 'ore' || item.category === 'material' || item.category === 'rare').map((item, index) => {
+    const premium = state.mining.operations.marketBeacon ? 1.12 : 1;
+    const sorting = state.mining.operations.oreSorting ? 1.1 : 1;
+    return {
+      id: 'buyer-' + item.name.replace(/\s+/g, '-').toLowerCase(),
+      item: item.name,
+      buyer: names[index % names.length],
+      location: sysName,
+      price: Math.floor(item.basePrice * (0.78 + (index % 4) * 0.06) * premium * sorting),
+      note: index % 2 === 0 ? 'Remote relay ready' : 'Bulk freighter in-system',
+    };
+  });
+  state.market.lastBuyerRefresh = Date.now();
+}
+
+function getBestRemoteBuyer(itemName) {
+  refreshNPCBuyers();
+  return state.market.npcBuyers.filter(buyer => buyer.item === itemName).sort((a, b) => b.price - a.price)[0] || null;
+}
+
+function pushMarketHistory(item, type, price, quantity, trader) {
+  state.market.history.push({ item, type, price, quantity, trader, time: Date.now() });
+  if (state.market.history.length > 100) state.market.history.splice(0, state.market.history.length - 100);
+}
+
+function getMiningYieldProfile(source) {
+  ensureMiningAutomationState();
+  const ops = state.mining.operations;
+  const isDrone = source === 'drone';
+  let progressMult = 1;
+  let oreMult = 1;
+  let creditsMult = 1;
+  let bonusQty = 0;
+  let refineBonus = 0;
+  if (ops.beamFocus) progressMult += 0.2;
+  if (ops.fracturePulse) bonusQty += Math.random() < 0.55 ? 1 : 0;
+  if (ops.yieldOptimizer) creditsMult += 0.25;
+  if (ops.cargoPress) bonusQty += Math.random() < 0.25 ? 1 : 0;
+  if (ops.autoRefine) refineBonus += 35;
+  if (ops.tractorScoop) oreMult += 0.15;
+  if (isDrone && ops.droneSwarm) { oreMult += 0.35; creditsMult += 0.2; bonusQty += 1; }
+  return { progressMult, oreMult, creditsMult, bonusQty, refineBonus };
+}
+
+function resolveMiningTargetOre() {
+  const sys = state.starSystems?.[state.location.systemIndex];
+  const preferred = state.mining.targetOre || sys?.resources?.[0] || 'Titanite Ore';
+  if (MARKET_ITEMS.some(item => item.name === preferred)) return preferred;
+  return 'Titanite Ore';
+}
+
+function grantMiningYield({ source = 'manual', asteroid = null } = {}) {
+  const ore = resolveMiningTargetOre();
+  const itemMeta = getMarketItemMeta(ore);
+  const profile = getMiningYieldProfile(source);
+  const baseQty = 1 + Math.floor(Math.random() * 3);
+  const quantity = Math.max(1, Math.round(baseQty * profile.oreMult) + profile.bonusQty);
+  const credits = Math.floor((itemMeta.basePrice * 0.2 + Math.random() * 35) * profile.creditsMult) + profile.refineBonus;
+  addInventoryItem(ore, quantity);
+  state.player.credits += credits;
+  state.mining.completedRuns = (state.mining.completedRuns || 0) + 1;
+  state.mining.lastYield = { ore, quantity, credits, source };
+  gainSkillXP('mining', source === 'drone' ? 0.05 : 0.08);
+  if (asteroid?.position) {
+    c.dmgNumbers.push({ text: `+${quantity} ${ore}`, px: asteroid.position.x, py: asteroid.position.y, pz: asteroid.position.z, age: 0, color: '#00ff88' });
+  }
+  if (state.mining.operations.remoteSell && state.mining.operations.routeToBuyer) {
+    const buyer = getBestRemoteBuyer(ore);
+    if (buyer) {
+      const inventoryEntry = state.inventory.find(item => item.name === ore);
+      if (inventoryEntry) {
+        inventoryEntry.quantity -= quantity;
+        if (inventoryEntry.quantity <= 0) state.inventory = state.inventory.filter(item => item !== inventoryEntry);
+      }
+      const saleCredits = buyer.price * quantity;
+      state.player.credits += saleCredits;
+      state.market.teleports += quantity;
+      pushMarketHistory(ore, 'sell', buyer.price, quantity, buyer.buyer + ' remote');
+      addComms('Market', `Remote buyer ${buyer.buyer} accepted ${quantity}x ${ore} for ${saleCredits} EC.`);
+      return { ore, quantity, credits: credits + saleCredits, soldRemotely: true };
+    }
+  }
+  pushMarketHistory(ore, 'mine', Math.floor(itemMeta.basePrice * 0.2), quantity, source === 'drone' ? 'Mining drone' : 'Ship drill');
+  addComms('Mining', `${source === 'drone' ? 'Drone haul' : 'Extracted'} ${quantity}x ${ore} (+${credits} EC).`);
+  return { ore, quantity, credits, soldRemotely: false };
+}
+
+function renderMiningOpsPanel() {
+  const buyers = state.market.npcBuyers.slice(0, 4);
+  const featureCards = MINING_OPERATION_FEATURES.map(feature => {
+    const active = !!state.mining.operations[feature.id];
+    return `<div class="market-op-card"><strong>${_escHtml(feature.label)}</strong><p>${_escHtml(feature.desc)} ${_escHtml(feature.effect)}</p><button class="btn btn-sm" onclick="window._toggleMiningFeature('${feature.id}')">${active ? 'Disable' : 'Enable'}</button></div>`;
+  }).join('');
+  const buyerCards = buyers.length ? buyers.map(buyer => `<div class="buyer-card"><strong>${_escHtml(buyer.buyer)}</strong><div>${_escHtml(buyer.item)} · ${buyer.price} EC</div><div style="color:var(--muted);font-size:0.76rem;">${_escHtml(buyer.location)} · ${_escHtml(buyer.note)}</div></div>`).join('') : '<p style="color:var(--muted)">No NPC buyers online yet.</p>';
+  const lastYield = state.mining.lastYield ? `${state.mining.lastYield.quantity}x ${state.mining.lastYield.ore} (${state.mining.lastYield.source})` : 'No completed mining run yet.';
+  return `<div class="premium-card"><div class="panel-title">Frontier Mining Automation</div><div class="premium-note">14 automation features are now wired into the existing mining loop. Enable autodrilling near belts, hold a buyer route in space, and teleport ore to NPC buyers without docking.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-sm" onclick="window._miningPreset('profit')">Profit Preset</button><button class="btn btn-sm" onclick="window._miningPreset('safety')">Safety Preset</button><button class="btn btn-sm" onclick="window._teleportCargoSale()">Teleport Ore Sale</button><button class="btn btn-sm" onclick="window._summonNpcBuyer()">Summon NPC Buyer</button></div><div style="margin-top:10px;color:var(--muted);font-size:0.78rem;">Last haul: ${_escHtml(lastYield)}. Completed runs: ${state.mining.completedRuns || 0}. Remote teleports: ${state.market.teleports || 0} lots.</div><div class="market-ops-grid">${featureCards}</div><div class="buyer-strip">${buyerCards}</div></div>`;
+}
+
 function generateNPCMarketOrders() {
   state.market.orders = [];
   const npcTraders = ['Stellaris Corp', 'Free Traders Consortium', 'Eden Remnants Salvage', 'Iron Syndicate Brokers', 'Void Cult Labs', 'NPC-' + Math.floor(Math.random()*999)];
@@ -8998,7 +9971,8 @@ window._marketTab = (tab) => {
 function renderMarketScreen() {
   const el = document.getElementById('market-content');
   // Tab highlights
-  ['buy','sell','history','place'].forEach(t => {
+  refreshNPCBuyers();
+  ['buy','sell','history','place','ops'].forEach(t => {
     const btn = document.getElementById('market-tab-' + t);
     if (btn) { btn.style.borderColor = t === marketTab ? 'var(--gold)' : ''; btn.style.color = t === marketTab ? 'var(--gold)' : ''; }
   });
@@ -9037,8 +10011,62 @@ function renderMarketScreen() {
       </div>
       <button class="btn btn-sm" onclick="window._placeOrder()">Place Order</button>
     </div>`;
+  } else if (marketTab === 'ops') {
+    el.innerHTML = renderMiningOpsPanel();
   }
 }
+
+window._toggleMiningFeature = (featureId) => {
+  ensureMiningAutomationState();
+  if (!(featureId in state.mining.operations)) return;
+  state.mining.operations[featureId] = !state.mining.operations[featureId];
+  if (featureId === 'autoDrill') state.chatbot.autoMine = state.mining.operations[featureId];
+  if (featureId === 'marketBeacon' || featureId === 'oreSorting') refreshNPCBuyers(true);
+  addComms('Mining Ops', `${MINING_OPERATION_FEATURES.find(feature => feature.id === featureId)?.label || featureId} ${state.mining.operations[featureId] ? 'enabled' : 'disabled'}.`);
+  if (state.screen === 'market') renderMarketScreen();
+};
+
+window._miningPreset = (preset) => {
+  ensureMiningAutomationState();
+  if (preset === 'profit') {
+    Object.assign(state.mining.operations, { autoScan: true, autoClaim: true, autoDrill: true, beamFocus: true, fracturePulse: true, yieldOptimizer: true, droneSwarm: true, cargoPress: true, autoRefine: true, oreSorting: true, hazardPing: true, tractorScoop: true, routeToBuyer: true, remoteSell: true, marketBeacon: true });
+    state.chatbot.autoMine = true;
+  } else {
+    Object.assign(state.mining.operations, { autoScan: true, autoClaim: true, autoDrill: false, beamFocus: true, fracturePulse: false, yieldOptimizer: true, droneSwarm: false, cargoPress: false, autoRefine: false, oreSorting: true, hazardPing: true, tractorScoop: true, routeToBuyer: true, remoteSell: false, marketBeacon: false });
+    state.chatbot.autoMine = false;
+  }
+  refreshNPCBuyers(true);
+  addComms('Mining Ops', `${preset === 'profit' ? 'Profit' : 'Safety'} preset loaded.`);
+  renderMarketScreen();
+};
+
+window._summonNpcBuyer = () => {
+  state.mining.operations.marketBeacon = true;
+  refreshNPCBuyers(true);
+  addComms('Market', 'NPC buyer beacon broadcast into the current sector. Better rates are now visible in Mining Ops.');
+  if (state.screen === 'market') renderMarketScreen();
+};
+
+window._teleportCargoSale = () => {
+  refreshNPCBuyers(true);
+  const sellable = state.inventory.filter(item => ['ore', 'material', 'rare'].includes(getMarketItemMeta(item.name).category) && (item.quantity || 0) > 0);
+  if (sellable.length === 0) { addComms('Market', 'No ore cargo available for remote sale.'); return; }
+  let totalCredits = 0;
+  sellable.forEach(item => {
+    const buyer = getBestRemoteBuyer(item.name);
+    if (!buyer) return;
+    const quantity = item.quantity || 1;
+    const credits = buyer.price * quantity;
+    totalCredits += credits;
+    pushMarketHistory(item.name, 'sell', buyer.price, quantity, buyer.buyer + ' remote');
+    item.quantity = 0;
+  });
+  state.inventory = state.inventory.filter(item => (item.quantity || 0) > 0);
+  state.player.credits += totalCredits;
+  state.market.teleports += 1;
+  addComms('Market', `Cargo teleported to NPC buyers. +${totalCredits} EC credited to your wallet.`);
+  if (state.screen === 'market') renderMarketScreen();
+};
 
 window._marketBuy = (orderId) => {
   const order = state.market.orders.find(o => o.id === orderId);
@@ -9151,7 +10179,7 @@ const EDEN_AI_RESPONSES = {
   'help':       'Commands: target, mine, status, market, jump, navigate, artifacts, dock. Toggle Auto-Target or Auto-Mine with the buttons below.',
   'status':     () => `Hull: ${Math.floor(state.ship.hull)}/${state.ship.maxHull} | Shield: ${Math.floor(state.ship.shield)}/${state.ship.maxShield} | Credits: ${state.player.credits} EC | Kills: ${c.kills}`,
   'target':     () => { if (c.enemies.length === 0) return 'No hostiles detected.'; const nearest = c.enemies.reduce((a,b) => a.group.position.distanceTo(ship.position) < b.group.position.distanceTo(ship.position) ? a : b); return `Nearest hostile: ${nearest.type} at ${Math.floor(nearest.group.position.distanceTo(ship.position))}m — ${nearest.hp}/${nearest.maxHp} HP`; },
-  'mine':       () => { if (c.asteroids.length === 0) return 'No asteroids nearby.'; startMining(0); return 'Mining laser engaged on nearest asteroid.'; },
+  'mine':       () => { if (c.asteroids.length === 0) return 'No asteroids nearby.'; startMining(getNearestAsteroidIndex()); return 'Mining laser engaged on nearest asteroid.'; },
   'market':     () => `Market has ${state.market.orders.length} active orders. Use the Market screen (nav bar) for trading.`,
   'jump':       () => `Current system: ${state.starSystems[state.location.systemIndex]?.name || 'Unknown'}. Use Star Map for navigation.`,
   'artifacts':  () => state.inAltUniverse ? `Alt universe: ${state.altUniverse.artifactsCollected}/${state.altUniverse.artifactsNeeded} artifacts collected.` : 'Not in alt universe. Find a Stargate to enter.',
@@ -9237,7 +10265,7 @@ function updateAutoSystems(dt) {
   }
   // Auto-mine: mine nearest asteroid when no enemies in range
   if (state.chatbot.autoMine && c.active && !state.mining.active && c.enemies.length === 0 && c.asteroids.length > 0) {
-    startMining(0);
+    startMining(getNearestAsteroidIndex());
   }
 }
 
@@ -9589,7 +10617,7 @@ document.addEventListener('keydown', (e) => {
   // M = mining toggle
   if (e.key === 'm' || e.key === 'M') {
     if (state.mining.active) stopMining();
-    else if (c.asteroids.length > 0) startMining(0);
+    else if (c.asteroids.length > 0) startMining(getNearestAsteroidIndex());
   }
   // T = chatbot toggle (release pointer lock to allow typing)
   if (e.key === 't' || e.key === 'T') {
@@ -9722,7 +10750,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 
   if (!scene || !camera || !ship || !turretMount || (!composer && !renderer)) return;
-  const shouldRenderFrame = c.active || state.screen === 'gunner' || state.screen === 'bridge';
+  const shouldRenderFrame = c.active || state.screen === 'gunner' || state.screen === 'bridge' || state.screen === 'title';
   try {
     if (!state._frameCount) state._frameCount = 0;
     state._frameCount++;
@@ -9730,6 +10758,7 @@ function gameLoop() {
     const dt = rawDt * (state._deathTimeDilation || 1);
     const dtMs = dt * 1000;
     state.gameTime += dtMs;
+    updateWorldCycleVisuals();
 
     // ═══ Power Management Multipliers ═══
     const alloc = state.powerAlloc || { weapons: 34, shields: 33, engines: 33 };
@@ -10012,14 +11041,13 @@ function gameLoop() {
         mdM.lookAt(nearestAst.position);
         // Auto-mine
         if (mdM.position.distanceTo(nearestAst.position) < 10) {
-          md.progress = (md.progress || 0) + dt * 15;
+          md.progress = (md.progress || 0) + dt * 15 * getMiningYieldProfile('drone').progressMult;
           state.miningBeamActive = true;
           state.miningBeamProgress = md.progress;
           if (md.progress >= 100) {
             md.progress = 0;
-            state.player.credits += 10;
-            gainSkillXP('mining', 0.05);
-            showToast('+10 EC (drone mining)');
+            const haul = grantMiningYield({ source: 'drone', asteroid: nearestAst });
+            showToast(`+${haul.quantity} ${haul.ore} (${haul.soldRemotely ? 'remote sale' : 'drone haul'})`);
           }
         }
       } else {
@@ -10772,6 +11800,8 @@ function gameLoop() {
       hudCtx.fillText('TGT ' + tDist + 'm', 20, hudCanvas.height - 16);
     }
     renderLibraryLabels();
+  } else if (state.screen === 'title') {
+    updateTitleScene(dt);
   } else {
     // Bridge — gentle idle camera
     const time = state.gameTime * 0.0001;
@@ -10817,7 +11847,10 @@ async function init() {
       AudioSFX.uiHover();
     }
   }, true);
+  initUiVoiceLabels();
   state.starSystems = generateStarSystems();
+  ensureMiningAutomationState();
+  primeTitleScene();
 
   // Try to connect Socket.IO
   state.socket = await connectSocket();
@@ -10874,8 +11907,10 @@ async function init() {
 
   // Start
   // Init audio on first user interaction
-  document.addEventListener('click', () => AudioSFX.init(), { once: true });
-  document.addEventListener('keydown', () => AudioSFX.init(), { once: true });
+  document.addEventListener('click', () => { AudioSFX.init(); MusicPlayer.init(); MusicPlayer.unlockAndStartOpeningSong(); }, { once: true });
+  document.addEventListener('keydown', () => { AudioSFX.init(); MusicPlayer.init(); MusicPlayer.unlockAndStartOpeningSong(); }, { once: true });
+
+  MusicPlayer.init();
 
   initSkinSwatches();
   addComms('AI Director', 'Old Eden systems initialising...');

@@ -16,11 +16,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createAssetUploadRouter } from './AssetUploadRouter.js';
+import { createAuthRouter } from './AuthRouter.js';
 import { logEvent } from './Logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, '..', '..', 'public');
+const musicDir = path.resolve(__dirname, '..', '..', 'musicgame');
 
 /**
  * Create and configure the Express application.
@@ -106,9 +108,11 @@ export function createHttpServer({ uploadDir = 'uploads', maxFileSize, corsOrigi
 
   // ── Static serving of uploaded assets ─────────────────────────────────────
   app.use('/assets', express.static(path.resolve(uploadDir)));
+  app.use('/musicgame', express.static(musicDir));
 
   // ── Asset upload API ──────────────────────────────────────────────────────
   app.use('/api/assets', createAssetUploadRouter({ uploadDir, maxFileSize }));
+  app.use('/api/auth', createAuthRouter());
 
   // ── Log server start event ──
   logEvent('server', 'Express server initialized');
