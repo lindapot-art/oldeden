@@ -8661,6 +8661,8 @@ document.addEventListener('keydown', (e) => {
       state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
       c._weaponSwapping = false;
       c.weaponReady = true;
+      // Weapon switch bonus — +20% damage for 3s when switching mid-combat
+      if (c.streak > 0) { c._weaponSwitchBonus = state.gameTime + 3000; addCombatLog('WEAPON SWITCH — +20% damage for 3s', '#88ccff'); }
       showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '\u26A1 Railgun' : '\u25C8 Laser'));
       addComms('System', `Switched to ${state.activeWeapon === 'railgun' ? 'Railgun \u2014 High damage, uses ammo' : 'Laser Turret \u2014 Fast fire, uses heat'}`);
       AudioSFX.play('click');
@@ -12578,9 +12580,10 @@ function gameLoop() {
       if (c.fireRecoilKick < 0.001) c.fireRecoilKick = 0;
     }
 
-    // Kill streak decay
+    // Kill streak decay — active combat (firing) slows decay
     if (c.streak > 0) {
-      c.streakTimer -= dtMs;
+      const _firingPause = (mouseHeld || c.charging) ? 0.3 : 1; // 70% slower decay while firing
+      c.streakTimer -= dtMs * _firingPause;
       if (c.streakTimer <= 0) { c.streak = 0; c.streakMultiplier = 1; c._scoreMultiplier = 1; c._streakDR = 0; }
       if (c._streakMilestoneTimer > 0) c._streakMilestoneTimer -= dtMs;
     }
@@ -13031,6 +13034,8 @@ function gameLoop() {
           // Apply genome damage multiplier + weapon-specific damage + crit chance
           const baseDmg = p.isLaser ? (p.damage || 0.65) : 1.0;
           let genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
+          // Weapon switch bonus — +20% damage for 3s after switching
+          if (c._weaponSwitchBonus && state.gameTime < c._weaponSwitchBonus) genomeDmg *= 1.2;
           const isCrit = Math.random() < 0.12 || (c.streak > 0 && c.streak % 10 === 0); // 12% crit + guaranteed every 10th streak kill
           if (isCrit) genomeDmg *= 2.0;
           // Armor-piercing ammo bonus (+40% damage, ignores shields)
@@ -13363,6 +13368,23 @@ function gameLoop() {
                 p._ricochetCount = _ricCount;
                 p._ricocheted = false; // allow further chains
               }
+            }
+            // Chain lightning — laser kills with 3+ rapid kills arc to nearby enemies
+            if (p.isLaser && c._rapidKills >= 3) {
+              const _chainPos = e.group.position.clone();
+              let _chainCount = 0;
+              c.enemies.forEach(_ce => {
+                if (_chainCount >= 2 || _ce === e) return;
+                const _cd = _ce.group.position.distanceTo(_chainPos);
+                if (_cd < 25) {
+                  const _chainDmg = genomeDmg * 0.3;
+                  _ce.hp -= _chainDmg;
+                  _ce.hitFlash = 150;
+                  c.dmgNumbers.push({ text: '\u26A1 CHAIN -' + _chainDmg.toFixed(0), px: _ce.group.position.x, py: _ce.group.position.y + 2, pz: _ce.group.position.z, age: 0, color: '#44ddff' });
+                  _chainCount++;
+                }
+              });
+              if (_chainCount > 0) addCombatLog('Chain lightning arced to ' + _chainCount + ' enemies!', '#44ddff');
             }
             // Salvage crate drop — 12% chance, contains random bonus
             if (Math.random() < 0.12) {
