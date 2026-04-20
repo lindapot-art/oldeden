@@ -8841,6 +8841,15 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('FLARE LAUNCHED — 4s distraction', '#ffaa44');
     AudioSFX.play('explosion');
   }
+  // Overcharge shot: 9 key — next shot does 5x damage, costs 5 ammo, 20s cooldown
+  if (e.key === '9' && c.active && !c.dead && (!c._overchargeCD || state.gameTime > c._overchargeCD) && c.ammo >= 5) {
+    c._overchargeNext = true;
+    c.ammo -= 4; // 1 more consumed on fire = 5 total
+    c._overchargeCD = state.gameTime + 20000;
+    addComms('Weapons', '\u26A1 OVERCHARGE LOADED! Next shot deals 5x damage.');
+    addCombatLog('OVERCHARGE PRIMED — next shot 5x', '#ff8800');
+    AudioSFX.play('lock_on');
+  }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -12639,7 +12648,8 @@ function gameLoop() {
 
     // Shield regen (apply shields power)
     if (state.ship.shield < state.ship.maxShield) {
-      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult() * shieldsMult);
+      let _streakShieldBonus = (c.streak >= 15) ? 1 : 0; // Kill streak shield regen — +1/s at 15+ streak
+      state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * (state.upgrades.shieldRegen * getPlayerShieldRegenMult() * shieldsMult + _streakShieldBonus));
     } else {
       // Shield capacitor — store excess regen as burst charge (max 30)
       if (!c._shieldCap) c._shieldCap = 0;
@@ -13287,6 +13297,14 @@ function gameLoop() {
           if (state.ship.shield > state.ship.maxShield * 0.8) genomeDmg *= 1.10;
           // Target painter — +30% damage to painted enemy
           if (e._painted && state.gameTime < e._painted) genomeDmg *= 1.30;
+          // Enemy intel — +10% damage to types you've killed 5+ of
+          if (c._enemyIntel && c._enemyIntel[e.type] >= 5) genomeDmg *= 1.10;
+          // Overcharge shot — 5x damage on next hit
+          if (c._overchargeNext) {
+            genomeDmg *= 5;
+            c._overchargeNext = false;
+            c.dmgNumbers.push({ text: '\u26A1 OVERCHARGE!', px: e.group.position.x, py: e.group.position.y + 7, pz: e.group.position.z, age: 0, color: '#ff8800' });
+          }
           // Momentum bonus — +10% damage while afterburner active
           if (state.flight && state.flight.afterburner) genomeDmg *= 1.10;
           // Shield break bonus — +25% damage after breaking enemy shield
@@ -13430,6 +13448,13 @@ function gameLoop() {
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
             const _creditStreakMult = Math.min(c.streakMultiplier, 2.5);
             c.score += pts; c.kills++;
+            // Enemy intel — track kills per type
+            if (!c._enemyIntel) c._enemyIntel = {};
+            c._enemyIntel[e.type] = (c._enemyIntel[e.type] || 0) + 1;
+            if (c._enemyIntel[e.type] === 5) {
+              addComms('Intel', '\u{1F4CA} Enemy intel complete: ' + e.type.toUpperCase() + ' — +10% damage permanently!');
+              addCombatLog('INTEL MASTERY: ' + e.type + ' (+10% dmg)', '#88ccff');
+            }
             // Double tap — killing 2 enemies within 1s gives +25% credits on second
             const _dtNow = performance.now();
             if (c._lastKillForDT && _dtNow - c._lastKillForDT < 1000) {
