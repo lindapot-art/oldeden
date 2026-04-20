@@ -6463,6 +6463,45 @@ function createEnemy(type) {
   c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)) });
 }
 
+// ── Formation spawn: spawn a wing of enemies in a V or line pattern ──
+function spawnFormation() {
+  const tier = (state.player.rebirths || 0) >= 2 || c.cycle >= 3 ? 'hard' : (state.player.rebirths || 0) >= 1 || c.cycle >= 2 ? 'medium' : 'easy';
+  const pool = ENEMY_TYPES_BY_TIER[tier];
+  const wingType = pool[Math.floor(Math.random() * pool.length)];
+  const count = 3 + Math.floor(Math.random() * 3); // 3-5 ships
+  const baseTheta = Math.random() * Math.PI * 2;
+  const basePhi = Math.acos(2 * Math.random() - 1);
+  const baseR = SPAWN_RADIUS + 100 + Math.random() * 100;
+  const basePos = new THREE.Vector3(
+    ship.position.x + baseR * Math.sin(basePhi) * Math.cos(baseTheta),
+    ship.position.y + baseR * Math.sin(basePhi) * Math.sin(baseTheta) * 0.3,
+    ship.position.z + baseR * Math.cos(basePhi)
+  );
+  for (let fi = 0; fi < count; fi++) {
+    const cfg = ENEMY_CONFIGS[wingType] || ENEMY_CONFIGS.fighter;
+    const g = new THREE.Group();
+    const modelKey = cfg.model || 'iron_sentinel';
+    const srcModel = state.loadedModels[modelKey] || state.loadedModels['iron_sentinel'];
+    if (srcModel) { g.add(reskinModel(srcModel, cfg.scale, cfg.tint || 0xff2200)); }
+    else { const asset = GLB_ASSETS[modelKey] || GLB_ASSETS['iron_sentinel'] || { role: 'enemy', scale: cfg.scale }; const vecModel = _buildVectorModel(modelKey || 'enemy_ship', asset); vecModel.scale.setScalar(cfg.scale); g.add(vecModel); }
+    if (!createEnemy._glowGeos) { createEnemy._glowGeos = new Map(); createEnemy._glowMat = new THREE.MeshBasicMaterial({ color: 0xff4422, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }); createEnemy._glowMat._pooled = true; }
+    const _glowR = Math.round(cfg.scale * 50);
+    if (!createEnemy._glowGeos.has(_glowR)) { const gg = new THREE.SphereGeometry(0.5 * cfg.scale, 6, 6); gg._pooled = true; createEnemy._glowGeos.set(_glowR, gg); }
+    const engineGlow = new THREE.Mesh(createEnemy._glowGeos.get(_glowR), createEnemy._glowMat);
+    engineGlow.position.set(0, 0, 2 * cfg.scale); g.add(engineGlow);
+    // V-formation offset: alternate left/right of base position
+    const side = (fi % 2 === 0 ? 1 : -1);
+    const rank = Math.ceil(fi / 2);
+    const offset = new THREE.Vector3(side * rank * 12, rank * 2 * (fi % 3 - 1), rank * 8);
+    g.position.copy(basePos).add(offset);
+    g.lookAt(ship.position);
+    scene.add(g);
+    const diffScale = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
+    c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type: wingType, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)), _formation: true });
+  }
+  addComms('Radar', '\u26A0 Formation detected! ' + count + ' ' + wingType + 's incoming!');
+}
+
 // Preload all combat-relevant models (enemies, bosses, NPCs)
 const COMBAT_MODELS = [
   // Enemies
@@ -7834,8 +7873,8 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     // Weapon mode label above crosshair
     hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
     hudCtx.textAlign = 'center'; hudCtx.globalAlpha = 0.45;
-    const wLabel = c.charging ? 'CHARGE' : (state.activeWeapon === 'laser' ? 'LASER' : 'RAILGUN');
-    hudCtx.fillStyle = c.charging ? '#ffcc00' : (state.activeWeapon === 'laser' ? '#44ff88' : '#44aaff');
+    const wLabel = c._weaponSwapping ? 'SWITCHING...' : c.charging ? 'CHARGE' : (state.activeWeapon === 'laser' ? 'LASER' : 'RAILGUN');
+    hudCtx.fillStyle = c._weaponSwapping ? '#ff8800' : c.charging ? '#ffcc00' : (state.activeWeapon === 'laser' ? '#44ff88' : '#44aaff');
     hudCtx.fillText(wLabel, cx, cy - crSize - 8);
     hudCtx.textAlign = 'left';
     hudCtx.restore();
@@ -8146,10 +8185,19 @@ document.addEventListener('keydown', (e) => {
     showToast(c.godMode ? '\u26A1 GOD MODE ON' : 'God mode OFF');
   }
   // Weapon swap: Q key
-  if ((e.key === 'q' || e.key === 'Q') && c.active) {
-    state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
-    showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '⚡ Railgun' : '◈ Laser'));
-    addComms('System', `Switched to ${state.activeWeapon === 'railgun' ? 'Railgun — High damage, uses ammo' : 'Laser Turret — Fast fire, uses heat'}`);
+  if ((e.key === 'q' || e.key === 'Q') && c.active && !c._weaponSwapping) {
+    c._weaponSwapping = true;
+    c._weaponSwapTimer = 300; // 300ms swap animation
+    c.weaponReady = false;
+    setTimeout(() => {
+      if (!c.active || c.dead) { c._weaponSwapping = false; c.weaponReady = true; return; }
+      state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
+      c._weaponSwapping = false;
+      c.weaponReady = true;
+      showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '\u26A1 Railgun' : '\u25C8 Laser'));
+      addComms('System', `Switched to ${state.activeWeapon === 'railgun' ? 'Railgun \u2014 High damage, uses ammo' : 'Laser Turret \u2014 Fast fire, uses heat'}`);
+      AudioSFX.play('click');
+    }, 300);
   }
   // Barrel roll — double-tap A or D
   if (c.active && !c.dead && c.barrelRoll === 0 && c.barrelRollCooldown <= 0) {
@@ -12916,7 +12964,38 @@ function gameLoop() {
     updateShipParade(dt, dtMs); updatePolicePatrol(dt, dtMs);
     updateAutopilot(dt);
 
-    // Auto-save every 60s (skip during death to avoid saving hull=0)
+    // ── Ambient radio chatter — immersive random comms ──
+    if (!c._nextChatter) c._nextChatter = state.gameTime + 20000 + Math.random() * 30000;
+    if (state.gameTime > c._nextChatter && !c.dead) {
+      const _chatterLines = [
+        ['Freighter 9', 'Hauling ore to Sector 7. Clear lanes, please.'],
+        ['Patrol Echo', 'All clear in the belt. No hostiles on scan.'],
+        ['Unknown', '...signal lost... coordinates... help...'],
+        ['Station Control', 'Docking bay 4 available for repairs.'],
+        ['Miner 42', 'Rich vein here! Titanium readings off the charts.'],
+        ['Patrol Delta', 'Eyes on two bogeys, bearing 270. Engaging.'],
+        ['Freighter 3', 'Jump drive spooling. See you on the other side.'],
+        ['Unknown', 'Anyone copy? My nav is shot. Need a tow.'],
+        ['Station Control', 'Market prices updated. Fuel at 12 credits per unit.'],
+        ['Patrol Alpha', 'Stay alert, pilots. Pirate activity detected in adjacent sector.'],
+        ['Salvager', 'Nice wreck here. Still warm.'],
+        ['EDEN AI', 'Frontier beacon signal nominal. All frequencies open.'],
+        ['Bounty Hunter', 'Target acquired. Moving to intercept.'],
+        ['Freighter 7', 'Cargo hold full. Heading to the exchange.'],
+        ['Unknown', '...they came out of nowhere... multiple contacts...'],
+      ];
+      const _cl = _chatterLines[Math.floor(Math.random() * _chatterLines.length)];
+      addComms(_cl[0], _cl[1]);
+      c._nextChatter = state.gameTime + 25000 + Math.random() * 40000;
+    }
+
+    // ── Formation spawn timer — periodic enemy wing attacks ──
+    if (!c._nextFormation) c._nextFormation = state.gameTime + 45000 + Math.random() * 30000;
+    if (state.gameTime > c._nextFormation && !c.dead && c.enemies.length < 15) {
+      spawnFormation();
+      c._nextFormation = state.gameTime + 45000 + Math.random() * 45000;
+    }
+
     if (!c.dead && state.gameTime - c.lastAutoSave > 60000) {
       c.lastAutoSave = state.gameTime;
       saveGame();
