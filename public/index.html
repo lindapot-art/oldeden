@@ -6199,6 +6199,12 @@ function enterGunnerMode() {
   c.active = true;
   c.dead = false;
   _deathSequenceActive = false;
+  // Score insurance payout — apply saved 10% score from last death
+  if (c._scoreInsurance && c._scoreInsurance > 0) {
+    c.score = c._scoreInsurance;
+    addComms('EDEN AI', '\u{1F4B0} Score insurance: +' + c._scoreInsurance + ' points retained from last life.');
+    c._scoreInsurance = 0;
+  } else { c.score = 0; }
   // Streak insurance: first death per cycle preserves streak if > 10
   if (c.streak > 10 && !c._streakInsuranceUsed) {
     c._streakInsuranceUsed = true;
@@ -6737,7 +6743,7 @@ function createEnemy(type) {
   // Elite variant — 8% chance, 2x HP, 2x points, red glow aura
   const _isElite = !_isBounty && Math.random() < 0.08;
   const _eliteMult = _isElite ? 2 : 1;
-  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale * _eliteMult), maxHp: Math.ceil(cfg.hp * diffScale * _eliteMult), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale * _eliteMult), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04) * (_isElite ? 0.7 : 1)), _isBounty, _isElite, _shield: _shieldHp, _maxShield: _shieldHp });
+  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale * _eliteMult), maxHp: Math.ceil(cfg.hp * diffScale * _eliteMult), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale * _eliteMult), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04) * (_isElite ? 0.7 : 1)), _isBounty, _isElite, _shield: _shieldHp, _maxShield: _shieldHp, _weakpoint: Math.random() < 0.15 });
   if (_isElite) {
     // Red pulsing glow for elites
     const _eliteGlow = new THREE.PointLight(0xff2200, 3, 15);
@@ -8825,6 +8831,15 @@ document.addEventListener('keydown', (e) => {
     addComms('Engineering', '\u{1F6E1} Shield capacitor discharged! +' + _capAmount + ' shield.');
     addCombatLog('SHIELD CAPACITOR — +' + _capAmount + ' shield', '#44ccff');
     AudioSFX.play('shield_regen');
+  }
+  // Flare launcher: 8 key — decoy flare that distracts enemies for 4s, 35s cooldown
+  if (e.key === '8' && c.active && !c.dead && (!c._flareCD || state.gameTime > c._flareCD)) {
+    c._flareCD = state.gameTime + 35000;
+    c._flareActive = state.gameTime + 4000;
+    c._flarePos = ship.position.clone().add(new THREE.Vector3((Math.random()-0.5)*20, (Math.random()-0.5)*10, (Math.random()-0.5)*20));
+    addComms('Countermeasures', '\u{1F4A5} Flare deployed! Enemies distracted for 4s.');
+    addCombatLog('FLARE LAUNCHED — 4s distraction', '#ffaa44');
+    AudioSFX.play('explosion');
   }
   keysDown.add(e.key.toLowerCase());
 });
@@ -12401,6 +12416,10 @@ function playerDeathSequence(cause) {
   if (window._clearMobileFireInterval) window._clearMobileFireInterval();
   AudioSFX.stopEngineHum();
   c.deathStats = { accuracy: c._shotsHit ? Math.round(c._shotsHit / Math.max(1, c._shotsFired) * 100) : 0, longestLife: Math.floor(state.gameTime / 1000), kills: c.kills, score: c.score, streak: c.bestStreak, credits: state.player.credits, damageSources: Object.assign({}, c._damageSources) };
+  // Score insurance — rebirths >= 2: retain 10% of score for next life
+  if ((state.player.rebirths || 0) >= 2 && c.score > 0) {
+    c._scoreInsurance = Math.floor(c.score * 0.10);
+  }
   let frag;
   try { frag = createSoulFragment(); } catch (_e) { frag = { id: 'ERR', powerLevel: 0 }; console.error('[Death] Fragment creation failed:', _e); }
   addComms('AI Director', `Ship destroyed! Soul Fragment ${frag.id} created (Power: ${frag.powerLevel})`);
@@ -13254,6 +13273,11 @@ function gameLoop() {
             genomeDmg *= 1.75;
             c.dmgNumbers.push({ text: '\uD83C\uDFAF HEADSHOT!', px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#ff2244' });
           }
+          // Weakpoint hit — 3x damage if enemy has weakpoint and hit within 3m of center
+          if (e._weakpoint && _headDist < 3) {
+            genomeDmg *= 3;
+            c.dmgNumbers.push({ text: '\u2B50 WEAKPOINT!', px: e.group.position.x, py: e.group.position.y + 6, pz: e.group.position.z, age: 0, color: '#ffee00' });
+          }
           // Focus fire bonus — every 5th hit on same enemy does 2x
           e._hitCount = (e._hitCount || 0) + 1;
           if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
@@ -13786,6 +13810,10 @@ function gameLoop() {
         e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0xff2200); ch.material.emissiveIntensity = 0.8; } });
       }
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
+      // Flare distraction — enemies chase flare instead of player while active
+      if (c._flareActive && state.gameTime < c._flareActive && c._flarePos) {
+        _tmpV3a.copy(c._flarePos).sub(e.group.position).normalize();
+      }
       // Enemy retreat AI — enemies at <20% HP flee (not bosses/commanders)
       const _hpPct = e.hp / e.maxHp;
       if (_hpPct < 0.20 && !e.isBoss && !e._isCommander && !e._retreating) {
