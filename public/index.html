@@ -7891,6 +7891,22 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
       hudCtx.restore();
     }
   }
+  // Hull breach warning — below 20% hull, red border flash + audio alarm every 2s
+  if (hullPct < 0.20 && hullPct > 0) {
+    const _breachPulse = Math.sin(state.gameTime * 0.008) > 0.3 ? 1 : 0;
+    if (_breachPulse) {
+      hudCtx.save();
+      hudCtx.strokeStyle = '#ff0000';
+      hudCtx.lineWidth = 4;
+      hudCtx.globalAlpha = 0.6;
+      hudCtx.strokeRect(2, 2, W - 4, H - 4);
+      hudCtx.restore();
+    }
+    if (!c._breachAlarmCD || state.gameTime > c._breachAlarmCD) {
+      c._breachAlarmCD = state.gameTime + 2000;
+      AudioSFX.play('hull_hit');
+    }
+  }
 
   // Repair pickup flash — green screen edge glow
   if (c.repairFlashTimer > 0) {
@@ -13488,6 +13504,13 @@ function gameLoop() {
               addComms('Intel', '\u{1F4CA} Enemy intel complete: ' + e.type.toUpperCase() + ' — +10% damage permanently!');
               addCombatLog('INTEL MASTERY: ' + e.type + ' (+10% dmg)', '#88ccff');
             }
+            // Kill memory bestiary — first kill of each type = 200 credit bonus
+            if (c._enemyIntel[e.type] === 1) {
+              state.player.credits += 200;
+              addComms('Bestiary', '\u{1F4D6} New species catalogued: ' + e.type.toUpperCase() + ' — +200 EC!');
+              addCombatLog('BESTIARY: ' + e.type + ' (+200 EC)', '#88ffcc');
+              c.dmgNumbers.push({ text: '\u{1F4D6} NEW SPECIES +200', px: e.group.position.x, py: e.group.position.y + 10, pz: e.group.position.z, age: 0, color: '#88ffcc' });
+            }
             // Double tap — killing 2 enemies within 1s gives +25% credits on second
             const _dtNow = performance.now();
             if (c._lastKillForDT && _dtNow - c._lastKillForDT < 1000) {
@@ -13903,6 +13926,15 @@ function gameLoop() {
       if (_tetherDist > 200 && !e._retreating) {
         _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
         e.group.position.addScaledVector(_tmpV3a, e.speed * dt * 2);
+      }
+      // Afterburner trail damage — enemies within 8m behind player while afterburner active take 3 dmg/s
+      if (state.flight && state.flight.afterburner && _tetherDist < 20) {
+        const _behindDot = _tmpV3a.copy(e.group.position).sub(ship.position).normalize().dot(ship.getWorldDirection(new THREE.Vector3()));
+        if (_behindDot < -0.5 && _tetherDist < 8) {
+          e.hp -= 3 * dt;
+          e.hitFlash = 100;
+          if (!e._trailDmgAnnounced) { e._trailDmgAnnounced = true; spawnImpactSparks(e.group.position, 0xff8800); }
+        }
       }
       // Enemies only chase if player has attacked (passive until provoked)
       // First life stays non-aggressive until the player engages.
