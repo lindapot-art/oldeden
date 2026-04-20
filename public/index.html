@@ -6710,7 +6710,16 @@ function createEnemy(type) {
   // Enemy shield — 15% chance on cycle 2+, absorbs damage before HP
   const _hasShield = c.cycle >= 2 && Math.random() < 0.15;
   const _shieldHp = _hasShield ? Math.ceil(cfg.hp * diffScale * 0.4) : 0;
-  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale), maxHp: Math.ceil(cfg.hp * diffScale), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04)), _isBounty, _shield: _shieldHp, _maxShield: _shieldHp });
+  // Elite variant — 8% chance, 2x HP, 2x points, red glow aura
+  const _isElite = !_isBounty && Math.random() < 0.08;
+  const _eliteMult = _isElite ? 2 : 1;
+  c.enemies.push({ group: g, hp: Math.ceil(cfg.hp * diffScale * _eliteMult), maxHp: Math.ceil(cfg.hp * diffScale * _eliteMult), speed: ENEMY_SPEED * cfg.speed * (1 + (state.player.rebirths || 0) * 0.05 + (c.cycle - 1) * 0.03), type, points: Math.floor(cfg.points * diffScale * _eliteMult), cfg, hitFlash: 0, lastShot: 0, shootRate: Math.max(1000, cfg.shootRate * (1 - (c.cycle - 1) * 0.04) * (_isElite ? 0.7 : 1)), _isBounty, _isElite, _shield: _shieldHp, _maxShield: _shieldHp });
+  if (_isElite) {
+    // Red pulsing glow for elites
+    const _eliteGlow = new THREE.PointLight(0xff2200, 3, 15);
+    _eliteGlow.name = '_eliteGlow';
+    g.add(_eliteGlow);
+  }
   if (_isBounty) {
     // Gold ring marker on bounty targets
     const _ringGeo = createEnemy._bountyRingGeo || (createEnemy._bountyRingGeo = new THREE.RingGeometry(2.5, 3.0, 16));
@@ -7770,9 +7779,9 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.lineWidth = 0.5;
     hudCtx.strokeRect(ex - barW/2, ey - barH/2, barW, barH);
     hudCtx.font = '8px "Segoe UI", system-ui, sans-serif';
-    hudCtx.fillStyle = e.isBoss ? '#ff2200' : '#ff8866';
+    hudCtx.fillStyle = e._isElite ? '#ff2200' : e.isBoss ? '#ff2200' : '#ff8866';
     hudCtx.textAlign = 'center';
-    hudCtx.fillText(e.type.toUpperCase(), ex, ey - barH - 2);
+    hudCtx.fillText((e._isElite ? '\u2B50 ELITE ' : '') + e.type.toUpperCase(), ex, ey - barH - 2);
     hudCtx.textAlign = 'left';
     hudCtx.globalAlpha = 1;
   });
@@ -12999,6 +13008,18 @@ function gameLoop() {
               if (_rapidName) {
                 c.dmgNumbers.push({ text: _rapidName + '!', px: ship.position.x, py: ship.position.y + 8, pz: ship.position.z, age: 0, color: c._rapidKills >= 4 ? '#ff44ff' : c._rapidKills >= 3 ? '#ff8800' : '#ffcc00' });
                 addCombatLog(_rapidName + '! (' + c._rapidKills + ' rapid kills)', c._rapidKills >= 4 ? '#ff44ff' : '#ffcc00');
+                // Combo finisher shockwave — 5+ rapid kills damages all nearby enemies
+                if (c._rapidKills >= 5) {
+                  const _swDmg = 8 + c._rapidKills * 2;
+                  let _swHits = 0;
+                  c.enemies.forEach(_se => {
+                    const _sd = _se.group.position.distanceTo(ship.position);
+                    if (_sd < 60) { _se.hp -= _swDmg; _se.hitFlash = 200; spawnImpactSparks(_se.group.position, 0xff44ff); _swHits++; }
+                  });
+                  addComms('EDEN AI', '\uD83D\uDCA5 COMBO FINISHER! Shockwave hit ' + _swHits + ' enemies for ' + _swDmg + ' damage!');
+                  AudioSFX.play('explosion');
+                  c._killCamTimer = 600; // Slow-mo on combo finisher
+                }
               }
             } else { c._scoreMultiplier = 1; c._rapidKills = 0; }
             c._lastKillTime = _now;
@@ -13053,6 +13074,13 @@ function gameLoop() {
               addComms('Bounty Board', '\uD83C\uDFAF BOUNTY COLLECTED! +' + bountyReward + ' EC, +2 SM');
               addCombatLog('Bounty collected — +' + bountyReward + ' EC bonus', '#ffcc00');
               AudioSFX.play('quest_complete');
+            }
+            // Elite kill bonus — 2x credits + combat log
+            if (e._isElite) {
+              const _eliteBonus = Math.floor(e.points * _creditStreakMult * 0.3);
+              state.player.credits += _eliteBonus;
+              addComms('EDEN AI', '\uD83D\uDD25 ELITE ' + (e.type || 'hostile').toUpperCase() + ' DESTROYED! +' + _eliteBonus + ' EC bonus');
+              addCombatLog('Elite eliminated — bonus +' + _eliteBonus + ' EC', '#ff4422');
             }
             // Earn Stellar Marks: +1 per 10 kills, +5 for bosses
             const _smKillAward = e.isBoss ? 5 : (c.kills % 10 === 0 ? 1 : 0);
@@ -13482,7 +13510,7 @@ function gameLoop() {
           const _overflow = _ramDmg - _absorbed;
           if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.6);
           AudioSFX.play('shield_hit'); triggerShieldShimmer();
-        } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); AudioSFX.play('hull_hit'); }
+        } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - _ramDmg * 0.6); c._lastHullDmgTime = state.gameTime; AudioSFX.play('hull_hit'); }
         if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); }
         c.damageFlash = 200;
         if (typeof triggerShieldFlash === 'function') triggerShieldFlash(state.ship.shield <= 0);
@@ -13517,7 +13545,7 @@ function gameLoop() {
             const _overflow = dmg - _absorbed;
             if (_overflow > 0) state.ship.hull = Math.max(0, state.ship.hull - _overflow * 0.5);
             AudioSFX.play('shield_hit'); triggerShieldShimmer();
-          } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
+          } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); c._lastHullDmgTime = state.gameTime; AudioSFX.play('hull_hit'); }
           if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); addCombatLog('SHIELDS DOWN — gate active', '#44ccff'); }
           // Shield capacitor auto-deploy when shield drops below 30%
           if (state.ship.shield > 0 && state.ship.shield < state.ship.maxShield * 0.3 && (c._shieldCap || 0) >= 5) {
@@ -13797,6 +13825,11 @@ function gameLoop() {
     if (c._mineCooldown > 0) c._mineCooldown -= dtMs;
     if (c._empCooldown > 0) c._empCooldown -= dtMs;
     if (c._eJumpCooldown > 0) c._eJumpCooldown -= dtMs;
+    // Passive hull regen — 0.5 HP/s when not hit for 10s
+    if (!c._lastHullDmgTime) c._lastHullDmgTime = 0;
+    if (state.gameTime - c._lastHullDmgTime > 10000 && state.ship.hull < state.ship.maxHull && state.ship.hull > 0) {
+      state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 0.5 * dt);
+    }
     // Salvage crate collection + decay
     if (c._salvageCrates && c._salvageCrates.length > 0) {
       for (let _ci = c._salvageCrates.length - 1; _ci >= 0; _ci--) {
