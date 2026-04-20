@@ -12370,6 +12370,10 @@ function gameLoop() {
     // Shield regen (apply shields power)
     if (state.ship.shield < state.ship.maxShield) {
       state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult() * shieldsMult);
+    } else {
+      // Shield capacitor — store excess regen as burst charge (max 30)
+      if (!c._shieldCap) c._shieldCap = 0;
+      c._shieldCap = Math.min(30, c._shieldCap + dt * state.upgrades.shieldRegen * getPlayerShieldRegenMult() * shieldsMult * 0.3);
     }
     // Overshield decay — shield above max slowly decays back to max
     if (state.ship.shield > state.ship.maxShield) {
@@ -13003,6 +13007,28 @@ function gameLoop() {
           hit = true; break;
         }
       }
+      // Asteroid mining — projectiles can hit asteroids for mineral loot
+      if (!hit) {
+        for (let ai = c.asteroids.length - 1; ai >= 0; ai--) {
+          const a = c.asteroids[ai];
+          if (!a || !a.position) continue;
+          if (p.group.position.distanceToSquared(a.position) < 36) { // 6m radius
+            if (!a._mineHp) a._mineHp = 3; // takes 3 hits to mine
+            a._mineHp--;
+            c.dmgNumbers.push({ text: 'MINING', px: a.position.x, py: a.position.y + 2, pz: a.position.z, age: 0, color: '#88ccff' });
+            if (a._mineHp <= 0) {
+              const _mCredits = 15 + Math.floor(Math.random() * 35);
+              state.player.credits += _mCredits;
+              c.dmgNumbers.push({ text: '+' + _mCredits + ' EC', px: a.position.x, py: a.position.y + 4, pz: a.position.z, age: 0, color: '#ffcc44' });
+              gainSkillXP('engineering', 0.02);
+              if (typeof spawnExplosionAt === 'function') spawnExplosionAt(a.position, 0x88aacc, 6);
+              scene.remove(a); c.asteroids.splice(ai, 1);
+              addCombatLog('Asteroid mined — +' + _mCredits + ' EC', '#88ccff');
+            }
+            hit = true; break;
+          }
+        }
+      }
       if (hit || p.age > p.life) { scene.remove(p.group); disposeObject(p.group); c.projectiles.splice(i, 1); }
     }
 
@@ -13021,6 +13047,15 @@ function gameLoop() {
           e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0x000000); ch.material.emissiveIntensity = 0.3; } });
         }
         continue; // Skip all movement and firing
+      }
+      // Enemy rage timer — enemies alive > 30s get speed + fire rate boost
+      if (!e._spawnTime) e._spawnTime = state.gameTime;
+      const _aliveTime = state.gameTime - e._spawnTime;
+      if (_aliveTime > 30000 && !e._enraged) {
+        e._enraged = true;
+        e.speed *= 1.3;
+        e.shootRate = Math.max(500, e.shootRate * 0.7);
+        e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) { ch.material.emissive.setHex(0xff2200); ch.material.emissiveIntensity = 0.8; } });
       }
       _tmpV3a.copy(ship.position).sub(e.group.position).normalize();
       // Enemies only chase if player has attacked (passive until provoked)
@@ -13244,6 +13279,12 @@ function gameLoop() {
             AudioSFX.play('shield_hit'); triggerShieldShimmer();
           } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - dmg * 0.5); AudioSFX.play('hull_hit'); }
           if (hadShield && state.ship.shield <= 0) { c.shieldBreakTimer = 2000; c.shieldGateTimer = 500; AudioSFX.play('shield_break'); addComms('EDEN AI', 'Shield gate active — brace!'); addCombatLog('SHIELDS DOWN — gate active', '#44ccff'); }
+          // Shield capacitor auto-deploy when shield drops below 30%
+          if (state.ship.shield > 0 && state.ship.shield < state.ship.maxShield * 0.3 && (c._shieldCap || 0) >= 5) {
+            state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + c._shieldCap);
+            addCombatLog('Shield capacitor discharged +' + Math.floor(c._shieldCap), '#44ccff');
+            c._shieldCap = 0;
+          }
           c.damageFlash = 300;
           addCombatLog('Hit by enemy fire — ' + dmg.toFixed(0) + ' dmg', '#ff6644');
           // Subsystem malfunction chance when hull < 40%
