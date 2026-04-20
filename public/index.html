@@ -31,6 +31,7 @@
     .nav-btn:hover,.nav-btn.active { color:var(--gold);border-color:var(--gold);background:rgba(212,168,86,0.1); }
     #action-bar.active { display:flex; }
     #hud-canvas.active { display:block !important; }
+    body.touch-ui #lock-prompt { display:none !important; }
     #mobile-controls.active { display:block !important; }
     #death-ticker.active { display:block; }
     #dock-overlay.active { display:flex;background:rgba(0,0,0,0.85); }
@@ -787,6 +788,80 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   }
 }
 
+@media (max-width: 900px), (pointer: coarse) {
+  #screen-create {
+    padding: 18px 16px 96px;
+  }
+  #screen-bridge {
+    padding: 12px 12px 96px;
+    gap: 12px;
+  }
+  #nav-bar.visible {
+    justify-content: flex-start;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-btn {
+    flex: 0 0 auto;
+    min-height: 42px;
+  }
+  #action-bar.active {
+    left: 8px;
+    right: 8px;
+    bottom: calc(150px + env(safe-area-inset-bottom));
+    transform: none;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 8px 4px;
+    scrollbar-width: none;
+  }
+  #action-bar.active::-webkit-scrollbar {
+    display: none;
+  }
+  #mobile-controls {
+    bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+  #touch-move-zone {
+    left: 12px !important;
+    width: 120px !important;
+    height: 120px !important;
+  }
+  #mobile-look-zone {
+    position: absolute;
+    right: 12px;
+    bottom: 0;
+    width: min(42vw, 184px);
+    height: 132px;
+    border-radius: 18px;
+    border: 1px solid rgba(68,170,255,0.35);
+    background: linear-gradient(180deg, rgba(8,14,24,0.18), rgba(8,14,24,0.42));
+    backdrop-filter: blur(4px);
+    pointer-events: auto;
+    touch-action: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 10px 12px;
+    color: rgba(230,230,230,0.75);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+  #touch-button-cluster {
+    right: 12px !important;
+    gap: 8px !important;
+  }
+  #touch-button-row {
+    gap: 8px !important;
+  }
+  #power-mgmt-panel {
+    bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+    width: calc(100vw - 20px);
+    min-width: 0 !important;
+    padding: 14px 16px 10px;
+  }
+}
+
 /* ── Settings Screen ─────────────────────── */
 #screen-settings { padding: 24px 20px 80px; align-items: center; }
 
@@ -859,11 +934,13 @@ html, body { margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-s
   <div id="touch-move-zone" style="position:absolute;left:16px;bottom:0;width:132px;height:132px;border-radius:50%;border:1px solid rgba(212,168,86,0.35);background:rgba(8,12,18,0.35);backdrop-filter:blur(4px);pointer-events:auto;touch-action:none;">
     <div id="touch-stick" style="position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;transform:translate(-50%, -50%);background:rgba(212,168,86,0.28);border:1px solid rgba(212,168,86,0.55);box-shadow:0 0 18px rgba(212,168,86,0.18);opacity:0.5;"></div>
   </div>
-  <div style="position:absolute;right:16px;bottom:0;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none;">
+  <div id="mobile-look-zone" aria-label="Touch look zone">DRAG OR TILT TO AIM</div>
+  <div id="touch-button-cluster" style="position:absolute;right:16px;bottom:0;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none;">
     <button id="touch-fire" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:52px;background:rgba(192,57,43,0.82);border-color:#ff7a66;color:#fff;touch-action:none;">FIRE</button>
-    <div style="display:flex;gap:10px;pointer-events:none;">
+    <div id="touch-button-row" style="display:flex;gap:10px;pointer-events:none;">
       <button id="touch-reload" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:46px;touch-action:none;">RELOAD</button>
       <button id="touch-boost" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:46px;border-color:var(--blue);color:var(--blue);touch-action:none;">BOOST</button>
+      <button id="touch-gyro" class="btn btn-sm" style="pointer-events:auto;min-width:92px;min-height:46px;border-color:#7ad7ff;color:#7ad7ff;background:rgba(8,14,24,0.28);touch-action:none;">GYRO OFF</button>
     </div>
   </div>
 </div>
@@ -1726,6 +1803,64 @@ const state = {
   // ── GLB loaded models cache ──
   loadedModels: {},
 };
+
+function isTouchPrimaryInput() {
+  return ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0 || window.matchMedia('(pointer: coarse)').matches;
+}
+
+function shouldUseMobileFlightUI() {
+  return isTouchPrimaryInput() && Math.min(window.innerWidth, window.innerHeight) <= 1100;
+}
+
+function syncInputModeUI() {
+  document.body.classList.toggle('touch-ui', shouldUseMobileFlightUI());
+}
+
+const gyroControl = {
+  available: typeof DeviceOrientationEvent !== 'undefined',
+  enabled: false,
+  zero: null,
+};
+
+function updateGyroButton() {
+  const btn = document.getElementById('touch-gyro');
+  if (!btn) return;
+  btn.textContent = gyroControl.enabled ? 'GYRO ON' : 'GYRO OFF';
+  btn.style.borderColor = gyroControl.enabled ? 'var(--green)' : '#7ad7ff';
+  btn.style.color = gyroControl.enabled ? 'var(--green)' : '#7ad7ff';
+  btn.style.background = gyroControl.enabled ? 'rgba(0,255,136,0.12)' : 'rgba(8,14,24,0.28)';
+}
+
+function resetGyroBaseline(beta, gamma) {
+  gyroControl.zero = { beta, gamma };
+}
+
+async function toggleGyroControls(forceEnabled) {
+  if (!gyroControl.available) {
+    addComms('System', 'Gyro controls unavailable on this browser/device.');
+    return;
+  }
+  const nextEnabled = typeof forceEnabled === 'boolean' ? forceEnabled : !gyroControl.enabled;
+  if (nextEnabled && typeof DeviceOrientationEvent?.requestPermission === 'function') {
+    try {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      if (permission !== 'granted') {
+        addComms('System', 'Gyro permission denied. Using touch aim only.');
+        return;
+      }
+    } catch (_err) {
+      addComms('System', 'Gyro permission request failed. Using touch aim only.');
+      return;
+    }
+  }
+  gyroControl.enabled = nextEnabled;
+  if (!gyroControl.enabled) gyroControl.zero = null;
+  updateGyroButton();
+  addComms('System', gyroControl.enabled ? 'Gyro flight assist online. Tilt to steer your turret view.' : 'Gyro flight assist offline.');
+}
+
+syncInputModeUI();
+window.addEventListener('resize', syncInputModeUI);
 
 // Initialise faction rep at neutral
 FACTIONS.forEach(f => { state.factionRep[f.id] = 0; });
@@ -2667,7 +2802,7 @@ function _showScreenInner(name, previousScreen) {
 
   // Hide lock-prompt on non-gunner screens to prevent click blocking
   const lp = document.getElementById('lock-prompt');
-  if (lp && name !== 'gunner') lp.style.display = 'none';
+  if (lp) lp.style.display = (name === 'gunner' && c.active && !c.locked && !shouldUseMobileFlightUI()) ? 'flex' : 'none';
 
   state.screen = name;
   document.body.dataset.screen = name;
@@ -2690,7 +2825,7 @@ function _showScreenInner(name, previousScreen) {
   document.getElementById('hud-canvas').classList.toggle('active', name === 'gunner');
 
   // Cursor
-  document.body.style.cursor = name === 'gunner' ? 'none' : 'default';
+  document.body.style.cursor = (name === 'gunner' && !shouldUseMobileFlightUI()) ? 'none' : 'default';
 
   if (name === 'bridge') updateBridgeUI();
   if (name === 'starmap') { resizeStarMap(); if (!_starMapAnimActive) { _starMapAnimActive = true; starMapAnimLoop(); } }
@@ -4778,9 +4913,11 @@ function enterGunnerMode() {
   AudioSFX.startAmbience();
   AudioSFX.startBGM();
   AudioSFX.startEngineHum();
-  canvas3d.requestPointerLock()?.catch?.(() => {});
+  if (shouldUseMobileFlightUI()) c.locked = true;
+  else canvas3d.requestPointerLock()?.catch?.(() => {});
   document.getElementById('action-bar').classList.add('active');
   document.getElementById('mobile-controls').classList.add('active');
+  updateGyroButton();
   // Reset flight
   state.flight.velocity = { x: 0, y: 0, z: 0 };
   state.flight.speed = 0;
@@ -4811,8 +4948,8 @@ function enterGunnerMode() {
   loadDashboardGun().then(_glbTick).catch(_glbTick);
   spawnShipLibrary().then(_glbTick).catch(_glbTick);
   replaceShipWithGLB().then(_glbTick).catch(_glbTick);
-  addComms('EDEN AI', 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
-  addComms('System', 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
+  addComms('EDEN AI', shouldUseMobileFlightUI() ? 'Touch flight online. Left pad moves, right pad aims, GYRO can tilt-steer the turret.' : 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
+  addComms('System', shouldUseMobileFlightUI() ? 'Gunner mode — Drag AIM zone, FIRE shoots, BOOST afterburns, GYRO toggles tilt steering.' : 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
   // Rebirth flavor — remind player of their journey
   if (state.player.rebirths > 0 && state.pastLives.length > 0) {
@@ -5056,6 +5193,7 @@ function spawnLootDrop(pos, type, creditValue) {
 
 function exitGunnerMode(skipScreenChange) {
   c.active = false;
+  c.locked = false;
   mouseHeld = false;
   if (document.pointerLockElement) document.exitPointerLock();
   // Clean up all 3D objects (guard each removal) + dispose GPU resources
@@ -5089,6 +5227,8 @@ function exitGunnerMode(skipScreenChange) {
   state._deathTimeDilation = 1; state._deathPullback = null;
   if (window._clearMobileFireInterval) window._clearMobileFireInterval();
   state._touchThrust = 0; state._touchStrafe = 0;
+  touchLookId = null; touchLookPoint = null;
+  gyroControl.zero = null;
   _materialCache.forEach(m => { m._pooled = false; m.dispose(); }); _materialCache.clear();
   stationModels.forEach(m => { scene.remove(m); disposeObject(m); }); stationModels = [];
   glbSceneObjects.forEach(o => { scene.remove(o); disposeObject(o); }); glbSceneObjects = []; libraryLabels = [];
@@ -6269,8 +6409,11 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
 //  INPUT
 // ================================================================
 let mouseHeld = false;
+let touchLookId = null;
+let touchLookPoint = null;
 canvas3d.addEventListener('mousedown', (e) => {
   if (state.screen !== 'gunner' || c.dead) return;
+  if (shouldUseMobileFlightUI()) return;
   if (!c.locked) { canvas3d.requestPointerLock()?.catch?.(() => {}); return; }
   if (e.button === 0) {
     mouseHeld = true;
@@ -6319,10 +6462,12 @@ canvas3d.addEventListener('touchstart', (e) => {
 (function initMobileControls() {
   const moveZone = document.getElementById('touch-move-zone');
   const stick = document.getElementById('touch-stick');
+  const lookZone = document.getElementById('mobile-look-zone');
   const fireBtn = document.getElementById('touch-fire');
   const reloadBtn = document.getElementById('touch-reload');
+  const gyroBtn = document.getElementById('touch-gyro');
   let touchOrigin = null, touchId = null;
-  if (!moveZone || !stick || !fireBtn || !reloadBtn) return;
+  if (!moveZone || !stick || !lookZone || !fireBtn || !reloadBtn || !gyroBtn) return;
   moveZone.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const t = e.changedTouches[0];
@@ -6356,6 +6501,33 @@ canvas3d.addEventListener('touchstart', (e) => {
   };
   moveZone.addEventListener('touchend', endTouch);
   moveZone.addEventListener('touchcancel', endTouch);
+  const endLookTouch = () => {
+    touchLookId = null;
+    touchLookPoint = null;
+  };
+  lookZone.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (state.screen !== 'gunner' || !c.active) return;
+    const t = e.changedTouches[0];
+    touchLookId = t.identifier;
+    touchLookPoint = { x: t.clientX, y: t.clientY };
+  }, { passive: false });
+  lookZone.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (touchLookId === null || !touchLookPoint || state.screen !== 'gunner' || !c.active) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier !== touchLookId) continue;
+      const deltaX = t.clientX - touchLookPoint.x;
+      const deltaY = t.clientY - touchLookPoint.y;
+      const sensitivity = state.settings.sensitivity / 5;
+      c.yaw += deltaX * 0.006 * sensitivity;
+      c.pitch += deltaY * 0.006 * sensitivity;
+      c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
+      touchLookPoint = { x: t.clientX, y: t.clientY };
+    }
+  }, { passive: false });
+  lookZone.addEventListener('touchend', endLookTouch);
+  lookZone.addEventListener('touchcancel', endLookTouch);
   let fireInterval = null;
   window._clearMobileFireInterval = () => { clearInterval(fireInterval); fireInterval = null; };
   fireBtn.addEventListener('touchstart', (e) => {
@@ -6381,19 +6553,49 @@ canvas3d.addEventListener('touchstart', (e) => {
     boostBtn.addEventListener('touchend', () => { keysDown.delete('shift'); });
     boostBtn.addEventListener('touchcancel', () => { keysDown.delete('shift'); });
   }
+  gyroBtn.addEventListener('touchstart', async (e) => {
+    e.preventDefault();
+    await toggleGyroControls();
+  }, { passive: false });
+  gyroBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await toggleGyroControls();
+  });
+  updateGyroButton();
 })();
 
+window.addEventListener('deviceorientation', (event) => {
+  if (!gyroControl.enabled || !c.active || !shouldUseMobileFlightUI()) return;
+  if (typeof event.beta !== 'number' || typeof event.gamma !== 'number') return;
+  if (!gyroControl.zero) {
+    resetGyroBaseline(event.beta, event.gamma);
+    return;
+  }
+  const deltaGamma = Math.max(-1, Math.min(1, (event.gamma - gyroControl.zero.gamma) / 30));
+  const deltaBeta = Math.max(-1, Math.min(1, (event.beta - gyroControl.zero.beta) / 35));
+  const sensitivity = state.settings.sensitivity / 5;
+  c.yaw += deltaGamma * 0.045 * sensitivity;
+  c.pitch += deltaBeta * 0.035 * sensitivity;
+  c.pitch = Math.max(-1.48, Math.min(1.48, c.pitch));
+});
+
 document.addEventListener('pointerlockchange', () => {
+  if (shouldUseMobileFlightUI()) {
+    c.locked = c.active;
+    const _mobileLp = document.getElementById('lock-prompt');
+    if (_mobileLp) _mobileLp.style.display = 'none';
+    return;
+  }
   c.locked = document.pointerLockElement === canvas3d;
   if (!c.locked) mouseHeld = false;
   const _lp = document.getElementById('lock-prompt');
   if (_lp) _lp.style.display = c.locked ? 'none' : (c.active ? 'flex' : 'none');
 });
 
-{ const _lp2 = document.getElementById('lock-prompt'); if (_lp2) _lp2.addEventListener('click', () => canvas3d.requestPointerLock()?.catch?.(() => {})); }
+{ const _lp2 = document.getElementById('lock-prompt'); if (_lp2) _lp2.addEventListener('click', () => { if (!shouldUseMobileFlightUI()) canvas3d.requestPointerLock()?.catch?.(() => {}); }); }
 
 document.addEventListener('mousemove', (e) => {
-  if (!c.locked || !c.active) return;
+  if ((!c.locked && !shouldUseMobileFlightUI()) || !c.active) return;
   // Full 360° turret — no clamping, free rotation (inverted Y — flight sim style)
   c.yaw += e.movementX * MOUSE_SENS * (state.settings.sensitivity / 5);
   c.pitch += e.movementY * MOUSE_SENS * (state.settings.sensitivity / 5);

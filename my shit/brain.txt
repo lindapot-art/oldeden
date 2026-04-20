@@ -1,0 +1,7 @@
+Screenshot-first gameplay workflow
+
+- Use long visual runs as the truth source, not diff confidence.
+- Treat mobile as a first-class path: no forced pointer lock, touch move plus touch aim, gyro tilt steering, compressed HUD, larger taps.
+- When QA says green but the screenshots still feel bad, trust the screenshots and keep drilling.
+- Ship fixes in batches: reproduce, patch, run visual QA, run full QA, then commit.
+- Keep generated screenshot evidence out of the code commit unless it is explicitly requested.
