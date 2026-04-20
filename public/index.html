@@ -12667,10 +12667,12 @@ function gameLoop() {
       // Auto-fire at max overcharge (2x) OR fire on release
       // Last stand — 25% faster fire rate when hull < 10%
       const _lastStandMult = (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) ? 1.25 : 1;
+      // Adrenaline rush — 25% faster fire rate when hull < 30%
+      const _adrenalineMult = (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.3 && state.ship.hull / state.ship.maxHull >= 0.1) ? 1.25 : 1;
       const _overloadMult = (c._weaponOverloadUntil && state.gameTime < c._weaponOverloadUntil) ? 2 : 1;
       if (c.chargeLevel >= 2) {
         const _overMult = 1 + c.chargeLevel; // 3x at full overcharge
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult * _overloadMult);
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult * _adrenalineMult * _overloadMult);
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
         railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
         spawnNail(weaponsMult * _overMult);
@@ -12678,7 +12680,7 @@ function gameLoop() {
       } else if (!mouseHeld && c.chargeLevel >= 1) {
         // Release fire at normal+ charge
         const _overMult = 1 + Math.max(0, c.chargeLevel - 1);
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult * _overloadMult);
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult * _adrenalineMult * _overloadMult);
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
         railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
         spawnNail(weaponsMult * _overMult);
@@ -13351,6 +13353,8 @@ function gameLoop() {
           // Focus fire bonus — every 5th hit on same enemy does 2x
           e._hitCount = (e._hitCount || 0) + 1;
           if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
+          // Combo finisher — every 10th hit is guaranteed critical (3x)
+          if (e._hitCount % 10 === 0) { genomeDmg *= 3; c.dmgNumbers.push({ text: '\u{1F4A5} COMBO CRIT!', px: e.group.position.x, py: e.group.position.y + 6, pz: e.group.position.z, age: 0, color: '#ff00ff' }); }
           // Last stand — below 10% hull, +15% damage
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) genomeDmg *= 1.15;
           // Shield harmonics — shield > 80% grants +10% damage (energy resonance)
@@ -14426,6 +14430,12 @@ function gameLoop() {
           if (_lr.mult >= 2.5) addCombatLog(_lr.name + ' ' + l.type + ' drop!', _lr.color);
         }
         AudioSFX.play('loot_' + l.type);
+        // Shield overcharge on loot — collecting any loot while shields full grants +10% overshield (cap 150%)
+        if (state.ship.shield >= state.ship.maxShield && state.ship.shield < state.ship.maxShield * 1.5) {
+          const _shieldBoost = state.ship.maxShield * 0.10;
+          state.ship.shield = Math.min(state.ship.maxShield * 1.5, state.ship.shield + _shieldBoost);
+          c.dmgNumbers.push({ text: '+OVERSHIELD', px: l.group.position.x, py: l.group.position.y + 3, pz: l.group.position.z, age: 0, color: '#88eeff' });
+        }
         // Quest collect objectives
         state.quests.forEach(q => {
           if (!q.active || q.completed) return;
