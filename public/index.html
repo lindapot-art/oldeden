@@ -12474,9 +12474,11 @@ function gameLoop() {
         railGlowMatR.color.setHex(_ocColor);
       }
       // Auto-fire at max overcharge (2x) OR fire on release
+      // Last stand — 25% faster fire rate when hull < 10%
+      const _lastStandMult = (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) ? 1.25 : 1;
       if (c.chargeLevel >= 2) {
         const _overMult = 1 + c.chargeLevel; // 3x at full overcharge
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / weaponsMult;
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult);
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
         railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
         spawnNail(weaponsMult * _overMult);
@@ -12484,7 +12486,7 @@ function gameLoop() {
       } else if (!mouseHeld && c.chargeLevel >= 1) {
         // Release fire at normal+ charge
         const _overMult = 1 + Math.max(0, c.chargeLevel - 1);
-        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / weaponsMult;
+        c.charging = false; c.cooling = true; c.coolEnd = performance.now() + COOLDOWN_TIME / (weaponsMult * _lastStandMult);
         c.chargeLevel = 0; railGlowMatL.opacity = 0; railGlowMatR.opacity = 0;
         railGlowMatL.color.setHex(0x44aaff); railGlowMatR.color.setHex(0x44aaff);
         spawnNail(weaponsMult * _overMult);
@@ -12941,6 +12943,36 @@ function gameLoop() {
       hudCtx.fillText('\u26FD Fuel Efficiency Active (-30% afterburner cost)', 20, H - 60);
       hudCtx.restore();
     }
+    // Last stand HUD indicator
+    if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) {
+      hudCtx.save();
+      hudCtx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ff2200';
+      hudCtx.globalAlpha = 0.6 + 0.3 * Math.sin(state.gameTime * 0.01);
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('\uD83D\uDD25 LAST STAND — +25% fire rate, +15% damage', W / 2, 40);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
+    // Enemy threat lines — faint red lines from nearby enemies to HUD center
+    {
+      const _projV = new THREE.Vector3();
+      hudCtx.save();
+      hudCtx.strokeStyle = '#ff2222';
+      hudCtx.lineWidth = 1;
+      c.enemies.forEach(en => {
+        if (en.group.position.distanceTo(ship.position) > 60) return;
+        _projV.copy(en.group.position).project(camera);
+        if (_projV.z > 1) return; // behind camera
+        const sx = (1 + _projV.x) * W / 2, sy = (1 - _projV.y) * H / 2;
+        hudCtx.globalAlpha = 0.12;
+        hudCtx.beginPath();
+        hudCtx.moveTo(W / 2, H / 2);
+        hudCtx.lineTo(sx, sy);
+        hudCtx.stroke();
+      });
+      hudCtx.restore();
+    }
 
     // Spawn enemies (capped at MAX_ENEMIES for performance)
     const MAX_ENEMIES = 15;
@@ -13024,6 +13056,8 @@ function gameLoop() {
           // Focus fire bonus — every 5th hit on same enemy does 2x
           e._hitCount = (e._hitCount || 0) + 1;
           if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
+          // Last stand — below 10% hull, +15% damage
+          if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) genomeDmg *= 1.15;
           // Enemy shield absorbs damage first
           if (e._shield > 0) {
             if (genomeDmg <= e._shield) {
@@ -13052,6 +13086,13 @@ function gameLoop() {
           c._shotsHit = (c._shotsHit || 0) + 1;
           c.dmgNumbers.push({ text: (isCrit ? 'CRIT -' : '-') + genomeDmg.toFixed(1), px: p.group.position.x, py: p.group.position.y, pz: p.group.position.z, age: 0, color: isCrit ? '#ffee00' : '#ff6644' });
           if (e.hp <= 0) {
+            // Overkill bonus — excess damage beyond HP gives bonus score
+            const _overkill = Math.abs(e.hp);
+            if (_overkill > e.maxHp * 0.5) {
+              const _okBonus = Math.floor(_overkill * 2);
+              c.score += _okBonus;
+              c.dmgNumbers.push({ text: 'OVERKILL +' + _okBonus, px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#ff4400' });
+            }
             // Kill streak
             c.streak++; c.streakTimer = 5000;
             c.streakMultiplier = c.streak >= 20 ? 4 : c.streak >= 15 ? 3.5 : c.streak >= 10 ? 3 : c.streak >= 5 ? 2 : c.streak >= 3 ? 1.5 : 1;
