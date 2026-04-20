@@ -1462,7 +1462,8 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <span><span style="color:var(--blue);">V</span> Fire missile</span>
         <span><span style="color:var(--blue);">X</span> Call wingman</span>
         <span><span style="color:var(--blue);">1-4</span> Power preset</span>
-        <span><span style="color:var(--blue);">M</span> Mine</span>
+        <span><span style="color:var(--blue);">Z</span> Drop mine</span>
+        <span><span style="color:var(--blue);">M</span> Mining</span>
         <span><span style="color:var(--blue);">T</span> AI Chat</span>
         <span><span style="color:var(--blue);">K</span> Skins</span>
         <span><span style="color:var(--blue);">G</span> Stargate</span>
@@ -1923,6 +1924,11 @@ const state = {
     shieldBreakTimer: 0,    // shield break visual timer
     shieldGateTimer: 0,     // brief invulnerability on shield break (ms)
     _damageSources: {},     // tracks total damage by source type
+    _mines: [],             // proximity mines array
+    maxMines: 3,            // max mines at once
+    _mineCooldown: 0,       // deploy cooldown timer
+    _autoTurret: false,     // auto-turret module active
+    _autoTurretTimer: 0,    // auto-turret fire timer
     repairFlashTimer: 0,    // green flash on hull/shield repair pickup
     subsystemDamage: { engine: 0, weapons: 0, sensors: 0 }, // 0=ok, >0 = malfunction timer (ms remaining)
     barrelRoll: 0,          // barrel roll animation progress (0=none, -1..1 = direction*progress)
@@ -2881,6 +2887,29 @@ function callWingman() {
   c._wingmanCooldown = 60000;
   addComms('Wingman', 'On station, commander. Covering your six.');
   AudioSFX.play('dock');
+}
+
+// ── Proximity Mine — drop behind ship, explodes on enemy contact ──
+function deployMine() {
+  if (c.dead || c._mineCooldown > 0) return;
+  if (c._mines.length >= c.maxMines) { showToast('Max mines deployed'); return; }
+  c._mineCooldown = 2000; // 2s cooldown between drops
+  // Spawn mine behind ship
+  const mineGeo = new THREE.OctahedronGeometry(0.6, 0);
+  const mineMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+  const mine = new THREE.Mesh(mineGeo, mineMat);
+  // Drop behind ship
+  const backDir = new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion);
+  mine.position.copy(ship.position).addScaledVector(backDir, 8);
+  // Glow ring
+  const ringGeo = new THREE.RingGeometry(0.8, 1.2, 16);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.4, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  mine.add(ring);
+  scene.add(mine);
+  c._mines.push({ mesh: mine, age: 0, radius: 18, damage: 40, ringMat });
+  addComms('Weapons', '\u2622 Mine deployed. ' + c._mines.length + '/' + c.maxMines);
+  AudioSFX.play('click');
 }
 
 // ================================================================
@@ -4658,6 +4687,8 @@ function renderStation() {
       <button class="trade-buy" onclick="window._upgradeTractor()" ${state.lootMagnet.range >= 200 ? 'disabled style="opacity:0.4"' : ''}>500 EC</button></div>
     <div class="trade-row"><span>\u2B06 Missile Capacity (${c.maxMissiles})</span>
       <button class="trade-buy" onclick="window._upgradeMissiles()" ${c.maxMissiles >= 8 ? 'disabled style="opacity:0.4"' : ''}>800 EC</button></div>
+    <div class="trade-row"><span>\u2699 Auto-Turret ${c._autoTurret ? '(INSTALLED)' : ''}</span>
+      <button class="trade-buy" onclick="window._buyAutoTurret()" ${c._autoTurret ? 'disabled style="opacity:0.4"' : ''}>1200 EC</button></div>
     <div style="color:var(--muted);font-size:0.7rem;margin-top:8px">Docking fee: ${state.economy.dockingFee} EC (auto-paid)</div>`;
 
   // ── Past Lives — Your dead characters as station NPCs ──
@@ -4988,6 +5019,16 @@ window._upgradeMissiles = () => {
   c.missiles = c.maxMissiles;
   AudioSFX.play('charge');
   addComms('Station', `Missile capacity upgraded to ${c.maxMissiles}. (-800 EC)`);
+  renderStation();
+};
+window._buyAutoTurret = () => {
+  if (c._autoTurret) { addComms('Station', 'Auto-turret already installed.'); return; }
+  if (state.player.credits < 1200) { addComms('Station', 'Insufficient credits.'); return; }
+  state.player.credits -= 1200;
+  c._autoTurret = true;
+  c._autoTurretTimer = 0;
+  AudioSFX.play('charge');
+  addComms('Station', 'Auto-turret module installed. Fires at nearest enemy automatically. (-1200 EC)');
   renderStation();
 };
 window._acceptQuest = (id) => {
@@ -7030,6 +7071,11 @@ function renderHUD(dtMs) {
   // Missile counter
   hudCtx.fillStyle = c.missiles > 0 ? '#ff8844' : '#555555';
   hudCtx.fillText('\uD83D\uDE80 MSL: ' + c.missiles + '/' + c.maxMissiles + '  [V]', wrx, wry+108);
+  // Mine counter
+  hudCtx.fillStyle = c._mines.length < c.maxMines ? '#ff6600' : '#555555';
+  hudCtx.fillText('\u2622 MNE: ' + c._mines.length + '/' + c.maxMines + '  [Z]', wrx, wry+122);
+  // Auto-turret status
+  if (c._autoTurret) { hudCtx.fillStyle = '#44ffaa'; hudCtx.fillText('\u2699 TURRET: ACTIVE', wrx, wry+136); }
 
   // Shield/Hull (top-left)
   const slx = 24, sly = 30;
@@ -7395,6 +7441,12 @@ function renderHUD(dtMs) {
 hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
   // Enemy count on radar
   hudCtx.fillStyle = '#ff4444'; hudCtx.fillText(c.enemies.length + ' hostile' + (c.enemies.length !== 1 ? 's' : ''), mapCx + 20, mapCy + mapR + 12);
+  // Threat level indicator
+  const _threatScore = c.enemies.reduce((s, e) => s + (e.isBoss ? 5 : e.type === 'destroyer' ? 4 : e.type === 'cruiser' ? 3 : e.type === 'bomber' ? 2.5 : e.type === 'interceptor' ? 2 : 1), 0);
+  const _threatLvl = _threatScore >= 30 ? 'EXTREME' : _threatScore >= 20 ? 'HIGH' : _threatScore >= 10 ? 'ELEVATED' : _threatScore >= 5 ? 'MODERATE' : 'LOW';
+  const _threatColor = _threatScore >= 30 ? '#ff0000' : _threatScore >= 20 ? '#ff4400' : _threatScore >= 10 ? '#ffaa00' : _threatScore >= 5 ? '#44aaff' : '#44ff88';
+  hudCtx.fillStyle = _threatColor; hudCtx.font = 'bold 8px "Segoe UI"';
+  hudCtx.fillText('THREAT: ' + _threatLvl, mapCx - 25, mapCy - mapR - 6);
   // Sensor damage — noise overlay on radar
   if (c.subsystemDamage.sensors > 0) {
     hudCtx.save();
@@ -8412,6 +8464,8 @@ document.addEventListener('keydown', (e) => {
   }
   // Wingman call: X key
   if ((e.key === 'x' || e.key === 'X') && c.active && !c.dead) { callWingman(); }
+  // Deploy mine: Z key
+  if ((e.key === 'z' || e.key === 'Z') && c.active && !c.dead) { deployMine(); }
   keysDown.add(e.key.toLowerCase());
 });
 document.addEventListener('keyup', (e) => {
@@ -13238,6 +13292,66 @@ function gameLoop() {
       }
       if (c._wingmanCooldown > 0) c._wingmanCooldown -= dtMs;
     } else { if (c._wingmanCooldown > 0) c._wingmanCooldown -= dtMs; }
+
+    // ── Proximity Mine update ──
+    if (c._mineCooldown > 0) c._mineCooldown -= dtMs;
+    for (let mi = c._mines.length - 1; mi >= 0; mi--) {
+      const mine = c._mines[mi];
+      mine.age += dtMs;
+      // Spin and pulse the mine
+      mine.mesh.rotation.y += dt * 2;
+      mine.mesh.rotation.x += dt * 0.5;
+      if (mine.ringMat) mine.ringMat.opacity = 0.2 + 0.2 * Math.sin(mine.age * 0.005);
+      // Auto-expire after 30s
+      if (mine.age > 30000) {
+        scene.remove(mine.mesh); if (mine.mesh.geometry) mine.mesh.geometry.dispose();
+        c._mines.splice(mi, 1); continue;
+      }
+      // Check enemies in blast radius
+      let _mineHit = false;
+      for (let ei = 0; ei < c.enemies.length; ei++) {
+        const e = c.enemies[ei];
+        if (e.group.position.distanceTo(mine.mesh.position) < mine.radius) {
+          e.hp -= mine.damage;
+          e.hitFlash = 300;
+          _mineHit = true;
+          if (e.hp <= 0) {
+            const pts = Math.floor((e.points || 25) * c._scoreMultiplier);
+            state.player.score += pts;
+            c.kills++;
+            c.streak++;
+            c.killConfirmTimer = 400;
+            c._killFeed.unshift({ text: (e.isBoss ? '\u2605 BOSS ' : '') + (e.type || 'hostile').toUpperCase() + ' +' + pts + ' [MINE]', time: performance.now(), color: '#ff6600' });
+            if (c._killFeed.length > 5) c._killFeed.length = 5;
+          }
+        }
+      }
+      if (_mineHit) {
+        spawnExplosion(mine.mesh.position, 12, 0xff6600);
+        AudioSFX.play('explosion');
+        scene.remove(mine.mesh); if (mine.mesh.geometry) mine.mesh.geometry.dispose();
+        c._mines.splice(mi, 1);
+      }
+    }
+
+    // ── Auto-turret module ──
+    if (c._autoTurret && !c.dead) {
+      c._autoTurretTimer -= dtMs;
+      if (c._autoTurretTimer <= 0) {
+        c._autoTurretTimer = 1800; // fires every 1.8s
+        let _atClosest = null, _atDist = 150;
+        c.enemies.forEach(e => {
+          const d = e.group.position.distanceTo(ship.position);
+          if (d < _atDist) { _atDist = d; _atClosest = e; }
+        });
+        if (_atClosest) {
+          _atClosest.hp -= 5 * weaponsMult;
+          _atClosest.hitFlash = 100;
+          spawnImpactSparks(_atClosest.group.position, 0x44ffaa);
+          c.dmgNumbers.push({ text: '-' + (5 * weaponsMult).toFixed(0), px: _atClosest.group.position.x, py: _atClosest.group.position.y + 2, pz: _atClosest.group.position.z, age: 0, color: '#44ffaa' });
+        }
+      }
+    }
 
     // ── Shield regen visual pulse ──
     if (state.ship.shield < state.ship.maxShield && state.ship.shield > 0 && !c.dead) {
