@@ -12725,6 +12725,19 @@ function gameLoop() {
     if (state.ship.hull > 0 && state.ship.hull < state.ship.maxHull * 0.15 && !c.dead) {
       state.ship.hull = Math.min(state.ship.maxHull * 0.15, state.ship.hull + dt * 0.5);
     }
+    // Emergency warp — at 5% hull, auto-teleport 50m random direction (60s cooldown)
+    if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull <= 0.05 && !c.dead) {
+      if (!c._emergencyWarpCD || state.gameTime > c._emergencyWarpCD) {
+        c._emergencyWarpCD = state.gameTime + 60000;
+        const _warpAngle = Math.random() * Math.PI * 2;
+        ship.position.x += Math.cos(_warpAngle) * 50;
+        ship.position.z += Math.sin(_warpAngle) * 50;
+        state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + state.ship.maxShield * 0.2);
+        addComms('EDEN AI', '\u26A1 EMERGENCY WARP! Relocated + 20% shields restored.');
+        addCombatLog('EMERGENCY WARP — relocated 50m', '#ff4488');
+        c.dmgNumbers.push({ text: '\u26A1 EMERGENCY WARP!', px: ship.position.x, py: ship.position.y + 6, pz: ship.position.z, age: 0, color: '#ff4488' });
+      }
+    }
     // Damage flash
     if (c.damageFlash > 0) c.damageFlash = Math.max(0, c.damageFlash - dtMs);
 
@@ -13476,6 +13489,19 @@ function gameLoop() {
             }
             // Kill streak
             c.streak++; c.streakTimer = 5000;
+            // Kill echo — every 50th kill triggers a shockwave (30m radius)
+            if (c.kills % 50 === 0) {
+              let _echoHits = 0;
+              c.enemies.forEach(_ee => {
+                if (_ee.hp > 0 && _ee.group.position.distanceTo(ship.position) < 30) {
+                  _ee.hp -= 25; _ee.hitFlash = 300; _echoHits++;
+                  spawnImpactSparks(_ee.group.position, 0xcc44ff);
+                }
+              });
+              addComms('EDEN AI', '\u{1F4A5} KILL ECHO! Shockwave hit ' + _echoHits + ' enemies!');
+              addCombatLog('KILL ECHO x' + c.kills + ' — shockwave ' + _echoHits + ' hits', '#cc44ff');
+              c.dmgNumbers.push({ text: '\u{1F4A5} KILL ECHO x' + c.kills, px: ship.position.x, py: ship.position.y + 8, pz: ship.position.z, age: 0, color: '#cc44ff' });
+            }
             c.streakMultiplier = c.streak >= 20 ? 4 : c.streak >= 15 ? 3.5 : c.streak >= 10 ? 3 : c.streak >= 5 ? 2 : c.streak >= 3 ? 1.5 : 1;
             // Streak milestone announcements
             const _milestones = {5:'RAMPAGE!',10:'UNSTOPPABLE!',15:'GODLIKE!',20:'LEGENDARY!'};
@@ -13847,12 +13873,14 @@ function gameLoop() {
               const _deathPos = p.group.position.clone();
               const _ricCount = (p._ricochetCount || 0) + 1;
               const _ricMult = [0.5, 0.3, 0.15][_ricCount - 1] || 0.15;
+              // Ricochet master — after 200 kills, ricochet damage bonus +20%
+              const _ricMasterBonus = c.kills >= 200 ? 1.2 : 1;
               c.enemies.forEach(_re => {
                 const rd = _re.group.position.distanceTo(_deathPos);
                 if (rd < _ricDist) { _ricDist = rd; _ricTarget = _re; }
               });
               if (_ricTarget) {
-                const _ricDmg = genomeDmg * _ricMult;
+                const _ricDmg = genomeDmg * _ricMult * _ricMasterBonus;
                 _ricTarget.hp -= _ricDmg;
                 _ricTarget.hitFlash = 150;
                 spawnImpactSparks(_ricTarget.group.position, 0xffaa44);
