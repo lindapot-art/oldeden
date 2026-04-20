@@ -12402,6 +12402,8 @@ function gameLoop() {
     // Kill-cam slow-mo effect
     const _killCamMult = (c._killCamTimer > 0) ? 0.3 : 1;
     if (c._killCamTimer > 0) c._killCamTimer -= rawDt * 1000;
+    // Adrenaline rush — enemies move at 40% speed during rush
+    const _adrenalineMult = (c._adrenalineUntil && state.gameTime < c._adrenalineUntil) ? 1 : 1;
     const dt = rawDt * (state._deathTimeDilation || 1) * _killCamMult;
     const dtMs = dt * 1000;
     state.gameTime += dtMs;
@@ -13072,6 +13074,27 @@ function gameLoop() {
       hudCtx.fillText('\uD83E\uDD16 Drone CD: ' + _scavCD + 's', 20, H - 90);
       hudCtx.restore();
     }
+    // Adrenaline rush HUD
+    if (c._adrenalineUntil && state.gameTime < c._adrenalineUntil) {
+      const _adRemain = Math.ceil((c._adrenalineUntil - state.gameTime) / 1000);
+      hudCtx.save();
+      hudCtx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#ff44ff';
+      hudCtx.globalAlpha = 0.7 + 0.2 * Math.sin(state.gameTime * 0.01);
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('\u26A1 ADRENALINE RUSH \u2014 enemies slowed (' + _adRemain + 's)', W / 2, 94);
+      hudCtx.textAlign = 'left';
+      hudCtx.restore();
+    }
+    // Shield harmonics indicator
+    if (state.ship.shield > state.ship.maxShield * 0.8) {
+      hudCtx.save();
+      hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillStyle = '#44ddff';
+      hudCtx.globalAlpha = 0.5;
+      hudCtx.fillText('\u{1F6E1} Shield Harmonics: +10% damage', 20, H - 105);
+      hudCtx.restore();
+    }
     // Enemy threat lines — faint red lines from nearby enemies to HUD center
     {
       const _projV = new THREE.Vector3();
@@ -13178,6 +13201,8 @@ function gameLoop() {
           if (e._hitCount % 5 === 0) { genomeDmg *= 2; c.dmgNumbers.push({ text: 'FOCUS!', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ff88ff' }); }
           // Last stand — below 10% hull, +15% damage
           if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull < 0.1) genomeDmg *= 1.15;
+          // Shield harmonics — shield > 80% grants +10% damage (energy resonance)
+          if (state.ship.shield > state.ship.maxShield * 0.8) genomeDmg *= 1.10;
           // Shield break bonus — +25% damage after breaking enemy shield
           if (c._shieldBreakBonus) { genomeDmg *= 1.25; c._shieldBreakBonus = false; c.dmgNumbers.push({ text: 'BREAK BONUS +25%', px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z, age: 0, color: '#00eeff' }); }
           // Enemy shield absorbs damage first
@@ -13266,6 +13291,16 @@ function gameLoop() {
               }
             } else { c._scoreMultiplier = 1; c._rapidKills = 0; }
             c._lastKillTime = _now;
+            // Adrenaline rush — 5+ kills in rapid succession triggers 3s slow-mo for enemies
+            if (c._rapidKills >= 5 && (!c._adrenalineUntil || state.gameTime > c._adrenalineUntil)) {
+              c._adrenalineUntil = state.gameTime + 3000;
+              addComms('EDEN AI', '\u26A1 ADRENALINE RUSH! Time slows for 3s!');
+              addCombatLog('ADRENALINE RUSH — 3s slow-mo', '#ff44ff');
+            }
+            // Fuel scoop upgrade — 3+ rebirths: +2 fuel per kill from wreckage
+            if ((state.player.rebirths || 0) >= 3) {
+              state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 2);
+            }
             const _tauntMult = (c._tauntActive && state.gameTime < c._tauntActive && e._taunted) ? 1.5 : 1;
             const pts = Math.floor(e.points * c.streakMultiplier * _temporalMult * c._scoreMultiplier * _tauntMult);
             // Credit multiplier capped at 2.5× to prevent late-game income explosion (full streak mult still applies to score)
@@ -13613,6 +13648,9 @@ function gameLoop() {
       // Enemies only chase if player has attacked (passive until provoked)
       // First life stays non-aggressive until the player engages.
       const autoAggro = !isFirstLife && !isProtectedSpace() && state.gameTime > 15000;
+      // Adrenaline rush — enemies move at 40% speed
+      const _origSpeed = e.speed;
+      if (c._adrenalineUntil && state.gameTime < c._adrenalineUntil) e.speed *= 0.4;
       if (c.playerHasAttacked || autoAggro) {
         const distToPlayer = e.group.position.distanceTo(ship.position);
         // Type-specific AI movement patterns
@@ -13821,6 +13859,8 @@ function gameLoop() {
           playerDeathSequence('Rammed by hostile ' + e.type);
         }
       }
+      // Restore original speed after adrenaline rush
+      e.speed = _origSpeed;
     }
 
     // Update enemy bolts
