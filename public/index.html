@@ -12749,6 +12749,11 @@ function gameLoop() {
     if (state.ship.hull > 0 && state.ship.hull < state.ship.maxHull * 0.15 && !c.dead) {
       state.ship.hull = Math.min(state.ship.maxHull * 0.15, state.ship.hull + dt * 0.5);
     }
+    // Regenerative genome — each rebirth adds +0.5 hull regen/s
+    const _regenGenome = (state.player.rebirths || 0) * 0.5;
+    if (_regenGenome > 0 && state.ship.hull > 0 && state.ship.hull < state.ship.maxHull && !c.dead) {
+      state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + dt * _regenGenome);
+    }
     // Emergency warp — at 5% hull, auto-teleport 50m random direction (60s cooldown)
     if (state.ship.hull > 0 && state.ship.hull / state.ship.maxHull <= 0.05 && !c.dead) {
       if (!c._emergencyWarpCD || state.gameTime > c._emergencyWarpCD) {
@@ -14004,8 +14009,17 @@ function gameLoop() {
     for (let ei = c.enemies.length - 1; ei >= 0; ei--) {
       const e = c.enemies[ei];
       if (!e || !e.group || !e.group.parent) { c.enemies.splice(ei, 1); continue; }
+      // Threat assessment — enemies targeting player glow yellow
+      const _isFacing = e.group.position.distanceTo(ship.position) < 60 && e.lastShot > state.gameTime - (e.shootRate || 2000) * 1.5;
+      if (_isFacing && !e._threatGlow) {
+        e._threatGlow = true;
+        e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) ch.material.emissive.setHex(0xccaa00); });
+      } else if (!_isFacing && e._threatGlow) {
+        e._threatGlow = false;
+        e.group.traverse(ch => { if (ch.isMesh && ch.material && ch.material.emissive) ch.material.emissive.setHex(0x000000); });
+      }
       // EMP stun check — skip movement & firing while stunned
-      if (e._stunTimer > 0) {
+      if (e._stunTimer > 0 || (e._stunUntil && state.gameTime < e._stunUntil)) {
         e._stunTimer -= dtMs;
         e._stunSparks = (e._stunSparks || 0) + dtMs;
         // Visual: blue emissive flash while stunned
