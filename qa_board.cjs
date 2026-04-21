@@ -399,32 +399,24 @@ async function qaUX(page) {
     // Try common selectors for confirm/start button
     let created = false;
     try {
-      // Select first faction
-      const factionCard = await page.$('.faction-card');
-      if (factionCard) {
-        await factionCard.click();
-        await new Promise(r => setTimeout(r, 200));
-      }
-      // Fill name if input exists
-      const nameInput = await page.$('#pilot-name, input[name], input[type="text"]');
-      if (nameInput) {
-        await nameInput.click({ clickCount: 3 });
-        await nameInput.type('QA_BOT', { delay: 50 });
-      }
-      // Try confirm/start buttons
-      const btnSelectors = ['#btn-create-char', '#btn-create', '#btn-confirm', '#btn-start', 'button[type="submit"]', '.btn-primary'];
-      for (const sel of btnSelectors) {
-        const btn = await page.$(sel);
-        if (btn) {
-          await btn.click();
-          created = true;
-          break;
+      created = await page.evaluate(() => {
+        const factionCard = document.querySelector('.faction-card');
+        if (factionCard) factionCard.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        const nameInput = document.getElementById('pilot-name') || document.querySelector('#screen-create input[type="text"]');
+        if (nameInput) {
+          nameInput.focus();
+          nameInput.value = 'QA_BOT';
+          nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+          nameInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-      }
-      if (!created) {
-        // Try pressing Enter if no button found
-        await page.keyboard.press('Enter');
-      }
+        const btn = document.querySelector('#btn-create-char, #btn-create, #btn-confirm, #btn-start, button[type="submit"], .btn-primary');
+        if (btn) {
+          btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+          return true;
+        }
+        return false;
+      });
+      if (!created) await page.keyboard.press('Enter');
     } catch (e) {
       rwarn('QA-UX', `Character creation automation failed: ${e.message}`);
     }
@@ -432,7 +424,13 @@ async function qaUX(page) {
     // Wait for gameplay/bridge screen
     let gameplayLoaded = false;
     try {
-      await page.waitForSelector('#screen-bridge.active', { timeout: 10000 });
+      await page.waitForTimeout(1200);
+      await page.waitForFunction(() => {
+        const activeScreen = [...document.querySelectorAll('.screen')].find(el => el.classList.contains('active'));
+        const launchBtn = document.querySelector('#btn-launch, #btn-enter-space');
+        const launchVisible = !!(launchBtn && launchBtn.offsetParent !== null);
+        return activeScreen?.id === 'screen-bridge' || launchVisible;
+      }, { timeout: 10000 });
       gameplayLoaded = true;
     } catch (e) {
       rwarn('QA-UX', 'Gameplay/overlay not detected after character creation');

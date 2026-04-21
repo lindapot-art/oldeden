@@ -979,6 +979,15 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     width: 120px !important;
     height: 120px !important;
   }
+  /* Hide mobile touch UI on fine-pointer (mouse/trackpad) devices */
+  @media (pointer: fine) {
+    #mobile-controls, #touch-move-zone, #touch-stick, #mobile-look-zone,
+    #touch-button-cluster, #touch-button-row, #touch-joystick-left,
+    #touch-fire, #touch-reload, #touch-boost, #touch-gyro, .touch-ui-element {
+      display: none !important;
+      pointer-events: none !important;
+    }
+  }
   #mobile-look-zone {
     position: absolute;
     right: 12px;
@@ -1437,6 +1446,17 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Mouse Sensitivity</label>
       <input type="range" id="setting-sens" min="1" max="10" value="5" style="width:100%;accent-color:var(--green);">
       <span id="setting-sens-val" style="color:var(--green);font-size:0.8rem;">5</span>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label for="setting-graphics-quality" style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Graphics Quality</label>
+      <select id="setting-graphics-quality" style="width:100%;padding:10px 12px;background:rgba(8,14,24,0.92);border:1px solid rgba(255,255,255,0.12);color:var(--text);border-radius:12px;">
+        <option value="auto">Auto Detect</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="ultra">Ultra</option>
+      </select>
+      <div id="graphics-quality-note" style="color:var(--muted);font-size:0.75rem;margin-top:8px;line-height:1.45;">Auto-detects based on device class.</div>
     </div>
     <div style="margin-bottom:20px;">
       <label style="font-size:0.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;">
@@ -2001,7 +2021,7 @@ const state = {
   flight: {
     thrust: 0, strafe: 0, vertical: 0,
     velocity: { x: 0, y: 0, z: 0 },
-    speed: 0, maxSpeed: 120, accel: 80, drag: 0.95,
+    speed: 0, maxSpeed: 120, accel: 22, drag: 0.982,
     warpSpeed: 300, warping: false, warpTarget: null,
     afterburner: false, afterburnerMult: 2.5,
   },
@@ -2046,6 +2066,7 @@ const state = {
     sfxVol: 0.8,
     bgmVol: 0.6,
     sensitivity: 5,
+    graphicsQuality: 'auto',
     scanlines: true,
     screenShake: true,
     musicCollapsed: false,
@@ -2132,7 +2153,14 @@ const state = {
 };
 
 function isTouchPrimaryInput() {
-  return ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0 || window.matchMedia('(pointer: coarse)').matches;
+  // Require ACTUAL touch — matchMedia pointer:coarse + either ontouchstart or maxTouchPoints
+  // Most desktop browsers falsely report maxTouchPoints > 0 but pointer is still 'fine'
+  const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+  const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+  const isFine = window.matchMedia('(pointer: fine)').matches;
+  // If pointer is fine (mouse), never treat as touch even if touchpoints exist
+  if (isFine && !isCoarse) return false;
+  return hasTouch && isCoarse;
 }
 
 function shouldUseMobileFlightUI() {
@@ -3429,16 +3457,17 @@ function updateWorldCycleVisuals(forceUi = false) {
   state.world.lightLevel = lightLevel;
   state.world.phaseName = phaseName;
 
-  scene.fog.color.setHSL(0.62 - lightLevel * 0.08, 0.45, 0.06 + lightLevel * 0.12);
-  scene.fog.density = 0.00055 - lightLevel * 0.00022;
-  renderer.toneMappingExposure = 1.05 + lightLevel * 0.95;
+  const _gfxPreset = getGraphicsQualityPreset().preset;
+  scene.fog.color.setHSL(0.61 - lightLevel * 0.05, 0.32, 0.025 + lightLevel * 0.055);
+  scene.fog.density = 0.00048 - lightLevel * 0.00016;
+  renderer.toneMappingExposure = (0.72 + lightLevel * 0.42) * _gfxPreset.exposureMul;
   scene.children.forEach(ch => {
-    if (ch.isAmbientLight) ch.intensity = 0.55 + lightLevel * 1.8;
+    if (ch.isAmbientLight) ch.intensity = 0.08 + lightLevel * 0.4;
   });
-  starLight.intensity = 1.3 + lightLevel * 3.3;
-  fillLight.intensity = 0.45 + (1 - lightLevel) * 1.2;
-  rimLight.intensity = 0.5 + lightLevel * 0.9;
-  hemiLight.intensity = 0.45 + lightLevel * 1.2;
+  starLight.intensity = 0.55 + lightLevel * 1.35;
+  fillLight.intensity = 0.14 + (1 - lightLevel) * 0.35;
+  rimLight.intensity = 0.18 + lightLevel * 0.32;
+  hemiLight.intensity = 0.08 + lightLevel * 0.18;
   starLight.color.setHSL(0.11, 0.65, 0.72 - lightLevel * 0.12);
   fillLight.color.setHSL(0.6, 0.5, 0.55 - lightLevel * 0.12);
   hemiLight.color.setHSL(0.58, 0.5, 0.45 + lightLevel * 0.28);
@@ -4295,7 +4324,7 @@ function jumpToSystem(idx) {
   });
   if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   if (typeof spawnSystemStar === "function") spawnSystemStar();
-  // Rare: Dyson sphere landmark in every 5th system
+  if (typeof spawnEscortWingmen === 'function') spawnEscortWingmen();
   if (state.location.systemIndex % 5 === 3) {
     loadGLBModel('dyson_sphere').then(model => {
       if (!c.active) return;
@@ -5505,16 +5534,19 @@ function initSettingsScreen() {
   const volM = document.getElementById('vol-master');
   const volS = document.getElementById('vol-sfx');
   const sens = document.getElementById('setting-sens');
+  const gfx = document.getElementById('setting-graphics-quality');
   const scan = document.getElementById('setting-scanlines');
   const shake = document.getElementById('setting-screenshake');
   volM.value = state.settings.masterVol * 100;
   volS.value = state.settings.sfxVol * 100;
   sens.value = state.settings.sensitivity;
+  if (gfx) gfx.value = state.settings.graphicsQuality || 'auto';
   scan.checked = state.settings.scanlines;
   shake.checked = state.settings.screenShake;
   document.getElementById('vol-master-val').textContent = Math.round(state.settings.masterVol * 100) + '%';
   document.getElementById('vol-sfx-val').textContent = Math.round(state.settings.sfxVol * 100) + '%';
   document.getElementById('setting-sens-val').textContent = state.settings.sensitivity;
+  updateGraphicsQualityNote();
   volM.oninput = () => { state.settings.masterVol = volM.value / 100; document.getElementById('vol-master-val').textContent = volM.value + '%'; AudioSFX.refreshMix(); };
   volS.oninput = () => { state.settings.sfxVol = volS.value / 100; document.getElementById('vol-sfx-val').textContent = volS.value + '%'; AudioSFX.refreshMix(); };
   const volB = document.getElementById('vol-bgm');
@@ -5524,6 +5556,7 @@ function initSettingsScreen() {
     volB.oninput = () => { state.settings.bgmVol = volB.value / 100; document.getElementById('vol-bgm-val').textContent = volB.value + '%'; AudioSFX.refreshMix(); MusicPlayer.syncVolume(); };
   }
   sens.oninput = () => { state.settings.sensitivity = parseInt(sens.value); document.getElementById('setting-sens-val').textContent = sens.value; };
+  if (gfx) gfx.onchange = () => { state.settings.graphicsQuality = gfx.value; applyGraphicsQuality(); };
   scan.onchange = () => { state.settings.scanlines = scan.checked; };
   shake.onchange = () => { state.settings.screenShake = shake.checked; };
 }
@@ -5639,13 +5672,60 @@ const canvas3d = document.getElementById('game-canvas');
 const hudCanvas = document.getElementById('hud-canvas');
 const hudCtx = hudCanvas.getContext('2d');
 const c = state.combat;
-let renderer, scene, camera, ship, turretMount, cockpit, composer;
+let renderer, scene, camera, ship, turretMount, cockpit, composer, bloomPass;
 let starLight, fillLight, rimLight, hemiLight;
 let railGlowMatL, railGlowMatR, muzzleMat, railL, railR;
 let threeReady = false;
 let shieldShimmerMat, shieldShimmerGeo, shieldShimmer;
 let shieldShimmerTimer = 0;
 let starLayers = [];
+
+const GRAPHICS_QUALITY_PRESETS = {
+  low: { maxPixelRatio: 1.0, bloomStrength: 0.45, bloomRadius: 0.2, bloomThreshold: 0.92, exposureMul: 0.9 },
+  medium: { maxPixelRatio: 1.2, bloomStrength: 0.7, bloomRadius: 0.3, bloomThreshold: 0.88, exposureMul: 0.96 },
+  high: { maxPixelRatio: 1.5, bloomStrength: 1.0, bloomRadius: 0.4, bloomThreshold: 0.85, exposureMul: 1.0 },
+  ultra: { maxPixelRatio: 2.0, bloomStrength: 1.22, bloomRadius: 0.48, bloomThreshold: 0.82, exposureMul: 1.06 },
+};
+
+function detectGraphicsQuality() {
+  const memoryGb = navigator.deviceMemory || 4;
+  const cores = navigator.hardwareConcurrency || 4;
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const pixelLoad = window.innerWidth * window.innerHeight * Math.max(1, window.devicePixelRatio || 1);
+  if (memoryGb <= 2 || cores <= 2) return 'low';
+  if (coarsePointer || memoryGb <= 4 || cores <= 4 || pixelLoad > 5000000) return 'medium';
+  if (memoryGb >= 8 && cores >= 8 && pixelLoad < 4200000) return 'ultra';
+  return 'high';
+}
+
+function getGraphicsQualityPreset() {
+  const mode = state?.settings?.graphicsQuality || 'auto';
+  const resolved = mode === 'auto' ? detectGraphicsQuality() : mode;
+  return { mode, resolved, preset: GRAPHICS_QUALITY_PRESETS[resolved] || GRAPHICS_QUALITY_PRESETS.high };
+}
+
+function updateGraphicsQualityNote() {
+  const note = document.getElementById('graphics-quality-note');
+  if (!note) return;
+  const { mode, resolved } = getGraphicsQualityPreset();
+  const memoryGb = navigator.deviceMemory || '?';
+  const cores = navigator.hardwareConcurrency || '?';
+  note.textContent = mode === 'auto'
+    ? 'Auto detected: ' + resolved.toUpperCase() + ' (' + memoryGb + 'GB RAM / ' + cores + ' threads)'
+    : 'Manual preset active: ' + resolved.toUpperCase() + '. Auto would pick ' + detectGraphicsQuality().toUpperCase() + '.';
+}
+
+function applyGraphicsQuality() {
+  const { resolved, preset } = getGraphicsQualityPreset();
+  state.settings._resolvedGraphicsQuality = resolved;
+  if (renderer) renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, preset.maxPixelRatio));
+  if (bloomPass) {
+    bloomPass.strength = preset.bloomStrength;
+    bloomPass.radius = preset.bloomRadius;
+    bloomPass.threshold = preset.bloomThreshold;
+  }
+  updateGraphicsQualityNote();
+}
 
 try {
 
@@ -5656,10 +5736,10 @@ try {
   console.warn('[Old Eden] high-performance WebGL failed, falling back to default');
   renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
 }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.8;
 renderer.shadowMap.enabled = false;
+applyGraphicsQuality();
 
 // WebGL context lost/restored recovery
 canvas3d.addEventListener('webglcontextlost', (event) => {
@@ -5673,15 +5753,16 @@ canvas3d.addEventListener('webglcontextrestored', () => {
   const lostDiv = document.getElementById('webgl-lost-overlay');
   if (lostDiv) lostDiv.classList.remove('active');
   // Re-init renderer settings
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.8;
+  applyGraphicsQuality();
   // Rebuild post-processing composer after context restore
   try {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
-    composer.addPass(bloom);
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0.85);
+    composer.addPass(bloomPass);
+    applyGraphicsQuality();
     console.log('[Old Eden] Post-processing rebuilt after context restore');
   } catch (e) { console.warn('[Old Eden] Composer rebuild failed:', e); }
 });
@@ -5695,23 +5776,23 @@ scene.fog = new THREE.FogExp2(0x050510, 0.00012);
 camera = new THREE.PerspectiveCamera(75, 1, 1.0, 50000);
 
 // Lighting — bright space sunlight for visibility
-scene.add(new THREE.AmbientLight(0x667799, 2.0));
+scene.add(new THREE.AmbientLight(0x223344, 0.3));
 
 // Persistent muzzle flash point light (reused per shot)
 window._mfLight = new THREE.PointLight(0x88ccff, 0, 20);
 scene.add(window._mfLight);
-starLight = new THREE.DirectionalLight(0xfff8e8, 4.0);
+starLight = new THREE.DirectionalLight(0xfff8e8, 2.0);
 starLight.position.set(500, 400, 300);
 starLight.castShadow = false;
 scene.add(starLight);
-fillLight = new THREE.DirectionalLight(0x88aadd, 1.5);
+fillLight = new THREE.DirectionalLight(0x88aadd, 0.5);
 fillLight.position.set(-400, 200, -300);
 scene.add(fillLight);
 rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
 rimLight.position.set(0, -200, 500);
 scene.add(rimLight);
 // Hemisphere light for natural sky/ground ambient
-hemiLight = new THREE.HemisphereLight(0x88bbff, 0x224466, 1.2);
+hemiLight = new THREE.HemisphereLight(0x445566, 0x111122, 0.15);
 
 // ── Cockpit interior spot light (warm glow) ──
 const cockpitSpot = new THREE.SpotLight(0xffddaa, 0.6, 10, Math.PI / 4, 0.5, 1);
@@ -5751,6 +5832,19 @@ scene.add(hemiLight);
 })();
 
 // ═══ STARFIELD PARALLAX LAYERS ═══
+// Procedural round star sprite texture (avoids square points)
+const _starSpriteCanvas = document.createElement('canvas');
+_starSpriteCanvas.width = 32; _starSpriteCanvas.height = 32;
+const _starCtx = _starSpriteCanvas.getContext('2d');
+const _starGrad = _starCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+_starGrad.addColorStop(0, 'rgba(255,255,255,1)');
+_starGrad.addColorStop(0.15, 'rgba(255,255,255,0.9)');
+_starGrad.addColorStop(0.4, 'rgba(200,220,255,0.3)');
+_starGrad.addColorStop(1, 'rgba(100,150,255,0)');
+_starCtx.fillStyle = _starGrad;
+_starCtx.fillRect(0, 0, 32, 32);
+const _starSpriteTexture = new THREE.CanvasTexture(_starSpriteCanvas);
+
 (function createStarLayers() {
   const starLayers = [
     { count: 800, size: 0.8, radius: 2500, color: 0xffffff, opacity: 0.3 },
@@ -5772,6 +5866,7 @@ scene.add(hemiLight);
     const mat = new THREE.PointsMaterial({
       color: cfg.color, size: cfg.size, transparent: true, opacity: cfg.opacity,
       blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: false,
+      map: _starSpriteTexture, alphaMap: _starSpriteTexture,
     });
     const stars = new THREE.Points(geo, mat);
     stars.renderOrder = -99;
@@ -5782,8 +5877,9 @@ scene.add(hemiLight);
 
 composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
+bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0.85);
 composer.addPass(bloomPass);
+applyGraphicsQuality();
 
 const _hudDPR = Math.min(window.devicePixelRatio || 1, 2);
 function resize() {
@@ -5823,6 +5919,8 @@ STAR_LAYER_CFG.forEach(cfg => {
   const mat = new THREE.PointsMaterial({
     color: cfg.color, size: cfg.size, sizeAttenuation: true,
     transparent: true, opacity: cfg.opacity, depthWrite: false,
+    map: _starSpriteTexture, alphaMap: _starSpriteTexture,
+    blending: THREE.AdditiveBlending,
   });
   const points = new THREE.Points(geo, mat);
   points.userData.parallax = cfg.parallax;
@@ -6256,7 +6354,8 @@ function enterGunnerMode() {
   if (shouldUseMobileFlightUI()) c.locked = true;
   else canvas3d.requestPointerLock()?.catch?.(() => {});
   document.getElementById('action-bar').classList.add('active');
-  document.getElementById('mobile-controls').classList.add('active');
+  if (shouldUseMobileFlightUI()) document.getElementById('mobile-controls').classList.add('active');
+  else document.getElementById('mobile-controls').classList.remove('active');
   updateGyroButton();
   // Reset flight
   state.flight.velocity = { x: 0, y: 0, z: 0 };
@@ -6289,6 +6388,7 @@ function enterGunnerMode() {
   loadDashboardGun().then(_glbTick).catch(_glbTick);
   spawnShipLibrary().then(_glbTick).catch(_glbTick);
   replaceShipWithGLB().then(_glbTick).catch(_glbTick);
+  spawnEscortWingmen();
   addComms('EDEN AI', shouldUseMobileFlightUI() ? 'Touch flight online. Left pad moves, right pad aims, GYRO can tilt-steer the turret.' : 'All systems online. WASD/Arrows fly, Shift boost, Space up, Ctrl down.');
   addComms('System', shouldUseMobileFlightUI() ? 'Gunner mode — Drag AIM zone, FIRE shoots, BOOST afterburns, GYRO toggles tilt steering.' : 'Gunner mode — Mouse aim, Click fire, Right-click/Dblclick navigate, R reload, ESC exit');
   addComms('System', 'P = autopilot | T = chatbot | L = labels | I = god mode');
@@ -6334,8 +6434,8 @@ function spawnAsteroids() {
   const resTint = tints[sys?.resources?.[0]] || 0x554433;
   const fogColors = { hegemony_vanguard: 0x050a14, free_traders: 0x050f08, void_cult: 0x0a0512, iron_syndicate: 0x0f0a05, eden_remnants: 0x0a0a08, stellar_church: 0x0f050a, autonomous_collective: 0x050a0f, rogue_ai_network: 0x100508 };
   const fogColor = fogColors[sys?.controllingFaction] || 0x050510;
-  scene.fog = new THREE.FogExp2(fogColor, 0.00025);
-  scene.background = new THREE.Color(fogColor);
+  scene.fog = new THREE.FogExp2(fogColor, 0.00015);
+  scene.background = new THREE.Color(0x010204);
   // Improved asteroid visuals: higher subdivision, vertex noise, color/material variety
   // Shared base material config
   function randomAsteroidColor(base) {
@@ -6345,7 +6445,7 @@ function spawnAsteroids() {
     return c.getHex();
   }
   // Use higher subdivision for smoother asteroids
-  const AST_DETAIL = 2;
+  const AST_DETAIL = 3;
   // Pre-generate 8 deformed asteroid geos with noise
   const _astGeoPool = [];
   for (let gi = 0; gi < 8; gi++) {
@@ -6480,7 +6580,7 @@ async function spawnSystemPlanets() {
       planet.scale.setScalar(baseScale * (0.5 + Math.random() * 0.8));
       // Place far away in different directions
       const angle = (pi / planetCount) * Math.PI * 2 + state.location.systemIndex * 0.7;
-      const dist = 800 + pi * 400 + Math.random() * 300;
+      const dist = 150 + pi * 120 + Math.random() * 80;
       planet.position.set(
         Math.cos(angle) * dist,
         (Math.random() - 0.5) * 200,
@@ -10907,12 +11007,22 @@ let stargateShips = [];
 
 async function createStargate() {
   // Try to load GLB stargate model and add it to the group
-  loadGLBModel('stargate').then(model => {
+  // Load GLB stargate — on success hide vector ring, on fail keep procedural
+  const _sgGlbPromise = loadGLBModel('stargate').then(model => {
     const glbGate = model.clone();
-    glbGate.scale.setScalar(5.0);
+    glbGate.scale.setScalar(12.0);
     glbGate.position.set(0, 0, 0);
+    glbGate.rotation.set(0, 0, 0);
+    glbGate.name = 'stargate-glb';
     stargateGroup.add(glbGate);
-  }).catch(() => {}); // Fall back to procedural ring
+    // Hide vector ring/chevrons/portal — keep only GLB + particles
+    stargateGroup.children.forEach(ch => {
+      if (ch === glbGate) return;
+      if (ch.isPoints) return; // keep energy particles
+      ch.visible = false;
+    });
+    stargateGroup.userData.hasGLB = true;
+  }).catch(() => { stargateGroup.userData.hasGLB = false; });
 
   if (stargateGroup) return;
   stargateGroup = new THREE.Group();
@@ -10970,6 +11080,49 @@ async function createStargate() {
   // Spawn a few ships near the stargate
   await spawnShipsNearStargate();
   await spawnWelcomeFleet();
+}
+
+// ── Escort Wingmen — 2 friendly NPCs that follow and fight ──
+async function spawnEscortWingmen() {
+  if (!c._escorts) c._escorts = [];
+  // Clean old escorts
+  c._escorts.forEach(e => { if (e && e.group) { scene.remove(e.group); disposeObject(e.group); } });
+  c._escorts = [];
+  const ESCORT_KEYS = ['escort_ship', 'patrol_alpha', 'patrol_beta', 'corvette_alpha', 'fighter_alpha'];
+  for (let ei = 0; ei < 2; ei++) {
+    try {
+      const key = ESCORT_KEYS[ei % ESCORT_KEYS.length];
+      const model = await loadGLBModel(key);
+      const g = new THREE.Group();
+      const inst = model.clone();
+      const asset = GLB_ASSETS[key];
+      inst.scale.setScalar((asset ? asset.scale : 1.0) * 2.0);
+      g.add(inst);
+      // Engine trail
+      const trailGeo = new THREE.CylinderGeometry(0.08, 0.5, 3, 6);
+      const trailMat = new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+      const trail = new THREE.Mesh(trailGeo, trailMat);
+      trail.rotation.x = Math.PI / 2;
+      trail.position.set(0, 0, 2);
+      g.add(trail);
+      // Name tag
+      g.userData.escortId = 'WINGMAN-' + (ei + 1);
+      g.userData.targetOffset = new THREE.Vector3(
+        (ei === 0 ? -12 : 12),
+        -2 + Math.random() * 2,
+        8 + Math.random() * 4
+      );
+      g.userData.hp = 200;
+      g.userData.maxHp = 200;
+      g.userData.fireTimer = 0;
+      g.userData.trailMat = trailMat;
+      // Start near player
+      g.position.copy(ship.position).add(g.userData.targetOffset);
+      scene.add(g);
+      c._escorts.push({ group: g, key: key });
+    } catch(e) { console.warn('[Escort] Failed to spawn wingman', e); }
+  }
+  if (c._escorts.length > 0) addComms('Fleet', '🛡 ' + c._escorts.length + ' escort wingmen deployed. They will engage hostiles.');
 }
 
 // ── Welcome Fleet — parade formation of diverse GLB ships ──
@@ -12279,31 +12432,53 @@ async function loadCockpitGLB() {
   try {
     const model = await loadGLBModel('cockpit_new');
     const cp = model.clone();
-    // Position cockpit AROUND the camera — the player sits INSIDE this
-    // This is separate from the railgun and procedural cockpit elements
-    cp.position.set(0, -1.2, 0.5);
-    cp.scale.setScalar(0.6);
-    // Orient so dashboard/windshield faces forward (-Z)
+    // Use the dedicated cockpit interior asset instead of an exterior shuttle hull.
+    cp.position.set(0, -2.55, 0.9);
+    cp.scale.setScalar(0.52);
     cp.rotation.set(0, Math.PI, 0);
     cp.name = 'cockpit-shuttle-glb';
-    // Keep cockpit mostly opaque but windows transparent
-    cp.traverse(child => {
-      if (child.isMesh && child.material) {
-        const mats = Array.isArray(child.material) ? child.material : [child.material];
-        mats.forEach(m => {
-          m.transparent = true;
-          m.opacity = 0.92;
-          m.depthWrite = true;
-          m.side = THREE.DoubleSide;
-        });
-      }
-    });
     // Guard: player may have exited gunner mode during async load
     if (!c.active) { disposeObject(cp); return; }
     // Add directly to camera (not cockpit group) so it doesn't conflict with railgun
     camera.add(cp);
+    cp.traverse(child => {
+      if (!child.isMesh || !child.material) return;
+      child.material = Array.isArray(child.material) ? child.material.map(m => m.clone()) : child.material.clone();
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      child.frustumCulled = false;
+      const materialHint = ((child.name || '') + ' ' + mats.map(m => m.name || '').join(' ')).toLowerCase();
+      const isWindow = /glass|window|canopy/.test(materialHint);
+      mats.forEach(m => {
+        m.side = THREE.DoubleSide;
+        m.transparent = true;
+        m.opacity = isWindow ? 0.12 : 0.34;
+        m.depthWrite = false;
+      });
+    });
     cockpitGLBModel = cp;
-    addComms('System', 'Spacecraft cockpit interior loaded.');
+    // Hide vector cockpit interior walls — GLB cockpit replaces them
+    if (cockpit) {
+      cockpit.traverse(child => {
+        if (child.name === 'cockpit-floor' || child.name === 'cockpit-wallL' ||
+            child.name === 'cockpit-wallR' || child.name === 'cockpit-ceiling' ||
+            child.name === 'cockpit-console' || child.name === 'cockpit-screen') {
+          child.visible = false;
+        }
+      });
+      // Hide all panels, seat, canopy, struts — keep railgun + muzzle
+      cockpit.children.forEach(ch => {
+        if (!ch.name || !ch.name.includes('rail')) {
+          // Keep only rails and muzzle
+          if (ch.geometry) {
+            const geoType = ch.geometry.type || '';
+            if (geoType.includes('Box') || geoType.includes('Plane') || geoType.includes('Sphere') || geoType.includes('Cylinder')) {
+              if (!ch.material || !ch.material._isRailMat) ch.visible = false;
+            }
+          }
+        }
+      });
+    }
+    addComms('System', 'Cockpit shuttle interior loaded — vector overlay hidden.');
   } catch(e) {
     console.warn('[GLB] Cockpit model failed, using procedural:', e);
   }
@@ -12771,6 +12946,63 @@ function gameLoop() {
     ship.position.z += fl.velocity.z * dt;
     // Update engine audio pitch/volume based on speed
     AudioSFX.updateEngineAudio(fl.speed, maxSpd, fl.afterburner);
+    // ── NPC/Station collision pushback ──
+    // Stations
+    if (c._stationModel && c._stationModel.position) {
+      const sDist = ship.position.distanceTo(c._stationModel.position);
+      if (sDist < 20) {
+        const pushDir = new THREE.Vector3().subVectors(ship.position, c._stationModel.position).normalize();
+        ship.position.addScaledVector(pushDir, 20 - sDist + 1);
+        fl.velocity.x *= 0.3; fl.velocity.y *= 0.3; fl.velocity.z *= 0.3;
+      }
+    }
+    // NPC ships (stargateShips)
+    for (const npcShip of stargateShips) {
+      if (!npcShip || !npcShip.position) continue;
+      const nDist = ship.position.distanceTo(npcShip.position);
+      if (nDist < 8) {
+        const pushDir = new THREE.Vector3().subVectors(ship.position, npcShip.position).normalize();
+        ship.position.addScaledVector(pushDir, 8 - nDist + 0.5);
+        fl.velocity.x *= 0.5; fl.velocity.y *= 0.5; fl.velocity.z *= 0.5;
+      }
+    }
+    // Escort ships
+    if (c._escorts) {
+      for (const esc of c._escorts) {
+        if (!esc || !esc.group) continue;
+        const eDist = ship.position.distanceTo(esc.group.position);
+        if (eDist < 6) {
+          const pushDir = new THREE.Vector3().subVectors(ship.position, esc.group.position).normalize();
+          ship.position.addScaledVector(pushDir, 6 - eDist + 0.3);
+        }
+      }
+    }
+    // ── Stargate proximity — prompt to jump ──
+    if (stargateGroup && !fl.warping) {
+      const gateDist = ship.position.distanceTo(stargateGroup.position);
+      const gatePromptEl = document.getElementById('gate-jump-prompt');
+      if (gateDist < 50) {
+        if (!gatePromptEl) {
+          const p = document.createElement('div');
+          p.id = 'gate-jump-prompt';
+          p.style.cssText = 'position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(0,20,40,0.92);border:2px solid #44aaff;padding:18px 32px;border-radius:12px;color:#44aaff;font-size:1.1rem;z-index:2000;text-align:center;pointer-events:none;font-family:var(--font-mono);text-shadow:0 0 8px #44aaff;';
+          p.innerHTML = '✨ STARGATE APPROACH ✨<br><span style="color:#fff;font-size:0.9rem">Press <b style="color:#ffaa00">F</b> to jump to another system</span>';
+          document.body.appendChild(p);
+        }
+        // F key triggers jump
+        if (keysDown.has('f') && !c._gateJumpCooldown) {
+          c._gateJumpCooldown = true;
+          keysDown.delete('f');
+          // Jump to next system
+          const totalSystems = state.starSystems.length;
+          const nextIdx = (state.location.systemIndex + 1) % totalSystems;
+          jumpToSystem(nextIdx);
+          setTimeout(() => { c._gateJumpCooldown = false; }, 3000);
+        }
+      } else {
+        if (gatePromptEl) gatePromptEl.remove();
+      }
+    }
     // Dynamic FOV — widens at high speed for acceleration feel
     const _targetFov = 75 + (fl.speed / Math.max(1, maxSpd)) * 12 + (fl.afterburner ? 5 : 0);
     camera.fov += (_targetFov - camera.fov) * Math.min(1, dt * 4);
@@ -13056,17 +13288,17 @@ function gameLoop() {
       // Find nearest asteroid to mine
       let nearestAst = null, nearestDist = 999;
       c.asteroids.forEach(a => {
-        if (!a || !a.position) return;
-        const d = a.position.distanceTo(ship.position);
+        if (!a || !a.mesh) return;
+        const d = a.mesh.position.distanceTo(ship.position);
         if (d < nearestDist) { nearestDist = d; nearestAst = a; }
       });
       if (nearestAst && nearestDist < 200) {
-        mdM.position.x += (nearestAst.position.x - mdM.position.x) * Math.min(1, 2 * dt);
-        mdM.position.y += (nearestAst.position.y + 3 - mdM.position.y) * Math.min(1, 2 * dt);
-        mdM.position.z += (nearestAst.position.z - mdM.position.z) * Math.min(1, 2 * dt);
-        mdM.lookAt(nearestAst.position);
+        mdM.position.x += (nearestAst.mesh.position.x - mdM.position.x) * Math.min(1, 2 * dt);
+        mdM.position.y += (nearestAst.mesh.position.y + 3 - mdM.position.y) * Math.min(1, 2 * dt);
+        mdM.position.z += (nearestAst.mesh.position.z - mdM.position.z) * Math.min(1, 2 * dt);
+        mdM.lookAt(nearestAst.mesh.position);
         // Auto-mine
-        if (mdM.position.distanceTo(nearestAst.position) < 10) {
+        if (mdM.position.distanceTo(nearestAst.mesh.position) < 10) {
           md.progress = (md.progress || 0) + dt * 15 * getMiningYieldProfile('drone').progressMult;
           state.miningBeamActive = true;
           state.miningBeamProgress = md.progress;
@@ -13262,8 +13494,8 @@ function gameLoop() {
       let proxDanger = false;
       let _proxThreat = '';
       c.asteroids.forEach(a => {
-        if (!a || !a.position) return;
-        const ad = a.position.distanceTo(ship.position);
+        if (!a || !a.mesh) return;
+        const ad = a.mesh.position.distanceTo(ship.position);
         if (ad < 25 && fl.speed > 30) { proxDanger = true; _proxThreat = 'ASTEROID'; }
       });
       let _proxClosest = 999;
@@ -13280,6 +13512,7 @@ function gameLoop() {
     }
 
     // Danger zone warning — alert when 4+ enemies within 50m
+    const W = hudCanvas.width, H = hudCanvas.height; // HUD dimensions for gameLoop HUD drawing
     {
       let _dzCount = 0;
       c.enemies.forEach(e => { if (e.group.position.distanceTo(ship.position) < 50) _dzCount++; });
@@ -14723,12 +14956,122 @@ function gameLoop() {
             if (hadShield) { AudioSFX.play('shield_hit'); triggerShieldShimmer(); } else { AudioSFX.play('hull_hit'); }
             c._asteroidHitCooldown = performance.now() + 800; // 800ms cooldown between hits
             addComms('EDEN AI', '\u26a0 Asteroid collision! Watch your heading.');
+            // ── Collision pushback — bounce ship away from asteroid ──
+            const pushDir = new THREE.Vector3().subVectors(ship.position, a.position).normalize();
+            const pushForce = Math.max(15, fl.speed * 0.6);
+            fl.velocity.x = pushDir.x * pushForce;
+            fl.velocity.y = pushDir.y * pushForce * 0.5;
+            fl.velocity.z = pushDir.z * pushForce;
+            ship.position.addScaledVector(pushDir, effectiveRadius - dist + 2);
             if (state.ship.hull <= 0 && !c.dead) { playerDeathSequence('Destroyed by asteroid collision'); }
           }
         }
       }
     }
 
+    // ── Escort Wingmen AI — follow player + engage enemies ──
+    if (c._escorts && c._escorts.length > 0) {
+      for (let ei = 0; ei < c._escorts.length; ei++) {
+        const esc = c._escorts[ei];
+        if (!esc || !esc.group || !esc.group.parent) continue;
+        const eg = esc.group;
+        // Formation follow — smoothly move to offset from player
+        const targetPos = _tmpV3a.copy(ship.position).add(eg.userData.targetOffset);
+        eg.position.lerp(targetPos, dt * 2.5);
+        // Face forward (same direction as player)
+        const lookTarget = _tmpV3b.copy(ship.position).add(new THREE.Vector3(0, 0, -50).applyQuaternion(camera.quaternion));
+        eg.lookAt(lookTarget);
+        // Engage nearest enemy
+        eg.userData.fireTimer -= dtMs;
+        if (eg.userData.fireTimer <= 0 && c.enemies.length > 0) {
+          let nearestEnemy = null, nearestDist = 150;
+          for (const en of c.enemies) {
+            if (!en || !en.group || en.hp <= 0) continue;
+            const d = en.group.position.distanceTo(eg.position);
+            if (d < nearestDist) { nearestDist = d; nearestEnemy = en; }
+          }
+          if (nearestEnemy) {
+            // Fire at enemy
+            eg.userData.fireTimer = 800 + Math.random() * 400;
+            const bulletGeo = new THREE.SphereGeometry(0.15, 4, 4);
+            const bulletMat = new THREE.MeshBasicMaterial({ color: 0x44ff88 });
+            const bullet = new THREE.Mesh(bulletGeo, bulletMat);
+            bullet.position.copy(eg.position);
+            const dir = new THREE.Vector3().subVectors(nearestEnemy.group.position, eg.position).normalize();
+            bullet.userData.vel = dir.multiplyScalar(200);
+            bullet.userData.age = 0;
+            bullet.userData.damage = 8;
+            bullet.userData.isEscort = true;
+            scene.add(bullet);
+            if (!c._escortBullets) c._escortBullets = [];
+            c._escortBullets.push(bullet);
+          }
+        }
+        // Trail opacity based on speed
+        if (eg.userData.trailMat) {
+          eg.userData.trailMat.opacity = 0.2 + (fl.speed / fl.maxSpeed) * 0.5;
+        }
+      }
+    }
+    // ── Escort bullets update ──
+    if (c._escortBullets) {
+      for (let bi = c._escortBullets.length - 1; bi >= 0; bi--) {
+        const b = c._escortBullets[bi];
+        b.userData.age += dtMs;
+        if (b.userData.age > 2000) { scene.remove(b); b.geometry?.dispose(); b.material?.dispose(); c._escortBullets.splice(bi, 1); continue; }
+        b.position.addScaledVector(b.userData.vel, dt);
+        // Check hit on enemies
+        for (const en of c.enemies) {
+          if (!en || !en.group || en.hp <= 0) continue;
+          if (b.position.distanceTo(en.group.position) < 5) {
+            en.hp -= b.userData.damage;
+            en.hitFlash = 200;
+            scene.remove(b); b.geometry?.dispose(); b.material?.dispose();
+            c._escortBullets.splice(bi, 1);
+            if (en.hp <= 0) {
+              addComms('Fleet', '🛡 Wingman eliminated ' + (en.name || 'hostile') + '!');
+            }
+            break;
+          }
+        }
+      }
+    }
+    // ── Auto-mine proximity — drill nearest asteroid within 25m ──
+    if (!c.dead && !c._autoMineCooldown) c._autoMineCooldown = 0;
+    if (!c.dead && performance.now() > c._autoMineCooldown) {
+      for (let _ami = 0; _ami < c.asteroids.length; _ami++) {
+        const ast = c.asteroids[_ami];
+        if (!ast || !ast.mesh) continue;
+        const amd = ast.mesh.position.distanceTo(ship.position);
+        if (amd < 25) {
+          // Auto-mine this asteroid
+          const sys = state.starSystems[state.location.systemIndex];
+          const res = sys?.resources?.[0] || 'Ore';
+          const yield_ = 2 + Math.floor(Math.random() * 4);
+          if (!state.cargo.hold) state.cargo.hold = [];
+          const existing = state.cargo.hold.find(i => i.name === res);
+          if (existing) existing.qty += yield_;
+          else state.cargo.hold.push({ name: res, qty: yield_, type: 'ore' });
+          state.mining.totalMined = (state.mining.totalMined || 0) + yield_;
+          c._autoMineCooldown = performance.now() + 3000; // 3s cooldown
+          // Visual feedback — flash the asteroid
+          if (ast.children[0] && ast.children[0].material) {
+            const origEmissive = ast.children[0].material.emissive?.getHex() || 0;
+            ast.children[0].material.emissive.setHex(0x44aaff);
+            ast.children[0].material.emissiveIntensity = 0.8;
+            setTimeout(() => {
+              if (ast.children[0] && ast.children[0].material) {
+                ast.children[0].material.emissive.setHex(origEmissive);
+                ast.children[0].material.emissiveIntensity = 0;
+              }
+            }, 400);
+          }
+          addComms('Mining', '⛏ Auto-mined ' + yield_ + 'x ' + res + ' (proximity drill)');
+          AudioSFX.play('mine');
+          break;
+        }
+      }
+    }
     // ── Homing missile update ──
     for (let mi = c._missiles.length - 1; mi >= 0; mi--) {
       const m = c._missiles[mi];
@@ -15134,6 +15477,7 @@ function gameLoop() {
     if (state.gameTime > c._nextOreShimmer) {
       c._nextOreShimmer = state.gameTime + 2000;
       c.asteroids.forEach(ast => {
+        if (!ast || !ast.mesh) return;
         const astDist = ast.mesh.position.distanceTo(ship.position);
         if (astDist < 80) {
           if (!ast._shimmerLight) {
