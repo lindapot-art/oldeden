@@ -7093,11 +7093,7 @@ function getBoltFromPool() {
 }
 function returnBoltToPool(b) {
   if (!b || !b.group) return;
-  b.gEnsure consumable items exist at combat start
-  if (!state.inventory.find(i => i.name === 'Repair Kit')) state.inventory.push({ name: 'Repair Kit', quantity: 3 });
-  if (!state.inventory.find(i => i.name === 'Shield Cell')) state.inventory.push({ name: 'Shield Cell', quantity: 2 });
-  if (!state.inventory.find(i => i.name === 'EMP Grenade')) state.inventory.push({ name: 'EMP Grenade', quantity: 1 });
-  // roup.parent?.remove(b.group);
+  b.group.parent?.remove(b.group);
   if (_boltPool.length < BOLT_POOL_MAX) _boltPool.push(b);
   else { disposeObject(b.group); }
 }
