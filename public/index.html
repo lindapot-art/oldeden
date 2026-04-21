@@ -32,7 +32,7 @@
     .nav-btn { background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;letter-spacing:0.05em;transition:all 0.2s; }
     .nav-btn:hover,.nav-btn.active { color:var(--gold);border-color:var(--gold);background:rgba(212,168,86,0.1); }
     #action-bar.active { display:flex; }
-    #hud-canvas.active { display:block !important; }
+    #hud-canvas.active { display:block !important; z-index: 100 !important; }
     body.touch-ui #lock-prompt { display:none !important; }
     #mobile-controls.active { display:block !important; }
     #death-ticker.active { display:block; }
@@ -12435,11 +12435,11 @@ async function loadCockpitGLB() {
     const model = await loadGLBModel('cockpit_new');
     const cp = model.clone();
     // Use the dedicated cockpit interior asset instead of an exterior shuttle hull.
-    cp.position.set(0, -2.05, 0.28);
-    cp.scale.setScalar(0.68);
-    cp.rotation.set(0.02, Math.PI, 0);
+    cp.position.set(0, 0.15, -0.5);
+    cp.scale.setScalar(1.2);
+    cp.rotation.set(0.0, Math.PI, 0.0);
     cp.name = 'cockpit-shuttle-glb';
-    cp.renderOrder = 10;
+    cp.renderOrder = 100;
     // Guard: player may have exited gunner mode during async load
     if (!c.active) { disposeObject(cp); return; }
     // Add directly to camera (not cockpit group) so it doesn't conflict with railgun
