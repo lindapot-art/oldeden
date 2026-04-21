@@ -1916,6 +1916,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <div id="bridge-launch">
     <button id="btn-launch">&#9876; ENTER SPACE</button>
     <button id="btn-leaderboard" class="btn" style="margin-left:16px;">🏆 Leaderboard</button>
+    <button id="btn-cosmetics" class="btn" style="margin-left:16px;">🛍️ Cosmetics</button>
   </div>
 </div>
 
@@ -1927,6 +1928,33 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <div id="leaderboard-table" style="width:100%;max-width:500px;"></div>
   <div class="btn-row" style="margin-top:2rem;">
     <button class="btn" id="btn-leaderboard-back">&larr; Back to Bridge</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  COSMETICS STORE SCREEN                      -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-cosmetics" style="background:rgba(0,0,0,0.92);z-index:90;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
+  <h2 class="holo-header">Cosmetics Store</h2>
+  <div style="width:100%;max-width:600px;">
+    <!-- Category tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" data-cosmetics-category="all" style="background:var(--teal);color:var(--dark);">All Items</button>
+      <button class="btn" data-cosmetics-category="ship">Ship Skins</button>
+      <button class="btn" data-cosmetics-category="character">Character</button>
+      <button class="btn" data-cosmetics-category="emote">Emotes</button>
+      <button class="btn" data-cosmetics-category="effect">Effects</button>
+    </div>
+    <!-- Catalog grid -->
+    <div id="cosmetics-catalog" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+    <!-- Player inventory -->
+    <div style="margin-top:20px;">
+      <div class="panel-title">Your Cosmetics</div>
+      <div id="cosmetics-inventory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:2rem;">
+    <button class="btn" id="btn-cosmetics-back">&larr; Back to Bridge</button>
   </div>
 </div>
 <!-- ════════════════════════════════════════════ -->
@@ -9954,6 +9982,138 @@ function renderLeaderboard() {
     table.innerHTML = html;
   }).catch(() => { if (table) table.innerHTML = '<div style="color:var(--danger);padding:24px;text-align:center;">Failed to load.</div>'; });
 }
+
+// Cosmetics Store
+let _cosmeticsState = { catalog: [], inventory: [], currentCategory: 'all' };
+
+_on('btn-cosmetics', 'click', () => { renderCosmeticsStore(); showScreen('cosmetics'); });
+_on('btn-cosmetics-back', 'click', () => showScreen('bridge'));
+
+function renderCosmeticsStore() {
+  const catalogDiv = document.getElementById('cosmetics-catalog');
+  const inventoryDiv = document.getElementById('cosmetics-inventory');
+  if (!catalogDiv || !inventoryDiv) return;
+  
+  catalogDiv.innerHTML = '<div style="color:var(--muted);padding:24px;text-align:center;">Loading catalog…</div>';
+  inventoryDiv.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;">Loading inventory…</div>';
+  
+  // Fetch catalog
+  fetch('/api/game/cosmetics/catalog')
+    .then(r => r.json())
+    .then(data => {
+      _cosmeticsState.catalog = data.catalog || [];
+      // Fetch inventory
+      return fetch('/api/game/cosmetics/inventory/' + (state.player?.id || 'guest'));
+    })
+    .then(r => r.json())
+    .then(data => {
+      _cosmeticsState.inventory = (data.inventory || []).map(item => item.id || item);
+      renderCatalogGrid();
+      renderInventoryGrid();
+    })
+    .catch(err => {
+      console.error('[Cosmetics]', err);
+      catalogDiv.innerHTML = '<div style="color:var(--danger);">Failed to load cosmetics.</div>';
+    });
+}
+
+function renderCatalogGrid() {
+  const catalogDiv = document.getElementById('cosmetics-catalog');
+  if (!catalogDiv || !_cosmeticsState.catalog.length) {
+    if (catalogDiv) catalogDiv.innerHTML = '<div style="color:var(--muted);">No items available.</div>';
+    return;
+  }
+  
+  const filtered = _cosmeticsState.currentCategory === 'all' 
+    ? _cosmeticsState.catalog 
+    : _cosmeticsState.catalog.filter(item => item.category === _cosmeticsState.currentCategory);
+  
+  let html = '';
+  filtered.forEach(item => {
+    const owned = _cosmeticsState.inventory.includes(item.id);
+    const btnColor = owned ? 'var(--green)' : 'var(--blue)';
+    const btnText = owned ? 'OWNED' : (item.price || '?') + ' SM';
+    html += `<div style="border:1px solid ${btnColor};border-radius:4px;padding:8px;text-align:center;cursor:pointer;background:rgba(0,0,0,0.4);" onclick="window._buyCosmeticItem('${item.id}', '${item.name}', ${item.price || 0}, ${owned})">
+      <div style="color:var(--muted);font-size:0.7rem;margin-bottom:4px;">${item.category.toUpperCase()}</div>
+      <div style="font-weight:600;color:var(--cyan);font-size:0.85rem;word-break:break-word;">${item.name}</div>
+      <div style="font-size:0.75rem;color:${btnColor};margin-top:6px;font-weight:600;">${btnText}</div>
+    </div>`;
+  });
+  catalogDiv.innerHTML = html;
+}
+
+function renderInventoryGrid() {
+  const inventoryDiv = document.getElementById('cosmetics-inventory');
+  if (!_cosmeticsState.inventory.length) {
+    inventoryDiv.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;">No cosmetics owned yet.</div>';
+    return;
+  }
+  
+  let html = '';
+  _cosmeticsState.inventory.forEach(itemId => {
+    const item = _cosmeticsState.catalog.find(i => i.id === itemId);
+    if (item) {
+      html += `<div style="border:2px solid var(--green);border-radius:4px;padding:8px;text-align:center;background:rgba(0,255,0,0.08);">
+        <div style="color:var(--green);font-size:0.7rem;margin-bottom:4px;">✓ OWNED</div>
+        <div style="font-weight:600;color:var(--green);font-size:0.85rem;word-break:break-word;">${item.name}</div>
+      </div>`;
+    }
+  });
+  inventoryDiv.innerHTML = html;
+}
+
+window._buyCosmeticItem = function(itemId, itemName, price, alreadyOwned) {
+  if (alreadyOwned) {
+    addComms('Cosmetics', 'You already own this item.');
+    return;
+  }
+  
+  if (!state.player?.id) {
+    addComms('System', 'Cannot purchase: not logged in.');
+    return;
+  }
+  
+  if ((state.player?.sm || 0) < price) {
+    addComms('Cosmetics', `Insufficient funds: need ${price} SM, have ${state.player?.sm || 0}.`);
+    return;
+  }
+  
+  // Submit purchase
+  fetch('/api/game/cosmetics/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ playerId: state.player.id, itemId })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        state.player.sm = (state.player.sm || 0) - price;
+        _cosmeticsState.inventory.push(itemId);
+        addComms('Cosmetics', `Purchased: ${itemName}!`);
+        renderCatalogGrid();
+        renderInventoryGrid();
+      } else {
+        addComms('Cosmetics', `Purchase failed: ${data.reason || 'unknown error'}`);
+      }
+    })
+    .catch(err => {
+      console.error('[Purchase Error]', err);
+      addComms('System', 'Purchase error. Try again.');
+    });
+};
+
+// Category tab handlers
+document.addEventListener('click', (e) => {
+  if (e.target.hasAttribute('data-cosmetics-category')) {
+    _cosmeticsState.currentCategory = e.target.getAttribute('data-cosmetics-category');
+    // Update button colors
+    document.querySelectorAll('[data-cosmetics-category]').forEach(btn => {
+      btn.style.background = btn.getAttribute('data-cosmetics-category') === _cosmeticsState.currentCategory ? 'var(--teal)' : 'rgba(0,0,0,0.4)';
+      btn.style.color = btn.getAttribute('data-cosmetics-category') === _cosmeticsState.currentCategory ? 'var(--dark)' : 'var(--cyan)';
+    });
+    renderCatalogGrid();
+  }
+});
 
 // Station / Character / Rebirth backs
 _on('btn-undock', 'click', () => { state.location.docked = false; state._stationPricesFetched = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });

@@ -440,3 +440,17 @@
 [2026-04-21T03:24:39.967Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:84e75c086c770ead
 [2026-04-21T03:24:47.624Z] PASS | hash:84e75c086c770ead | errors:0 | webgl:OK | dom:OK
 [2026-04-21T04:08:31.330Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:2cbe01460f391514
+[2026-04-21T04:15:04.323Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:FAIL | hash:98e41630c602ecd6
+[2026-04-21T04:22:29.038Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:FAIL | hash:8ad059041fb4d9f3
+[2026-04-21T04:33:06.292Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:FAIL | hash:ca0556f903b59025
+[2026-04-21T04:38:21.060Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:FAIL QA-UX:OK | hash:684b66a813468cc8
+[2026-04-21T04:41:42.732Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:FAIL QA-UX:OK | hash:9180bb98fe57e56f
+[2026-04-21T04:43:43.646Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:a66ad097098fa2fe
+[2026-04-21T05:39:38.291Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:8785e5c776af1e44
+[2026-04-21T06:02:05.407Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:3652110cacfa4d24
+[2026-04-21T07:04:29.867Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:ca407222cf1b9c01
+[2026-04-21T07:07:00.142Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:FAIL | hash:3b46afd0c3706104
+[2026-04-21T07:07:43.692Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:FAIL | hash:3b46afd0c3706104
+[2026-04-21T07:10:44.177Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:3de77112ea84d099
+[2026-04-21T07:14:12.300Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:3de77112ea84d099
+[2026-04-21T07:19:50.663Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:3de77112ea84d099

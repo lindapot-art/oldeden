@@ -215,6 +215,50 @@ app.get('/api/game/economy/rates', (_req, res) => {
   res.json(econ.getExchangeRates());
 });
 
+// ── Cosmetics Store API ──────────────────────────────────────────────────────
+
+app.get('/api/game/cosmetics/catalog', (_req, res) => {
+  const cosmetics = engine.getSystem('cosmetics');
+  const catalog = cosmetics.getCatalog().map(item => ({
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    price: item.priceSm || item.price || 100,
+    rarity: item.rarity || 'common',
+    description: item.description,
+    available: item.available !== false,
+  }));
+  res.json({ catalog });
+});
+
+app.get('/api/game/cosmetics/inventory/:playerId', (req, res) => {
+  const { playerId } = req.params;
+  const cosmetics = engine.getSystem('cosmetics');
+  const inventory = cosmetics.getPlayerCosmetics(playerId) || [];
+  res.json({ inventory });
+});
+
+app.post('/api/game/cosmetics/purchase', async (req, res) => {
+  try {
+    const { playerId, itemId } = req.body;
+    if (!playerId || !itemId) {
+      return res.status(400).json({ error: 'Missing playerId or itemId' });
+    }
+    
+    const cosmetics = engine.getSystem('cosmetics');
+    const result = cosmetics.purchase(playerId, itemId);
+    
+    if (result.success) {
+      res.json({ success: true, message: 'Cosmetic purchased!' });
+    } else {
+      res.status(409).json({ success: false, reason: result.reason });
+    }
+  } catch (err) {
+    console.error('[API] Cosmetics purchase error:', err);
+    res.status(500).json({ error: 'Purchase failed' });
+  }
+});
+
 // /api/game/systems intentionally removed — exposed internal engine details
 
 // ── Save / Load API ──────────────────────────────────────────────────────────
