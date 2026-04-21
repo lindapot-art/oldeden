@@ -1916,7 +1916,6 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <div id="bridge-launch">
     <button id="btn-launch">&#9876; ENTER SPACE</button>
     <button id="btn-leaderboard" class="btn" style="margin-left:16px;">🏆 Leaderboard</button>
-    <button id="btn-cosmetics" class="btn" style="margin-left:16px;">🛍️ Cosmetics</button>
   </div>
 </div>
 
@@ -1928,33 +1927,6 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <div id="leaderboard-table" style="width:100%;max-width:500px;"></div>
   <div class="btn-row" style="margin-top:2rem;">
     <button class="btn" id="btn-leaderboard-back">&larr; Back to Bridge</button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════ -->
-<!--  COSMETICS STORE SCREEN                      -->
-<!-- ════════════════════════════════════════════ -->
-<div class="screen" id="screen-cosmetics" style="background:rgba(0,0,0,0.92);z-index:90;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
-  <h2 class="holo-header">Cosmetics Store</h2>
-  <div style="width:100%;max-width:600px;">
-    <!-- Category tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn" data-cosmetics-category="all" style="background:var(--teal);color:var(--dark);">All Items</button>
-      <button class="btn" data-cosmetics-category="ship">Ship Skins</button>
-      <button class="btn" data-cosmetics-category="character">Character</button>
-      <button class="btn" data-cosmetics-category="emote">Emotes</button>
-      <button class="btn" data-cosmetics-category="effect">Effects</button>
-    </div>
-    <!-- Catalog grid -->
-    <div id="cosmetics-catalog" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
-    <!-- Player inventory -->
-    <div style="margin-top:20px;">
-      <div class="panel-title">Your Cosmetics</div>
-      <div id="cosmetics-inventory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
-    </div>
-  </div>
-  <div class="btn-row" style="margin-top:2rem;">
-    <button class="btn" id="btn-cosmetics-back">&larr; Back to Bridge</button>
   </div>
 </div>
 <!-- ════════════════════════════════════════════ -->
@@ -2618,6 +2590,67 @@ const state = {
   targetLock: { target: null, lockTimer: 0, locked: false },
   // ── Loot Magnet ──
   lootMagnet: { active: false, range: 80, cooldown: 0 },
+  // ── Ship Upgrade System ──
+  shipUpgrades: {
+    hull: { level: 1, maxLevel: 10, cost: 500, multiplier: 1.0 },
+    shield: { level: 1, maxLevel: 10, cost: 400, multiplier: 1.0 },
+    engine: { level: 1, maxLevel: 10, cost: 600, multiplier: 1.0 },
+    weapons: { level: 1, maxLevel: 10, cost: 800, multiplier: 1.0 },
+    reactor: { level: 1, maxLevel: 10, cost: 1000, multiplier: 1.0 },
+    targeting: { level: 1, maxLevel: 5, cost: 1200, multiplier: 1.0 },
+    armor: { level: 1, maxLevel: 8, cost: 700, multiplier: 1.0 },
+    countermeasures: { level: 1, maxLevel: 6, cost: 900, multiplier: 1.0 }
+  },
+  shipModules: {
+    installed: [],
+    maxSlots: 4,
+    available: [
+      { id: 'repair_drone', name: 'Repair Drone', cost: 2500, effect: 'Auto repair hull over time' },
+      { id: 'shield_booster', name: 'Shield Booster', cost: 2000, effect: '+50% shield capacity' },
+      { id: 'afterburner', name: 'Advanced Afterburner', cost: 3000, effect: '+100% afterburner efficiency' },
+      { id: 'targeting_computer', name: 'Targeting Computer', cost: 2800, effect: 'Auto-lock enemies' },
+      { id: 'energy_absorber', name: 'Energy Absorber', cost: 3500, effect: 'Convert damage to energy' },
+      { id: 'weapon_overdrive', name: 'Weapon Overdrive', cost: 4000, effect: '+75% weapon damage' },
+      { id: 'stealth_cloak', name: 'Stealth Cloak', cost: 5000, effect: 'Temporary invisibility' },
+      { id: 'gravity_generator', name: 'Gravity Generator', cost: 4500, effect: 'Pull enemies and projectiles' }
+    ]
+  },
+  // ── Enhanced Enemy AI System ──
+  enemyAI: {
+    flocking: { enabled: true, range: 25, strength: 0.8 },
+    formation: { type: 'arrow', spacing: 15 },
+    behavior: 'aggressive', // aggressive, defensive, flanking, swarm, retreat, kamikaze
+    adaptTimer: 0,
+    adaptThreshold: 10000
+  },
+  // ── Advanced Visual Effects ──
+  visualFX: {
+    screenShake: { intensity: 0, duration: 0 },
+    colorOverlay: { r: 1, g: 1, b: 1, alpha: 0 },
+    particlePool: [],
+    trails: [],
+    explosionCount: 0
+  },
+  // ── Advanced Targeting System ──
+  targetLock: {
+    target: null,
+    lockTimer: 0,
+    locked: false,
+    autoMode: true,
+    accuracy: 0.85,
+    leadPrediction: true
+  },
+  // ── Power-ups and Abilities ──
+  powerUps: [],
+  activePowerUps: [],
+  abilities: {
+    shield_boost: { cooldown: 0, duration: 8000, ready: true },
+    weapon_overdrive: { cooldown: 0, duration: 6000, ready: true },
+    time_dilation: { cooldown: 0, duration: 5000, ready: true },
+    stealth_cloak: { cooldown: 0, duration: 4000, ready: true },
+    energy_drain: { cooldown: 0, duration: 3000, ready: true },
+    gravity_well: { cooldown: 0, duration: 7000, ready: true }
+  },
   // ── Proximity Warning ──
   proximityAlert: false,
   // ── Drones ──
@@ -2908,6 +2941,490 @@ function gainSkillXP(skillName, amount) {
 function getSkillBonus(skillName) {
   return 1 + (state.skills[skillName] * 0.05); // +5% per level, max +50% at level 10
 }
+
+// ── Ship Upgrade System Functions ──
+function getUpgradeCost(upgradeType, currentLevel) {
+  const baseUpgrade = state.shipUpgrades[upgradeType];
+  if (!baseUpgrade) return 0;
+  return Math.floor(baseUpgrade.cost * Math.pow(currentLevel + 1, 1.5));
+}
+
+function purchaseUpgrade(upgradeType) {
+  const upgrade = state.shipUpgrades[upgradeType];
+  if (!upgrade || upgrade.level >= upgrade.maxLevel) {
+    addComms('Upgrades', 'Maximum level reached for ' + upgradeType);
+    return false;
+  }
+  
+  const cost = getUpgradeCost(upgradeType, upgrade.level);
+  if (state.player.credits < cost) {
+    addComms('Upgrades', 'Insufficient credits for ' + upgradeType + ' upgrade');
+    return false;
+  }
+  
+  state.player.credits -= cost;
+  upgrade.level++;
+  
+  // Apply upgrade effects
+  switch(upgradeType) {
+    case 'hull':
+      upgrade.multiplier = 1 + (upgrade.level - 1) * 0.2;
+      state.ship.maxHull = Math.floor(100 * upgrade.multiplier);
+      state.ship.hull = Math.min(state.ship.hull, state.ship.maxHull);
+      break;
+    case 'shield':
+      upgrade.multiplier = 1 + (upgrade.level - 1) * 0.15;
+      state.ship.maxShield = Math.floor(50 * upgrade.multiplier);
+      break;
+    case 'weapons':
+      upgrade.multiplier = 1 + (upgrade.level - 1) * 0.12;
+      break;
+    case 'engine':
+      upgrade.multiplier = 1 + (upgrade.level - 1) * 0.1;
+      break;
+    case 'reactor':
+      upgrade.multiplier = 1 + (upgrade.level - 1) * 0.08;
+      state.ship.maxEnergy = Math.floor(100 * upgrade.multiplier);
+      break;
+  }
+  
+  addComms('UPGRADE', `${upgradeType.toUpperCase()} Level ${upgrade.level} — +${Math.floor((upgrade.multiplier - 1) * 100)}% efficiency`);
+  AudioSFX.play('quest_complete');
+  
+  // Refresh upgrade display if open
+  const upgradesTab = document.getElementById('market-upgrades-content');
+  if (upgradesTab && upgradesTab.style.display !== 'none') {
+    showUpgradesTab();
+  }
+  
+  return true;
+}
+
+function installModule(moduleId) {
+  if (state.shipModules.installed.length >= state.shipModules.maxSlots) {
+    addComms('Modules', 'No available module slots');
+    return false;
+  }
+  
+  const module = state.shipModules.available.find(m => m.id === moduleId);
+  if (!module) {
+    addComms('Modules', 'Module not found');
+    return false;
+  }
+  
+  if (state.player.credits < module.cost) {
+    addComms('Modules', 'Insufficient credits for module');
+    return false;
+  }
+  
+  // Check if already installed
+  const alreadyInstalled = state.shipModules.installed.find(m => m.id === moduleId);
+  if (alreadyInstalled) {
+    addComms('Modules', 'Module already installed');
+    return false;
+  }
+  
+  state.player.credits -= module.cost;
+  state.shipModules.installed.push(module);
+  
+  addComms('MODULE INSTALLED', `${module.name} — ${module.effect}`);
+  AudioSFX.play('quest_complete');
+  
+  // Refresh upgrade display if open
+  const upgradesTab = document.getElementById('market-upgrades-content');
+  if (upgradesTab && upgradesTab.style.display !== 'none') {
+    showUpgradesTab();
+  }
+  
+  return true;
+}
+
+function getWeaponDamageMultiplier() {
+  let mult = 1;
+  
+  // Ship weapons upgrade bonus
+  if (state.shipUpgrades && state.shipUpgrades.weapons) {
+    mult *= state.shipUpgrades.weapons.multiplier;
+  }
+  
+  // Weapon Overdrive module bonus
+  const weaponModule = state.shipModules.installed.find(m => m.id === 'weapon_overdrive');
+  if (weaponModule) {
+    mult *= 1.75;
+  }
+  
+  return mult;
+}
+
+function getEngineEfficiencyMultiplier() {
+  let mult = 1;
+  
+  // Ship engine upgrade bonus
+  if (state.shipUpgrades && state.shipUpgrades.engine) {
+    mult *= state.shipUpgrades.engine.multiplier;
+  }
+  
+  // Advanced Afterburner module bonus
+  const engineModule = state.shipModules.installed.find(m => m.id === 'afterburner');
+  if (engineModule) {
+    mult *= 2.0;
+  }
+  
+  return mult;
+}
+
+// ── Advanced Particle Effects System ──
+function createExplosionParticles(position, size = 1, color = 0xff4400) {
+  const particleCount = Math.floor(size * 15);
+  
+  for (let i = 0; i < particleCount; i++) {
+    const particle = {
+      position: position.clone(),
+      velocity: new THREE.Vector3(
+        (Math.random() - 0.5) * size * 40,
+        (Math.random() - 0.5) * size * 40,
+        (Math.random() - 0.5) * size * 20
+      ),
+      life: 1.0,
+      maxLife: 0.8 + Math.random() * 0.4,
+      size: size * (0.5 + Math.random() * 1.5),
+      color: color,
+      gravity: -20 * size
+    };
+    
+    state.visualFX.particlePool.push(particle);
+  }
+  
+  state.visualFX.explosionCount++;
+  
+  // Screen shake
+  state.visualFX.screenShake.intensity = Math.min(10, size * 2);
+  state.visualFX.screenShake.duration = 300;
+  
+  // Color flash
+  state.visualFX.colorOverlay = { r: 1, g: 0.8, b: 0.6, alpha: 0.3 };
+}
+
+function updateParticleSystem(dtMs) {
+  for (let i = state.visualFX.particlePool.length - 1; i >= 0; i--) {
+    const p = state.visualFX.particlePool[i];
+    
+    p.velocity.y += p.gravity * dtMs * 0.001;
+    p.position.add(p.velocity.clone().multiplyScalar(dtMs * 0.001));
+    p.life -= dtMs * 0.001 / p.maxLife;
+    
+    if (p.life <= 0) {
+      state.visualFX.particlePool.splice(i, 1);
+    }
+  }
+  
+  // Update screen shake
+  if (state.visualFX.screenShake.duration > 0) {
+    state.visualFX.screenShake.duration -= dtMs;
+    const shake = state.visualFX.screenShake.intensity * (state.visualFX.screenShake.duration / 300);
+    camera.position.x += (Math.random() - 0.5) * shake * 0.1;
+    camera.position.y += (Math.random() - 0.5) * shake * 0.1;
+  }
+  
+  // Update color overlay fade
+  if (state.visualFX.colorOverlay.alpha > 0) {
+    state.visualFX.colorOverlay.alpha = Math.max(0, state.visualFX.colorOverlay.alpha - dtMs * 0.003);
+  }
+}
+
+function createShieldHitEffect(position, color = 0x00aaff) {
+  const ringGeometry = new THREE.RingGeometry(5, 8, 16);
+  const ringMaterial = new THREE.MeshBasicMaterial({ 
+    color: color, 
+    transparent: true, 
+    opacity: 0.8,
+    side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.position.copy(position);
+  ring.userData.life = 0.5;
+  scene.add(ring);
+  
+  setTimeout(() => scene.remove(ring), 500);
+}
+
+// ── Enhanced Enemy AI Behaviors ──
+function updateEnemyAI(enemy, dtMs) {
+  if (!enemy || enemy.hp <= 0) return;
+  
+  // Update AI behavior timer
+  state.enemyAI.adaptTimer += dtMs;
+  if (state.enemyAI.adaptTimer >= state.enemyAI.adaptThreshold) {
+    state.enemyAI.adaptTimer = 0;
+    adaptAIBehavior();
+  }
+  
+  const shipPos = ship.position;
+  const enemyPos = enemy.group.position;
+  const distance = shipPos.distanceTo(enemyPos);
+  
+  switch(state.enemyAI.behavior) {
+    case 'aggressive':
+      // Direct assault
+      const direction = new THREE.Vector3().subVectors(shipPos, enemyPos).normalize();
+      enemy.group.position.add(direction.multiplyScalar(enemy.speed * dtMs * 0.001));
+      break;
+      
+    case 'flanking':
+      // Circle around player
+      const angle = Math.atan2(enemyPos.y - shipPos.y, enemyPos.x - shipPos.x) + dtMs * 0.001;
+      const radius = Math.min(distance, 40);
+      enemy.group.position.x = shipPos.x + Math.cos(angle) * radius;
+      enemy.group.position.y = shipPos.y + Math.sin(angle) * radius;
+      break;
+      
+    case 'swarm':
+      // Flocking behavior
+      applyFlockingBehavior(enemy);
+      break;
+      
+    case 'defensive':
+      // Maintain distance and fire
+      if (distance < 30) {
+        const retreatDir = new THREE.Vector3().subVectors(enemyPos, shipPos).normalize();
+        enemy.group.position.add(retreatDir.multiplyScalar(enemy.speed * dtMs * 0.002));
+      }
+      break;
+  }
+  
+  // Enhanced targeting with lead prediction
+  if (Math.random() < 0.3 * dtMs * 0.001) {
+    fireEnemyProjectileWithLead(enemy);
+  }
+}
+
+function applyFlockingBehavior(enemy) {
+  let separation = new THREE.Vector3();
+  let alignment = new THREE.Vector3();
+  let cohesion = new THREE.Vector3();
+  let neighborCount = 0;
+  
+  c.enemies.forEach(other => {
+    if (other === enemy || other.hp <= 0) return;
+    const dist = enemy.group.position.distanceTo(other.group.position);
+    if (dist < state.enemyAI.flocking.range) {
+      neighborCount++;
+      
+      // Separation
+      const diff = new THREE.Vector3().subVectors(enemy.group.position, other.group.position);
+      diff.normalize().divideScalar(dist);
+      separation.add(diff);
+      
+      // Alignment  
+      alignment.add(other.velocity || new THREE.Vector3());
+      
+      // Cohesion
+      cohesion.add(other.group.position);
+    }
+  });
+  
+  if (neighborCount > 0) {
+    cohesion.divideScalar(neighborCount).sub(enemy.group.position);
+    alignment.divideScalar(neighborCount);
+    
+    const velocity = new THREE.Vector3()
+      .add(separation.multiplyScalar(1.5))
+      .add(alignment.multiplyScalar(1.0))
+      .add(cohesion.multiplyScalar(0.5));
+    
+    enemy.velocity = velocity.normalize().multiplyScalar(enemy.speed * 0.5);
+    enemy.group.position.add(enemy.velocity.clone().multiplyScalar(0.016));
+  }
+}
+
+function adaptAIBehavior() {
+  const behaviors = ['aggressive', 'defensive', 'flanking', 'swarm'];
+  const playerHealth = state.ship.hull / state.ship.maxHull;
+  
+  if (playerHealth < 0.3) {
+    state.enemyAI.behavior = 'aggressive';
+  } else if (c.enemies.length > 8) {
+    state.enemyAI.behavior = 'swarm';
+  } else {
+    state.enemyAI.behavior = behaviors[Math.floor(Math.random() * behaviors.length)];
+  }
+  
+  addCombatLog(`AI ADAPTATION: ${state.enemyAI.behavior.toUpperCase()}`, '#ff8800');
+}
+
+function fireEnemyProjectileWithLead(enemy) {
+  const shipVel = ship.userData.velocity || new THREE.Vector3();
+  const leadTime = 2.0; // Seconds of lead prediction
+  const predictedPos = ship.position.clone().add(shipVel.clone().multiplyScalar(leadTime));
+  
+  const direction = new THREE.Vector3().subVectors(predictedPos, enemy.group.position).normalize();
+  
+  const projGeom = new THREE.SphereGeometry(0.8, 6, 6);
+  const projMat = new THREE.MeshBasicMaterial({ color: 0xff2200, emissive: 0x440000 });
+  const proj = new THREE.Mesh(projGeom, projMat);
+  proj.position.copy(enemy.group.position);
+  proj.userData.velocity = direction.multiplyScalar(60);
+  proj.userData.damage = 8;
+  proj.userData.isEnemyProjectile = true;
+  proj.userData.age = 0;
+  
+  scene.add(proj);
+  c.projectiles.push(proj);
+}
+
+// ── Enhanced Targeting Functions ──
+function findNearestEnemy() {
+  let nearest = null;
+  let nearestDist = Infinity;
+  c.enemies.forEach(e => {
+    if (e.hp <= 0) return;
+    const dist = ship.position.distanceTo(e.group.position);
+    if (dist < nearestDist && dist < 120) {
+      nearestDist = dist;
+      nearest = e;
+    }
+  });
+  return nearest;
+}
+
+function manualTargetEnemy() {
+  const nearest = findNearestEnemy();
+  if (nearest) {
+    state.targetLock.target = nearest;
+    state.targetLock.lockTimer = 0;
+    state.targetLock.locked = false;
+    addCombatLog(`Target acquired: ${nearest.type || 'Enemy'}`, '#44aaff');
+    try { AudioSFX.play('target_lock'); } catch(e) {}
+  } else {
+    addCombatLog('No targets in range', '#888888');
+  }
+}
+
+function updateTargetingSystem(dtMs) {
+  if (state.targetLock.autoMode) {
+    if (!state.targetLock.target || state.targetLock.target.hp <= 0) {
+      state.targetLock.target = findNearestEnemy();
+      state.targetLock.lockTimer = 0;
+      state.targetLock.locked = false;
+    }
+  }
+  
+  if (state.targetLock.target && state.targetLock.target.hp > 0) {
+    state.targetLock.lockTimer = Math.min(state.targetLock.lockTimer + dtMs, 2000);
+    if (state.targetLock.lockTimer >= 2000) state.targetLock.locked = true;
+  }
+}
+
+// ── Power-up System ──
+function createPowerUp(position, type) {
+  const powerUpTypes = {
+    shield_restore: { color: 0x00aaff, name: 'Shield Restore', effect: 'Restore 50% shield' },
+    weapon_boost: { color: 0xff4400, name: 'Weapon Boost', effect: '+100% damage for 10s' },
+    speed_boost: { color: 0x00ff88, name: 'Speed Boost', effect: '+200% speed for 8s' },
+    invulnerability: { color: 0xffaa00, name: 'Invulnerability', effect: 'Immune for 3s' }
+  };
+  
+  const selectedType = type || Object.keys(powerUpTypes)[Math.floor(Math.random() * Object.keys(powerUpTypes).length)];
+  const powerUpData = powerUpTypes[selectedType];
+  if (!powerUpData) return;
+  
+  const geom = new THREE.SphereGeometry(2, 8, 8);
+  const mat = new THREE.MeshBasicMaterial({ color: powerUpData.color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.position.copy(position);
+  scene.add(mesh);
+  
+  const powerUp = {
+    id: 'powerup_' + Date.now(),
+    type: selectedType,
+    mesh: mesh,
+    data: powerUpData,
+    position: position,
+    age: 0,
+    lifetime: 15000
+  };
+  
+  state.powerUps.push(powerUp);
+}
+
+function updatePowerUps(dtMs) {
+  for (let i = state.powerUps.length - 1; i >= 0; i--) {
+    const powerUp = state.powerUps[i];
+    powerUp.age += dtMs;
+    
+    if (powerUp.age >= powerUp.lifetime) {
+      scene.remove(powerUp.mesh);
+      state.powerUps.splice(i, 1);
+      continue;
+    }
+    
+    powerUp.mesh.rotation.y += dtMs * 0.003;
+    
+    const dist = ship.position.distanceTo(powerUp.position);
+    if (dist < 8) {
+      scene.remove(powerUp.mesh);
+      state.powerUps.splice(i, 1);
+      
+      switch(powerUp.type) {
+        case 'shield_restore':
+          state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + state.ship.maxShield * 0.5);
+          break;
+      }
+      
+      AudioSFX.play('quest_complete');
+      addCombatLog('POWER-UP: ' + powerUp.data.name, '#ffaa00');
+    }
+  }
+}
+
+function activateAbility(abilityName) {
+  if (!c.active || c.dead) return;
+  
+  const ability = state.abilities[abilityName];
+  if (!ability || !ability.ready || ability.cooldown > 0) {
+    addCombatLog('Ability not ready: ' + abilityName, '#ff4444');
+    return;
+  }
+  
+  ability.ready = false;
+  ability.cooldown = getAbilityCooldown(abilityName);
+  
+  const effect = {
+    type: abilityName,
+    timeLeft: ability.duration,
+    startTime: performance.now(),
+    isAbility: true
+  };
+  
+  state.activePowerUps.push(effect);
+  
+  switch(abilityName) {
+    case 'shield_boost':
+      state.ship.maxShield *= 2;
+      state.ship.shield = state.ship.maxShield;
+      addCombatLog('SHIELD BOOST ACTIVATED', '#00aaff');
+      break;
+    case 'weapon_overdrive':
+      addCombatLog('WEAPON OVERDRIVE ACTIVATED', '#ff4400');
+      break;
+    case 'time_dilation':
+      addCombatLog('TIME DILATION ACTIVATED', '#aa00ff');
+      break;
+  }
+  
+  AudioSFX.play('boost');
+  state.ship.energy = Math.max(0, state.ship.energy - 20);
+}
+
+function getAbilityCooldown(abilityName) {
+  const cooldowns = {
+    shield_boost: 25000,
+    weapon_overdrive: 20000,
+    time_dilation: 30000
+  };
+  return cooldowns[abilityName] || 10000;
+}
+
 function fireActiveGunRoomWeapon() {
   if (!c.active || c.dead) return;
   const activeWepKey = state.activeGunRoomWeapon || GUN_ROOM_WEAPONS[0].key;
@@ -3459,10 +3976,39 @@ function updateDeathTicker() {
 // ── Power Allocation Multiplier System ──
 function getPowerMultiplier(type) {
   const pa = state.powerAlloc || { weapons: 34, shields: 33, engines: 33 };
-  if (type === 'weapons') return 0.7 + (pa.weapons / 100) * 0.6; // 0.7x to 1.3x
-  if (type === 'shields') return 0.6 + (pa.shields / 100) * 0.4; // 0.6x to 1.0x  
-  if (type === 'engines') return 0.5 + (pa.engines / 100) * 0.8; // 0.5x to 1.3x
-  return 1;
+  let baseMult = 1;
+  
+  if (type === 'weapons') {
+    baseMult = 0.7 + (pa.weapons / 100) * 0.6; // 0.7x to 1.3x
+    // Apply ship upgrades multiplier
+    if (state.shipUpgrades && state.shipUpgrades.weapons) {
+      baseMult *= state.shipUpgrades.weapons.multiplier;
+    }
+    // Apply weapon overdrive module
+    const weaponModule = state.shipModules && state.shipModules.installed.find(m => m.id === 'weapon_overdrive');
+    if (weaponModule) {
+      baseMult *= 1.75;
+    }
+  } else if (type === 'shields') {
+    baseMult = 0.6 + (pa.shields / 100) * 0.4; // 0.6x to 1.0x  
+    // Apply ship upgrades multiplier
+    if (state.shipUpgrades && state.shipUpgrades.shield) {
+      baseMult *= state.shipUpgrades.shield.multiplier;
+    }
+  } else if (type === 'engines') {
+    baseMult = 0.5 + (pa.engines / 100) * 0.8; // 0.5x to 1.3x
+    // Apply ship upgrades multiplier
+    if (state.shipUpgrades && state.shipUpgrades.engine) {
+      baseMult *= state.shipUpgrades.engine.multiplier;
+    }
+    // Apply advanced afterburner module
+    const engineModule = state.shipModules && state.shipModules.installed.find(m => m.id === 'afterburner');
+    if (engineModule) {
+      baseMult *= 2.0;
+    }
+  }
+  
+  return baseMult;
 }
 const LASER_FIRE_RATE = 100;   // ms between shots
 const LASER_DAMAGE = 0.65;    // per hit — laser has faster fire rate for higher DPS
@@ -3721,6 +4267,20 @@ document.addEventListener('keydown', (e) => {
   else if (key === '5') { state.activeWeapon = 'white_blaster'; fireBlasterWhite(); }
   else if (key === '6') { state.activeWeapon = 'turret'; fireBlasterTurret(); }
   else if (key === 'm') { fireMissile(); }
+  // Enhanced targeting controls
+  else if (key === 't') { manualTargetEnemy(); }
+  else if (key === 'g') { state.targetLock.target = null; state.targetLock.locked = false; addCombatLog('Target cleared', '#888888'); }
+  else if (key === 'y') { 
+    state.targetLock.autoMode = !state.targetLock.autoMode; 
+    addCombatLog('Auto-targeting: ' + (state.targetLock.autoMode ? 'ON' : 'OFF'), '#44aaff'); 
+  }
+  // Special abilities
+  else if (key === 'q') { activateAbility('shield_boost'); }
+  else if (key === 'z') { activateAbility('weapon_overdrive'); }
+  else if (key === 'x') { activateAbility('time_dilation'); }
+  else if (key === 'c') { activateAbility('stealth_cloak'); }
+  else if (key === 'v') { activateAbility('energy_drain'); }
+  else if (key === 'b') { activateAbility('gravity_well'); }
   // Consumables
   else if (key === 'r') { window._activateConsumable('Repair Kit'); }
   else if (key === 's') { window._activateConsumable('Shield Cell'); }
@@ -9983,138 +10543,6 @@ function renderLeaderboard() {
   }).catch(() => { if (table) table.innerHTML = '<div style="color:var(--danger);padding:24px;text-align:center;">Failed to load.</div>'; });
 }
 
-// Cosmetics Store
-let _cosmeticsState = { catalog: [], inventory: [], currentCategory: 'all' };
-
-_on('btn-cosmetics', 'click', () => { renderCosmeticsStore(); showScreen('cosmetics'); });
-_on('btn-cosmetics-back', 'click', () => showScreen('bridge'));
-
-function renderCosmeticsStore() {
-  const catalogDiv = document.getElementById('cosmetics-catalog');
-  const inventoryDiv = document.getElementById('cosmetics-inventory');
-  if (!catalogDiv || !inventoryDiv) return;
-  
-  catalogDiv.innerHTML = '<div style="color:var(--muted);padding:24px;text-align:center;">Loading catalog…</div>';
-  inventoryDiv.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;">Loading inventory…</div>';
-  
-  // Fetch catalog
-  fetch('/api/game/cosmetics/catalog')
-    .then(r => r.json())
-    .then(data => {
-      _cosmeticsState.catalog = data.catalog || [];
-      // Fetch inventory
-      return fetch('/api/game/cosmetics/inventory/' + (state.player?.id || 'guest'));
-    })
-    .then(r => r.json())
-    .then(data => {
-      _cosmeticsState.inventory = (data.inventory || []).map(item => item.id || item);
-      renderCatalogGrid();
-      renderInventoryGrid();
-    })
-    .catch(err => {
-      console.error('[Cosmetics]', err);
-      catalogDiv.innerHTML = '<div style="color:var(--danger);">Failed to load cosmetics.</div>';
-    });
-}
-
-function renderCatalogGrid() {
-  const catalogDiv = document.getElementById('cosmetics-catalog');
-  if (!catalogDiv || !_cosmeticsState.catalog.length) {
-    if (catalogDiv) catalogDiv.innerHTML = '<div style="color:var(--muted);">No items available.</div>';
-    return;
-  }
-  
-  const filtered = _cosmeticsState.currentCategory === 'all' 
-    ? _cosmeticsState.catalog 
-    : _cosmeticsState.catalog.filter(item => item.category === _cosmeticsState.currentCategory);
-  
-  let html = '';
-  filtered.forEach(item => {
-    const owned = _cosmeticsState.inventory.includes(item.id);
-    const btnColor = owned ? 'var(--green)' : 'var(--blue)';
-    const btnText = owned ? 'OWNED' : (item.price || '?') + ' SM';
-    html += `<div style="border:1px solid ${btnColor};border-radius:4px;padding:8px;text-align:center;cursor:pointer;background:rgba(0,0,0,0.4);" onclick="window._buyCosmeticItem('${item.id}', '${item.name}', ${item.price || 0}, ${owned})">
-      <div style="color:var(--muted);font-size:0.7rem;margin-bottom:4px;">${item.category.toUpperCase()}</div>
-      <div style="font-weight:600;color:var(--cyan);font-size:0.85rem;word-break:break-word;">${item.name}</div>
-      <div style="font-size:0.75rem;color:${btnColor};margin-top:6px;font-weight:600;">${btnText}</div>
-    </div>`;
-  });
-  catalogDiv.innerHTML = html;
-}
-
-function renderInventoryGrid() {
-  const inventoryDiv = document.getElementById('cosmetics-inventory');
-  if (!_cosmeticsState.inventory.length) {
-    inventoryDiv.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;">No cosmetics owned yet.</div>';
-    return;
-  }
-  
-  let html = '';
-  _cosmeticsState.inventory.forEach(itemId => {
-    const item = _cosmeticsState.catalog.find(i => i.id === itemId);
-    if (item) {
-      html += `<div style="border:2px solid var(--green);border-radius:4px;padding:8px;text-align:center;background:rgba(0,255,0,0.08);">
-        <div style="color:var(--green);font-size:0.7rem;margin-bottom:4px;">✓ OWNED</div>
-        <div style="font-weight:600;color:var(--green);font-size:0.85rem;word-break:break-word;">${item.name}</div>
-      </div>`;
-    }
-  });
-  inventoryDiv.innerHTML = html;
-}
-
-window._buyCosmeticItem = function(itemId, itemName, price, alreadyOwned) {
-  if (alreadyOwned) {
-    addComms('Cosmetics', 'You already own this item.');
-    return;
-  }
-  
-  if (!state.player?.id) {
-    addComms('System', 'Cannot purchase: not logged in.');
-    return;
-  }
-  
-  if ((state.player?.sm || 0) < price) {
-    addComms('Cosmetics', `Insufficient funds: need ${price} SM, have ${state.player?.sm || 0}.`);
-    return;
-  }
-  
-  // Submit purchase
-  fetch('/api/game/cosmetics/purchase', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ playerId: state.player.id, itemId })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        state.player.sm = (state.player.sm || 0) - price;
-        _cosmeticsState.inventory.push(itemId);
-        addComms('Cosmetics', `Purchased: ${itemName}!`);
-        renderCatalogGrid();
-        renderInventoryGrid();
-      } else {
-        addComms('Cosmetics', `Purchase failed: ${data.reason || 'unknown error'}`);
-      }
-    })
-    .catch(err => {
-      console.error('[Purchase Error]', err);
-      addComms('System', 'Purchase error. Try again.');
-    });
-};
-
-// Category tab handlers
-document.addEventListener('click', (e) => {
-  if (e.target.hasAttribute('data-cosmetics-category')) {
-    _cosmeticsState.currentCategory = e.target.getAttribute('data-cosmetics-category');
-    // Update button colors
-    document.querySelectorAll('[data-cosmetics-category]').forEach(btn => {
-      btn.style.background = btn.getAttribute('data-cosmetics-category') === _cosmeticsState.currentCategory ? 'var(--teal)' : 'rgba(0,0,0,0.4)';
-      btn.style.color = btn.getAttribute('data-cosmetics-category') === _cosmeticsState.currentCategory ? 'var(--dark)' : 'var(--cyan)';
-    });
-    renderCatalogGrid();
-  }
-});
-
 // Station / Character / Rebirth backs
 _on('btn-undock', 'click', () => { state.location.docked = false; state._stationPricesFetched = false; addComms('Station', 'Undocking...'); showScreen('bridge'); });
 _on('btn-char-back', 'click', () => showScreen('bridge'));
@@ -15278,6 +15706,12 @@ function gameLoop() {
               state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5);
               c.dmgNumbers.push({ text: '+5 SCRAP REPAIR', px: e.group.position.x, py: e.group.position.y + 3, pz: e.group.position.z, age: 0, color: '#88ff88' });
             }
+            // Power-up drop — 15% chance to drop power-up
+            if (Math.random() < 0.15) {
+              createPowerUp(e.group.position);
+            }
+            // Enhanced explosion with particles
+            createExplosionParticles(e.group.position, e.isBoss ? 2.5 : 1.5, 0xff6600);
             scene.remove(e.group); disposeObject(e.group); c.enemies.splice(j, 1);
             // Ricochet — railgun kills bounce to nearest enemy within 30m
             // Ricochet chain — railgun kills bounce up to 3 enemies
@@ -15368,6 +15802,13 @@ function gameLoop() {
       }
     }
 
+    // Update advanced systems
+    if (c.active) {
+      updateTargetingSystem(dtMs);
+      updateParticleSystem(dtMs);
+      updatePowerUps(dtMs);
+    }
+
     // Update enemies
     for (let ei = c.enemies.length - 1; ei >= 0; ei--) {
       const e = c.enemies[ei];
@@ -15433,6 +15874,10 @@ function gameLoop() {
         }
         continue;
       }
+      
+      // Enhanced Enemy AI System
+      updateEnemyAI(e, dtMs);
+      
       // Combat tether — enemies beyond 200m get pulled back toward player
       const _tetherDist = e.group.position.distanceTo(ship.position);
       if (_tetherDist > 200 && !e._retreating) {
