@@ -1182,6 +1182,431 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     .holo-btn-secondary:hover {
       box-shadow: 0 0 40px rgba(255, 0, 255, 0.7);
     }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOLOGRAPHIC UI MASTER THEME — All Screens
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base holographic panel with animated borders */
+.holo-panel-base {
+  background: linear-gradient(135deg, rgba(68,170,255,0.08), rgba(20,40,80,0.12));
+  border: 1px solid rgba(68,170,255,0.3);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 
+    0 0 40px rgba(68,170,255,0.25),
+    inset 0 0 40px rgba(68,170,255,0.05),
+    0 0 80px rgba(106,196,255,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-panel-base::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(106,196,255,0.5), transparent);
+  animation: scanlineFlicker 3s infinite;
+}
+
+@keyframes scanlineFlicker {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Animated holographic header */
+.holo-header {
+  color: var(--gold);
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-shadow: 
+    0 0 20px rgba(224,177,95,0.4),
+    0 0 40px rgba(224,177,95,0.2);
+  margin-bottom: 1.5rem;
+  animation: titleGlow 4s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 20px rgba(224,177,95,0.4), 0 0 40px rgba(224,177,95,0.2); }
+  50% { text-shadow: 0 0 30px rgba(224,177,95,0.6), 0 0 60px rgba(224,177,95,0.3); }
+}
+
+/* Holographic button — LED style */
+.holo-btn-modern {
+  background: linear-gradient(135deg, rgba(68,170,255,0.9), rgba(107,196,255,0.8));
+  border: 1px solid rgba(107,196,255,0.6);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 0 20px rgba(68,170,255,0.4),
+    inset 0 0 20px rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-btn-modern::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: rotate(45deg);
+  animation: buttonShine 3s infinite;
+}
+
+.holo-btn-modern:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 0 30px rgba(68,170,255,0.6),
+    inset 0 0 30px rgba(255,255,255,0.15),
+    0 8px 20px rgba(68,170,255,0.3);
+  border-color: rgba(107,196,255,0.9);
+}
+
+.holo-btn-modern:active {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 0 20px rgba(68,170,255,0.4),
+    inset 0 0 20px rgba(255,255,255,0.2);
+}
+
+@keyframes buttonShine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+/* Secondary holo button */
+.holo-btn-secondary {
+  background: linear-gradient(135deg, rgba(68,170,255,0.6), rgba(107,196,255,0.5));
+  border: 1px solid rgba(107,196,255,0.4);
+  color: rgba(255,255,255,0.9);
+}
+
+.holo-btn-secondary:hover {
+  background: linear-gradient(135deg, rgba(68,170,255,0.8), rgba(107,196,255,0.7));
+  border-color: rgba(107,196,255,0.7);
+}
+
+/* Holographic info box */
+.holo-info-box {
+  background: linear-gradient(135deg, rgba(107,196,255,0.05), rgba(68,170,255,0.03));
+  border-left: 3px solid rgba(68,170,255,0.5);
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.9rem;
+  margin: 12px 0;
+  box-shadow: inset 0 0 20px rgba(68,170,255,0.1);
+}
+
+/* Holographic stat bar */
+.holo-stat-bar {
+  background: rgba(20,40,80,0.6);
+  border: 1px solid rgba(68,170,255,0.2);
+  border-radius: 4px;
+  height: 24px;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(68,170,255,0.1);
+}
+
+.holo-stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(68,170,255,0.8), rgba(107,196,255,0.9));
+  box-shadow: 0 0 10px rgba(107,196,255,0.6), inset 0 0 5px rgba(255,255,255,0.3);
+  transition: width 0.4s ease;
+}
+
+/* Holographic text */
+.holo-text {
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 0 5px rgba(68,170,255,0.3);
+}
+
+.holo-text-muted {
+  color: rgba(255,255,255,0.6);
+  text-shadow: 0 0 3px rgba(68,170,255,0.15);
+}
+
+.holo-text-accent {
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(224,177,95,0.3);
+}
+
+/* Screen-specific overrides */
+#screen-title {
+  background: linear-gradient(135deg, rgba(10,10,15,0.95), rgba(15,20,35,0.95)),
+              radial-gradient(ellipse at 50% 100%, rgba(68,170,255,0.1), transparent);
+}
+
+#screen-title .title-card,
+#screen-title .account-card,
+#screen-title .notice-card {
+  border: 1px solid rgba(68,170,255,0.3);
+  background: linear-gradient(135deg, rgba(20,30,50,0.6), rgba(10,15,30,0.7));
+  backdrop-filter: blur(15px);
+  box-shadow: 
+    0 0 40px rgba(68,170,255,0.2),
+    inset 0 0 40px rgba(68,170,255,0.05);
+}
+
+#screen-title .btn {
+  background: linear-gradient(135deg, rgba(68,170,255,0.8), rgba(107,196,255,0.7));
+  border: 1px solid rgba(107,196,255,0.6);
+  color: white;
+  box-shadow: 0 0 20px rgba(68,170,255,0.3);
+  transition: all 0.3s ease;
+}
+
+#screen-title .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(68,170,255,0.5);
+}
+
+/* Bridge panel holographic */
+.bridge-panel {
+  background: linear-gradient(135deg, rgba(20,30,50,0.7), rgba(10,15,30,0.8));
+  border: 1px solid rgba(68,170,255,0.3);
+  backdrop-filter: blur(15px);
+  box-shadow: 
+    0 0 30px rgba(68,170,255,0.2),
+    inset 0 0 30px rgba(68,170,255,0.05);
+  border-radius: 8px;
+}
+
+.panel-title {
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(224,177,95,0.2);
+}
+
+.stat-bar {
+  background: rgba(10,10,20,0.7);
+  border: 1px solid rgba(68,170,255,0.2);
+  border-radius: 3px;
+  box-shadow: inset 0 0 8px rgba(68,170,255,0.1);
+}
+
+.stat-fill {
+  box-shadow: 0 0 8px currentColor, inset 0 0 4px rgba(255,255,255,0.3);
+  border-radius: 2px;
+}
+
+/* Create screen holographic cards */
+#screen-create {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+#screen-create .create-section {
+  background: linear-gradient(135deg, rgba(20,30,50,0.6), rgba(10,15,30,0.7));
+  border: 1px solid rgba(68,170,255,0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px rgba(68,170,255,0.15);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+#screen-create h3 {
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(224,177,95,0.2);
+  letter-spacing: 0.12em;
+}
+
+#screen-create input,
+#screen-create select {
+  background: rgba(10,15,30,0.8);
+  border: 1px solid rgba(68,170,255,0.25);
+  color: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 6px;
+}
+
+#screen-create input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+#screen-create input:focus,
+#screen-create select:focus {
+  outline: none;
+  border-color: rgba(68,170,255,0.6);
+  box-shadow: 0 0 15px rgba(68,170,255,0.3);
+}
+
+/* Character screen */
+#screen-character {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+.char-panel {
+  background: linear-gradient(135deg, rgba(20,30,50,0.6), rgba(10,15,30,0.7));
+  border: 1px solid rgba(68,170,255,0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 25px rgba(68,170,255,0.15);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+/* Star map screen */
+#screen-starmap {
+  background: linear-gradient(135deg, rgba(10,10,15,0.95), rgba(15,20,35,0.95));
+}
+
+#starmap-sidebar {
+  background: linear-gradient(135deg, rgba(20,30,50,0.8), rgba(10,15,30,0.9));
+  border: 1px solid rgba(68,170,255,0.3);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px rgba(68,170,255,0.2);
+}
+
+/* Station screen */
+#screen-station {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+.station-panel {
+  background: linear-gradient(135deg, rgba(20,30,50,0.6), rgba(10,15,30,0.7));
+  border: 1px solid rgba(68,170,255,0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 25px rgba(68,170,255,0.15);
+}
+
+/* Market screen */
+#screen-market {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+/* Rebirth/Soul Fracture screen */
+#screen-rebirth {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(20,10,30,0.9));
+}
+
+#screen-rebirth .sf-panel {
+  background: linear-gradient(135deg, rgba(30,15,50,0.6), rgba(15,10,25,0.7));
+  border: 1px solid rgba(168,85,247,0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 25px rgba(168,85,247,0.15);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+#screen-rebirth .lottery-card {
+  background: linear-gradient(135deg, rgba(30,15,50,0.7), rgba(15,10,25,0.8));
+  border: 1px solid rgba(168,85,247,0.3);
+  box-shadow: 0 0 20px rgba(168,85,247,0.2);
+  border-radius: 6px;
+}
+
+/* Leaderboard */
+#screen-leaderboard {
+  background: linear-gradient(135deg, rgba(10,10,15,0.95), rgba(15,20,35,0.95)) !important;
+}
+
+/* Settings */
+#screen-settings {
+  background: linear-gradient(135deg, rgba(10,10,15,0.95), rgba(15,20,35,0.95)) !important;
+}
+
+#screen-settings input[type="range"] {
+  accent-color: var(--gold);
+}
+
+/* Eulogy screen */
+#screen-eulogy {
+  background: linear-gradient(135deg, rgba(10,10,15,0.98), rgba(15,20,35,0.98));
+  backdrop-filter: blur(25px);
+}
+
+/* Interior screen */
+#screen-interior {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+.interior-room-panel {
+  background: linear-gradient(135deg, rgba(20,30,50,0.8), rgba(10,15,30,0.9));
+  border: 1px solid rgba(68,170,255,0.3);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px rgba(68,170,255,0.2);
+  border-radius: 8px;
+}
+
+/* Quarters screen */
+#screen-quarters {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+.quarters-panel {
+  background: linear-gradient(135deg, rgba(20,30,50,0.6), rgba(10,15,30,0.7));
+  border: 1px solid rgba(68,170,255,0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 25px rgba(68,170,255,0.15);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+/* Global button updates */
+.btn {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn:not(.holo-btn):not(.title-badge) {
+  background: linear-gradient(135deg, rgba(68,170,255,0.7), rgba(107,196,255,0.6));
+  border: 1px solid rgba(107,196,255,0.5);
+  color: white;
+  box-shadow: 0 0 15px rgba(68,170,255,0.25);
+}
+
+.btn:not(.holo-btn):not(.title-badge):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(68,170,255,0.4);
+  border-color: rgba(107,196,255,0.7);
+}
+
+/* Atlas screen */
+#screen-atlas {
+  background: linear-gradient(135deg, rgba(10,10,15,0.9), rgba(15,20,35,0.9));
+}
+
+.atlas-card {
+  background: linear-gradient(135deg, rgba(20,30,50,0.6), rgba(10,15,30,0.7));
+  border: 1px solid rgba(68,170,255,0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 20px rgba(68,170,255,0.15);
+  border-radius: 8px;
+}
+
+/* Smooth screen transitions */
+.screen {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.screen.active {
+  animation: screenFadeIn 0.5s ease-out;
+}
+
+@keyframes screenFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 </style>
 
 
@@ -1345,8 +1770,8 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <div id="title-stars" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;"></div>
   <div class="title-stack">
     <div class="title-grid">
-      <div class="title-card">
-        <h1 style="color:var(--gold);font-size:3.2rem;font-weight:400;letter-spacing:0.18em;text-align:center;">OLD EDEN</h1>
+      <div class="title-card holo-panel-base">
+        <h1 class="holo-header" style="font-size:3.2rem;font-weight:300;">OLD EDEN</h1>
         <div style="text-align:center;margin-bottom:1.4rem;color:var(--muted);font-size:1.1rem;">Blockchain Space MMO with living skies, wallet-linked premium gear, and a 100-entry frontier atlas.</div>
         <div style="display:flex;justify-content:center;gap:24px;margin-bottom:1.2rem;flex-wrap:wrap;">
           <button class="btn" id="btn-new">New Game</button>
@@ -1369,7 +1794,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <div style="text-align:center;color:var(--muted);font-size:0.9rem;margin-top:1rem;">v0.9.7 &mdash; Free-to-play, play-to-own</div>
         <div id="server-status" style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:0.5rem;"></div>
       </div>
-      <div class="account-card">
+      <div class="account-card holo-panel-base">
         <div class="panel-title">Pilot Account</div>
         <div class="account-grid">
           <input type="text" id="account-email" placeholder="Email or tester username (kakababa)">
@@ -1385,7 +1810,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         </div>
       </div>
     </div>
-    <div class="notice-card">
+    <div class="notice-card holo-panel-base">
       <div class="panel-title">Donation & Premium Notice</div>
       <div class="donation-strip">
         <strong>Premium purchases are optional.</strong> Unique premium weapons and premium time route <strong>90%</strong> of the payment to the project wallet <span id="premium-wallet-inline">0x75B30d0dE751D9628510f3cb273F09f7137f9E3F</span> and <strong>10%</strong> to the Ukrainian army support wallet <span id="donation-wallet-inline">0x165CD37b4C644C2921454429E7F9358d18A45e14</span>. This split is surfaced here, in station specials, and before every wallet purchase.
@@ -1398,12 +1823,12 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <!--  CHARACTER CREATION SCREEN                  -->
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-create">
-  <h2 style="color:var(--gold);font-size:2rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;text-align:center;">Create Your Pilot</h2>
-  <div class="create-section">
+  <h2 class="holo-header">Create Your Pilot</h2>
+  <div class="create-section holo-panel-base">
     <h3 style="color:var(--gold);">Choose Your Faction</h3>
     <div id="faction-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:1rem 0;"></div>
   </div>
-  <div class="create-section">
+  <div class="create-section holo-panel-base">
     <h3>Genome &mdash; 256 Gene Sequence</h3>
     <div class="genome-row">
       <canvas id="genome-canvas" width="256" height="256"></canvas>
@@ -1413,7 +1838,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
     </div>
   </div>
-  <div class="create-section">
+  <div class="create-section holo-panel-base">
     <label style="color:var(--muted);display:block;margin-bottom:0.5rem;">Pilot Name</label>
     <input type="text" id="pilot-name" maxlength="24" placeholder="Enter pilot name..." style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;width:200px;font-size:1rem;">
     <div class="create-help" id="create-account-summary">No account linked yet. You can still play free, or return to the title screen to sign up and connect a wallet.</div>
@@ -1467,7 +1892,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     <span class="bridge-connection" id="bridge-conn">&#9679; Online</span>
   </div>
 
-  <div class="bridge-panel" id="bridge-left">
+  <div class="bridge-panel holo-panel-base" id="bridge-left">
     <div class="panel-title">Ship Status</div>
     <div class="stat-row">Hull <div class="stat-bar"><div class="stat-fill" id="bar-hull" style="width:100%;background:var(--danger)"></div></div></div>
     <div class="stat-row">Shield <div class="stat-bar"><div class="stat-fill" id="bar-shield" style="width:100%;background:var(--blue)"></div></div></div>
@@ -1480,7 +1905,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     </div>
   </div>
 
-  <div class="bridge-panel" id="bridge-right">
+  <div class="bridge-panel holo-panel-base" id="bridge-right">
     <div class="panel-title">Communications</div>
     <div id="comms-feed" role="log" aria-live="polite" aria-label="Communications log"></div>
     <div class="panel-title" style="margin-top:16px;">Cargo</div>
@@ -1498,7 +1923,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <!--  LEADERBOARD SCREEN                         -->
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-leaderboard" style="background:rgba(0,0,0,0.92);z-index:90;flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
-  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;">Leaderboard</h2>
+  <h2 class="holo-header">Leaderboard</h2>
   <div id="leaderboard-table" style="width:100%;max-width:500px;"></div>
   <div class="btn-row" style="margin-top:2rem;">
     <button class="btn" id="btn-leaderboard-back">&larr; Back to Bridge</button>
@@ -1528,11 +1953,11 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <div class="screen" id="screen-station">
   <h2 id="station-name">&#9968; Orbital Station</h2>
   <div class="station-grid">
-    <div class="station-panel">
+    <div class="station-panel holo-panel-base">
       <div class="panel-title">Trade Market</div>
       <div id="trade-market"></div>
     </div>
-    <div class="station-panel">
+    <div class="station-panel holo-panel-base">
       <div class="panel-title">Mission Board</div>
       <div id="mission-board"></div>
     </div>
@@ -1548,20 +1973,20 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <div class="screen" id="screen-character">
   <h2 id="char-name">Pilot Profile</h2>
   <div class="char-grid">
-    <div class="char-panel">
+    <div class="char-panel holo-panel-base">
       <div class="panel-title">Genome</div>
       <canvas id="char-genome-canvas" width="192" height="192" style="border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;"></canvas>
       <div id="char-gene-stats" style="margin-top:10px;"></div>
     </div>
-    <div class="char-panel">
+    <div class="char-panel holo-panel-base">
       <div class="panel-title">Faction Standings</div>
       <div id="faction-standings"></div>
     </div>
-    <div class="char-panel">
+    <div class="char-panel holo-panel-base">
       <div class="panel-title">Aptitude Skills</div>
       <div id="skill-list"></div>
     </div>
-    <div class="char-panel">
+    <div class="char-panel holo-panel-base">
       <div class="panel-title">Character Info</div>
       <div id="char-info"></div>
     </div>
@@ -1572,13 +1997,13 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 </div>
 
 <div class="screen" id="screen-atlas">
-  <h2 style="color:var(--gold);font-size:1.8rem;font-weight:300;letter-spacing:0.14em;margin-bottom:1rem;">Frontier Atlas</h2>
+  <h2 class="holo-header" style="font-size:1.8rem;">Frontier Atlas</h2>
   <div class="atlas-hero">
-    <div class="atlas-card">
+    <div class="atlas-card holo-panel-base">
       <div class="panel-title">Frontier Expansion</div>
       <div style="color:var(--text);line-height:1.7;font-size:0.92rem;">The Atlas tracks 100 new frontier elements across anomalies, contract chains, discovery events, relic markets, premium prototypes, living weather, and sector rituals. It is meant to make the game feel denser, stranger, and less empty immediately.</div>
     </div>
-    <div class="atlas-card">
+    <div class="atlas-card holo-panel-base">
       <div class="panel-title">Daily Specials</div>
       <div id="atlas-specials" style="display:grid;gap:8px;color:var(--muted);font-size:0.82rem;"></div>
     </div>
@@ -1601,7 +2026,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <!--  REBIRTH SCREEN                              -->
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-settings" style="z-index:90;background:var(--bg);flex-direction:column;align-items:center;padding:40px 20px;overflow-y:auto;">
-  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1.5rem;">Settings</h2>
+  <h2 class="holo-header">Settings</h2>
   <div style="width:100%;max-width:500px;">
     <div style="margin-bottom:20px;">
       <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Master Volume</label>
@@ -1754,7 +2179,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <!--  MARKET SCREEN (EVE-style)                   -->
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-market">
-  <h2 style="color:var(--gold);font-size:1.6rem;font-weight:300;letter-spacing:0.15em;margin-bottom:1rem;">&#9878; Galactic Market</h2>
+  <h2 class="holo-header">&#9878; Galactic Market</h2>
   <div style="display:flex;gap:8px;margin-bottom:16px;">
     <button class="btn btn-sm" id="market-tab-buy" onclick="window._marketTab('buy')">Buy Orders</button>
     <button class="btn btn-sm" id="market-tab-sell" onclick="window._marketTab('sell')">Sell Orders</button>
