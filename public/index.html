@@ -1034,6 +1034,154 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 
 /* ── Selection ───────────────────────────── */
 ::selection { background: rgba(212,168,86,0.3); color: #fff; }
+
+    /* ═════ HOLOGRAPHIC UI ANIMATIONS ═════ */
+    @keyframes scanlineGlitch {
+      0% { opacity: 1; }
+      50% { opacity: 0.95; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes panelSlideIn {
+      0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { text-shadow: 0 0 10px #44aaff, 0 0 20px #44aaff; }
+      50% { text-shadow: 0 0 20px #44aaff, 0 0 40px #44aaff; }
+    }
+
+    @keyframes buttonShine {
+      0%, 100% { box-shadow: 0 0 20px rgba(68, 170, 255, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(68, 170, 255, 0.8); }
+    }
+
+    /* Opening scene */
+    #screen-opening {
+      background: #000000;
+      display: none !important;
+    }
+
+    #screen-opening.active {
+      display: flex !important;
+    }
+
+    #opening-scene-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #opening-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #44aaff;
+      font-family: 'Courier New', monospace;
+      z-index: 5;
+    }
+
+    #opening-text h2 {
+      font-size: 3em;
+      margin: 0;
+      text-shadow: 0 0 20px #44aaff;
+      letter-spacing: 3px;
+    }
+
+    /* Holographic menu */
+    #screen-create-holo {
+      background: radial-gradient(ellipse at center, rgba(68, 170, 255, 0.05), rgba(20, 40, 80, 0.3));
+      display: none !important;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #screen-create-holo.active {
+      display: flex !important;
+    }
+
+    .holo-panel {
+      background: radial-gradient(ellipse at 50% 0%, rgba(68, 170, 255, 0.2), rgba(20, 40, 80, 0.6));
+      border: 2px solid #44aaff;
+      backdrop-filter: blur(20px);
+      border-radius: 10px;
+      box-shadow: 0 0 60px rgba(68, 170, 255, 0.4), inset 0 0 40px rgba(68, 170, 255, 0.1);
+      padding: 40px;
+      max-width: 900px;
+      width: 90%;
+      animation: panelSlideIn 1s cubic-bezier(0.16, 1, 0.3, 1);
+      color: #e0e0ff;
+      font-family: 'Courier New', monospace;
+    }
+
+    .holo-title {
+      font-size: 2.5em;
+      margin: 0 0 10px 0;
+      text-align: center;
+      color: #44aaff;
+      text-shadow: 0 0 10px #44aaff, 0 0 20px #44aaff, 0 0 30px #44aaff;
+      letter-spacing: 2px;
+      animation: titlePulse 3s ease-in-out infinite;
+    }
+
+    .holo-subtitle {
+      font-size: 1.1em;
+      text-align: center;
+      color: #96a3bc;
+      margin: 0 0 30px 0;
+      text-shadow: 0 0 5px #44aaff;
+    }
+
+    #dna-canvas-container {
+      width: 100%;
+      height: 300px;
+      margin: 20px 0;
+      background: rgba(10, 30, 50, 0.5);
+      border-radius: 5px;
+      border: 1px solid rgba(68, 170, 255, 0.3);
+    }
+
+    #dna-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .holo-btn {
+      background: linear-gradient(135deg, #44aaff 0%, #6bc4ff 100%);
+      border: 1px solid #44aaff;
+      color: #000033;
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 20px rgba(68, 170, 255, 0.5);
+      animation: buttonShine 3s infinite;
+      font-family: 'Courier New', monospace;
+    }
+
+    .holo-btn:hover {
+      box-shadow: 0 0 40px rgba(68, 170, 255, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .holo-btn-secondary {
+      background: linear-gradient(135deg, #ff00ff 0%, #00ffff 100%);
+      border-color: #ff00ff;
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+    }
+
+    .holo-btn-secondary:hover {
+      box-shadow: 0 0 40px rgba(255, 0, 255, 0.7);
+    }
 </style>
 
 
@@ -1273,6 +1421,34 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <div class="btn-row" style="justify-content:center;margin-top:1rem;">
     <button class="btn" id="btn-back-title">&larr; Back</button>
     <button class="btn" id="btn-create-char">Create Pilot &rarr;</button>
+  </div>
+</div>
+
+<!-- HOLOGRAPHIC UI SCREENS -->
+<div class="screen" id="screen-opening">
+  <canvas id="opening-scene-canvas"></canvas>
+  <div id="opening-text">
+    <h2>CONSCIOUSNESS RESTORED</h2>
+  </div>
+</div>
+
+<div class="screen" id="screen-create-holo">
+  <div class="holo-panel">
+    <h1 class="holo-title">GENETIC RESURRECTION</h1>
+    <p class="holo-subtitle">⬢ DNA RECOMBINATION PROTOCOL ⬢</p>
+    
+    <div id="dna-canvas-container">
+      <canvas id="dna-canvas"></canvas>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+      <button class="holo-btn holo-btn-secondary" id="btn-randomize-dna">
+        ◬ RANDOMIZE DNA ◬
+      </button>
+      <button class="holo-btn" id="btn-enter-eden">
+        → ENTER EDEN →
+      </button>
+    </div>
   </div>
 </div>
 
@@ -15882,6 +16058,238 @@ window.enableDevCheats = () => {
 }
 
   init();
+
+
+    // ════════════════════════════════════════════════════════════════════════
+    // HOLOGRAPHIC UI - Opening Scene + Character Creation
+    // ════════════════════════════════════════════════════════════════════════
+
+    let holoState = {
+      openingSceneInitialized: false,
+      dnaVisualizationInitialized: false,
+      openingSceneActive: false
+    };
+
+    function startOpeningSequence() {
+      if (holoState.openingSceneActive) return;
+      holoState.openingSceneActive = true;
+
+      // Hide all screens
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+      // Show opening scene
+      const openingScreen = document.getElementById('screen-opening');
+      if (openingScreen) {
+        openingScreen.classList.add('active');
+        setTimeout(() => initOpeningScene(), 50);
+      }
+    }
+
+    function initOpeningScene() {
+      if (holoState.openingSceneInitialized || typeof THREE === 'undefined') {
+        if (typeof THREE === 'undefined') {
+          setTimeout(initOpeningScene, 50);
+        }
+        return;
+      }
+
+      holoState.openingSceneInitialized = true;
+
+      const canvas = document.getElementById('opening-scene-canvas');
+      if (!canvas) return;
+
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 5000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+
+      renderer.setSize(width, height);
+      renderer.setClearColor(0x020305, 1);
+      camera.position.z = 15;
+
+      // Starfield
+      const starGeo = new THREE.BufferGeometry();
+      const starPositions = new Float32Array(2000 * 3);
+      for (let i = 0; i < 2000; i++) {
+        starPositions[i*3] = (Math.random() - 0.5) * 1000;
+        starPositions[i*3+1] = (Math.random() - 0.5) * 1000;
+        starPositions[i*3+2] = (Math.random() - 0.5) * 1000;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, opacity: 0.8 });
+      const stars = new THREE.Points(starGeo, starMat);
+      scene.add(stars);
+
+      // Load astronaut
+      const gltfLoader = new GLTFLoader();
+      let astronaut = null;
+
+      gltfLoader.load('/3d/glb/optimized/space_suit.glb', (gltf) => {
+        astronaut = gltf.scene;
+        astronaut.scale.setScalar(3);
+        astronaut.rotation.set(Math.PI * 0.1, Math.PI * 0.3, 0);
+
+        astronaut.traverse(child => {
+          if (child.isMesh && child.material) {
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(mat => {
+              mat.emissive = new THREE.Color(0x1a2a4a);
+              mat.emissiveIntensity = 0.1;
+            });
+          }
+        });
+
+        scene.add(astronaut);
+      }, undefined, (e) => {
+        console.warn('[Opening] Could not load space_suit.glb:', e);
+      });
+
+      let openingTime = 0;
+      const openingDuration = 15;
+
+      function renderOpening() {
+        openingTime += 1 / 60;
+        const progress = Math.min(openingTime / openingDuration, 1);
+
+        if (astronaut) {
+          astronaut.rotation.y += 0.0008;
+          astronaut.position.y = Math.sin(openingTime * 0.3) * 2;
+          astronaut.position.x = Math.cos(openingTime * 0.2) * 1.5;
+        }
+
+        stars.rotation.x += 0.00002;
+        stars.rotation.y += 0.00003;
+
+        camera.position.x = Math.sin(openingTime * 0.1) * 2;
+        camera.position.y = Math.cos(openingTime * 0.08) * 1.5;
+
+        renderer.render(scene, camera);
+
+        if (progress < 1) {
+          requestAnimationFrame(renderOpening);
+        } else {
+          transitionToCharacterCreation();
+        }
+      }
+
+      renderOpening();
+
+      window.addEventListener('resize', () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+    }
+
+    function transitionToCharacterCreation() {
+      const openingScreen = document.getElementById('screen-opening');
+      const createHoloScreen = document.getElementById('screen-create-holo');
+
+      if (openingScreen) openingScreen.classList.remove('active');
+      if (createHoloScreen) {
+        createHoloScreen.classList.add('active');
+        setTimeout(() => initDNAVisualization(), 50);
+      }
+    }
+
+    function initDNAVisualization() {
+      if (holoState.dnaVisualizationInitialized || typeof THREE === 'undefined') return;
+      holoState.dnaVisualizationInitialized = true;
+
+      const container = document.getElementById('dna-canvas-container');
+      const canvas = document.getElementById('dna-canvas');
+      if (!container || !canvas) return;
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a1a2a);
+
+      const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+      camera.position.z = 8;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(width, height);
+
+      // DNA cubes
+      const colors = [0xff00ff, 0x00ffff, 0x44aaff, 0x00ff88, 0xffaa00];
+      colors.forEach((color, idx) => {
+        const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+        const mat = new THREE.MeshStandardMaterial({
+          color: color,
+          metalness: 0.7,
+          roughness: 0.3,
+          emissive: color,
+          emissiveIntensity: 0.5
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+
+        const angle = (idx / colors.length) * Math.PI * 2;
+        mesh.position.set(Math.cos(angle) * 3.5, Math.sin(angle) * 3.5, (Math.random() - 0.5) * 2);
+        mesh.userData = {
+          angle: angle,
+          speed: 0.01 + Math.random() * 0.02,
+          rotSpeed: new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02)
+        };
+
+        scene.add(mesh);
+      });
+
+      function animate() {
+        const time = Date.now() * 0.001;
+        scene.traverse(obj => {
+          if (obj.isMesh && obj.userData.angle !== undefined) {
+            const d = obj.userData;
+            const orbitAngle = d.angle + time * d.speed;
+            obj.position.x = Math.cos(orbitAngle) * 3.5;
+            obj.position.y = Math.sin(orbitAngle * 0.5) * 2;
+            obj.position.z = Math.sin(orbitAngle) * 3.5;
+            obj.rotation.x += d.rotSpeed.x;
+            obj.rotation.y += d.rotSpeed.y;
+            obj.rotation.z += d.rotSpeed.z;
+          }
+        });
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+    }
+
+    // Intercept "New Game" button
+    const btnNew = document.getElementById('btn-new');
+    if (btnNew) {
+      btnNew.addEventListener('click', (e) => {
+        e.preventDefault();
+        startOpeningSequence();
+      });
+    }
+
+    // "ENTER EDEN" button continues to character creation
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnEnterEden = document.getElementById('btn-enter-eden');
+      if (btnEnterEden) {
+        btnEnterEden.addEventListener('click', () => {
+          const createHoloScreen = document.getElementById('screen-create-holo');
+          if (createHoloScreen) createHoloScreen.classList.remove('active');
+          showScreen('create');
+        });
+      }
+    });
 </script>
 
 
