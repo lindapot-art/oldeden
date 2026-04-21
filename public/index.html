@@ -3476,7 +3476,8 @@ function fireLaser() {
   
   g.position.copy(origin);
   scene.add(g);
-  const laserDmgMult = getPowerMultiplier('weapons');
+  const laserDmgMult = getPowerMultiplier('weapons');
+
   c.projectiles.push({ group: g, dir: _laserDir.clone(), speed: LASER_SPEED, life: 2000, age: 0, trailMat: beamMat, heatMat: null, slugLight: null, isLaser: true, damage: LASER_DAMAGE * laserDmgMult });
   
   // Small recoil
@@ -3674,6 +3675,38 @@ function emergencyJump() {
   addCombatLog('Emergency jump executed', '#44ddff');
   AudioSFX.play('quest_complete');
 }
+
+
+
+// ════════════════════════════════════════════════════════════════
+//  WEAPON & CONSUMABLE KEY BINDINGS
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if (state.screen !== 'gunner' || !c.active || c.dead) return;
+  const key = e.key.toLowerCase();
+  
+  // Weapon selection & fire
+  if (key === '1') { state.activeWeapon = 'laser'; fireLaser(); }
+  else if (key === '2') { state.activeWeapon = 'railgun'; fireRailgun(); }
+  else if (key === '3') { state.activeWeapon = 'pistol'; firePistol(); }
+  else if (key === '4') { state.activeWeapon = 'blaster'; fireBlasterFuturistic(); }
+  else if (key === '5') { state.activeWeapon = 'white_blaster'; fireBlasterWhite(); }
+  else if (key === '6') { state.activeWeapon = 'turret'; fireBlasterTurret(); }
+  else if (key === 'm') { fireMissile(); }
+  // Consumables
+  else if (key === 'r') { window._activateConsumable('Repair Kit'); }
+  else if (key === 's') { window._activateConsumable('Shield Cell'); }
+  else if (key === 'e') { window._activateConsumable('EMP Grenade'); }
+}, true);
+
+// Show consumable hints on HUD
+window._showConsumableStatus = () => {
+  const repair = state.inventory.find(i => i.name === 'Repair Kit')?.quantity || 0;
+  const shield = state.inventory.find(i => i.name === 'Shield Cell')?.quantity || 0;
+  const emp = state.inventory.find(i => i.name === 'EMP Grenade')?.quantity || 0;
+  const hints = document.getElementById('consumable-hints');
+  if (hints) hints.innerHTML = `R:Repair×${repair} S:Shield×${shield} E:EMP×${emp}`;
+};
 
 function fireEMP() {
   if (c.dead || c._empCooldown > 0) return;
@@ -3985,6 +4018,11 @@ function showScreen(name) {
   if (name === 'gunner' && !threeReady) {
     addComms('System', '3D engine not available. Cannot enter gunner mode.');
     return;
+  // Cleanup gun room WebGL on exit
+  if (previousScreen === 'gunroom' && name !== 'gunroom' && state.gunRoomRenderers?.length > 0) {
+    state.gunRoomRenderers.forEach(r => { if (r && r.dispose) r.dispose(); });
+    state.gunRoomRenderers = [];
+  }
   }
   // Same-screen guard
   if (name === state.screen) return;
@@ -4017,6 +4055,11 @@ function _showScreenInner(name, previousScreen) {
   const _hasTarget = state.targetLock && state.targetLock.locked && state.targetLock.target;
   document.getElementById('warp-target-btn')?.classList.toggle('visible', _inGame && !!_hasTarget);
   if (name === 'gunroom') { try { initGunRoom(); } catch(e) { console.warn('[GunRoom] Init failed:', e.message); } }
+  // Cleanup gun room WebGL on exit
+  if (previousScreen === 'gunroom' && name !== 'gunroom' && state.gunRoomRenderers?.length > 0) {
+    state.gunRoomRenderers.forEach(r => { if (r && r.dispose) r.dispose(); });
+    state.gunRoomRenderers = [];
+  }
   if (name === 'quarters') initQuarters();
   if (name === 'interior') { try { initInterior(); } catch(e) { console.warn('[Interior] Init failed:', e.message); } }
 
@@ -7050,7 +7093,11 @@ function getBoltFromPool() {
 }
 function returnBoltToPool(b) {
   if (!b || !b.group) return;
-  b.group.parent?.remove(b.group);
+  b.gEnsure consumable items exist at combat start
+  if (!state.inventory.find(i => i.name === 'Repair Kit')) state.inventory.push({ name: 'Repair Kit', quantity: 3 });
+  if (!state.inventory.find(i => i.name === 'Shield Cell')) state.inventory.push({ name: 'Shield Cell', quantity: 2 });
+  if (!state.inventory.find(i => i.name === 'EMP Grenade')) state.inventory.push({ name: 'EMP Grenade', quantity: 1 });
+  // roup.parent?.remove(b.group);
   if (_boltPool.length < BOLT_POOL_MAX) _boltPool.push(b);
   else { disposeObject(b.group); }
 }
@@ -7087,6 +7134,10 @@ function enterGunnerMode() {
   c.active = true;
   c.dead = false;
   _deathSequenceActive = false;
+  // Ensure consumable items exist at combat start
+  if (!state.inventory.find(i => i.name === 'Repair Kit')) state.inventory.push({ name: 'Repair Kit', quantity: 3 });
+  if (!state.inventory.find(i => i.name === 'Shield Cell')) state.inventory.push({ name: 'Shield Cell', quantity: 2 });
+  if (!state.inventory.find(i => i.name === 'EMP Grenade')) state.inventory.push({ name: 'EMP Grenade', quantity: 1 });
   // Score insurance payout — apply saved 10% score from last death
   if (c._scoreInsurance && c._scoreInsurance > 0) {
     c.score = c._scoreInsurance;
