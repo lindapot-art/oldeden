@@ -11519,7 +11519,7 @@ function spawnNPCShip(type) {
       if (child.isMesh && child.material && !child.material.isMeshBasicMaterial) {
         child.material = child.material.clone();
         child.material.emissive = new THREE.Color(npcDef.color);
-        child.material.emissiveIntensity = 0.25;
+        child.material.emissiveIntensity = 0.05;
       }
     });
     g.add(vecModel);
@@ -11603,7 +11603,7 @@ function spawnSystemNPCs() {
         if (child.isMesh && child.material && !child.material.isMeshBasicMaterial) {
           child.material = child.material.clone();
           child.material.emissive = _ghostColor;
-          child.material.emissiveIntensity = 0.6;
+          child.material.emissiveIntensity = 0.15;
           child.material.transparent = true;
           child.material.opacity = 0.7;
           child.material.depthWrite = false;
@@ -12335,7 +12335,7 @@ function applySkin(skin) {
     // Clone shared/cached material before mutating
     if (child.material._shared || child.material._pooled) { child.material = child.material.clone(); }
     // Determine if this is hull or accent based on original color
-    const isAccent = child.material.emissiveIntensity > 0.2;
+    const isAccent = child.material.emissiveIntensity > 0.1;
     child.material.color.setHex(isAccent ? skin.accent : skin.primary);
     child.material.roughness = skin.roughness;
     child.material.metalness = skin.metalness;
