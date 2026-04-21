@@ -421,19 +421,26 @@ async function qaUX(page) {
       rwarn('QA-UX', `Character creation automation failed: ${e.message}`);
     }
 
-    // Wait for gameplay/bridge screen
+    // Wait for create-complete event from page
     let gameplayLoaded = false;
     try {
-      await page.waitForTimeout(1200);
-      await page.waitForFunction(() => {
-        const activeScreen = [...document.querySelectorAll('.screen')].find(el => el.classList.contains('active'));
-        const launchBtn = document.querySelector('#btn-launch, #btn-enter-space');
-        const launchVisible = !!(launchBtn && launchBtn.offsetParent !== null);
-        return activeScreen?.id === 'screen-bridge' || launchVisible;
-      }, { timeout: 10000 });
-      gameplayLoaded = true;
+      gameplayLoaded = await page.evaluate(() => {
+        return new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve(false), 8000);
+          window.addEventListener('createCharacterComplete', (evt) => {
+            clearTimeout(timeout);
+            // Event fired: character creation succeeded, bridge is loading
+            resolve(true);
+          });
+          // Fallback: if event already fired before we attached listener, check active screen
+          setTimeout(() => {
+            const activeScreen = [...document.querySelectorAll('.screen')].find(el => el.classList.contains('active'));
+            if (activeScreen?.id === 'screen-bridge') resolve(true);
+          }, 500);
+        });
+      });
     } catch (e) {
-      rwarn('QA-UX', 'Gameplay/overlay not detected after character creation');
+      rwarn('QA-UX', 'Create-complete event listener failed: ' + e.message);
     }
 
     // Screenshot gameplay/overlay

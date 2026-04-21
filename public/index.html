@@ -3781,6 +3781,8 @@ function createCharacter() {
 
   saveGame();
   showScreen('bridge');
+  // Signal QA board that character creation completed successfully
+  window.dispatchEvent(new CustomEvent('createCharacterComplete', { detail: { name, faction: state.player.faction } }));
   addComms('EDEN AI', '\u2694 Click ENTER SPACE to launch into combat, pilot.');
   // First life: reduce early pressure so the player can orient before combat ramps up.
   if ((state.player.rebirths || 0) === 0) {
@@ -12428,15 +12430,16 @@ window._applySkinPreset = (idx) => {
 let cockpitGLBModel = null;
 
 async function loadCockpitGLB() {
-  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); cockpitGLBModel = null; }
+  if (cockpitGLBModel) { camera.remove(cockpitGLBModel); disposeObject(cockpitGLBModel); cockpitGLBModel = null; }
   try {
     const model = await loadGLBModel('cockpit_new');
     const cp = model.clone();
     // Use the dedicated cockpit interior asset instead of an exterior shuttle hull.
-    cp.position.set(0, -2.55, 0.9);
-    cp.scale.setScalar(0.52);
-    cp.rotation.set(0, Math.PI, 0);
+    cp.position.set(0, -2.05, 0.28);
+    cp.scale.setScalar(0.68);
+    cp.rotation.set(0.02, Math.PI, 0);
     cp.name = 'cockpit-shuttle-glb';
+    cp.renderOrder = 10;
     // Guard: player may have exited gunner mode during async load
     if (!c.active) { disposeObject(cp); return; }
     // Add directly to camera (not cockpit group) so it doesn't conflict with railgun
@@ -12450,9 +12453,15 @@ async function loadCockpitGLB() {
       const isWindow = /glass|window|canopy/.test(materialHint);
       mats.forEach(m => {
         m.side = THREE.DoubleSide;
-        m.transparent = true;
-        m.opacity = isWindow ? 0.12 : 0.34;
-        m.depthWrite = false;
+        if (isWindow) {
+          m.transparent = true;
+          m.opacity = 0.08;
+          m.depthWrite = false;
+        } else {
+          m.transparent = false;
+          m.opacity = 1;
+          m.depthWrite = true;
+        }
       });
     });
     cockpitGLBModel = cp;
