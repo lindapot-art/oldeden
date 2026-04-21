@@ -32,7 +32,7 @@ async function runVisualProxyQA() {
     
     // Click New Game
     await page.click('#btn-new');
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Select first faction
     await page.evaluate(() => {
@@ -42,7 +42,7 @@ async function runVisualProxyQA() {
       }
     });
     
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     // Start continuous monitoring
     let screenshotCount = 0;
