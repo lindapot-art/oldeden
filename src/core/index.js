@@ -16,12 +16,21 @@ import { FactionSystem, FACTIONS } from '../systems/FactionSystem.js';
 import { InventorySystem } from '../systems/InventorySystem.js';
 import { SkillSystem } from '../systems/SkillSystem.js';
 import { QuestSystem } from '../systems/QuestSystem.js';
+import { DialogueSystem } from '../systems/DialogueSystem.js';
+import { FactionStorylineSystem } from '../systems/FactionStorylineSystem.js';
+import { NarrativeIntegrationSystem } from '../systems/NarrativeIntegrationSystem.js';
 import { EnemySpawnSystem } from '../systems/EnemySpawnSystem.js';
 import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { BossSystem } from '../systems/BossSystem.js';
 import { LeaderboardSystem } from '../systems/LeaderboardSystem.js';
 const leaderboard = new LeaderboardSystem();
 import { BountySystem } from '../systems/BountySystem.js';
+import { GuildSystem } from '../systems/GuildSystem.js';
+import { PlayerTradingSystem } from '../systems/PlayerTradingSystem.js';
+import { FleetSystem } from '../systems/FleetSystem.js';
+import { AuctionHouseSystem } from '../systems/AuctionHouseSystem.js';
+import { CommunicationSystem } from '../systems/CommunicationSystem.js';
+import { TerritoryControlSystem } from '../systems/TerritoryControlSystem.js';
 import { createHttpServer } from '../server/HttpServer.js';
 import { FileStore } from '../persistence/FileStore.js';
 import { MongoStore } from '../persistence/MongoStore.js';
@@ -65,12 +74,23 @@ const factions = new FactionSystem();
 const inventory = new InventorySystem();
 const skills = new SkillSystem();
 const quests = new QuestSystem();
+const dialogue = new DialogueSystem();
+const storylines = new FactionStorylineSystem();
+const narrative = new NarrativeIntegrationSystem();
 
 // ── Systems with cross-dependencies ─────────────────────────────────────────
 const enemies = new EnemySpawnSystem(npc, combat);
 const projectiles = new ProjectileSystem(combat);
 const bosses = new BossSystem(npc, combat, enemies);
 const bounties = new BountySystem(engine);
+
+// ── Multiplayer systems (Phase 3) ───────────────────────────────────────────
+const guilds = new GuildSystem(engine);
+const playerTrading = new PlayerTradingSystem(engine);
+const fleets = new FleetSystem(engine);
+const auctionHouse = new AuctionHouseSystem(engine);
+const communication = new CommunicationSystem(engine);
+const territoryControl = new TerritoryControlSystem(engine);
 
 engine
   .registerSystem('genetics', genetics)
@@ -82,6 +102,9 @@ engine
   .registerSystem('inventory', inventory)
   .registerSystem('skills', skills)
   .registerSystem('quests', quests)
+  .registerSystem('dialogue', dialogue)
+  .registerSystem('storylines', storylines)
+  .registerSystem('narrative', narrative)
   .registerSystem('rebirth', rebirth)
   .registerSystem('procedural', procedural)
   .registerSystem('exploration', exploration)
@@ -93,6 +116,12 @@ engine
   .registerSystem('projectiles', projectiles)
   .registerSystem('bosses', bosses)
   .registerSystem('bounties', bounties)
+  .registerSystem('guilds', guilds)
+  .registerSystem('playerTrading', playerTrading)
+  .registerSystem('fleets', fleets)
+  .registerSystem('auctionHouse', auctionHouse)
+  .registerSystem('communication', communication)
+  .registerSystem('territoryControl', territoryControl)
   .registerSystem('director', director)
   .registerSystem('leaderboard', leaderboard);
 
@@ -153,23 +182,19 @@ function getStationPrices(systemIdx) {
   return prices;
 }
 
-// Register starter quests in QuestSystem
-const STARTER_QUESTS = [
-  { id: 'q-kill-scouts',  name: 'Thin the Ranks',   objectives: [{ type: 'kill', target: 'scout', required: 5 }],  rewards: { credits: 750 } },
-  { id: 'q-kill-fighters', name: 'Dogfight Ace',     objectives: [{ type: 'kill', target: 'fighter', required: 3 }], rewards: { credits: 1200 } },
-  { id: 'q-kill-bombers', name: 'Bomber Buster',     objectives: [{ type: 'kill', target: 'bomber', required: 2 }],  rewards: { credits: 1500 } },
-  { id: 'q-kill-any-10',  name: 'Combat Veteran',    objectives: [{ type: 'kill', target: '*', required: 10 }],      rewards: { credits: 1800, reputation: { hegemony_vanguard: 50 } } },
-  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 900, reputation: { void_cult: 50 } } },
-  { id: 'q-trade-5',      name: 'Merchant Initiate', objectives: [{ type: 'collect', target: '*', required: 5 }],    rewards: { credits: 1050, reputation: { iron_syndicate: 50 } } },
-  // New quest types for variety
-  { id: 'q-mine-titanite', name: 'Mine Titanite Ore', objectives: [{ type: 'mine', target: 'Titanite Ore', required: 10 }], rewards: { credits: 950, item: 'Titanite Ore' } },
-  { id: 'q-deliver-fuel', name: 'Fuel Delivery', objectives: [{ type: 'deliver', target: 'Hydrogen Fuel', required: 20, destination: 'Outpost Gamma' }], rewards: { credits: 1100, reputation: { iron_syndicate: 30 } } },
-  { id: 'q-explore-anomaly', name: 'Explore Anomaly', objectives: [{ type: 'explore', target: 'Anomaly-7', required: 1 }], rewards: { credits: 1300, reputation: { void_cult: 40 } } },
-  { id: 'q-rescue-pilot', name: 'Rescue Downed Pilot', objectives: [{ type: 'rescue', target: 'Pilot', required: 1, location: 'Sector 12' }], rewards: { credits: 1600, reputation: { hegemony_vanguard: 60 } } },
-  { id: 'q-bounty-pirate', name: 'Pirate Bounty', objectives: [{ type: 'bounty', target: 'pirate_captain', required: 1 }], rewards: { credits: 2000, item: 'Rare Blaster' } },
-  { id: 'q-survive-radiation', name: 'Survive Radiation Zone', objectives: [{ type: 'survive', target: 'radiation', required: 60 }], rewards: { credits: 1400, reputation: { void_cult: 25 } } },
+// Register story-driven faction quests from FactionStorylineSystem
+// Replaces procedural STARTER_QUESTS with rich narrative missions
+console.log('[Main] Initializing story-driven faction mission system...');
+// Story missions are registered automatically by the FactionStorylineSystem
+// Players discover missions through NPC interactions and reputation requirements
+
+// Legacy procedural quests (kept for backward compatibility, lower priority)
+const LEGACY_QUESTS = [
+  { id: 'q-kill-scouts',  name: 'Thin the Ranks',   objectives: [{ type: 'kill', target: 'scout', required: 5 }],  rewards: { credits: 500 } },
+  { id: 'q-kill-fighters', name: 'Dogfight Ace',     objectives: [{ type: 'kill', target: 'fighter', required: 3 }], rewards: { credits: 800 } },
+  { id: 'q-visit-3',      name: 'Star Cartographer', objectives: [{ type: 'visit', target: '*', required: 3 }],      rewards: { credits: 600 } },
 ];
-STARTER_QUESTS.forEach(q => quests.registerQuest(q));
+LEGACY_QUESTS.forEach(q => quests.registerQuest(q));
 
 // ── HTTP Server ──────────────────────────────────────────────────────────────
 const httpPort = parseInt(process.env.PORT ?? '3847', 10);
@@ -440,6 +465,15 @@ const RATE_LIMITS = {
   'starmap:request': { max: 2,  windowMs: 5000 },
   'quests:request':  { max: 2,  windowMs: 5000 },
   'player:sync':     { max: 3,  windowMs: 1000 },
+  // Multiplayer system rate limits
+  'guild:create':    { max: 1,  windowMs: 30000 },
+  'guild:invite':    { max: 5,  windowMs: 10000 },
+  'trade:propose':   { max: 3,  windowMs: 5000 },
+  'fleet:create':    { max: 2,  windowMs: 60000 },
+  'market:createOrder': { max: 10, windowMs: 10000 },
+  'chat:sendMessage': { max: 20, windowMs: 10000 },
+  'territory:claim': { max: 1,  windowMs: 60000 },
+  'territory:attack': { max: 2, windowMs: 30000 },
 };
 
 /** IP-based rate limiter map — shared across all sockets from the same IP */
@@ -543,6 +577,12 @@ io.on('connection', (socket) => {
     'quest:list', 'quest:accept',
     'rebirth:sync', 'cargo:deposit',
     'disconnect', 'disconnecting',
+    // Multiplayer system events
+    'guild:info', 'guild:acceptInvite', 'trade:addItem', 'trade:confirm',
+    'fleet:invite', 'fleet:setDestination', 'market:getOrders', 'market:getPrices',
+    'chat:joinChannel', 'chat:privateMessage', 'territory:getClaimable',
+    'bounty:board', 'bounty:accept', 'bounty:active', 'bounty:abandon',
+    'inventory:use_consumable',
   ]);
   socket.use(([eventName], next) => {
     if (!KNOWN_EVENTS.has(eventName)) {
@@ -659,20 +699,36 @@ io.on('connection', (socket) => {
       const player = players.get(socket.id);
       if (!player) return;
       const questId = typeof data?.questId === 'string' ? data.questId : '';
-      const def = STARTER_QUESTS.find(q => q.id === questId);
-      if (!def || player.activeQuests.has(questId)) return;
-      if (player.activeQuests.size >= 5) {
-        socket.emit('quest:error', { error: 'Max 5 active quests' });
-        return;
+      
+      // Check if it's a legacy quest or story mission
+      const legacyQuest = LEGACY_QUESTS.find(q => q.id === questId);
+      const storylineSystem = engine.getSystem('storylines');
+      const questSystem = engine.getSystem('quests');
+      
+      if (legacyQuest) {
+        // Handle legacy procedural quest
+        const result = questSystem.acceptQuest(player.id, questId);
+        if (result.ok) {
+          socket.emit('quest:accepted', { questId, type: 'legacy' });
+        } else {
+          socket.emit('quest:error', { error: result.error });
+        }
+      } else if (data.storylineId) {
+        // Handle story mission from faction storyline
+        const mission = storylineSystem.startStoryline(player.id, data.storylineId);
+        if (mission) {
+          socket.emit('quest:accepted', { 
+            questId: mission.id, 
+            storylineId: data.storylineId,
+            type: 'story',
+            mission: mission 
+          });
+        } else {
+          socket.emit('quest:error', { error: 'Story mission not available' });
+        }
+      } else {
+        socket.emit('quest:error', { error: 'Quest not found' });
       }
-      const instance = {
-        ...def,
-        objectives: def.objectives.map(o => ({ ...o, current: 0 })),
-        completed: false,
-        acceptedAt: Date.now(),
-      };
-      player.activeQuests.set(questId, instance);
-      socket.emit('quest:accepted', { questId, quest: instance });
     } catch (err) { console.error('[Socket] quest:accept error:', err.message); }
   });
 
@@ -1050,6 +1106,206 @@ io.on('connection', (socket) => {
     } catch (err) { console.error('[Socket] quests:request error:', err.message); }
   });
 
+  // ── Multiplayer Systems (Phase 3) ──────────────────────────────────────────
+
+  // Guild System Events
+  socket.on('guild:create', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const guildSystem = engine.getSystem('guilds');
+      const result = guildSystem.createGuild(data.name, player.playerId, data.description);
+      socket.emit('guild:createResult', result);
+    } catch (err) { console.error('[Socket] guild:create error:', err.message); }
+  });
+
+  socket.on('guild:invite', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const guildSystem = engine.getSystem('guilds');
+      const result = guildSystem.invitePlayer(data.guildId, data.targetPlayerId, player.playerId);
+      socket.emit('guild:inviteResult', result);
+    } catch (err) { console.error('[Socket] guild:invite error:', err.message); }
+  });
+
+  socket.on('guild:acceptInvite', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const guildSystem = engine.getSystem('guilds');
+      const result = guildSystem.acceptInvite(data.inviteId, player.playerId);
+      socket.emit('guild:inviteAccepted', result);
+    } catch (err) { console.error('[Socket] guild:acceptInvite error:', err.message); }
+  });
+
+  socket.on('guild:info', (data) => {
+    try {
+      const guildSystem = engine.getSystem('guilds');
+      const guild = guildSystem.getGuild(data.guildId);
+      socket.emit('guild:info', { guild });
+    } catch (err) { console.error('[Socket] guild:info error:', err.message); }
+  });
+
+  // Player Trading Events
+  socket.on('trade:propose', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const tradingSystem = engine.getSystem('playerTrading');
+      const result = tradingSystem.proposeTrade(player.playerId, data.targetPlayerId, data.message);
+      socket.emit('trade:proposeResult', result);
+    } catch (err) { console.error('[Socket] trade:propose error:', err.message); }
+  });
+
+  socket.on('trade:addItem', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const tradingSystem = engine.getSystem('playerTrading');
+      const result = tradingSystem.addItemToTrade(data.tradeId, player.playerId, data.itemId, data.quantity);
+      socket.emit('trade:itemAdded', result);
+    } catch (err) { console.error('[Socket] trade:addItem error:', err.message); }
+  });
+
+  socket.on('trade:confirm', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const tradingSystem = engine.getSystem('playerTrading');
+      const result = tradingSystem.confirmTrade(data.tradeId, player.playerId);
+      socket.emit('trade:confirmed', result);
+    } catch (err) { console.error('[Socket] trade:confirm error:', err.message); }
+  });
+
+  // Fleet System Events
+  socket.on('fleet:create', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const fleetSystem = engine.getSystem('fleets');
+      const result = fleetSystem.createFleet(data.name, player.playerId, data.description);
+      socket.emit('fleet:createResult', result);
+    } catch (err) { console.error('[Socket] fleet:create error:', err.message); }
+  });
+
+  socket.on('fleet:invite', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const fleetSystem = engine.getSystem('fleets');
+      const result = fleetSystem.inviteToFleet(data.fleetId, data.targetPlayerId, player.playerId);
+      socket.emit('fleet:inviteResult', result);
+    } catch (err) { console.error('[Socket] fleet:invite error:', err.message); }
+  });
+
+  socket.on('fleet:setDestination', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const fleetSystem = engine.getSystem('fleets');
+      const result = fleetSystem.setFleetDestination(data.fleetId, player.playerId, data.destination);
+      socket.emit('fleet:destinationSet', result);
+    } catch (err) { console.error('[Socket] fleet:setDestination error:', err.message); }
+  });
+
+  // Auction House Events
+  socket.on('market:createOrder', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const auctionSystem = engine.getSystem('auctionHouse');
+      const result = auctionSystem.createOrder(player.playerId, data.itemId, data.quantity, data.pricePerUnit, data.orderType);
+      socket.emit('market:orderCreated', result);
+    } catch (err) { console.error('[Socket] market:createOrder error:', err.message); }
+  });
+
+  socket.on('market:getOrders', (data) => {
+    try {
+      const auctionSystem = engine.getSystem('auctionHouse');
+      const orders = auctionSystem.getMarketOrders(data.itemId, data.region);
+      socket.emit('market:orders', { orders });
+    } catch (err) { console.error('[Socket] market:getOrders error:', err.message); }
+  });
+
+  socket.on('market:getPrices', () => {
+    try {
+      const auctionSystem = engine.getSystem('auctionHouse');
+      const prices = auctionSystem.getMarketPrices();
+      socket.emit('market:prices', { prices });
+    } catch (err) { console.error('[Socket] market:getPrices error:', err.message); }
+  });
+
+  // Communication System Events
+  socket.on('chat:joinChannel', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const commSystem = engine.getSystem('communication');
+      const result = commSystem.joinChannel(player.playerId, data.channelId);
+      socket.emit('chat:joinResult', result);
+    } catch (err) { console.error('[Socket] chat:joinChannel error:', err.message); }
+  });
+
+  socket.on('chat:sendMessage', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const commSystem = engine.getSystem('communication');
+      const result = commSystem.sendMessage(player.playerId, data.channelId, data.message);
+      if (result.success) {
+        // Broadcast to other players in channel
+        io.emit('chat:newMessage', {
+          channelId: data.channelId,
+          playerId: player.playerId,
+          playerName: player.name,
+          message: data.message,
+          timestamp: Date.now()
+        });
+      }
+      socket.emit('chat:sendResult', result);
+    } catch (err) { console.error('[Socket] chat:sendMessage error:', err.message); }
+  });
+
+  socket.on('chat:privateMessage', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const commSystem = engine.getSystem('communication');
+      const result = commSystem.sendPrivateMessage(player.playerId, data.targetPlayerId, data.message);
+      socket.emit('chat:privateMessageResult', result);
+    } catch (err) { console.error('[Socket] chat:privateMessage error:', err.message); }
+  });
+
+  // Territory Control Events
+  socket.on('territory:claim', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const territorySystem = engine.getSystem('territoryControl');
+      const result = territorySystem.claimTerritory(data.guildId, data.territoryId, player.playerId);
+      socket.emit('territory:claimResult', result);
+    } catch (err) { console.error('[Socket] territory:claim error:', err.message); }
+  });
+
+  socket.on('territory:attack', (data) => {
+    try {
+      const player = players.get(socket.id);
+      if (!player) return;
+      const territorySystem = engine.getSystem('territoryControl');
+      const result = territorySystem.attackTerritory(data.attackingGuildId, data.territoryId, data.attackForce, player.playerId);
+      socket.emit('territory:attackResult', result);
+    } catch (err) { console.error('[Socket] territory:attack error:', err.message); }
+  });
+
+  socket.on('territory:getClaimable', () => {
+    try {
+      const territorySystem = engine.getSystem('territoryControl');
+      const territories = territorySystem.getClaimableTerritories();
+      socket.emit('territory:claimableList', { territories });
+    } catch (err) { console.error('[Socket] territory:getClaimable error:', err.message); }
+  });
+
   socket.on('disconnect', async () => {
     const player = players.get(socket.id);
     if (player) {
@@ -1101,6 +1357,24 @@ io.on('connection', (socket) => {
       const fractureSys = engine.getSystem('fracture');
       if (fractureSys?._activeShards) {
         // Remove shards originated by this player (optional — keeps shards for others to find)
+      }
+      
+      // Clean up multiplayer systems (Phase 3)
+      const guildSys = engine.getSystem('guilds');
+      if (guildSys) {
+        guildSys.handlePlayerDisconnect?.(pid);
+      }
+      const tradingSys = engine.getSystem('playerTrading');
+      if (tradingSys) {
+        tradingSys.handlePlayerDisconnect?.(pid);
+      }
+      const fleetSys = engine.getSystem('fleets');
+      if (fleetSys) {
+        fleetSys.handlePlayerDisconnect?.(pid);
+      }
+      const commSys = engine.getSystem('communication');
+      if (commSys) {
+        commSys.handlePlayerDisconnect?.(pid);
       }
     }
     players.delete(socket.id);
