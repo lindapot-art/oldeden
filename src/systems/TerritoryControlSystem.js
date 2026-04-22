@@ -166,7 +166,7 @@ export class TerritoryControlSystem {
     
     // Process territory maintenance and conflicts
     setInterval(() => {
-      this.processTerritoryMaintenance();
+      this.processAllTerritoryMaintenance();
       this.processActiveConflicts();
     }, 300000); // Every 5 minutes
     
@@ -761,11 +761,28 @@ export class TerritoryControlSystem {
       }
     }
   }
+  
+  /**
+   * Process maintenance for all owned territories
+   */
+  processAllTerritoryMaintenance() {
+    for (const territory of this.territories.values()) {
+      if (territory.ownerGuildId && territory.state !== TERRITORY_STATES.CONTESTED) {
+        this.processTerritoryMaintenance(territory);
+      }
+    }
+  }
 
   /**
    * Process territory maintenance costs
    */
   processTerritoryMaintenance(territory) {
+    // Safety check: ensure territory has maintenanceCost defined
+    if (!territory.maintenanceCost) {
+      console.warn(`[TerritoryControlSystem] Territory ${territory.id} missing maintenanceCost, skipping maintenance`);
+      return;
+    }
+    
     const maintenanceCost = territory.maintenanceCost;
     const guildSystem = this.engine.getSystem('guilds');
     const guild = guildSystem.getGuild(territory.ownerGuildId);

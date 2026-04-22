@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Old Eden</title>
   <style>
     :root {
@@ -1074,14 +1074,59 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     width: 120px !important;
     height: 120px !important;
   }
-  /* Hide mobile touch UI on fine-pointer (mouse/trackpad) devices */
-  @media (pointer: fine) {
+  /* Mobile controls: Show on touch devices and when manually enabled */
+  @media (pointer: coarse) {
     #mobile-controls, #touch-move-zone, #touch-stick, #mobile-look-zone,
     #touch-button-cluster, #touch-button-row, #touch-joystick-left,
     #touch-fire, #touch-reload, #touch-boost, #touch-gyro, .touch-ui-element {
-      display: none !important;
-      pointer-events: none !important;
+      display: block !important;
+      pointer-events: auto !important;
     }
+  }
+  
+  /* Show when manually enabled via settings */
+  body.mobile-enabled #mobile-controls,
+  body.mobile-enabled #touch-move-zone,
+  body.mobile-enabled #touch-stick,
+  body.mobile-enabled #mobile-look-zone,
+  body.mobile-enabled #touch-button-cluster,
+  body.mobile-enabled #touch-button-row,
+  body.mobile-enabled #touch-joystick-left,
+  body.mobile-enabled #touch-fire,
+  body.mobile-enabled #touch-reload,
+  body.mobile-enabled #touch-boost,
+  body.mobile-enabled #touch-gyro,
+  body.mobile-enabled .touch-ui-element {
+    display: block !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Auto-show in small landscape mode */
+  @media (max-width: 900px) and (orientation: landscape) {
+    body.mobile-auto #mobile-controls,
+    body.mobile-auto #touch-move-zone,
+    body.mobile-auto #touch-stick,
+    body.mobile-auto #mobile-look-zone,
+    body.mobile-auto #touch-button-cluster,
+    body.mobile-auto #touch-button-row,
+    body.mobile-auto #touch-joystick-left,
+    body.mobile-auto #touch-fire,
+    body.mobile-auto #touch-reload,
+    body.mobile-auto #touch-boost,
+    body.mobile-auto #touch-gyro,
+    body.mobile-auto .touch-ui-element {
+      display: block !important;
+      pointer-events: auto !important;
+    }
+  }
+  
+  /* Landscape optimization */
+  @media (orientation: landscape) and (max-height: 650px) {
+    #hud-top, #hud-bottom { padding: 6px 10px; font-size: 0.9rem; }
+    #touch-move-zone { width: 80px !important; height: 80px !important; }
+    #mobile-look-zone { width: min(25vw, 100px) !important; }
+    #screen-create { padding: 10px; }
+    #pilot-name { width: min(150px, 70vw) !important; font-size: 0.9rem; }
   }
   #mobile-look-zone {
     position: absolute;
@@ -1179,7 +1224,26 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       z-index: 5;
     }
 
-    #opening-text h2 {
+
+    
+    #death-title {
+      color: #ff4444;
+      text-shadow: 0 0 10px #ff4444;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    #death-narrative {
+      color: #cccccc;
+      font-size: 1.1rem;
+      line-height: 1.4;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+      opacity: 0.9;
+    }
+
+        #opening-text h2 {
       font-size: 3em;
       margin: 0;
       text-shadow: 0 0 20px #44aaff;
@@ -1975,7 +2039,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   </div>
   <div class="create-section holo-panel-base">
     <label style="color:var(--muted);display:block;margin-bottom:0.5rem;">Pilot Name</label>
-    <input type="text" id="pilot-name" maxlength="24" placeholder="Enter pilot name..." style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;width:200px;font-size:1rem;">
+    <input type="text" id="pilot-name" maxlength="24" placeholder="Enter pilot name..." style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;width:min(200px, 80vw);font-size:1rem;max-width:300px;">
     <div class="create-help" id="create-account-summary">No account linked yet. You can still play free, or return to the title screen to sign up and connect a wallet.</div>
   </div>
   <div class="btn-row" style="justify-content:center;margin-top:1rem;">
@@ -1988,11 +2052,13 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <div class="screen" id="screen-opening">
   <canvas id="opening-scene-canvas"></canvas>
   <div id="opening-text">
-    <h2>CONSCIOUSNESS RESTORED</h2>
+    <h2 id="death-title">ANOTHER DEATH</h2>
+    <p id="death-narrative">Your corpse drifts in the cold void. Resurrection awaits...</p>
   </div>
 </div>
 
 <div class="screen" id="screen-create-holo">
+  <button class="dna-close-btn" onclick="closeDNAMenu()" style="position:absolute;top:15px;right:20px;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;z-index:999;" title="Close DNA Menu">✕</button>
   <div class="holo-panel">
     <h1 class="holo-title">GENETIC RESURRECTION</h1>
     <p class="holo-subtitle">⬢ DNA RECOMBINATION PROTOCOL ⬢</p>
@@ -2240,6 +2306,10 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <span><span style="color:var(--blue);">ESC</span> Exit gunner</span>
       </div>
     </div>
+  </div>
+  <div class="setting-row">
+    <div class="setting-label">Mobile Controls</div>
+    <button class="btn btn-sm" id="btn-mobile-toggle">Enable Touch Controls</button>
   </div>
   <div class="btn-row"><button class="btn" id="btn-settings-back">&larr; Back</button></div>
 </div>
@@ -21396,6 +21466,80 @@ window.enableDevCheats = () => {
 
       renderOpening();
 
+      // DEATH NARRATIVE SYSTEM - Updates text based on rebirth count
+      function updateDeathNarrative() {
+        const titleEl = document.getElementById('death-title');
+        const narrativeEl = document.getElementById('death-narrative');
+        const rebirthCount = (state && state.character && state.character.cycle) || 0;
+        
+        const titles = [
+          "FIRST DEATH", "SECOND DEATH", "THIRD DEATH", "MANY DEATHS", 
+          "COUNTLESS DEATHS", "DEATH INCARNATE", "ETERNAL DEATH", 
+          "TRANSCENDENT DEATH", "DEATH MASTERED", "BEYOND DEATH"
+        ];
+        
+        const narratives = [
+          "Your corpse drifts in the cold void. The first taste of space's cruelty...",
+          "Another body joins the wreckage. Death is becoming familiar...",
+          "The debris field grows. Your failures accumulate in metal and bone...",
+          "Multiple corpses mark your struggles. Each death teaches harsh lessons...",
+          "Death no longer surprises you. The void is just another battlefield...",
+          "Ancient bones and twisted metal. You are learning to master mortality...",
+          "The cosmos remembers every death. Your legend grows in blood and stars...",
+          "Death is your teacher. Resurrection is your tool. Evolution awaits...",
+          "You have become death itself. The universe bends to your will...",
+          "Beyond death, beyond life. You are what Old Eden has never seen..."
+        ];
+        
+        const title = titles[Math.min(rebirthCount, titles.length - 1)];
+        const text = narratives[Math.min(rebirthCount, narratives.length - 1)];
+        
+        if (titleEl) titleEl.textContent = title;
+        if (narrativeEl) narrativeEl.textContent = text;
+      }
+      
+      // Update death narrative after brief delay
+      setTimeout(updateDeathNarrative, 500);
+    
+    // UPDATE DEATH NARRATIVE based on rebirth count
+    function updateDeathNarrative() {
+      const titleEl = document.getElementById('death-title');
+      const narrativeEl = document.getElementById('death-narrative');
+      const rebirthCount = (state && state.character && state.character.cycle) || 0;
+      
+      const titles = [
+        "FIRST DEATH", "SECOND DEATH", "THIRD DEATH", "MANY DEATHS", 
+        "COUNTLESS DEATHS", "DEATH INCARNATE", "ETERNAL DEATH", 
+        "TRANSCENDENT DEATH", "DEATH MASTERED", "BEYOND DEATH"
+      ];
+      
+      const narratives = [
+        "Your corpse drifts in the cold void. The first taste of space's cruelty...",
+        "Another body joins the wreckage. Death is becoming familiar...",
+        "The debris field grows. Your failures accumulate in metal and bone...",
+        "Multiple corpses mark your struggles. Each death teaches harsh lessons...",
+        "Death no longer surprises you. The void is just another battlefield...",
+        "Ancient bones and twisted metal. You are learning to master mortality...",
+        "The cosmos remembers every death. Your legend grows in blood and stars...",
+        "Death is your teacher. Resurrection is your tool. Evolution is your goal...",
+        "You have become death itself. The universe bends to your will...",
+        "Beyond death, beyond life. You are something Old Eden has never seen..."
+      ];
+      
+      const title = titles[Math.min(rebirthCount, titles.length - 1)];
+      const text = narratives[Math.min(rebirthCount, narratives.length - 1)];
+      
+      if (titleEl) titleEl.textContent = title;
+      if (narrativeEl) narrativeEl.textContent = text;
+    }
+    
+    // Update narrative when opening scene starts
+    setTimeout(() => {
+      if (typeof updateDeathNarrative === 'function') {
+        updateDeathNarrative();
+      }
+    }, 500);
+
       window.addEventListener('resize', () => {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -21498,6 +21642,75 @@ window.enableDevCheats = () => {
         startOpeningSequence();
       });
     }
+
+    // Mobile controls functionality
+    let mobileControlsEnabled = false;
+
+    function closeDNAMenu() {
+      const screen = document.getElementById('screen-create-holo');
+      if (screen && screen.classList.contains('active')) {
+        screen.classList.remove('active');
+        showScreen('create');
+        return true;
+      }
+      return false;
+    }
+
+    function toggleMobileControls() {
+      mobileControlsEnabled = !mobileControlsEnabled;
+      const body = document.body;
+      
+      if (mobileControlsEnabled) {
+        body.classList.add('mobile-enabled');
+      } else {
+        body.classList.remove('mobile-enabled');
+      }
+      
+      const btn = document.getElementById('btn-mobile-toggle');
+      if (btn) {
+        btn.textContent = mobileControlsEnabled ? 'Disable Touch Controls' : 'Enable Touch Controls';
+      }
+      
+      localStorage.setItem('mobileControlsEnabled', mobileControlsEnabled.toString());
+    }
+
+    function autoDetectMobile() {
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const isSmall = window.innerWidth <= 900;
+      const isTouchDevice = 'ontouchstart' in window;
+      
+      if ((isLandscape && isSmall) || isTouchDevice) {
+        document.body.classList.add('mobile-auto');
+      } else {
+        document.body.classList.remove('mobile-auto');
+      }
+    }
+
+    // Initialize mobile controls
+    document.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('mobileControlsEnabled');
+      if (saved === 'true') {
+        mobileControlsEnabled = true;
+        document.body.classList.add('mobile-enabled');
+      }
+      
+      const btn = document.getElementById('btn-mobile-toggle');
+      if (btn) {
+        btn.addEventListener('click', toggleMobileControls);
+        btn.textContent = mobileControlsEnabled ? 'Disable Touch Controls' : 'Enable Touch Controls';
+      }
+      
+      autoDetectMobile();
+      window.addEventListener('resize', autoDetectMobile);
+      window.addEventListener('orientationchange', () => setTimeout(autoDetectMobile, 100));
+      
+      // Enhanced ESC key handling for DNA menu
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeDNAMenu();
+        }
+      });
+    });
 
     // "ENTER EDEN" button continues to character creation
     document.addEventListener('DOMContentLoaded', () => {
