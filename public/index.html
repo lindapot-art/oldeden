@@ -97,6 +97,57 @@
 #death-ticker-content .ticker-boss{color:var(--gold);}
 @keyframes tickerScroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 
+/* ── FITTING SCREEN STYLES ──────────────────── */
+.resource-bar { margin-bottom:4px; }
+.resource-label { font-size:0.8rem; color:var(--text); margin-bottom:4px; }
+.resource-track { width:100%; height:12px; background:rgba(0,0,0,0.4); border-radius:6px; border:1px solid var(--border); overflow:hidden; }
+.resource-fill { height:100%; border-radius:6px; transition:width 0.3s ease; }
+
+.fitting-slot { transition:all 0.2s ease; position:relative; }
+.fitting-slot:hover { transform:scale(1.05); border-color:currentColor !important; }
+.fitting-slot.occupied { border-style:solid; background:rgba(255,255,255,0.08); }
+.fitting-slot.occupied:hover { border-color:var(--gold) !important; }
+
+.fitted-module { 
+  position:absolute; inset:2px; border-radius:4px; 
+  background:rgba(255,255,255,0.12); 
+  display:flex; flex-direction:column; align-items:center; justify-content:center; 
+  font-size:0.6rem; line-height:1.2; text-align:center; 
+  cursor:pointer; transition:all 0.2s ease;
+}
+.fitted-module:hover { background:rgba(255,255,255,0.2); }
+.fitted-module-name { font-weight:600; }
+.fitted-module-meta { color:var(--muted); font-size:0.5rem; }
+
+.module-tab { transition:all 0.2s ease; }
+.module-tab.active { background:rgba(255,255,255,0.15); border-color:currentColor; }
+.module-tab:hover:not(.active) { background:rgba(255,255,255,0.08); }
+
+.module-item { 
+  background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:6px; 
+  padding:12px; margin-bottom:8px; cursor:pointer; transition:all 0.2s ease;
+  position:relative;
+}
+.module-item:hover { border-color:var(--gold); background:rgba(212,168,86,0.05); }
+.module-item.affordable { border-left:3px solid var(--green); }
+.module-item.expensive { border-left:3px solid var(--danger); }
+
+.module-name { font-weight:600; color:var(--text); margin-bottom:4px; }
+.module-cost { color:var(--gold); font-size:0.8rem; margin-bottom:6px; }
+.module-requirements { display:flex; gap:12px; margin-bottom:6px; font-size:0.75rem; }
+.module-req-cpu { color:var(--blue); }
+.module-req-pg { color:var(--warn); }
+.module-effect { font-size:0.8rem; color:var(--muted); }
+.module-description { font-size:0.75rem; color:var(--muted); margin-top:4px; font-style:italic; }
+
+.drag-hint { 
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.8); color:var(--gold); padding:4px 8px; 
+  border-radius:4px; font-size:0.7rem; pointer-events:none; 
+  opacity:0; transition:opacity 0.2s ease;
+}
+.fitting-slot:hover .drag-hint { opacity:1; }
+
 /* ── QA UNVERIFIED BANNER ─────────────────── */
 #qa-unverified-banner{position:fixed;top:0;left:0;right:0;z-index:99999;background:repeating-linear-gradient(45deg,#ff0000,#ff0000 10px,#cc0000 10px,#cc0000 20px);color:#fff;text-align:center;font-size:0.85rem;font-weight:700;letter-spacing:0.15em;padding:6px 0;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.6);font-family:monospace;}
 #qa-unverified-banner.qa-passed{background:#00aa44;}
@@ -167,9 +218,16 @@ body[data-screen="settings"] #warp-target-btn {
 #hazard-overlay.storm{opacity:1;background:radial-gradient(ellipse at center,rgba(100,140,255,0.04) 0%,rgba(80,120,255,0.10) 100%);box-shadow:inset 0 0 60px rgba(100,140,255,0.12);animation:hazFlicker 0.15s steps(2) infinite;}
 #hazard-overlay.pirate{opacity:1;background:radial-gradient(ellipse at center,rgba(255,60,30,0.03) 0%,rgba(255,40,20,0.08) 100%);box-shadow:inset 0 0 50px rgba(255,40,20,0.10);animation:hazPulse 4s ease-in-out infinite;}
 #hazard-overlay.temporal{opacity:1;background:radial-gradient(ellipse at center,rgba(200,100,255,0.05) 0%,rgba(160,60,220,0.10) 100%);box-shadow:inset 0 0 70px rgba(180,80,255,0.12);animation:hazWarp 5s ease-in-out infinite;}
+#hazard-overlay.radiation{opacity:1;background:radial-gradient(ellipse at center,rgba(255,200,0,0.03) 0%,rgba(255,150,0,0.08) 100%);box-shadow:inset 0 0 50px rgba(255,180,0,0.15);animation:hazRadiation 3s ease-in-out infinite;}
+#hazard-overlay.electromagnetic{opacity:1;background:radial-gradient(ellipse at center,rgba(0,150,255,0.04) 0%,rgba(100,200,255,0.09) 100%);box-shadow:inset 0 0 60px rgba(150,200,255,0.12);animation:hazElectro 4s linear infinite;}
+#hazard-overlay.toxic{opacity:1;background:radial-gradient(ellipse at center,rgba(150,255,50,0.03) 0%,rgba(100,200,0,0.07) 100%);box-shadow:inset 0 0 55px rgba(120,220,40,0.1);animation:hazToxic 6s ease-in-out infinite;}
+#hazard-overlay.generic-hazard{opacity:1;background:radial-gradient(ellipse at center,rgba(255,100,100,0.03) 0%,rgba(200,50,50,0.06) 100%);box-shadow:inset 0 0 45px rgba(220,80,80,0.08);}
 @keyframes hazPulse{0%,100%{opacity:0.7;}50%{opacity:1;}}
 @keyframes hazFlicker{0%{opacity:0.6;}50%{opacity:1;}100%{opacity:0.8;}}
 @keyframes hazWarp{0%{opacity:0.6;filter:hue-rotate(0deg);}50%{opacity:1;filter:hue-rotate(30deg);}100%{opacity:0.6;filter:hue-rotate(0deg);}}
+@keyframes hazRadiation{0%{opacity:0.4;transform:scale(1);}50%{opacity:0.8;transform:scale(1.02);}100%{opacity:0.4;transform:scale(1);}}
+@keyframes hazElectro{0%{filter:brightness(1) hue-rotate(0deg);}25%{filter:brightness(1.2) hue-rotate(90deg);}50%{filter:brightness(0.8) hue-rotate(180deg);}75%{filter:brightness(1.1) hue-rotate(270deg);}100%{filter:brightness(1) hue-rotate(360deg);}}
+@keyframes hazToxic{0%{opacity:0.5;}33%{opacity:0.7;}66%{opacity:0.3;}100%{opacity:0.5;}}
 
 /* ── Music Player ─────────────────────────── */
 #music-player-panel{position:fixed;top:18px;right:18px;z-index:120;background:linear-gradient(180deg,rgba(8,16,28,0.96),rgba(4,8,14,0.92));border:1px solid rgba(107,196,255,0.24);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.42),0 0 28px rgba(107,196,255,0.08);padding:14px 16px 12px;width:min(360px,calc(100vw - 28px));backdrop-filter:blur(18px);transition:max-height 0.28s ease,padding 0.28s ease,transform 0.28s ease,border-color 0.28s ease;overflow:hidden;}
@@ -1629,6 +1687,29 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <div id="muzzle-flash-overlay"></div>
 <div id="webgl-lost-overlay"><div class="wl-title">&#9888; GPU CONNECTION LOST</div><div class="wl-sub">The WebGL context was lost. This may be a driver issue.</div><button class="wl-btn" onclick="location.reload()">&#8635; Reload Game</button></div>
 <div id="glb-loading-overlay">LOADING ASSETS <span id="glb-load-count">0/0</span><div class="glb-bar"><div class="glb-fill" id="glb-load-fill"></div></div></div>
+
+<!-- BANDWIDTH OPTIMIZATION INDICATOR -->
+<div id="bandwidth-optimizer" style="
+  position: fixed; 
+  top: 10px; 
+  right: 10px; 
+  background: rgba(0, 20, 40, 0.9);
+  border: 1px solid #00ff88;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  color: #00ff88;
+  min-width: 200px;
+  z-index: 1001;
+  display: none;
+">
+  <div style="color: #ffffff; font-weight: bold; margin-bottom: 6px;">🚀 BANDWIDTH OPTIMIZER</div>
+  <div id="bandwidth-loaded">💾 Loaded: <span id="bandwidth-loaded-val">0MB</span></div>
+  <div id="bandwidth-saved">💰 Saved: <span id="bandwidth-saved-val">0MB</span></div>
+  <div id="bandwidth-efficiency">⚡ Efficiency: <span id="bandwidth-efficiency-val">0%</span></div>
+  <div id="bandwidth-concurrent">⬇️ Downloads: <span id="bandwidth-concurrent-val">0</span></div>
+</div>
 <div id="music-player-panel" aria-label="Music Player">
   <div class="music-header">
     <div class="music-header-main">
@@ -1663,6 +1744,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   <button class="nav-btn" id="nav-character" data-screen="character" aria-label="Character">Pilot</button>
   <button class="nav-btn" id="nav-atlas" data-screen="atlas" aria-label="Atlas">Atlas</button>
   <button class="nav-btn" id="nav-market" data-screen="market" aria-label="Market">Market</button>
+  <button class="nav-btn" id="nav-fitting" data-screen="fitting" aria-label="Fitting">Fitting</button>
   <button class="nav-btn" id="nav-ship" data-screen="interior" aria-label="Interior">Ship</button>
   <button class="nav-btn" id="nav-settings" data-screen="settings" aria-label="Settings">Settings</button>
 </nav>
@@ -1906,6 +1988,8 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   </div>
 
   <div class="bridge-panel holo-panel-base" id="bridge-right">
+    <div class="panel-title">Module Status</div>
+    <div id="module-status-display" style="font-family:monospace;font-size:0.7rem;margin-bottom:12px;max-height:80px;overflow-y:auto;"></div>
     <div class="panel-title">Communications</div>
     <div id="comms-feed" role="log" aria-live="polite" aria-label="Communications log"></div>
     <div class="panel-title" style="margin-top:16px;">Cargo</div>
@@ -2091,6 +2175,8 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <span><span style="color:var(--blue);">K</span> Skins</span>
         <span><span style="color:var(--blue);">G</span> Stargate</span>
         <span><span style="color:var(--blue);">F</span> Star map</span>
+        <span><span style="color:var(--blue);">N</span> Anomaly scan</span>
+        <span><span style="color:var(--blue);">V</span> Wormhole scan</span>
         <span><span style="color:var(--blue);">B</span> Dock</span>
         <span><span style="color:var(--blue);">P</span> Autopilot</span>
         <span><span style="color:var(--blue);">L</span> Labels</span>
@@ -2192,6 +2278,172 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 </div>
 
 <!-- ════════════════════════════════════════════ -->
+<!--  FITTING SCREEN (EVE-style Ship Fitting)    -->
+<!-- ════════════════════════════════════════════ -->
+<div class="screen" id="screen-fitting">
+  <h2 class="holo-header">&#9881; Ship Fitting</h2>
+  
+  <!-- Ship Overview & Resources -->
+  <div class="fitting-header" style="display:flex;gap:20px;margin-bottom:20px;padding:15px;background:rgba(0,20,40,0.3);border:1px solid var(--border);border-radius:8px;">
+    <div class="ship-info">
+      <h3 style="color:var(--gold);margin:0 0 8px 0;">Iron Sentinel</h3>
+      <div style="font-size:0.85rem;color:var(--muted);">Assault Frigate • Caldari Design</div>
+    </div>
+    <div class="resource-bars" style="flex:1;">
+      <div class="resource-bar">
+        <div class="resource-label">CPU: <span id="cpu-used">0</span>/<span id="cpu-total">300</span> tf</div>
+        <div class="resource-track"><div class="resource-fill" id="cpu-bar" style="width:0%;background:var(--blue);"></div></div>
+      </div>
+      <div class="resource-bar" style="margin-top:8px;">
+        <div class="resource-label">Powergrid: <span id="pg-used">0</span>/<span id="pg-total">1000</span> MW</div>
+        <div class="resource-track"><div class="resource-fill" id="pg-bar" style="width:0%;background:var(--warn);"></div></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Fitting Interface -->
+  <div class="fitting-grid" style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+    
+    <!-- Slot Layout -->
+    <div class="slot-layout" style="background:rgba(0,15,30,0.4);border:1px solid var(--border);border-radius:8px;padding:20px;">
+      <h3 style="color:var(--text);margin:0 0 15px 0;">Module Slots</h3>
+      
+      <!-- High Slots -->
+      <div class="slot-group" style="margin-bottom:20px;">
+        <div class="slot-group-header" style="color:var(--danger);font-weight:600;margin-bottom:8px;">High Power (8 slots)</div>
+        <div class="slot-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;" data-slot-type="high">
+          <div class="fitting-slot" data-slot-index="0" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 1">
+            <span style="color:var(--danger);font-size:0.7rem;">H1</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="1" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 2">
+            <span style="color:var(--danger);font-size:0.7rem;">H2</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="2" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 3">
+            <span style="color:var(--danger);font-size:0.7rem;">H3</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="3" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 4">
+            <span style="color:var(--danger);font-size:0.7rem;">H4</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="4" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 5">
+            <span style="color:var(--danger);font-size:0.7rem;">H5</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="5" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 6">
+            <span style="color:var(--danger);font-size:0.7rem;">H6</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="6" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 7">
+            <span style="color:var(--danger);font-size:0.7rem;">H7</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="7" style="aspect-ratio:1;border:2px dashed var(--danger);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,80,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="High Slot 8">
+            <span style="color:var(--danger);font-size:0.7rem;">H8</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mid Slots -->
+      <div class="slot-group" style="margin-bottom:20px;">
+        <div class="slot-group-header" style="color:var(--warn);font-weight:600;margin-bottom:8px;">Medium Power (8 slots)</div>
+        <div class="slot-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;" data-slot-type="mid">
+          <div class="fitting-slot" data-slot-index="0" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 1">
+            <span style="color:var(--warn);font-size:0.7rem;">M1</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="1" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 2">
+            <span style="color:var(--warn);font-size:0.7rem;">M2</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="2" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 3">
+            <span style="color:var(--warn);font-size:0.7rem;">M3</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="3" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 4">
+            <span style="color:var(--warn);font-size:0.7rem;">M4</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="4" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 5">
+            <span style="color:var(--warn);font-size:0.7rem;">M5</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="5" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 6">
+            <span style="color:var(--warn);font-size:0.7rem;">M6</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="6" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 7">
+            <span style="color:var(--warn);font-size:0.7rem;">M7</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="7" style="aspect-ratio:1;border:2px dashed var(--warn);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,200,80,0.05);cursor:pointer;transition:all 0.2s ease;" title="Mid Slot 8">
+            <span style="color:var(--warn);font-size:0.7rem;">M8</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Low Slots -->
+      <div class="slot-group">
+        <div class="slot-group-header" style="color:var(--green);font-weight:600;margin-bottom:8px;">Low Power (8 slots)</div>
+        <div class="slot-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;" data-slot-type="low">
+          <div class="fitting-slot" data-slot-index="0" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 1">
+            <span style="color:var(--green);font-size:0.7rem;">L1</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="1" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 2">
+            <span style="color:var(--green);font-size:0.7rem;">L2</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="2" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 3">
+            <span style="color:var(--green);font-size:0.7rem;">L3</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="3" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 4">
+            <span style="color:var(--green);font-size:0.7rem;">L4</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="4" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 5">
+            <span style="color:var(--green);font-size:0.7rem;">L5</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="5" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 6">
+            <span style="color:var(--green);font-size:0.7rem;">L6</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="6" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 7">
+            <span style="color:var(--green);font-size:0.7rem;">L7</span>
+          </div>
+          <div class="fitting-slot" data-slot-index="7" style="aspect-ratio:1;border:2px dashed var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(80,255,120,0.05);cursor:pointer;transition:all 0.2s ease;" title="Low Slot 8">
+            <span style="color:var(--green);font-size:0.7rem;">L8</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Module Browser -->
+    <div class="module-browser" style="background:rgba(0,15,30,0.4);border:1px solid var(--border);border-radius:8px;padding:20px;">
+      <h3 style="color:var(--text);margin:0 0 15px 0;">Available Modules</h3>
+      
+      <!-- Module Categories -->
+      <div class="module-tabs" style="display:flex;gap:4px;margin-bottom:15px;">
+        <button class="module-tab active" data-module-type="high" style="padding:6px 12px;font-size:0.8rem;border:1px solid var(--danger);color:var(--danger);background:rgba(255,80,80,0.1);border-radius:4px;cursor:pointer;">High</button>
+        <button class="module-tab" data-module-type="mid" style="padding:6px 12px;font-size:0.8rem;border:1px solid var(--warn);color:var(--warn);background:rgba(255,200,80,0.1);border-radius:4px;cursor:pointer;">Mid</button>
+        <button class="module-tab" data-module-type="low" style="padding:6px 12px;font-size:0.8rem;border:1px solid var(--green);color:var(--green);background:rgba(80,255,120,0.1);border-radius:4px;cursor:pointer;">Low</button>
+      </div>
+      
+      <!-- Module List -->
+      <div id="module-list" style="max-height:400px;overflow-y:auto;"></div>
+      
+      <!-- Fitting Stats -->
+      <div class="fitting-stats" style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border);">
+        <h4 style="color:var(--text);margin:0 0 10px 0;font-size:0.9rem;">Ship Performance</h4>
+        <div class="stat-row" style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">
+          <span>Weapon Damage:</span><span id="stat-weapon-damage">100%</span>
+        </div>
+        <div class="stat-row" style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">
+          <span>Shield Capacity:</span><span id="stat-shield-capacity">100%</span>
+        </div>
+        <div class="stat-row" style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">
+          <span>Engine Efficiency:</span><span id="stat-engine-efficiency">100%</span>
+        </div>
+        <div class="stat-row" style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">
+          <span>Hull Repair:</span><span id="stat-hull-repair">0 HP/s</span>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="btn-row" style="margin-top:1.5rem;">
+    <button class="btn" id="btn-fitting-back">&larr; Back</button>
+    <button class="btn btn-sm" id="btn-fitting-save">Save Fit</button>
+    <button class="btn btn-sm" id="btn-fitting-clear">Clear All</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
 <!--  EULOGY SCREEN — Between Death & Karma     -->
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-eulogy">
@@ -2288,6 +2540,15 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// Make THREE globally available for 3D engine and EVE systems
+window.THREE = THREE;
+window.GLTFLoader = GLTFLoader;
+window.DRACOLoader = DRACOLoader;
+window.MeshoptDecoder = MeshoptDecoder;
+window.EffectComposer = EffectComposer;
+window.RenderPass = RenderPass;
+window.UnrealBloomPass = UnrealBloomPass;
 
 // Safe event binding helper — prevents null crashes from missing DOM elements
 function _on(id, evt, fn, opts) { const el = document.getElementById(id); if (el) el.addEventListener(evt, fn, opts); else console.warn('[_on] Missing element:', id); }
@@ -2601,20 +2862,61 @@ const state = {
     armor: { level: 1, maxLevel: 8, cost: 700, multiplier: 1.0 },
     countermeasures: { level: 1, maxLevel: 6, cost: 900, multiplier: 1.0 }
   },
+  // ── EVE-Style Fitting System ──
+  shipFitting: {
+    // Current ship stats for iron_sentinel 
+    cpu: { used: 0, total: 300 },
+    powergrid: { used: 0, total: 1000 },
+    // Slot configuration: 8 high, 8 mid, 8 low
+    slots: {
+      high: [null,null,null,null,null,null,null,null],
+      mid: [null,null,null,null,null,null,null,null], 
+      low: [null,null,null,null,null,null,null,null]
+    },
+    // Available modules categorized by slot type
+    availableModules: {
+      high: [
+        { id: 'weapon_overdrive', name: 'Weapon Overdrive', cost: 4000, cpu: 35, powergrid: 150, effect: '+75% weapon damage', description: 'Overcharges weapon systems for massive damage boost' },
+        { id: 'gravity_generator', name: 'Gravity Generator', cost: 4500, cpu: 45, powergrid: 200, effect: 'Pull enemies and projectiles', description: 'Creates gravity well to control battlefield' }
+      ],
+      mid: [
+        { id: 'shield_booster', name: 'Shield Booster', cost: 2000, cpu: 25, powergrid: 120, effect: '+500 shield HP per cycle', description: 'Active shield booster module', cycleTime: 10000, capDrain: 25, heatBonus: { cycleReduction: 0.2, effectBonus: 0.1, damagePerCycle: 0.02 }},
+        { id: 'afterburner', name: 'Advanced Afterburner', cost: 3000, cpu: 30, powergrid: 100, effect: '+100% afterburner efficiency', description: 'Dramatically improves thrust output' },
+        { id: 'targeting_computer', name: 'Targeting Computer', cost: 2800, cpu: 40, powergrid: 80, effect: 'Auto-lock enemies', description: 'Automated target acquisition system' },
+        { id: 'energy_absorber', name: 'Energy Absorber', cost: 3500, cpu: 35, powergrid: 110, effect: 'Converts damage to capacitor', description: 'Active energy absorption module', cycleTime: 6000, capDrain: 15, heatBonus: { cycleReduction: 0, effectBonus: 0.5, damagePerCycle: 0.025 }},
+        { id: 'stealth_cloak', name: 'Stealth Cloak', cost: 5000, cpu: 50, powergrid: 180, effect: 'Temporary invisibility', description: 'Phase-shift technology for stealth operations' }
+      ],
+      low: [
+        { id: 'repair_drone', name: 'Hull Repair Module', cost: 2500, cpu: 20, powergrid: 90, effect: '+80 hull HP per cycle', description: 'Active hull repair system', cycleTime: 12000, capDrain: 35, heatBonus: { cycleReduction: 0.2, effectBonus: 0.1, damagePerCycle: 0.03 }},
+        { id: 'armor_repair', name: 'Armor Repair Module', cost: 2200, cpu: 18, powergrid: 85, effect: '+120 armor HP per cycle', description: 'Active armor repair system', cycleTime: 8000, capDrain: 20, heatBonus: { cycleReduction: 0.2, effectBonus: 0.15, damagePerCycle: 0.015 }}
+      ]
+    },
+    // Stacking penalties for multiple same-type modules
+    stackingPenalties: {
+      weapon_overdrive: [1.0, 0.87, 0.57, 0.28, 0.11, 0.03],
+      shield_booster: [1.0, 0.87, 0.57, 0.28, 0.11, 0.03],
+      targeting_computer: [1.0, 0.87, 0.57, 0.28, 0.11, 0.03]
+    }
+  },
+  // Legacy shipModules for backward compatibility
   shipModules: {
     installed: [],
-    maxSlots: 4,
-    available: [
-      { id: 'repair_drone', name: 'Repair Drone', cost: 2500, effect: 'Auto repair hull over time' },
-      { id: 'shield_booster', name: 'Shield Booster', cost: 2000, effect: '+50% shield capacity' },
-      { id: 'afterburner', name: 'Advanced Afterburner', cost: 3000, effect: '+100% afterburner efficiency' },
-      { id: 'targeting_computer', name: 'Targeting Computer', cost: 2800, effect: 'Auto-lock enemies' },
-      { id: 'energy_absorber', name: 'Energy Absorber', cost: 3500, effect: 'Convert damage to energy' },
-      { id: 'weapon_overdrive', name: 'Weapon Overdrive', cost: 4000, effect: '+75% weapon damage' },
-      { id: 'stealth_cloak', name: 'Stealth Cloak', cost: 5000, effect: 'Temporary invisibility' },
-      { id: 'gravity_generator', name: 'Gravity Generator', cost: 4500, effect: 'Pull enemies and projectiles' }
-    ]
+    maxSlots: 24, // Updated to match new fitting system
+    available: [] // Moved to shipFitting.availableModules
   },
+  // ── EVE-Style Module Cycling System ──
+  moduleStates: {
+    // Track state of all fitted modules
+    activeModules: [], // Array of { slotType, slotIndex, moduleId, state }
+    cyclingModules: new Map(), // moduleKey -> { cycleStartTime, cycleTime, isOverheated }
+    moduleIntegrity: new Map(), // moduleKey -> integrity percentage (0-100)
+    moduleHeat: new Map(), // moduleKey -> heat level (0-100)
+    recentDamage: [], // Track damage for energy absorber: { damage, timestamp }
+    heatDissipationRate: 2.5, // Heat dissipated per second when not overheated
+    maxHeatBeforeShutdown: 95, // Module shuts down if heat exceeds this
+    damageHistory: 10000 // Track damage for last 10 seconds for energy absorber
+  },
+
   // ── Enhanced Enemy AI System ──
   enemyAI: {
     flocking: { enabled: true, range: 25, strength: 0.8 },
@@ -3000,45 +3302,185 @@ function purchaseUpgrade(upgradeType) {
   return true;
 }
 
-function installModule(moduleId) {
-  if (state.shipModules.installed.length >= state.shipModules.maxSlots) {
-    addComms('Modules', 'No available module slots');
+// ═══════════════════════════════════════════════════════════════
+//  EVE-STYLE FITTING SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+function canFitModule(slotType, moduleId) {
+  const module = getModuleById(moduleId);
+  if (!module) return { canFit: false, reason: 'Module not found' };
+  
+  // Check if slot type matches
+  if (!state.shipFitting.availableModules[slotType]?.find(m => m.id === moduleId)) {
+    return { canFit: false, reason: `Module not compatible with ${slotType} slots` };
+  }
+  
+  // Check CPU requirements
+  const cpuRequired = module.cpu || 0;
+  if (state.shipFitting.cpu.used + cpuRequired > state.shipFitting.cpu.total) {
+    return { canFit: false, reason: `Insufficient CPU: need ${cpuRequired}, have ${state.shipFitting.cpu.total - state.shipFitting.cpu.used} available` };
+  }
+  
+  // Check powergrid requirements  
+  const powerRequired = module.powergrid || 0;
+  if (state.shipFitting.powergrid.used + powerRequired > state.shipFitting.powergrid.total) {
+    return { canFit: false, reason: `Insufficient powergrid: need ${powerRequired}, have ${state.shipFitting.powergrid.total - state.shipFitting.powergrid.used} available` };
+  }
+  
+  return { canFit: true };
+}
+
+function getModuleById(moduleId) {
+  // Search all slot types for the module
+  for (const slotType of ['high', 'mid', 'low']) {
+    const module = state.shipFitting.availableModules[slotType]?.find(m => m.id === moduleId);
+    if (module) return module;
+  }
+  return null;
+}
+
+function fitModule(slotType, slotIndex, moduleId) {
+  const check = canFitModule(slotType, moduleId);
+  if (!check.canFit) {
+    addComms('Fitting', check.reason);
     return false;
   }
   
-  const module = state.shipModules.available.find(m => m.id === moduleId);
-  if (!module) {
-    addComms('Modules', 'Module not found');
-    return false;
-  }
+  const module = getModuleById(moduleId);
+  if (!module) return false;
   
+  // Check if player can afford it
   if (state.player.credits < module.cost) {
-    addComms('Modules', 'Insufficient credits for module');
+    addComms('Fitting', `Insufficient credits: ${module.cost} EC required`);
     return false;
   }
   
-  // Check if already installed
-  const alreadyInstalled = state.shipModules.installed.find(m => m.id === moduleId);
-  if (alreadyInstalled) {
-    addComms('Modules', 'Module already installed');
+  // Check if slot is valid
+  if (slotIndex < 0 || slotIndex >= 8) {
+    addComms('Fitting', 'Invalid slot index');
     return false;
   }
   
+  // Remove any existing module from slot
+  const existingModule = state.shipFitting.slots[slotType][slotIndex];
+  if (existingModule) {
+    unfitModule(slotType, slotIndex);
+  }
+  
+  // Fit the new module
+  state.shipFitting.slots[slotType][slotIndex] = module;
+  state.shipFitting.cpu.used += module.cpu || 0;
+  state.shipFitting.powergrid.used += module.powergrid || 0;
   state.player.credits -= module.cost;
-  state.shipModules.installed.push(module);
   
-  addComms('MODULE INSTALLED', `${module.name} — ${module.effect}`);
+  addComms('FITTING', `${module.name} fitted to ${slotType} slot ${slotIndex + 1}`);
   AudioSFX.play('quest_complete');
   
-  // Refresh upgrade display if open
-  const upgradesTab = document.getElementById('market-upgrades-content');
-  if (upgradesTab && upgradesTab.style.display !== 'none') {
-    showUpgradesTab();
-  }
+  // Update any open fitting UI
+  if (state.screen === 'fitting') renderFittingScreen();
   
   return true;
 }
 
+function unfitModule(slotType, slotIndex) {
+  const module = state.shipFitting.slots[slotType][slotIndex];
+  if (!module) return false;
+  
+  // Remove module and restore resources
+  state.shipFitting.slots[slotType][slotIndex] = null;
+  state.shipFitting.cpu.used -= module.cpu || 0;
+  state.shipFitting.powergrid.used -= module.powergrid || 0;
+  
+  // Refund 50% of module cost (standard EVE mechanic)
+  const refund = Math.floor(module.cost * 0.5);
+  state.player.credits += refund;
+  
+  addComms('FITTING', `${module.name} removed, ${refund} EC refunded`);
+  
+  // Update any open fitting UI
+  if (state.screen === 'fitting') renderFittingScreen();
+  
+  return true;
+}
+
+function getStackingPenalty(moduleId, count) {
+  const penalties = state.shipFitting.stackingPenalties[moduleId];
+  if (!penalties || count <= 1) return 1.0;
+  return penalties[Math.min(count - 1, penalties.length - 1)] || 0.01;
+}
+
+function getFittedModules(slotType = null) {
+  const modules = [];
+  const slotTypes = slotType ? [slotType] : ['high', 'mid', 'low'];
+  
+  for (const type of slotTypes) {
+    state.shipFitting.slots[type].forEach((module, index) => {
+      if (module) {
+        modules.push({ ...module, slotType: type, slotIndex: index });
+      }
+    });
+  }
+  
+  return modules;
+}
+
+function calculateFittingStats() {
+  const stats = {
+    weaponDamageBonus: 1.0,
+    shieldCapacityBonus: 1.0,
+    engineEfficiencyBonus: 1.0,
+    repairRate: 0,
+    hasAutoTargeting: false,
+    energyAbsorption: 0,
+    hasStealth: false,
+    hasGravityWell: false
+  };
+  
+  // Count modules by type for stacking penalties
+  const moduleCounts = {};
+  const fittedModules = getFittedModules();
+  
+  fittedModules.forEach(module => {
+    moduleCounts[module.id] = (moduleCounts[module.id] || 0) + 1;
+  });
+  
+  // Apply module effects with stacking penalties
+  fittedModules.forEach(module => {
+    const count = moduleCounts[module.id];
+    const penalty = getStackingPenalty(module.id, count);
+    
+    switch (module.id) {
+      case 'weapon_overdrive':
+        stats.weaponDamageBonus += 0.75 * penalty;
+        break;
+      case 'shield_booster':
+        stats.shieldCapacityBonus += 0.5 * penalty;
+        break;
+      case 'afterburner':
+        stats.engineEfficiencyBonus += 1.0 * penalty;
+        break;
+      case 'repair_drone':
+        stats.repairRate += 2 * penalty; // 2 HP/sec per drone
+        break;
+      case 'targeting_computer':
+        stats.hasAutoTargeting = true;
+        break;
+      case 'energy_absorber':
+        stats.energyAbsorption += 0.1 * penalty; // 10% damage to energy
+        break;
+      case 'stealth_cloak':
+        stats.hasStealth = true;
+        break;
+      case 'gravity_generator':
+        stats.hasGravityWell = true;
+        break;
+    }
+  });
+  
+  return stats;
+}
+
+// Update existing damage/efficiency functions to use new fitting system
 function getWeaponDamageMultiplier() {
   let mult = 1;
   
@@ -3047,11 +3489,9 @@ function getWeaponDamageMultiplier() {
     mult *= state.shipUpgrades.weapons.multiplier;
   }
   
-  // Weapon Overdrive module bonus
-  const weaponModule = state.shipModules.installed.find(m => m.id === 'weapon_overdrive');
-  if (weaponModule) {
-    mult *= 1.75;
-  }
+  // NEW: Use fitting system for weapon damage bonus
+  const fittingStats = calculateFittingStats();
+  mult *= fittingStats.weaponDamageBonus;
   
   return mult;
 }
@@ -3064,14 +3504,389 @@ function getEngineEfficiencyMultiplier() {
     mult *= state.shipUpgrades.engine.multiplier;
   }
   
-  // Advanced Afterburner module bonus
-  const engineModule = state.shipModules.installed.find(m => m.id === 'afterburner');
-  if (engineModule) {
-    mult *= 2.0;
-  }
+  // NEW: Use fitting system for engine efficiency bonus
+  const fittingStats = calculateFittingStats();
+  mult *= fittingStats.engineEfficiencyBonus;
   
   return mult;
 }
+
+function installModule(moduleId) {
+  // Legacy function - now redirects to fitting system
+  // Try to fit in first available slot of appropriate type
+  const module = getModuleById(moduleId);
+  if (!module) {
+    addComms('Modules', 'Module not found');
+    return false;
+  }
+  
+  // Determine slot type
+  let slotType = null;
+  for (const type of ['high', 'mid', 'low']) {
+    if (state.shipFitting.availableModules[type]?.find(m => m.id === moduleId)) {
+      slotType = type;
+      break;
+    }
+  }
+  
+  if (!slotType) {
+    addComms('Modules', 'Unknown module type');
+    return false;
+  }
+  
+  // Find first empty slot
+  const slotIndex = state.shipFitting.slots[slotType].findIndex(slot => slot === null);
+  if (slotIndex === -1) {
+    addComms('Modules', `No available ${slotType} slots`);
+    return false;
+  }
+  
+  return fitModule(slotType, slotIndex, moduleId);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FITTING SCREEN UI
+// ═══════════════════════════════════════════════════════════════
+
+let currentModuleTab = 'high';
+
+function renderFittingScreen() {
+  if (state.screen !== 'fitting') return;
+  
+  updateResourceBars();
+  updateSlotDisplay();
+  updateModuleBrowser();
+  updateFittingStats();
+}
+
+function updateResourceBars() {
+  const cpuUsed = document.getElementById('cpu-used');
+  const cpuTotal = document.getElementById('cpu-total');
+  const cpuBar = document.getElementById('cpu-bar');
+  const pgUsed = document.getElementById('pg-used');
+  const pgTotal = document.getElementById('pg-total');
+  const pgBar = document.getElementById('pg-bar');
+  
+  if (cpuUsed) cpuUsed.textContent = state.shipFitting.cpu.used;
+  if (cpuTotal) cpuTotal.textContent = state.shipFitting.cpu.total;
+  if (pgUsed) pgUsed.textContent = state.shipFitting.powergrid.used;
+  if (pgTotal) pgTotal.textContent = state.shipFitting.powergrid.total;
+  
+  const cpuPercent = (state.shipFitting.cpu.used / state.shipFitting.cpu.total) * 100;
+  const pgPercent = (state.shipFitting.powergrid.used / state.shipFitting.powergrid.total) * 100;
+  
+  if (cpuBar) {
+    cpuBar.style.width = `${Math.min(100, cpuPercent)}%`;
+    cpuBar.style.background = cpuPercent > 100 ? 'var(--danger)' : 'var(--blue)';
+  }
+  
+  if (pgBar) {
+    pgBar.style.width = `${Math.min(100, pgPercent)}%`;
+    pgBar.style.background = pgPercent > 100 ? 'var(--danger)' : 'var(--warn)';
+  }
+}
+
+function updateSlotDisplay() {
+  ['high', 'mid', 'low'].forEach(slotType => {
+    const slotGrid = document.querySelector(`[data-slot-type="${slotType}"]`);
+    if (!slotGrid) return;
+    
+    const slots = slotGrid.querySelectorAll('.fitting-slot');
+    slots.forEach((slot, index) => {
+      const module = state.shipFitting.slots[slotType][index];
+      slot.classList.toggle('occupied', !!module);
+      
+      // Remove existing fitted module display
+      const existing = slot.querySelector('.fitted-module');
+      if (existing) existing.remove();
+      
+      if (module) {
+        const moduleDiv = document.createElement('div');
+        moduleDiv.className = 'fitted-module';
+        moduleDiv.innerHTML = `
+          <div class="fitted-module-name">${module.name}</div>
+          <div class="fitted-module-meta">${module.cpu}cpu ${module.powergrid}pg</div>
+        `;
+        moduleDiv.addEventListener('click', () => unfitModule(slotType, index));
+        slot.appendChild(moduleDiv);
+      } else {
+        // Add drag hint for empty slots
+        const hint = document.createElement('div');
+        hint.className = 'drag-hint';
+        hint.textContent = 'Click module to fit';
+        slot.appendChild(hint);
+      }
+    });
+  });
+}
+
+// ── EXPLORATION SCANNER FUNCTIONS ──────────────────────────────────────
+
+function scanForAnomalies() {
+  const currentSystem = state.starSystems[state.location.systemIndex];
+  if (!currentSystem) {
+    addComms('Scanner', 'No system data available.');
+    return;
+  }
+  
+  const anomalies = currentSystem.anomalies || [];
+  if (anomalies.length === 0) {
+    addComms('Scanner', 'No anomalous readings detected in this system.');
+    AudioSFX.play('ping');
+    return;
+  }
+  
+  const unscannedAnomalies = anomalies.filter(a => !a.scanned);
+  const scannedAnomalies = anomalies.filter(a => a.scanned);
+  
+  if (unscannedAnomalies.length === 0) {
+    addComms('Scanner', `All ${anomalies.length} anomalies in system have been scanned.`);
+    AudioSFX.play('ping');
+    return;
+  }
+  
+  // Scan the first unscanned anomaly
+  const targetAnomaly = unscannedAnomalies[0];
+  const success = scanAnomaly(targetAnomaly.id, state.location.systemIndex);
+  
+  if (success) {
+    // Update the star map display
+    renderStarMap();
+  }
+  
+  AudioSFX.play(success ? 'loot_credits' : 'shield_hit');
+}
+
+function scanForWormholes() {
+  const wormholes = findSystemWormholes(state.location.systemIndex);
+  
+  if (wormholes.length === 0) {
+    addComms('Scanner', 'No wormhole signatures detected in this system.');
+    AudioSFX.play('ping');
+    return;
+  }
+  
+  const wormhole = wormholes[0];
+  const destinationSystem = state.starSystems[wormhole.destination];
+  const stabilityPercent = Math.floor(wormhole.stability * 100);
+  const usesLeft = wormhole.maxUses - wormhole.usageCount;
+  
+  addComms('Scanner', `Wormhole detected: ${destinationSystem ? destinationSystem.name : 'Unknown'} (${stabilityPercent}% stable, ${usesLeft} uses left)`);
+  
+  if (usesLeft > 0) {
+    addComms('Navigation', 'Press V again to transit through wormhole (risk: hull damage).');
+    
+    // Set up wormhole transit on next V press
+    state._wormholeReady = true;
+    setTimeout(() => { state._wormholeReady = false; }, 10000); // 10 second window
+    
+    AudioSFX.play('warp_tunnel');
+  } else {
+    addComms('Navigation', 'Wormhole has collapsed - transit not possible.');
+    AudioSFX.play('shield_hit');
+  }
+}
+
+// Enhanced wormhole transit function
+function attemptWormholeTransit() {
+  const wormholes = findSystemWormholes(state.location.systemIndex);
+  
+  if (wormholes.length === 0 || !state._wormholeReady) {
+    addComms('Navigation', 'No wormhole route available for transit.');
+    return;
+  }
+  
+  const wormhole = wormholes[0];
+  if (wormhole.usageCount >= wormhole.maxUses) {
+    addComms('Navigation', 'Wormhole has collapsed since scan.');
+    return;
+  }
+  
+  // Confirm dangerous transit
+  const confirm = window.confirm('Transit through unstable wormhole? Risk: random destination, hull damage.');
+  if (!confirm) {
+    addComms('Navigation', 'Wormhole transit aborted.');
+    return;
+  }
+  
+  useWormholeTravel(wormhole, wormhole.destination);
+  state._wormholeReady = false;
+}
+
+function updateModuleBrowser() {
+  const moduleList = document.getElementById('module-list');
+  if (!moduleList) return;
+  
+  const modules = state.shipFitting.availableModules[currentModuleTab] || [];
+  
+  moduleList.innerHTML = modules.map(module => {
+    const canAfford = state.player.credits >= module.cost;
+    const fittingCheck = canFitModule(currentModuleTab, module.id);
+    
+    return `
+      <div class="module-item ${canAfford ? 'affordable' : 'expensive'}" 
+           onclick="window._fitModuleFromBrowser('${module.id}')" 
+           title="${fittingCheck.canFit ? 'Click to fit to first available slot' : fittingCheck.reason}">
+        <div class="module-name">${module.name}</div>
+        <div class="module-cost">${module.cost.toLocaleString()} EC ${canAfford ? '' : '(insufficient credits)'}</div>
+        <div class="module-requirements">
+          <div class="module-req-cpu">CPU: ${module.cpu}</div>
+          <div class="module-req-pg">PG: ${module.powergrid}</div>
+        </div>
+        <div class="module-effect">${module.effect}</div>
+        <div class="module-description">${module.description}</div>
+        ${!fittingCheck.canFit ? `<div style="color:var(--danger);font-size:0.7rem;margin-top:4px;">${fittingCheck.reason}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function updateFittingStats() {
+  const stats = calculateFittingStats();
+  
+  const weaponDamage = document.getElementById('stat-weapon-damage');
+  const shieldCapacity = document.getElementById('stat-shield-capacity');
+  const engineEfficiency = document.getElementById('stat-engine-efficiency');
+  const hullRepair = document.getElementById('stat-hull-repair');
+  
+  if (weaponDamage) weaponDamage.textContent = Math.round(stats.weaponDamageBonus * 100) + '%';
+  if (shieldCapacity) shieldCapacity.textContent = Math.round(stats.shieldCapacityBonus * 100) + '%';
+  if (engineEfficiency) engineEfficiency.textContent = Math.round(stats.engineEfficiencyBonus * 100) + '%';
+  if (hullRepair) hullRepair.textContent = stats.repairRate.toFixed(1) + ' HP/s';
+}
+
+// Update module status UI for bridge screen
+window.updateModuleStatusUI = function() {
+  if (!state.moduleStates || state.screen !== 'bridge') return;
+  
+  try {
+    const statusDisplay = document.getElementById('module-status-display');
+    if (!statusDisplay) return;
+    
+    let statusHTML = '';
+    
+    // Check fitted modules with cycling capability
+    ['mid', 'low'].forEach(slotType => {
+      state.shipFitting.slots[slotType].forEach((module, slotIndex) => {
+        if (!module || !module.cycleTime) return;
+        
+        const moduleKey = window.getModuleKey(slotType, slotIndex);
+        const isCycling = window.isModuleCycling ? window.isModuleCycling(slotType, slotIndex) : false;
+        const heat = window.getModuleHeat ? window.getModuleHeat(slotType, slotIndex) : 0;
+        const integrity = window.getModuleIntegrity ? window.getModuleIntegrity(slotType, slotIndex) : 100;
+        
+        // Calculate cycle progress
+        let cycleProgress = 0;
+        if (isCycling && state.moduleStates.cyclingModules) {
+          const cycleData = state.moduleStates.cyclingModules.get(moduleKey);
+          if (cycleData) {
+            const elapsed = Date.now() - cycleData.cycleStartTime;
+            cycleProgress = Math.min(100, (elapsed / cycleData.cycleTime) * 100);
+          }
+        }
+        
+        // Color based on heat level
+        let heatColor = '#00ff88'; // Cool
+        if (heat > 60) heatColor = '#ffaa00'; // Warm
+        if (heat > 80) heatColor = '#ff4444'; // Hot
+        
+        // Color based on integrity
+        let integrityColor = '#00ff88'; // Good
+        if (integrity < 50) integrityColor = '#ffaa00'; // Damaged
+        if (integrity < 25) integrityColor = '#ff4444'; // Critical
+        
+        // Get activation key
+        let activationKey = '';
+        if (slotType === 'mid' && slotIndex === 0) activationKey = '9';
+        else if (slotType === 'mid' && module.id === 'energy_absorber') activationKey = '0';
+        else if (slotType === 'low' && slotIndex === 0) activationKey = 'Q';
+        else if (slotType === 'low' && slotIndex === 1) activationKey = 'Z';
+        
+        statusHTML += `
+          <div style="margin:2px 0;line-height:1.2;">
+            <span style="color:var(--muted);">[${activationKey}] ${module.name.replace(' Module', '')}</span><br>
+            ${isCycling ? `<span style="color:var(--blue);">Cycling ${cycleProgress.toFixed(0)}%</span>` : '<span style="color:var(--green);">Ready</span>'}
+            <span style="color:${heatColor};margin-left:8px;">Heat:${heat.toFixed(0)}%</span>
+            <span style="color:${integrityColor};margin-left:8px;">Integ:${integrity.toFixed(0)}%</span>
+          </div>
+        `;
+      });
+    });
+    
+    if (statusHTML === '') {
+      statusHTML = '<span style="color:var(--muted);">No active modules fitted</span>';
+    }
+    
+    statusDisplay.innerHTML = statusHTML;
+  } catch (error) {
+    console.warn('Module status UI update failed:', error);
+  }
+};
+
+// Module tab switching
+window._switchModuleTab = function(tabType) {
+  currentModuleTab = tabType;
+  
+  // Update tab buttons
+  document.querySelectorAll('.module-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.moduleType === tabType);
+  });
+  
+  updateModuleBrowser();
+};
+
+// Fit module from browser
+window._fitModuleFromBrowser = function(moduleId) {
+  const slotType = currentModuleTab;
+  const slotIndex = state.shipFitting.slots[slotType].findIndex(slot => slot === null);
+  
+  if (slotIndex === -1) {
+    addComms('Fitting', `No available ${slotType} slots`);
+    return;
+  }
+  
+  fitModule(slotType, slotIndex, moduleId);
+};
+
+// Fitting screen navigation
+window._clearAllFitting = function() {
+  let refund = 0;
+  ['high', 'mid', 'low'].forEach(slotType => {
+    state.shipFitting.slots[slotType].forEach((module, index) => {
+      if (module) {
+        refund += Math.floor(module.cost * 0.5);
+        state.shipFitting.slots[slotType][index] = null;
+      }
+    });
+  });
+  
+  state.shipFitting.cpu.used = 0;
+  state.shipFitting.powergrid.used = 0;
+  state.player.credits += refund;
+  
+  addComms('Fitting', `All modules removed, ${refund} EC refunded`);
+  renderFittingScreen();
+};
+
+// Initialize fitting screen event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Module tab buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('.module-tab')) {
+      window._switchModuleTab(e.target.dataset.moduleType);
+    }
+  });
+  
+  // Fitting screen buttons
+  const clearBtn = document.getElementById('btn-fitting-clear');
+  if (clearBtn) clearBtn.addEventListener('click', window._clearAllFitting);
+  
+  const backBtn = document.getElementById('btn-fitting-back');
+  if (backBtn) backBtn.addEventListener('click', () => showScreen('bridge'));
+});
+
+// NOTE: getWeaponDamageMultiplier() and getEngineEfficiencyMultiplier() 
+// have been moved to the EVE-Style Fitting System section above
 
 // ── Advanced Particle Effects System ──
 function createExplosionParticles(position, size = 1, color = 0xff4400) {
@@ -4693,6 +5508,7 @@ function _showScreenInner(name, previousScreen) {
   if (name === 'rebirth') updateRebirthScreen();
   if (name === 'settings') initSettingsScreen();
   if (name === 'market') { if (state.market.orders.length === 0) generateNPCMarketOrders(); renderMarketScreen(); }
+  if (name === 'fitting') renderFittingScreen();
   if (name === 'gunner') enterGunnerMode();
 
   // Toggle quest/mission overlays visibility per screen
@@ -5382,7 +6198,7 @@ function updateBridgeUI() {
     const qo = document.getElementById('quest-overlay');
     const mp = document.getElementById('mission-progress-overlay');
     if (!qo) return;
-    const questScreens = ['bridge','starmap','station','character','market','quarters','armory'];
+    const questScreens = ['bridge','starmap','station','character','market','quarters','armory','fitting'];
     const show = questScreens.includes(state.screen);
     qo.style.display = show ? 'block' : 'none';
     if (mp) mp.style.display = show ? 'block' : 'none';
@@ -5391,10 +6207,17 @@ function updateBridgeUI() {
   }
 
 // ================================================================
-//  STAR MAP
+//  STAR MAP - ENHANCED WITH PROCEDURAL DATA
 // ================================================================
 function generateStarSystems() {
   const systems = [];
+  
+  // Use server-side ProceduralGenerator for consistent data
+  if (window.proceduralSystemsCache) {
+    return window.proceduralSystemsCache;
+  }
+
+  // Generate 40 systems with procedural data
   for (let i = 0; i < 40; i++) {
     const angle = i * 2.399;
     const radius = 60 + Math.sqrt(i) * 55;
@@ -5402,27 +6225,37 @@ function generateStarSystems() {
     const jy = (Math.cos(i * 11.1) * 30);
     const x = Math.cos(angle) * radius + jx;
     const y = Math.sin(angle) * radius + jy;
-    const factionIdx = Math.floor(i / 5) % 8;
-    const faction = FACTIONS[factionIdx];
-    const starTypes = ['M-class Red Dwarf','K-class Orange Dwarf','G-class Yellow Dwarf','F-class Yellow-White','A-class White','Neutron Star','Binary System'];
-    const resources = ['Titanite Ore','Dark Matter Crystals','Hydrogen Fuel','Rare Earth Compounds','Ancient Artefacts','Quantum Processors'];
-    const hazards = ['Radiation Belt','Asteroid Field','Pirate Territory','Temporal Anomaly'];
-    const prefixes = ['Alpha','Beta','Gamma','Delta','Zeta','Tau','Sigma','Nova','Kappa','Omega',
-      'Vela','Cygnus','Draco','Lyra','Aquila','Perseus','Orion','Hydra','Corvus','Pyxis'];
-    const suffixes = ['Prime','Reach','Deep','Secundus','Minor','Expanse','Crossing','Haven','Nexus','Gate',
-      'Hollow','Drift','Frontier','Terminus','Rift','Spire','Anchorage','Bastion','Threshold','Abyss'];
-    const name = prefixes[i % prefixes.length] + ' ' + suffixes[Math.floor(i / prefixes.length) % suffixes.length];
+    
+    // Generate procedural system data (will be enhanced by server)
+    const systemSeed = `sys-${i}`;
+    const proceduralData = generateProceduralSystemData(systemSeed);
+    
     systems.push({
-      id: 'sys-' + i, name, x, y,
-      starType: starTypes[i % starTypes.length],
-      controllingFaction: faction.id,
-      factionColor: faction.color,
-      resources: [resources[i % resources.length], resources[(i+3) % resources.length]],
-      hazards: i % 4 === 0 ? [hazards[i % hazards.length]] : [],
-      planetCount: 1 + (i % 7),
+      id: systemSeed,
+      index: i,
+      name: proceduralData.name,
+      x: x,
+      y: y,
+      starType: proceduralData.starType,
+      controllingFaction: proceduralData.controllingFaction,
+      factionColor: getFactionColor(proceduralData.controllingFaction),
+      resources: proceduralData.resources,
+      hazards: proceduralData.hazards,
+      planets: proceduralData.planets,
+      planetCount: proceduralData.planetCount,
       hasStation: i % 3 === 0,
+      hasWormhole: proceduralData.hasWormhole,
+      baseRadiation: proceduralData.baseRadiation,
+      // Enhanced exploration data
+      explored: false,
+      anomalies: [],
+      discoveredAnomalies: new Set(),
+      lastVisited: null,
+      jumpRange: 120, // Base jump range
+      fuelCostModifier: 1.0
     });
   }
+
   // Build jump routes — connect nearby systems
   systems.forEach((s, i) => {
     s.connections = [];
@@ -5432,6 +6265,7 @@ function generateStarSystems() {
       if (dist < 120) s.connections.push(j);
     });
   });
+
   // Guarantee every system has at least 1 connection
   systems.forEach((s, i) => {
     if (s.connections.length === 0) {
@@ -5447,7 +6281,141 @@ function generateStarSystems() {
       }
     }
   });
+
+  // Cache the systems for consistency
+  window.proceduralSystemsCache = systems;
   return systems;
+}
+
+// Generate procedural system data (client-side version that matches server)
+function generateProceduralSystemData(seed) {
+  const rng = makeSeededRng(seed);
+  
+  // Star types with weights (matching server ProceduralGenerator)
+  const starTypes = [
+    { type: 'M-class Red Dwarf',    weight: 0.73, radiationBase: 0.05 },
+    { type: 'K-class Orange Dwarf', weight: 0.12, radiationBase: 0.08 },
+    { type: 'G-class Yellow Dwarf', weight: 0.07, radiationBase: 0.10 },
+    { type: 'F-class Yellow-White', weight: 0.03, radiationBase: 0.15 },
+    { type: 'A-class White',        weight: 0.006, radiationBase: 0.25 },
+    { type: 'Neutron Star',         weight: 0.002, radiationBase: 0.95 },
+    { type: 'Black Hole',           weight: 0.001, radiationBase: 1.00 },
+    { type: 'Binary System',        weight: 0.02, radiationBase: 0.20 },
+  ];
+
+  const hazardTypes = [
+    'Radiation Belt', 'Asteroid Field', 'Pirate Territory',
+    'Temporal Anomaly', 'Toxic Atmosphere', 'Extreme Gravity Well',
+    'Electromagnetic Storm', 'Wormhole Instability',
+  ];
+
+  const resourceTypes = [
+    'Titanite Ore', 'Dark Matter Crystals', 'Hydrogen Fuel',
+    'Rare Earth Compounds', 'Bio-organic Materials', 'Ancient Artefacts',
+    'Quantum Processors', 'Anti-matter Reserves',
+  ];
+
+  const factionNames = [
+    'Hegemony Vanguard', 'Free Traders Consortium', 'Void Cult',
+    'Iron Syndicate', 'Eden Remnants', 'Stellar Church',
+    'Autonomous Collective', 'Rogue AI Network',
+  ];
+
+  const starType = weightedPick(starTypes, rng);
+  const planetCount = Math.floor(rng() * 8) + 1;
+  const hazards = pickMultiple(hazardTypes, Math.floor(rng() * 3), rng);
+  const resources = pickMultiple(resourceTypes, 1 + Math.floor(rng() * 4), rng);
+
+  return {
+    name: generateStarName(rng),
+    starType: starType.type,
+    baseRadiation: starType.radiationBase,
+    planetCount,
+    planets: Array.from({ length: planetCount }, () => generatePlanetData(rng)),
+    hazards,
+    resources,
+    hasWormhole: rng() < 0.05, // 5% wormhole chance
+    controllingFaction: rng() < 0.6 ? pick(factionNames, rng) : null,
+  };
+}
+
+// Utility functions for procedural generation
+function makeSeededRng(seed) {
+  let s = 0;
+  if (seed) {
+    for (let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
+  } else {
+    s = (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  return () => {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 0x100000000;
+  };
+}
+
+function pick(arr, rng) {
+  return arr[Math.floor(rng() * arr.length)];
+}
+
+function pickMultiple(arr, count, rng) {
+  const shuffled = [...arr].sort(() => rng() - 0.5);
+  return shuffled.slice(0, Math.min(count, arr.length));
+}
+
+function weightedPick(items, rng) {
+  const total = items.reduce((s, item) => s + item.weight, 0);
+  let roll = rng() * total;
+  for (const item of items) {
+    roll -= item.weight;
+    if (roll <= 0) return item;
+  }
+  return items[items.length - 1];
+}
+
+function generateStarName(rng) {
+  const prefixes = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Zeta', 'Tau', 'Sigma', 'Nova'];
+  const suffixes = ['Prime', 'Secundus', 'Minor', 'Maxima', 'Reach', 'Deep', 'Expanse'];
+  const nums = ['-I', '-II', '-III', '-IV', '-V', ''];
+  return `${pick(prefixes, rng)} ${pick(suffixes, rng)}${pick(nums, rng)}`;
+}
+
+function generatePlanetData(rng) {
+  const biomes = [
+    'Arid Desert', 'Ice World', 'Ocean World', 'Jungle Canopy',
+    'Volcanic Hellscape', 'Barren Rock', 'Terraformed Garden',
+    'Fungal Forest', 'Crystal Wastes', 'Gas Giant',
+  ];
+
+  return {
+    name: generatePlanetName(rng),
+    biome: pick(biomes, rng),
+    gravity: (0.1 + rng() * 3.9).toFixed(2),
+    atmosphereDensity: rng().toFixed(2),
+    hasLife: rng() < 0.15,
+    colonised: rng() < 0.2,
+    radiation: rng() < 0.3 ? (rng() * 0.8).toFixed(2) : '0.00',
+  };
+}
+
+function generatePlanetName(rng) {
+  const roots = ['Keth', 'Vor', 'Sel', 'Mar', 'Ion', 'Drak', 'Vex', 'Kal', 'Nur'];
+  const endings = ['us', 'ia', 'on', 'ara', 'ex', 'ith', 'or', 'en'];
+  return `${pick(roots, rng)}${pick(endings, rng)}`;
+}
+
+function getFactionColor(factionName) {
+  const factionColors = {
+    'Hegemony Vanguard': '#c41e3a',
+    'Free Traders Consortium': '#2e8b57',
+    'Void Cult': '#4b0082',
+    'Iron Syndicate': '#696969',
+    'Eden Remnants': '#daa520',
+    'Stellar Church': '#f0f8ff',
+    'Autonomous Collective': '#ff4500',
+    'Rogue AI Network': '#dc143c'
+  };
+
+  return factionColors[factionName] || '#888888';
 }
 
 let smCanvas, smCtx;
@@ -5512,6 +6480,40 @@ function renderStarMap() {
       smCtx.strokeStyle = 'rgba(255,255,255,0.3)';
       smCtx.lineWidth = 0.8;
       smCtx.beginPath(); smCtx.arc(sx, sy, r + 3, 0, Math.PI * 2); smCtx.stroke();
+    }
+
+    // Wormhole indicator
+    if (s.hasWormhole) {
+      smCtx.strokeStyle = 'rgba(138,43,226,0.6)';
+      smCtx.lineWidth = 1.2;
+      smCtx.setLineDash([3, 3]);
+      smCtx.beginPath(); smCtx.arc(sx, sy, r + 6, 0, Math.PI * 2); smCtx.stroke();
+      smCtx.setLineDash([]);
+    }
+
+    // Anomaly indicator
+    const anomalies = s.anomalies || [];
+    const unscannedAnomalies = anomalies.filter(a => !a.scanned);
+    if (unscannedAnomalies.length > 0) {
+      smCtx.fillStyle = 'rgba(68,170,255,0.4)';
+      smCtx.beginPath();
+      smCtx.arc(sx + r + 8, sy - r - 8, 2, 0, Math.PI * 2);
+      smCtx.fill();
+      
+      // Anomaly count
+      if (unscannedAnomalies.length > 1) {
+        smCtx.fillStyle = 'rgba(68,170,255,0.8)';
+        smCtx.font = '8px "Segoe UI", system-ui, sans-serif';
+        smCtx.fillText(unscannedAnomalies.length.toString(), sx + r + 10, sy - r - 4);
+      }
+    }
+
+    // Hazard warning
+    if (s.hazards && s.hazards.length > 0) {
+      smCtx.fillStyle = 'rgba(255,68,68,0.6)';
+      smCtx.beginPath();
+      smCtx.arc(sx - r - 8, sy - r - 8, 2, 0, Math.PI * 2);
+      smCtx.fill();
     }
 
     // Label
@@ -5585,127 +6587,298 @@ function onStarMapDblClick(e) {
 function renderSystemDetail(idx) {
   const s = state.starSystems[idx];
   if (!s) return;
-  const faction = FACTIONS.find(f => f.id === s.controllingFaction) || { name: 'Unclaimed', color: '#888' };
+  
+  const faction = FACTIONS.find(f => f.id === s.controllingFaction) || { name: s.controllingFaction || 'Unclaimed', color: '#888' };
   const isCurrent = idx === state.location.systemIndex;
+  
+  // Calculate jump cost for display
+  let jumpCostDisplay = '';
+  if (!isCurrent) {
+    const currentSys = state.starSystems[state.location.systemIndex];
+    if (currentSys) {
+      const distance = Math.hypot(s.x - currentSys.x, s.y - currentSys.y);
+      const fuelCost = Math.ceil(10 + (distance / 50));
+      const canAfford = state.ship.fuel >= fuelCost;
+      const inRange = distance <= s.jumpRange;
+      
+      jumpCostDisplay = `
+        <p style="margin-top:8px;font-size:0.8rem;">
+          <strong>Jump Cost:</strong> 
+          <span style="color:${canAfford ? 'var(--green)' : 'var(--danger)'}">${fuelCost} fuel</span>
+          (you have ${Math.floor(state.ship.fuel)})
+        </p>
+        <p style="font-size:0.8rem;color:var(--muted);">
+          Distance: ${Math.floor(distance)} units
+          ${!inRange ? '<span style="color:var(--danger)"> - OUT OF RANGE</span>' : ''}
+        </p>
+      `;
+    }
+  }
+  
+  // Wormhole information
+  const wormholes = findSystemWormholes(idx);
+  let wormholeDisplay = '';
+  if (wormholes.length > 0) {
+    const wh = wormholes[0];
+    const destSystem = state.starSystems[wh.destination];
+    const stabilityPercent = Math.floor(wh.stability * 100);
+    const usesLeft = wh.maxUses - wh.usageCount;
+    
+    wormholeDisplay = `
+      <div style="margin-top:8px;padding:6px;background:rgba(138,43,226,0.1);border:1px solid rgba(138,43,226,0.3);border-radius:4px;">
+        <p style="margin:0;font-size:0.8rem;color:#DA70D6;">
+          <strong>🌀 Wormhole Detected</strong>
+        </p>
+        <p style="margin:2px 0 0 0;font-size:0.7rem;color:var(--muted);">
+          → ${destSystem ? destSystem.name : 'Unknown'}
+        </p>
+        <p style="margin:2px 0 0 0;font-size:0.7rem;color:var(--muted);">
+          Stability: ${stabilityPercent}% | Uses: ${usesLeft}/${wh.maxUses}
+        </p>
+      </div>
+    `;
+  }
+  
+  // Anomaly information
+  const anomalies = s.anomalies || [];
+  let anomalyDisplay = '';
+  if (anomalies.length > 0) {
+    const scannedCount = anomalies.filter(a => a.scanned).length;
+    const unscannedCount = anomalies.length - scannedCount;
+    
+    anomalyDisplay = `
+      <div style="margin-top:8px;padding:6px;background:rgba(68,170,255,0.1);border:1px solid rgba(68,170,255,0.3);border-radius:4px;">
+        <p style="margin:0;font-size:0.8rem;color:#44aaff;">
+          <strong>📡 Anomalies: ${anomalies.length}</strong>
+        </p>
+        <p style="margin:2px 0 0 0;font-size:0.7rem;color:var(--muted);">
+          ${scannedCount > 0 ? `Scanned: ${scannedCount}` : ''}
+          ${unscannedCount > 0 ? `${scannedCount > 0 ? ' | ' : ''}Unscanned: ${unscannedCount}` : ''}
+        </p>
+        ${unscannedCount > 0 ? '<p style="margin:2px 0 0 0;font-size:0.7rem;color:var(--warn);">Use scanner when in system</p>' : ''}
+      </div>
+    `;
+  }
+  
+  // Enhanced hazard display
+  let hazardDisplay = '';
+  if (s.hazards && s.hazards.length > 0) {
+    const hazardEffects = {
+      'Radiation Belt': 'Hull damage over time',
+      'Electromagnetic Storm': 'Power drain effects', 
+      'Extreme Gravity Well': 'Heat buildup increase',
+      'Toxic Atmosphere': 'Periodic hull damage',
+      'Temporal Anomaly': 'Random time effects',
+      'Asteroid Field': 'Collision damage risk',
+      'Pirate Territory': 'Increased combat spawns',
+      'Wormhole Instability': 'Navigation hazards'
+    };
+    
+    hazardDisplay = `
+      <p style="margin-top:6px;font-size:0.8rem;"><strong>⚠ Active Hazards:</strong></p>
+      <div>
+        ${s.hazards.map(h => `
+          <div class="tag" style="color:var(--danger);border-color:rgba(255,68,68,0.3);background:rgba(255,68,68,0.1);margin:2px 4px 2px 0;font-size:0.7rem;">
+            ${h}
+            ${hazardEffects[h] ? `<div style="font-size:0.6rem;color:var(--muted);margin-top:1px;">${hazardEffects[h]}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  
+  // Enhanced resource display
+  let resourceDisplay = '';
+  if (s.resources && s.resources.length > 0) {
+    resourceDisplay = `
+      <p style="margin-top:6px;font-size:0.8rem;"><strong>🗿 Resources:</strong></p>
+      <div>
+        ${s.resources.map(r => `<span class="tag" style="color:var(--green);border-color:rgba(68,255,68,0.3);background:rgba(68,255,68,0.1);margin:2px 4px 2px 0;font-size:0.7rem;">${r}</span>`).join('')}
+      </div>
+    `;
+  }
+  
+  // Exploration status
+  let explorationStatus = '';
+  if (s.explored) {
+    const lastVisitedDate = s.lastVisited ? new Date(s.lastVisited).toLocaleDateString() : 'Unknown';
+    explorationStatus = `
+      <p style="margin-top:6px;font-size:0.7rem;color:var(--green);">
+        ✓ Explored (Last visit: ${lastVisitedDate})
+      </p>
+    `;
+  } else {
+    explorationStatus = `
+      <p style="margin-top:6px;font-size:0.7rem;color:var(--warn);">
+        ⦿ Unexplored System
+      </p>
+    `;
+  }
+  
   document.getElementById('system-detail').innerHTML = `
     <div class="system-info">
-      <h3>${_escHtml(s.name)} ${isCurrent ? '<span style="color:var(--gold);font-size:0.75rem">(Current)</span>' : ''}</h3>
-      <p>Star: ${_escHtml(s.starType)}</p>
-      <p>Planets: ${s.planetCount}</p>
-      <p>Faction: <span style="color:${faction.color}">${_escHtml(faction.name)}</span></p>
-      <p>Station: ${s.hasStation ? '<span style="color:var(--green)">Available</span>' : '<span style="color:var(--muted)">None</span>'}</p>
-      <p style="margin-top:6px;">Resources:</p>
-      <div>${(s.resources||[]).map(r => `<span class="tag">${_escHtml(r)}</span>`).join('')}</div>
-      ${s.hazards && s.hazards.length ? `<p style="margin-top:6px;">Hazards:</p><div>${s.hazards.map(h => `<span class="tag" style="color:var(--warn);border-color:rgba(255,170,0,0.2);background:rgba(255,170,0,0.06)">${_escHtml(h)}</span>`).join('')}</div>` : ''}
-      ${!isCurrent ? `<p style="margin-top:8px;font-size:0.8rem;color:var(--muted);">Jump cost: <span style="color:${state.ship.fuel >= 5 ? 'var(--green)' : 'var(--danger)'}">5 fuel</span> (you have ${state.ship.fuel.toFixed(0)})</p>` : ''}
+      <h3>${s.name} ${isCurrent ? '<span style="color:var(--gold);font-size:0.75rem">(Current)</span>' : ''}</h3>
+      
+      <div style="margin:8px 0;">
+        <p style="margin:2px 0;"><strong>Star:</strong> ${s.starType}</p>
+        <p style="margin:2px 0;"><strong>Planets:</strong> ${s.planetCount}</p>
+        <p style="margin:2px 0;"><strong>Faction:</strong> <span style="color:${faction.color}">${faction.name}</span></p>
+        <p style="margin:2px 0;"><strong>Station:</strong> ${s.hasStation ? '<span style="color:var(--green)">Available</span>' : '<span style="color:var(--muted)">None</span>'}</p>
+        ${s.baseRadiation > 0.1 ? `<p style="margin:2px 0;"><strong>Radiation:</strong> <span style="color:var(--warn)">${Math.floor(s.baseRadiation * 100)}%</span></p>` : ''}
+      </div>
+      
+      ${explorationStatus}
+      ${resourceDisplay}
+      ${hazardDisplay}
+      ${wormholeDisplay}
+      ${anomalyDisplay}
+      ${jumpCostDisplay}
     </div>
   `;
 }
 
 function jumpToSystem(idx) {
   if (idx === null || idx === undefined || _isJumping) return;
-  // Enforce jump route connectivity BEFORE animation
-  if (!state.inAltUniverse) {
-    const _curSys = state.starSystems[state.location.systemIndex];
-    if (_curSys && _curSys.connections && !_curSys.connections.includes(idx)) {
-      addComms('Navigation', 'No jump route to that system. Select a connected system.');
+  
+  const targetSystem = state.starSystems[idx];
+  const currentSystem = state.starSystems[state.location.systemIndex];
+  
+  // Enhanced navigation validation
+  if (!state.inAltUniverse && currentSystem) {
+    // Check for direct connection
+    if (!currentSystem.connections.includes(idx)) {
+      // Check for wormhole alternative
+      const wormholes = findSystemWormholes(state.location.systemIndex);
+      const wormholeToTarget = wormholes.find(wh => wh.destination === idx);
+      
+      if (wormholeToTarget) {
+        // Offer wormhole travel
+        if (confirm(`No direct route available. Use unstable wormhole? (Risk: hull damage)`)) {
+          useWormholeTravel(wormholeToTarget, idx);
+          return;
+        }
+      }
+      
+      addComms('Navigation', 'No jump route to that system. Select a connected system or find a wormhole.');
       AudioSFX.play('shield_hit');
       return;
     }
+    
+    // Calculate enhanced fuel cost based on distance and ship
+    const distance = Math.hypot(targetSystem.x - currentSystem.x, targetSystem.y - currentSystem.y);
+    const baseFuelCost = Math.ceil(10 + (distance / 50)); // Distance-based fuel cost
+    
+    // Apply ship efficiency modifiers (TODO: integrate with fitting system)
+    const shipEfficiency = 1.0; // Base efficiency
+    const fuelCost = Math.ceil(baseFuelCost * shipEfficiency);
+    
+    // Check fuel availability
+    if (state.ship.fuel < fuelCost) {
+      addComms('Navigation', `Insufficient fuel for jump. Need ${fuelCost}, have ${Math.floor(state.ship.fuel)}.`);
+      AudioSFX.play('shield_hit');
+      return;
+    }
+    
+    // Deduct fuel
+    state.ship.fuel = Math.max(0, state.ship.fuel - fuelCost);
   }
+  
   _isJumping = true;
   AudioSFX.play('jump');
-  // Warp flash animation
-  const warpOverlay = document.createElement('div');
-  warpOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;background:radial-gradient(ellipse at center,rgba(68,170,255,0.8) 0%,rgba(0,0,0,0) 70%);animation:warpFlash 1.2s ease-out forwards;';
-  if (!document.getElementById('warp-flash-style')) {
-    const style = document.createElement('style');
-    style.id = 'warp-flash-style';
-    style.textContent = '@keyframes warpFlash{0%{opacity:0;transform:scale(0.3)}15%{opacity:1;transform:scale(1)}40%{opacity:1}100%{opacity:0;transform:scale(2)}}';
-    document.head.appendChild(style);
-  }
-  document.body.appendChild(warpOverlay);
-  setTimeout(() => { if (warpOverlay.parentNode) warpOverlay.remove(); _isJumping = false; }, 1500);
-  // Star streaks
-  const streakCanvas = document.createElement('canvas');
-  streakCanvas.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;';
-  streakCanvas.width = window.innerWidth; streakCanvas.height = window.innerHeight;
-  document.body.appendChild(streakCanvas);
-  const sctx = streakCanvas.getContext('2d');
-  const streaks = Array.from({length: 60}, () => ({
-    x: Math.random() * streakCanvas.width,
-    y: Math.random() * streakCanvas.height,
-    len: 30 + Math.random() * 80,
-    speed: 800 + Math.random() * 1200,
-    alpha: 0.3 + Math.random() * 0.7,
-  }));
-  let warpStart = performance.now();
-  function drawStreaks() {
-    const elapsed = performance.now() - warpStart;
-    if (elapsed > 1200 || !streakCanvas.parentNode) { if (warpOverlay.parentNode) warpOverlay.remove(); if (streakCanvas.parentNode) streakCanvas.remove(); const ws = document.getElementById('warp-flash-style'); if (ws) ws.remove(); return; }
-    sctx.clearRect(0, 0, streakCanvas.width, streakCanvas.height);
-    const progress = elapsed / 1200;
-    const cx = streakCanvas.width / 2, cy = streakCanvas.height / 2;
-    streaks.forEach(s => {
-      const dx = s.x - cx, dy = s.y - cy;
-      const angle = Math.atan2(dy, dx);
-      const curLen = s.len * (0.5 + progress * 2);
-      const ex = s.x + Math.cos(angle) * curLen * progress;
-      const ey = s.y + Math.sin(angle) * curLen * progress;
-      sctx.strokeStyle = `rgba(180,210,255,${s.alpha * (1 - progress)})`;
-      sctx.lineWidth = 1;
-      sctx.beginPath(); sctx.moveTo(s.x, s.y); sctx.lineTo(ex, ey); sctx.stroke();
-    });
-    requestAnimationFrame(drawStreaks);
-  }
-  drawStreaks();
-
+  
+  // Enhanced warp visual effects
+  createWarpEffects();
+  
+  // Update location
   state.location.systemIndex = idx;
   state.location.docked = false;
-  state.ship.fuel = Math.max(0, state.ship.fuel - 5);
-  // Economy sink: fuel cost for warp jump
-  const fuelCost = state.economy.fuelCostPerJump;
-  if (state.player.credits >= fuelCost) {
-    state.player.credits -= fuelCost;
+  
+  // Economy cost (credit cost in addition to fuel)
+  const creditCost = state.economy.fuelCostPerJump;
+  if (state.player.credits >= creditCost) {
+    state.player.credits -= creditCost;
   } else {
-    // No credits? Take hull damage — desperation jump
+    // Emergency jump - hull damage
     state.ship.hull = Math.max(1, state.ship.hull - 10);
-    addComms('Engineering', 'Emergency jump — hull integrity compromised! Earn credits for safer travel.');
+    addComms('Engineering', 'Emergency jump — hull integrity compromised!');
   }
+  
   gainSkillXP('piloting', 0.04);
   state.selectedSystem = null;
-  const sys = state.starSystems[idx];
+  
+  // Mark system as explored
+  targetSystem.explored = true;
+  targetSystem.lastVisited = Date.now();
+  
+  // Generate system anomalies on first visit
+  if (!targetSystem.anomalies.length) {
+    targetSystem.anomalies = generateSystemAnomalies(idx);
+  }
+  
   // Report visit to server for quest progress
-  if (state.socket) state.socket.emit('system:visit', { systemId: sys.id });
-  // Offline visit quest progress
-  state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
-    q.objectives.forEach(o => {
-      if (o.type === 'visit' && (o.target === '*' || o.target === sys.id)) {
-        o.current = (o.current || 0) + 1;
-      }
-    });
-    if (q.objectives.every(o => (o.current || 0) >= o.required)) {
-      q.completed = true; q.active = false;
-      if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
-      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
-      AudioSFX.play('quest_complete');
-    }
-  });
-  addComms('Navigation', `Jumped to ${sys.name}. ${sys.hasStation ? 'Station detected — docking available.' : 'No stations in range.'}`);
-    if (typeof activateWarpTunnel === 'function') activateWarpTunnel(2000);
-  AudioSFX.play('warp_depart');
-  setTimeout(() => AudioSFX.play('warp_arrive'), 1200);
-  setTimeout(() => triggerScreenShake(), 1300);
+  if (state.socket) state.socket.emit('system:visit', { systemId: targetSystem.id });
+  
+  // Offline quest progress
+  updateQuestProgress(targetSystem);
+  
+  // Enhanced arrival messages with procedural data
+  let arrivalMessages = [`Jumped to ${targetSystem.name}.`];
+  
+  if (targetSystem.hasStation) {
+    arrivalMessages.push('Station detected — docking available.');
+  } else {
+    arrivalMessages.push('No stations in range.');
+  }
+  
+  // Hazard warnings
+  if (targetSystem.hazards && targetSystem.hazards.length > 0) {
+    arrivalMessages.push(`⚠ Hazards detected: ${targetSystem.hazards.join(', ')}`);
+    startHazardEffects(idx);
+  }
+  
+  // Wormhole detection
+  const wormholes = findSystemWormholes(idx);
+  if (wormholes.length > 0) {
+    arrivalMessages.push(`Unstable wormhole signature detected (${wormholes.length} exit${wormholes.length > 1 ? 's' : ''})`);
+  }
+  
+  // Anomaly detection
+  const unscannedAnomalies = targetSystem.anomalies.filter(a => !a.scanned);
+  if (unscannedAnomalies.length > 0) {
+    arrivalMessages.push(`Scanner readings: ${unscannedAnomalies.length} unidentified signature${unscannedAnomalies.length > 1 ? 's' : ''}`);
+  }
+  
+  // Resource richness indication
+  if (targetSystem.resources && targetSystem.resources.length > 3) {
+    arrivalMessages.push('Rich resource deposits detected in system.');
+  }
+  
+  addComms('Navigation', arrivalMessages.join(' '));
+  
+  // Trigger enhanced system effects
+  setTimeout(() => {
+    AudioSFX.play('warp_arrive');
+    triggerScreenShake();
+    activateSystemEffects(idx);
+  }, 1200);
+  
+  // Visual and gameplay effects
+  if (typeof activateWarpTunnel === 'function') activateWarpTunnel(2000);
   if (typeof spawnSystemPlanets === "function") spawnSystemPlanets();
-  // System ambient color variation
-  const _sysColors = [0x667799, 0x996677, 0x669966, 0x887766, 0x776699, 0x668899, 0x998866, 0x669977];
-  const _sysCol = _sysColors[state.location.systemIndex % _sysColors.length];
-  scene.children.forEach(ch => {
-    if (ch.isAmbientLight) ch.color.setHex(_sysCol);
-  });
+  
+  // Enhanced system ambient effects based on star type
+  updateSystemAmbience(targetSystem);
+  
   if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   if (typeof spawnSystemStar === "function") spawnSystemStar();
   if (typeof spawnEscortWingmen === 'function') spawnEscortWingmen();
+  
+  // Special landmarks (enhanced with procedural data)
+  if (targetSystem.starType === 'Neutron Star' || targetSystem.starType === 'Black Hole') {
+    addComms('Scanner', `${targetSystem.starType} detected! Extreme gravitational effects active.`);
+  }
+  
+  // Dyson sphere spawning (keeping existing mechanic)
   if (state.location.systemIndex % 5 === 3) {
     loadGLBModel('dyson_sphere').then(model => {
       if (!c.active) return;
@@ -5717,13 +6890,510 @@ function jumpToSystem(idx) {
       addComms('Scanner', 'Dyson sphere detected at long range. Ancient civilization relic?');
     }).catch(() => {});
   }
-  if (sys.hazards && sys.hazards.length) {
-    addComms('Warning', `Hazard detected: ${sys.hazards.join(', ')}`);
-  }
+  
   document.getElementById('btn-jump').style.display = 'none';
-  state._stationPricesFetched = false; // Reset so next dock fetches fresh prices
+  state._stationPricesFetched = false;
   renderStarMap();
   saveGame();
+  
+  _isJumping = false;
+}
+
+// Enhanced warp visual effects
+function createWarpEffects() {
+  // Warp flash animation
+  const warpOverlay = document.createElement('div');
+  warpOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;background:radial-gradient(ellipse at center,rgba(68,170,255,0.8) 0%,rgba(0,0,0,0) 70%);animation:warpFlash 1.2s ease-out forwards;';
+  
+  if (!document.getElementById('warp-flash-style')) {
+    const style = document.createElement('style');
+    style.id = 'warp-flash-style';
+    style.textContent = '@keyframes warpFlash{0%{opacity:0;transform:scale(0.3)}15%{opacity:1;transform:scale(1)}40%{opacity:1}100%{opacity:0;transform:scale(2)}}';
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(warpOverlay);
+  setTimeout(() => { if (warpOverlay.parentNode) warpOverlay.remove(); }, 1500);
+  
+  // Star streaks
+  const streakCanvas = document.createElement('canvas');
+  streakCanvas.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;';
+  streakCanvas.width = window.innerWidth; 
+  streakCanvas.height = window.innerHeight;
+  document.body.appendChild(streakCanvas);
+  
+  const sctx = streakCanvas.getContext('2d');
+  const streaks = Array.from({length: 60}, () => ({
+    x: Math.random() * streakCanvas.width,
+    y: Math.random() * streakCanvas.height,
+    len: 30 + Math.random() * 80,
+    speed: 800 + Math.random() * 1200,
+    alpha: 0.3 + Math.random() * 0.7,
+  }));
+  
+  let warpStart = performance.now();
+  function drawStreaks() {
+    const elapsed = performance.now() - warpStart;
+    if (elapsed > 1200 || !streakCanvas.parentNode) { 
+      if (streakCanvas.parentNode) streakCanvas.remove(); 
+      const ws = document.getElementById('warp-flash-style'); 
+      if (ws) ws.remove(); 
+      return; 
+    }
+    
+    sctx.clearRect(0, 0, streakCanvas.width, streakCanvas.height);
+    const progress = elapsed / 1200;
+    const cx = streakCanvas.width / 2, cy = streakCanvas.height / 2;
+    
+    streaks.forEach(s => {
+      const dx = s.x - cx, dy = s.y - cy;
+      const angle = Math.atan2(dy, dx);
+      const curLen = s.len * (0.5 + progress * 2);
+      const ex = s.x + Math.cos(angle) * curLen * progress;
+      const ey = s.y + Math.sin(angle) * curLen * progress;
+      sctx.strokeStyle = `rgba(180,210,255,${s.alpha * (1 - progress)})`;
+      sctx.lineWidth = 1;
+      sctx.beginPath(); sctx.moveTo(s.x, s.y); sctx.lineTo(ex, ey); sctx.stroke();
+    });
+    
+    requestAnimationFrame(drawStreaks);
+  }
+  drawStreaks();
+}
+
+// ── ENHANCED EXPLORATION FUNCTIONS ──────────────────────────────
+
+// Wormhole system integration
+function findSystemWormholes(systemIdx) {
+  const system = state.starSystems[systemIdx];
+  if (!system || !system.hasWormhole) return [];
+  
+  // Generate wormhole data (cached per system)
+  if (!system._wormholeData) {
+    const rng = makeSeededRng(`wh-${systemIdx}`);
+    system._wormholeData = [{
+      id: `wormhole-${systemIdx}`,
+      destination: generateWormholeDestination(systemIdx, rng),
+      stability: 0.3 + rng() * 0.4, // 30-70% stability
+      usageCount: 0,
+      maxUses: Math.floor(rng() * 3) + 2, // 2-4 uses before collapse
+      type: 'unstable'
+    }];
+  }
+  
+  return system._wormholeData;
+}
+
+function generateWormholeDestination(fromSystemIdx, rng) {
+  // Generate a distant system as destination
+  const maxSystems = state.starSystems.length;
+  let destination = Math.floor(rng() * maxSystems);
+  
+  // Ensure it's not the same system and is reasonably distant
+  while (destination === fromSystemIdx || Math.abs(destination - fromSystemIdx) < 5) {
+    destination = Math.floor(rng() * maxSystems);
+  }
+  
+  return destination;
+}
+
+function useWormholeTravel(wormhole, destinationIdx) {
+  if (!wormhole || wormhole.usageCount >= wormhole.maxUses) {
+    addComms('Navigation', 'Wormhole has collapsed - route unavailable.');
+    return;
+  }
+  
+  _isJumping = true;
+  wormhole.usageCount++;
+  
+  // Wormhole travel effects
+  AudioSFX.play('warp_tunnel');
+  createWormholeEffects();
+  
+  // Calculate instability damage
+  const stabilityRoll = Math.random();
+  let hullDamage = 0;
+  
+  if (stabilityRoll > wormhole.stability) {
+    hullDamage = Math.floor(5 + Math.random() * 15); // 5-20 hull damage
+    state.ship.hull = Math.max(1, state.ship.hull - hullDamage);
+    addComms('Engineering', `Unstable wormhole transit - ${hullDamage} hull damage taken!`);
+  }
+  
+  // No fuel cost for wormhole travel
+  state.location.systemIndex = destinationIdx;
+  state.location.docked = false;
+  
+  // Check if wormhole collapses
+  if (wormhole.usageCount >= wormhole.maxUses) {
+    addComms('Navigation', 'Wormhole collapsed after transit - route permanently closed.');
+  }
+  
+  const targetSystem = state.starSystems[destinationIdx];
+  targetSystem.explored = true;
+  targetSystem.lastVisited = Date.now();
+  
+  addComms('Navigation', `Wormhole transit to ${targetSystem.name} complete.`);
+  
+  setTimeout(() => {
+    AudioSFX.play('warp_arrive');
+    activateSystemEffects(destinationIdx);
+    renderStarMap();
+    saveGame();
+    _isJumping = false;
+  }, 1500);
+}
+
+function createWormholeEffects() {
+  // Purple wormhole visual effect
+  const wormholeOverlay = document.createElement('div');
+  wormholeOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;background:radial-gradient(ellipse at center,rgba(138,43,226,0.8) 0%,rgba(75,0,130,0.4) 50%,rgba(0,0,0,0) 70%);animation:wormholeFlash 1.8s ease-in-out forwards;';
+  
+  if (!document.getElementById('wormhole-style')) {
+    const style = document.createElement('style');
+    style.id = 'wormhole-style';
+    style.textContent = '@keyframes wormholeFlash{0%{opacity:0;transform:rotate(0deg) scale(0.1)}25%{opacity:1;transform:rotate(90deg) scale(0.8)}75%{opacity:1;transform:rotate(270deg) scale(1.2)}100%{opacity:0;transform:rotate(360deg) scale(2)}}';
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(wormholeOverlay);
+  setTimeout(() => { if (wormholeOverlay.parentNode) wormholeOverlay.remove(); }, 2000);
+}
+
+// Hazard effects system
+function startHazardEffects(systemIdx) {
+  const system = state.starSystems[systemIdx];
+  if (!system || !system.hazards || system.hazards.length === 0) return;
+  
+  // Clear existing hazard timer
+  if (state._hazardTimer) {
+    clearInterval(state._hazardTimer);
+  }
+  
+  // Start hazard processing (every 10 seconds)
+  state._hazardTimer = setInterval(() => {
+    applySystemHazards(system);
+  }, 10000);
+  
+  // Apply initial hazard overlay
+  updateHazardOverlay(system.hazards);
+}
+
+function applySystemHazards(system) {
+  if (!system || !system.hazards) return;
+  
+  let totalDamage = 0;
+  let messages = [];
+  
+  system.hazards.forEach(hazard => {
+    switch (hazard) {
+      case 'Radiation Belt':
+        const radiationDamage = Math.floor(system.baseRadiation * 2);
+        if (radiationDamage > 0) {
+          state.ship.hull = Math.max(1, state.ship.hull - radiationDamage);
+          totalDamage += radiationDamage;
+          messages.push(`Radiation: -${radiationDamage} hull`);
+        }
+        break;
+        
+      case 'Electromagnetic Storm':
+        const powerDrain = Math.floor(Math.random() * 5) + 3;
+        state.ship.power = Math.max(0, state.ship.power - powerDrain);
+        messages.push(`EM Storm: -${powerDrain} power`);
+        break;
+        
+      case 'Extreme Gravity Well':
+        const gravityStrain = Math.floor(Math.random() * 3) + 1;
+        // TODO: Integrate with heat system when available
+        messages.push(`Gravity strain: +${gravityStrain} heat`);
+        break;
+        
+      case 'Toxic Atmosphere':
+        if (Math.random() < 0.3) { // 30% chance per tick
+          const toxicDamage = Math.floor(Math.random() * 4) + 1;
+          state.ship.hull = Math.max(1, state.ship.hull - toxicDamage);
+          totalDamage += toxicDamage;
+          messages.push(`Toxins: -${toxicDamage} hull`);
+        }
+        break;
+        
+      case 'Temporal Anomaly':
+        if (Math.random() < 0.1) { // 10% chance for temporal effects
+          const effect = Math.random();
+          if (effect < 0.5) {
+            // Time dilation - skill XP bonus
+            gainSkillXP('piloting', 0.1);
+            messages.push('Temporal flux: skill enhanced');
+          } else {
+            // Temporal strain - minor systems damage
+            messages.push('Temporal distortion detected');
+          }
+        }
+        break;
+    }
+  });
+  
+  if (messages.length > 0) {
+    addComms('Hazard System', messages.join(' | '));
+  }
+  
+  if (totalDamage > 0) {
+    AudioSFX.play('hull_damage');
+  }
+}
+
+function updateHazardOverlay(hazards) {
+  const hazardOverlay = document.getElementById('hazard-overlay');
+  if (!hazardOverlay) return;
+  
+  // Clear existing hazard classes
+  hazardOverlay.className = 'hazard-overlay';
+  
+  if (hazards.length > 0) {
+    // Apply primary hazard visual effect
+    const primaryHazard = hazards[0];
+    switch (primaryHazard) {
+      case 'Radiation Belt':
+        hazardOverlay.classList.add('radiation');
+        break;
+      case 'Electromagnetic Storm':
+        hazardOverlay.classList.add('electromagnetic');
+        break;
+      case 'Temporal Anomaly':
+        hazardOverlay.classList.add('temporal');
+        break;
+      case 'Toxic Atmosphere':
+        hazardOverlay.classList.add('toxic');
+        break;
+      default:
+        hazardOverlay.classList.add('generic-hazard');
+    }
+  }
+}
+
+// Anomaly system
+function generateSystemAnomalies(systemIdx) {
+  const system = state.starSystems[systemIdx];
+  if (!system) return [];
+  
+  // Use system seed for consistent anomaly generation
+  const rng = makeSeededRng(`anomaly-${systemIdx}`);
+  const anomalyCount = Math.floor(rng() * 4); // 0-3 anomalies per system
+  const anomalies = [];
+  
+  for (let i = 0; i < anomalyCount; i++) {
+    const anomaly = {
+      id: `anomaly-${systemIdx}-${i}`,
+      type: pickAnomalyType(system, rng),
+      position: {
+        x: (rng() - 0.5) * 1000,
+        y: (rng() - 0.5) * 1000,
+        z: (rng() - 0.5) * 200
+      },
+      scanDifficulty: Math.floor(rng() * 5) + 1, // 1-5 difficulty
+      scanned: false,
+      rewards: null,
+      discovered: false
+    };
+    
+    anomalies.push(anomaly);
+  }
+  
+  return anomalies;
+}
+
+function pickAnomalyType(system, rng) {
+  const anomalyTypes = [
+    { type: 'Combat Site', weight: 1 },
+    { type: 'Resource Cache', weight: 1 },
+    { type: 'Derelict Ship', weight: 1 },
+    { type: 'Research Data', weight: 1 }
+  ];
+  
+  // Adjust weights based on system properties
+  if (system.hazards.includes('Pirate Territory')) {
+    anomalyTypes[0].weight = 3; // More combat sites
+  }
+  
+  if (system.resources.length > 2) {
+    anomalyTypes[1].weight = 2; // More resource caches
+  }
+  
+  if (system.starType === 'Neutron Star' || system.starType === 'Black Hole') {
+    anomalyTypes[3].weight = 3; // More research data near exotic stars
+  }
+  
+  return weightedPick(anomalyTypes, rng).type;
+}
+
+function scanAnomaly(anomalyId, systemIdx) {
+  const system = state.starSystems[systemIdx];
+  const anomaly = system.anomalies.find(a => a.id === anomalyId);
+  
+  if (!anomaly) {
+    addComms('Scanner', 'Anomaly not found.');
+    return false;
+  }
+  
+  if (anomaly.scanned) {
+    addComms('Scanner', 'Anomaly already scanned.');
+    return false;
+  }
+  
+  // Check player scanning skill (TODO: integrate with proper skill system)
+  const playerScanSkill = (state.player.skills?.scanning || 1) + Math.random() * 2;
+  
+  if (playerScanSkill >= anomaly.scanDifficulty) {
+    anomaly.scanned = true;
+    anomaly.discovered = true;
+    anomaly.rewards = generateAnomalyRewards(anomaly);
+    
+    // Apply rewards
+    if (anomaly.rewards.credits > 0) {
+      state.player.credits += anomaly.rewards.credits;
+    }
+    
+    anomaly.rewards.items.forEach(item => {
+      // TODO: Add to inventory when inventory system is integrated
+      addComms('Scanner', `Acquired: ${item}`);
+    });
+    
+    Object.entries(anomaly.rewards.skillXP).forEach(([skill, xp]) => {
+      gainSkillXP(skill, xp / 100); // Convert to proper XP scale
+    });
+    
+    addComms('Scanner', `${anomaly.type} scanned: +${anomaly.rewards.credits} credits, ${anomaly.rewards.items.length} items`);
+    AudioSFX.play('loot_credits');
+    return true;
+  } else {
+    addComms('Scanner', `Scan failed - need scanning skill ${anomaly.scanDifficulty}+`);
+    return false;
+  }
+}
+
+function generateAnomalyRewards(anomaly) {
+  const rewards = {
+    credits: 0,
+    items: [],
+    skillXP: {}
+  };
+  
+  switch (anomaly.type) {
+    case 'Combat Site':
+      rewards.credits = 500 + Math.floor(Math.random() * 2000);
+      rewards.items.push('Boss Fragment');
+      rewards.skillXP.combat = 50;
+      break;
+      
+    case 'Resource Cache':
+      rewards.credits = 200 + Math.floor(Math.random() * 800);
+      rewards.items.push('Exotic Materials', 'Rare Minerals');
+      rewards.skillXP.mining = 25;
+      break;
+      
+    case 'Derelict Ship':
+      rewards.credits = 100 + Math.floor(Math.random() * 500);
+      rewards.items.push('Ship Module', 'Salvage Components');
+      rewards.skillXP.engineering = 30;
+      break;
+      
+    case 'Research Data':
+      rewards.credits = 300 + Math.floor(Math.random() * 1200);
+      rewards.items.push('Technology Data', 'Research Notes');
+      rewards.skillXP.science = 40;
+      break;
+  }
+  
+  return rewards;
+}
+
+// System effects and ambience
+function updateSystemAmbience(system) {
+  // Enhanced ambient color based on star type
+  const starColors = {
+    'M-class Red Dwarf': 0x8B4513,      // Reddish brown
+    'K-class Orange Dwarf': 0xFF8C00,   // Dark orange
+    'G-class Yellow Dwarf': 0xFFD700,   // Gold
+    'F-class Yellow-White': 0xF5F5DC,   // Beige
+    'A-class White': 0xF8F8FF,          // Ghost white
+    'Neutron Star': 0x00FFFF,           // Cyan
+    'Black Hole': 0x4B0082,             // Indigo
+    'Binary System': 0xFF69B4           // Hot pink
+  };
+  
+  const starColor = starColors[system.starType] || 0x667799;
+  
+  scene.children.forEach(ch => {
+    if (ch.isAmbientLight) {
+      ch.color.setHex(starColor);
+      
+      // Adjust intensity based on radiation
+      const baseIntensity = 0.4;
+      const radiationBonus = system.baseRadiation * 0.3;
+      ch.intensity = baseIntensity + radiationBonus;
+    }
+  });
+}
+
+function activateSystemEffects(systemIdx) {
+  const system = state.starSystems[systemIdx];
+  if (!system) return;
+  
+  // System-specific effects
+  if (system.starType === 'Neutron Star') {
+    // Neutron star effects - enhanced navigation
+    addComms('Navigation', 'Neutron star boost detected - jump range temporarily increased.');
+    // TODO: Implement temporary jump range boost
+  }
+  
+  if (system.starType === 'Black Hole') {
+    // Black hole effects - time dilation
+    addComms('Physics', 'Gravitational time dilation detected - time flows differently here.');
+    // TODO: Implement time dilation effects
+  }
+  
+  if (system.hasWormhole) {
+    // Wormhole instability effects
+    addComms('Scanner', 'Spacetime distortion detected - unstable wormhole present.');
+  }
+  
+  // Resource richness effects
+  if (system.resources.length > 3) {
+    addComms('Geology', `Rich deposits of ${system.resources.slice(0,2).join(' and ')} detected.`);
+  }
+}
+
+function updateQuestProgress(system) {
+  // Enhanced quest progress tracking
+  state.quests.filter(q => q.active && !q.completed && q.objectives).forEach(q => {
+    q.objectives.forEach(o => {
+      if (o.type === 'visit') {
+        if (o.target === '*' || o.target === system.id) {
+          o.current = (o.current || 0) + 1;
+        }
+        
+        // Special exploration objectives
+        if (o.target === 'neutron_star' && system.starType === 'Neutron Star') {
+          o.current = (o.current || 0) + 1;
+        }
+        
+        if (o.target === 'dangerous_system' && system.hazards.length > 1) {
+          o.current = (o.current || 0) + 1;
+        }
+      }
+    });
+    
+    // Check quest completion
+    if (q.objectives.every(o => (o.current || 0) >= o.required)) {
+      q.completed = true; 
+      q.active = false;
+      if (!state.socket || !state.connected) { 
+        state.player.credits += q.rewards?.credits || 0; 
+      }
+      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+      AudioSFX.play('quest_complete');
+    }
+  });
 }
 
 // ================================================================
@@ -7516,6 +9186,16 @@ for (let bi = 0; bi < 5; bi++) {
 camera.add(cockpit);
 scene.add(camera);
 
+// Make 3D engine objects globally available
+window.renderer = renderer;
+window.scene = scene; 
+window.localScene = scene; // EVE systems expect localScene
+window.camera = camera;
+window.composer = composer;
+window.ship = ship; // Player ship for EVE systems
+window.player = ship; // Alternative reference for compatibility
+window.threeReady = true;
+
 threeReady = true;
 } catch(err) {
   console.error('[Old Eden] 3D engine failed to initialise:', err);
@@ -8377,41 +10057,107 @@ function spawnFleetCommander() {
 }
 
 // Preload all combat-relevant models (enemies, bosses, NPCs)
+// OPTIMIZED FOR BANDWIDTH - Smart loading based on model size and priority
+const COMBAT_MODELS_PRIORITY = [
+  // HIGH PRIORITY - Small essential models (load first)
+  'iron_sentinel', 'fighter_alpha', 'fighter_beta', 'scout_ship', 
+  'cargo_shuttle', 'shuttle', 'patrol_alpha', 'patrol_beta', 'patrol_gamma'
+];
+
+const COMBAT_MODELS_MEDIUM = [
+  // MEDIUM PRIORITY - Standard combat models (batch load)
+  'alien_battleship', 'cruiser_alpha', 'corvette_alpha', 'destroyer_alpha',
+  'gunship_alpha', 'frigate_alpha', 'alien_insect', 'cargo_cruiser',
+  'escort_ship', 'shuttle_b', 'container_shuttle', 'evac_pod_a', 'evac_pod_b',
+  'red_fighter', 'cruiser_beta', 'red_cruiser', 'home_module'
+];
+
+const COMBAT_MODELS_LARGE = [
+  // LOW PRIORITY - Large models (defer until needed)
+  'cyborg_ship', 'freighter', 'titan_a', 'titan_b', 'demon_battleship', 
+  'red_battleship', 'demon_cruiser', 'space_body', 'space_suit'
+];
+
+// Legacy COMBAT_MODELS for compatibility  
 const COMBAT_MODELS = [
-  // Enemies
-  'iron_sentinel', 'fighter_alpha', 'fighter_beta', 'alien_battleship',
-  'scout_ship', 'cruiser_alpha', 'corvette_alpha', 'destroyer_alpha',
-  'gunship_alpha', 'frigate_alpha', 'alien_insect',
-  // NPC civilian
-  'cargo_shuttle', 'shuttle', 'evac_pod_b', 'freighter', 'cargo_cruiser',
-  'escort_ship', 'shuttle_b', 'container_shuttle', 'cyborg_ship',
-  'home_module', 'evac_pod_a', 'red_fighter', 'cruiser_beta',
-  // Bosses
-  'titan_a', 'titan_b', 'demon_battleship', 'red_battleship', 'demon_cruiser',
-  // Police
-  'patrol_alpha', 'patrol_beta', 'patrol_gamma',
-  // Criminal
-  'red_cruiser',
-  // Ambient props
-  'space_body', 'space_suit',
+  ...COMBAT_MODELS_PRIORITY,
+  ...COMBAT_MODELS_MEDIUM, 
+  ...COMBAT_MODELS_LARGE
 ];let _combatModelIdx = 0;
 async function preloadEnemyModel() {
-  // Load iron_sentinel first (most common) — blocks
-  try { await loadGLBModel('iron_sentinel'); } catch(e) { /* fallback to box */ }
-  // Stagger remaining models: load 2 at a time with delay to avoid frame spikes
-  _combatModelIdx = 0;
-  _loadNextCombatBatch();
+  console.log('🚀 Starting bandwidth-optimized GLB preloading...');
+  
+  // Use smart preloading if bandwidth manager is available
+  if (window.smartPreloadModels) {
+    window.smartPreloadModels('combat_start');
+    return;
+  }
+  
+  // Fallback to optimized priority-based loading
+  console.log('📦 Loading priority combat models first...');
+  
+  // Load high-priority models first (small, essential)
+  for (const key of COMBAT_MODELS_PRIORITY) {
+    try {
+      await loadGLBModel(key);
+      console.log(`✅ Loaded priority model: ${key}`);
+    } catch (e) {
+      console.warn(`⚠️ Failed to load priority model ${key}:`, e);
+    }
+  }
+  
+  // Load medium-priority models in small batches to avoid bandwidth spikes
+  let batchIndex = 0;
+  const batchSize = 3;
+  
+  const loadNextBatch = () => {
+    const batch = COMBAT_MODELS_MEDIUM.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
+    if (batch.length === 0) {
+      console.log('📊 Medium priority models loading complete');
+      setTimeout(loadLargeModels, 2000); // Wait before loading large models
+      return;
+    }
+    
+    console.log(`📦 Loading medium batch ${batchIndex + 1}: ${batch.join(', ')}`);
+    
+    const promises = batch.map(key => 
+      loadGLBModel(key).catch(e => console.warn(`⚠️ Failed to load ${key}:`, e))
+    );
+    
+    Promise.all(promises).then(() => {
+      batchIndex++;
+      setTimeout(loadNextBatch, 1000); // 1 second delay between batches
+    });
+  };
+  
+  loadNextBatch();
 }
-function _loadNextCombatBatch() {
-  const BATCH = 2;
-  const promises = [];
-  while (_combatModelIdx < COMBAT_MODELS.length && promises.length < BATCH) {
-    const key = COMBAT_MODELS[_combatModelIdx++];
-    if (!state.loadedModels[key]) promises.push(loadGLBModel(key).catch(() => {}));
-  }
-  if (promises.length > 0) {
-    Promise.all(promises).then(() => { if (_combatModelIdx < COMBAT_MODELS.length) setTimeout(_loadNextCombatBatch, 300); });
-  }
+
+function loadLargeModels() {
+  console.log('🐘 Loading large models in background...');
+  
+  // Load large models one at a time with longer delays
+  let largeIndex = 0;
+  
+  const loadNextLarge = () => {
+    if (largeIndex >= COMBAT_MODELS_LARGE.length) {
+      console.log('✅ All GLB model preloading complete!');
+      return;
+    }
+    
+    const key = COMBAT_MODELS_LARGE[largeIndex++];
+    console.log(`🐘 Loading large model: ${key}`);
+    
+    loadGLBModel(key)
+      .then(() => console.log(`✅ Loaded large model: ${key}`))
+      .catch(e => console.warn(`⚠️ Failed to load large model ${key}:`, e))
+      .finally(() => {
+        // Wait longer between large model loads to preserve bandwidth
+        setTimeout(loadNextLarge, 3000);
+      });
+  };
+  
+  loadNextLarge();
 }
 
 function fireRailgun() {
@@ -10311,8 +12057,19 @@ document.addEventListener('keydown', (e) => {
   }
   // Wingman call: X key
   if ((e.key === 'x' || e.key === 'X') && c.active && !c.dead) { callWingman(); }
-  // Deploy mine: Z key
-  if ((e.key === 'z' || e.key === 'Z') && c.active && !c.dead) { deployMine(); }
+  // Deploy mine: Z key (Note: Z also used for armor repair when in fitting mode)
+  if ((e.key === 'z' || e.key === 'Z') && c.active && !c.dead) { 
+    // Check if we have armor repair module fitted first
+    if (state.shipFitting.slots.low[1] && state.shipFitting.slots.low[1].cycleTime) {
+      const isOverheated = e.shiftKey;
+      if (typeof window.activateModule === 'function') {
+        window.activateModule('low', 1, isOverheated);
+        return;
+      }
+    }
+    // Otherwise deploy mine
+    deployMine(); 
+  }
   // Combat log toggle: J key
   if ((e.key === 'j' || e.key === 'J') && c.active) { c._showCombatLog = !c._showCombatLog; }
   // EMP blast: N key
@@ -10367,6 +12124,33 @@ document.addEventListener('keydown', (e) => {
       addCombatLog('TARGET PAINTED — ' + (_closest.type || 'hostile').toUpperCase() + ' marked', '#ffaa00');
       AudioSFX.play('lock_on');
     } else { addComms('Targeting', '\u26A0 No targets in range (120m)'); }
+  }
+  
+  // ── MODULE ACTIVATION KEYBINDS ──
+  // Shield Booster: 9 key (mid slot 0)
+  if ((e.key === '9') && c.active && !c.dead && state.shipFitting.slots.mid[0] && state.shipFitting.slots.mid[0].cycleTime) {
+    const isOverheated = e.shiftKey;
+    if (typeof window.activateModule === 'function') {
+      window.activateModule('mid', 0, isOverheated);
+    }
+  }
+  // Energy Absorber: 0 key (mid slot 3 where energy_absorber usually is)
+  if ((e.key === '0') && c.active && !c.dead) {
+    // Find energy absorber in mid slots
+    const energyAbsorberSlot = state.shipFitting.slots.mid.findIndex(m => m && m.id === 'energy_absorber');
+    if (energyAbsorberSlot >= 0) {
+      const isOverheated = e.shiftKey;
+      if (typeof window.activateModule === 'function') {
+        window.activateModule('mid', energyAbsorberSlot, isOverheated);
+      }
+    }
+  }
+  // Hull Repair: Q key (low slot 0)
+  if ((e.key === 'q' || e.key === 'Q') && c.active && !c.dead && state.shipFitting.slots.low[0] && state.shipFitting.slots.low[0].cycleTime) {
+    const isOverheated = e.shiftKey;
+    if (typeof window.activateModule === 'function') {
+      window.activateModule('low', 0, isOverheated);
+    }
   }
   // Scavenger drone: O key — collect distant loot, 20s cooldown
   if ((e.key === 'o' || e.key === 'O') && c.active && !c.dead && (!c._scavDroneCooldown || state.gameTime > c._scavDroneCooldown)) {
@@ -11569,6 +13353,433 @@ var GLB_ASSETS = {
 
 // Lazy-init GLTFLoader — module-init instance hangs on parse; fresh instance works
 var _glbParser = null;
+
+
+// ══ GLB BANDWIDTH OPTIMIZATION SYSTEM ══
+window.GLBBandwidthManager = {
+  loadingBudget: {
+    initial: 2 * 1024 * 1024, // 2MB initial budget
+    perFrame: 500 * 1024,     // 500KB per frame budget  
+    maxConcurrent: 3          // Max 3 concurrent downloads
+  },
+  
+  loadingQueue: {
+    priority: [], // Critical models (iron_sentinel, basic fighters)
+    normal: [],   // Standard combat models
+    deferred: [], // Large models loaded only when needed
+    background: [] // Ambient/prop models
+  },
+  
+  loadingState: {
+    currentBudget: 2 * 1024 * 1024,
+    activeDownloads: 0,
+    lastFrameTime: 0
+  },
+  
+  // Bandwidth-aware model categories
+  modelCategories: {
+    // HUGE models (>5MB) - defer until proximity/combat
+    huge: ['cyborg_ship', 'railgun_turret'],
+    
+    // LARGE models (1-5MB) - load in combat phases only
+    large: ['alien_battleship', 'alien_insect', 'cockpit_new', 'cockpit_shuttle', 'container_shuttle', 'cruiser_beta', 'demon_battleship', 'demon_cruiser', 'destroyer_alpha', 'dyson_sphere', 'evac_pod_a', 'evac_pod_b', 'fighter_alpha', 'fighter_beta', 'freighter', 'gunship_alpha', 'gun_futuristic', 'home_module', 'iron_sentinel', 'planet_earth', 'planet_earthlike', 'planet_green', 'planet_moon', 'planet_purple', 'planet_yellow', 'railgun_massive', 'railgun_ship', 'red_battleship', 'red_cruiser', 'red_fighter', 'shuttle', 'shuttle_b', 'space_insect', 'stargate', 'station_a', 'station_b', 'station_facility', 'station_light', 'station_massive', 'station_sphere', 'station_zorgus', 'titan_a', 'titan_b'],
+    
+    // MEDIUM models (100KB-1MB) - batch load with throttling
+    medium: ['blaster_turret', 'blaster_white', 'cargo_shuttle', 'corvette_alpha', 'cruiser_alpha', 'dashboard_red', 'escort_ship', 'frigate_alpha', 'patrol_alpha', 'patrol_beta', 'patrol_gamma', 'pistol_chrome', 'railgun_barrel', 'railgun_large', 'space_body'],
+    
+    // SMALL models (<100KB) - can preload immediately
+    small: ['cargo_cruiser', 'cargo_small', 'dashboard_basic', 'interceptor', 'railgun_barrel_b', 'railgun_med', 'railgun_ship_b', 'scout_ship', 'space_suit']
+  },
+  
+  // Smart loading strategy based on game state
+  getLoadingStrategy(gamePhase = 'menu') {
+    switch (gamePhase) {
+      case 'menu':
+        return {
+          immediate: this.modelCategories.small,
+          batched: this.modelCategories.medium.slice(0, 5), // Only 5 medium models
+          deferred: [...this.modelCategories.large, ...this.modelCategories.huge]
+        };
+        
+      case 'combat_start':
+        return {
+          immediate: ['iron_sentinel', 'fighter_alpha', 'fighter_beta'],
+          batched: this.modelCategories.medium,
+          deferred: this.modelCategories.huge
+        };
+        
+      case 'boss_encounter':
+        return {
+          immediate: ['titan_a', 'titan_b', 'demon_battleship'],
+          batched: this.modelCategories.large.filter(k => k.includes('boss') || k.includes('titan')),
+          deferred: this.modelCategories.huge.filter(k => !k.includes('boss') && !k.includes('titan'))
+        };
+        
+      default:
+        return this.getLoadingStrategy('menu');
+    }
+  },
+  
+  // Check if model should be loaded based on proximity and game state
+  shouldLoadModel(modelKey, playerPosition, gamePhase) {
+    // Always load small models
+    if (this.modelCategories.small.includes(modelKey)) return true;
+    
+    // Load combat models during combat
+    if (gamePhase === 'combat' && (
+      modelKey.includes('fighter') || 
+      modelKey.includes('enemy') || 
+      modelKey === 'iron_sentinel'
+    )) return true;
+    
+    // Defer huge models unless specifically needed
+    if (this.modelCategories.huge.includes(modelKey)) {
+      return gamePhase === 'boss_encounter' || gamePhase === 'special_event';
+    }
+    
+    return true; // Default to loading
+  },
+  
+  // Bandwidth-aware GLB loader wrapper
+  async loadModelWithBudget(modelKey, priority = 'normal') {
+    // Check budget
+    const modelSize = this.getModelSize(modelKey);
+    if (this.loadingState.currentBudget < modelSize && priority !== 'critical') {
+      console.log(`[GLB] Deferring ${modelKey} - insufficient budget`);
+      return this.deferModelLoad(modelKey);
+    }
+    
+    // Check concurrent downloads
+    if (this.loadingState.activeDownloads >= this.loadingBudget.maxConcurrent && priority !== 'critical') {
+      console.log(`[GLB] Queuing ${modelKey} - too many concurrent downloads`);
+      return this.queueModelLoad(modelKey, priority);
+    }
+    
+    // Load the model
+    this.loadingState.activeDownloads++;
+    this.loadingState.currentBudget -= modelSize;
+    
+    try {
+      const result = await window.originalLoadGLBModel(modelKey);
+      return result;
+    } finally {
+      this.loadingState.activeDownloads--;
+      // Restore budget gradually
+      setTimeout(() => {
+        this.loadingState.currentBudget = Math.min(
+          this.loadingBudget.initial,
+          this.loadingState.currentBudget + this.loadingBudget.perFrame
+        );
+      }, 16); // Next frame
+    }
+  },
+  
+  getModelSize(modelKey) {
+    const sizes = {
+      'alien_battleship': 1518352,
+      'alien_insect': 2261860,
+      'blaster_turret': 976892,
+      'blaster_white': 976892,
+      'cargo_cruiser': 95284,
+      'cargo_shuttle': 265512,
+      'cargo_small': 13496,
+      'cockpit_new': 2451040,
+      'cockpit_shuttle': 4307128,
+      'container_shuttle': 1080224,
+      'corvette_alpha': 985984,
+      'cruiser_alpha': 173284,
+      'cruiser_beta': 1417000,
+      'cyborg_ship': 11476556,
+      'dashboard_basic': 42324,
+      'dashboard_red': 252628,
+      'demon_battleship': 1600780,
+      'demon_cruiser': 1504016,
+      'destroyer_alpha': 1299540,
+      'dyson_sphere': 3994472,
+      'escort_ship': 149712,
+      'evac_pod_a': 1910276,
+      'evac_pod_b': 1817932,
+      'fighter_alpha': 1498020,
+      'fighter_beta': 1662784,
+      'freighter': 2915196,
+      'frigate_alpha': 1027056,
+      'gunship_alpha': 1587124,
+      'gun_futuristic': 3502476,
+      'home_module': 2698660,
+      'interceptor': 43240,
+      'iron_sentinel': 1543496,
+      'patrol_alpha': 165464,
+      'patrol_beta': 151720,
+      'patrol_gamma': 157012,
+      'pistol_chrome': 916484,
+      'planet_earth': 1915752,
+      'planet_earthlike': 2491392,
+      'planet_green': 1679928,
+      'planet_moon': 1649628,
+      'planet_purple': 1623180,
+      'planet_yellow': 1496492,
+      'railgun_barrel': 420648,
+      'railgun_barrel_b': 37764,
+      'railgun_large': 132680,
+      'railgun_massive': 1670288,
+      'railgun_med': 44528,
+      'railgun_ship': 1808812,
+      'railgun_ship_b': 44664,
+      'railgun_turret': 8096188,
+      'red_battleship': 1427212,
+      'red_cruiser': 1399028,
+      'red_fighter': 1399028,
+      'scout_ship': 43536,
+      'shuttle': 1388116,
+      'shuttle_b': 1320424,
+      'space_body': 179636,
+      'space_insect': 1547960,
+      'space_suit': 44576,
+      'stargate': 2009192,
+      'station_a': 2205436,
+      'station_b': 2207396,
+      'station_facility': 2307784,
+      'station_light': 2142808,
+      'station_massive': 1922508,
+      'station_sphere': 2081616,
+      'station_zorgus': 1711976,
+      'titan_a': 2711360,
+      'titan_b': 2772092
+    };
+    return sizes[modelKey] || 100000; // Default 100KB
+  },
+  
+  deferModelLoad(modelKey) {
+    return new Promise((resolve) => {
+      this.loadingQueue.deferred.push({ modelKey, resolve });
+      this.processDeferredQueue();
+    });
+  },
+  
+  queueModelLoad(modelKey, priority) {
+    return new Promise((resolve) => {
+      this.loadingQueue[priority].push({ modelKey, resolve });
+      this.processQueue();
+    });
+  },
+  
+  processDeferredQueue() {
+    if (this.loadingQueue.deferred.length === 0) return;
+    
+    setTimeout(() => {
+      if (this.loadingState.activeDownloads < 2 && this.loadingState.currentBudget > 1024 * 1024) {
+        const item = this.loadingQueue.deferred.shift();
+        if (item) {
+          this.loadModelWithBudget(item.modelKey, 'deferred').then(item.resolve);
+        }
+      }
+      this.processDeferredQueue();
+    }, 1000); // Check every second
+  },
+  
+  processQueue() {
+    // Process priority queue first
+    if (this.loadingQueue.priority.length > 0) {
+      const item = this.loadingQueue.priority.shift();
+      this.loadModelWithBudget(item.modelKey, 'priority').then(item.resolve);
+      return;
+    }
+    
+    // Then normal queue
+    if (this.loadingQueue.normal.length > 0 && this.loadingState.activeDownloads < this.loadingBudget.maxConcurrent) {
+      const item = this.loadingQueue.normal.shift();
+      this.loadModelWithBudget(item.modelKey, 'normal').then(item.resolve);
+    }
+  }
+};
+
+// Hook into the existing loadGLBModel function
+if (typeof window.loadGLBModel !== 'undefined') {
+  window.originalLoadGLBModel = window.loadGLBModel;
+  
+  window.loadGLBModel = function(key, options = {}) {
+    // Use bandwidth manager for optimization
+    if (window.GLBBandwidthManager && !options.bypassBandwidthManager) {
+      const priority = options.priority || 'normal';
+      return window.GLBBandwidthManager.loadModelWithBudget(key, priority);
+    }
+    
+    // Fallback to original function
+    return window.originalLoadGLBModel(key);
+  };
+  
+  console.log('🚀 GLB Bandwidth Manager activated');
+}
+
+// Smart preloading based on game phase
+window.smartPreloadModels = function(gamePhase = 'menu') {
+  if (!window.GLBBandwidthManager) return;
+  
+  const strategy = window.GLBBandwidthManager.getLoadingStrategy(gamePhase);
+  
+  // Load immediate models first
+  strategy.immediate.forEach(modelKey => {
+    window.loadGLBModel(modelKey, { priority: 'priority' });
+  });
+  
+  // Batch load medium priority models
+  let batchDelay = 0;
+  strategy.batched.forEach((modelKey, index) => {
+    setTimeout(() => {
+      window.loadGLBModel(modelKey, { priority: 'normal' });
+    }, batchDelay);
+    batchDelay += 500; // 500ms between batch loads
+  });
+  
+  console.log(`📦 Smart preload (${gamePhase}): ${strategy.immediate.length} immediate, ${strategy.batched.length} batched, ${strategy.deferred.length} deferred`);
+};
+
+// Proximity-based loading for open world scenarios
+window.proximityLoadModels = function(playerPosition, loadRadius = 1000) {
+  if (!window.GLBBandwidthManager || !playerPosition) return;
+  
+  // This would be integrated with the game's entity system
+  // For now, just demonstrate the concept
+  console.log('🎯 Proximity loading activated - radius:', loadRadius);
+};
+
+// ══ BANDWIDTH MONITORING SYSTEM ══
+window.BandwidthMonitor = {
+  stats: {
+    totalLoaded: 0,
+    totalDeferred: 0, 
+    activeDownloads: 0,
+    peakConcurrent: 0,
+    startTime: Date.now()
+  },
+  
+  log(event, modelKey, size) {
+    const timestamp = ((Date.now() - this.stats.startTime) / 1000).toFixed(1);
+    
+    switch(event) {
+      case 'loaded':
+        this.stats.totalLoaded += size;
+        console.log(`📊 [${timestamp}s] Loaded ${modelKey}: ${Math.round(size/1024)}KB (Total: ${Math.round(this.stats.totalLoaded/1024/1024*100)/100}MB)`);
+        break;
+        
+      case 'deferred':
+        this.stats.totalDeferred += size;
+        console.log(`⏳ [${timestamp}s] Deferred ${modelKey}: ${Math.round(size/1024)}KB (Saved: ${Math.round(this.stats.totalDeferred/1024/1024*100)/100}MB)`);
+        break;
+        
+      case 'download_start':
+        this.stats.activeDownloads++;
+        this.stats.peakConcurrent = Math.max(this.stats.peakConcurrent, this.stats.activeDownloads);
+        console.log(`⬇️ [${timestamp}s] Starting download ${modelKey} (${this.stats.activeDownloads} concurrent)`);
+        break;
+        
+      case 'download_end':
+        this.stats.activeDownloads--;
+        break;
+    }
+  },
+  
+  getReport() {
+    const runtime = (Date.now() - this.stats.startTime) / 1000;
+    return {
+      totalLoadedMB: Math.round(this.stats.totalLoaded / 1024 / 1024 * 100) / 100,
+      totalDeferredMB: Math.round(this.stats.totalDeferred / 1024 / 1024 * 100) / 100,
+      bandwidthSavedPercent: Math.round(this.stats.totalDeferred / (this.stats.totalLoaded + this.stats.totalDeferred) * 100),
+      peakConcurrentDownloads: this.stats.peakConcurrent,
+      averageLoadRate: Math.round(this.stats.totalLoaded / 1024 / runtime),
+      runtimeSeconds: Math.round(runtime)
+    };
+  },
+  
+  displayReport() {
+    const report = this.getReport();
+    console.log('📊 BANDWIDTH REPORT:');
+    console.log(`  💾 Loaded: ${report.totalLoadedMB}MB`);
+    console.log(`  ⏳ Deferred: ${report.totalDeferredMB}MB`);
+    console.log(`  💰 Bandwidth Saved: ${report.bandwidthSavedPercent}%`);
+    console.log(`  ⬇️ Peak Concurrent: ${report.peakConcurrentDownloads} downloads`);
+    console.log(`  📈 Load Rate: ${report.averageLoadRate}KB/s`);
+    console.log(`  ⏱️ Runtime: ${report.runtimeSeconds}s`);
+    
+    return report;
+  }
+};
+
+// Hook into GLB loading to monitor bandwidth
+if (window.loadGLBModel && !window.loadGLBModel._bandwidthMonitored) {
+  const originalLoadGLB = window.loadGLBModel;
+  
+  window.loadGLBModel = async function(key, options = {}) {
+    if (window.GLBBandwidthManager) {
+      const size = window.GLBBandwidthManager.getModelSize(key);
+      window.BandwidthMonitor.log('download_start', key, size);
+      
+      try {
+        const result = await originalLoadGLB(key, options);
+        window.BandwidthMonitor.log('loaded', key, size);
+        window.BandwidthMonitor.log('download_end', key, size);
+        return result;
+      } catch (error) {
+        window.BandwidthMonitor.log('download_end', key, 0);
+        throw error;
+      }
+    } else {
+      return originalLoadGLB(key, options);
+    }
+  };
+  
+  window.loadGLBModel._bandwidthMonitored = true;
+  console.log('📊 Bandwidth monitoring activated');
+}
+
+// Display bandwidth report every 30 seconds
+setInterval(() => {
+  if (window.BandwidthMonitor && window.BandwidthMonitor.stats.totalLoaded > 0) {
+    window.BandwidthMonitor.displayReport();
+  }
+}, 30000);
+
+// ══ BANDWIDTH UI UPDATER ══
+window.updateBandwidthUI = function() {
+  const indicator = document.getElementById('bandwidth-optimizer');
+  if (!indicator || !window.BandwidthMonitor) return;
+  
+  const report = window.BandwidthMonitor.getReport();
+  
+  // Show indicator if any models have been loaded
+  if (report.totalLoadedMB > 0 || report.totalDeferredMB > 0) {
+    indicator.style.display = 'block';
+    
+    document.getElementById('bandwidth-loaded-val').textContent = `${report.totalLoadedMB}MB`;
+    document.getElementById('bandwidth-saved-val').textContent = `${report.totalDeferredMB}MB`;
+    document.getElementById('bandwidth-efficiency-val').textContent = `${report.bandwidthSavedPercent}%`;
+    document.getElementById('bandwidth-concurrent-val').textContent = window.BandwidthMonitor.stats.activeDownloads;
+    
+    // Color code efficiency
+    const efficiencyEl = document.getElementById('bandwidth-efficiency');
+    if (report.bandwidthSavedPercent >= 50) {
+      efficiencyEl.style.color = '#00ff88'; // Green for high efficiency
+    } else if (report.bandwidthSavedPercent >= 25) {
+      efficiencyEl.style.color = '#ffaa00'; // Orange for medium
+    } else {
+      efficiencyEl.style.color = '#ff4444'; // Red for low efficiency
+    }
+  }
+};
+
+// Update bandwidth UI every 2 seconds
+setInterval(window.updateBandwidthUI, 2000);
+
+// Hook bandwidth UI updates into the monitor
+if (window.BandwidthMonitor) {
+  const originalLog = window.BandwidthMonitor.log;
+  window.BandwidthMonitor.log = function(event, modelKey, size) {
+    originalLog.call(this, event, modelKey, size);
+    setTimeout(window.updateBandwidthUI, 100); // Update UI shortly after logging
+  };
+}
+
+
 function _getGLBParser() {
   if (!_glbParser) {
     const d = new DRACOLoader();
@@ -14195,6 +16406,20 @@ document.addEventListener('keydown', (e) => {
     if (c.active) exitGunnerMode(true);
     showScreen('starmap');
   }
+  // N = anomaly scanner
+  if (e.key === 'n' || e.key === 'N') {
+    if (c.dead) return;
+    scanForAnomalies();
+  }
+  // V = wormhole scanner/transit
+  if (e.key === 'v' || e.key === 'V') {
+    if (c.dead) return;
+    if (state._wormholeReady) {
+      attemptWormholeTransit();
+    } else {
+      scanForWormholes();
+    }
+  }
   // B = dock at station
   if (e.key === 'b' || e.key === 'B') {
     if (c.dead) return;
@@ -14266,7 +16491,658 @@ function playerDeathSequence(cause) {
 // ================================================================
 const clock = new THREE.Clock();
 
-function gameLoop() {
+
+// ══ EVE ONLINE DEFENSE SYSTEMS ══
+window.eveDefenseSystems = {
+  shields: {
+    current: 1000,
+    maximum: 1000,
+    regenRate: 25, // HP per second
+    regenDelay: 8000, // ms delay after damage
+    lastDamageTime: 0,
+    resistance: {
+      kinetic: 0.20,
+      thermal: 0.25, 
+      electromagnetic: 0.30,
+      explosive: 0.15
+    }
+  },
+  armor: {
+    current: 800,
+    maximum: 800,
+    repairRate: 15, // HP per second when active
+    resistance: {
+      kinetic: 0.35,
+      thermal: 0.40,
+      electromagnetic: 0.10,
+      explosive: 0.50
+    },
+    nanobots: {
+      active: true,
+      efficiency: 0.85,
+      capacitorDrain: 20 // per second
+    }
+  },
+  hull: {
+    current: 600,
+    maximum: 600,
+    repairRate: 8, // HP per second when active
+    resistance: {
+      kinetic: 0.15,
+      thermal: 0.15,
+      electromagnetic: 0.15,
+      explosive: 0.15
+    },
+    selfRepair: {
+      active: true,
+      efficiency: 0.70,
+      capacitorDrain: 35 // per second
+    }
+  },
+  capacitor: {
+    current: 2000,
+    maximum: 2000,
+    rechargeRate: 50, // Base recharge per second
+    stability: 0.90, // Recharge efficiency curve
+    modules: {
+      shieldBooster: { drain: 45, boost: 150 },
+      armorRepairer: { drain: 25, repair: 80 },
+      hullRepairer: { drain: 40, repair: 50 }
+    }
+  }
+};
+
+window.eveDroneSystem = {
+  maxDrones: 5,
+  drones: [],
+  droneTypes: {
+    light: {
+      hp: 150, damage: 25, speed: 45, range: 400,
+      size: 0.8, color: 0x00ff88, tracking: 0.08
+    },
+    medium: {
+      hp: 280, damage: 55, speed: 35, range: 500,
+      size: 1.6, color: 0x4488ff, tracking: 0.06
+    },
+    heavy: {
+      hp: 400, damage: 85, speed: 25, range: 600,
+      size: 2.4, color: 0xff4444, tracking: 0.04
+    }
+  },
+  currentType: 'light',
+  autoLaunch: true,
+  autoEngage: true,
+  engagementRange: 500
+};
+
+// EVE Damage Application System
+window.applyEVEDamage = function(incomingDamage, damageType = 'kinetic') {
+  const defense = window.eveDefenseSystems;
+  let remainingDamage = incomingDamage;
+  
+  // 1. Apply to Shields first
+  if (remainingDamage > 0 && defense.shields.current > 0) {
+    const resistance = defense.shields.resistance[damageType] || 0;
+    const actualDamage = remainingDamage * (1 - resistance);
+    const shieldDamage = Math.min(actualDamage, defense.shields.current);
+    
+    defense.shields.current -= shieldDamage;
+    defense.shields.lastDamageTime = Date.now();
+    remainingDamage -= shieldDamage / (1 - resistance);
+    
+    // Shield effect
+    window.createShieldEffect();
+  }
+  
+  // 2. Apply to Armor if damage remains
+  if (remainingDamage > 0 && defense.armor.current > 0) {
+    const resistance = defense.armor.resistance[damageType] || 0;
+    const actualDamage = remainingDamage * (1 - resistance);
+    const armorDamage = Math.min(actualDamage, defense.armor.current);
+    
+    defense.armor.current -= armorDamage;
+    remainingDamage -= armorDamage / (1 - resistance);
+    
+    // Armor effect
+    window.createArmorEffect();
+  }
+  
+  // 3. Apply to Hull if damage still remains
+  if (remainingDamage > 0 && defense.hull.current > 0) {
+    const resistance = defense.hull.resistance[damageType] || 0;
+    const actualDamage = remainingDamage * (1 - resistance);
+    const hullDamage = Math.min(actualDamage, defense.hull.current);
+    
+    defense.hull.current -= hullDamage;
+    
+    // Hull critical effect
+    window.createHullEffect();
+    
+    // Ship destroyed if hull depleted
+    if (defense.hull.current <= 0) {
+      window.triggerShipDestruction();
+    }
+  }
+  
+  return {
+    shieldsRemaining: defense.shields.current,
+    armorRemaining: defense.armor.current,
+    hullRemaining: defense.hull.current,
+    totalDamageApplied: incomingDamage
+  };
+};
+
+// Shield Regeneration System
+window.updateShieldRegeneration = function() {
+  const shields = window.eveDefenseSystems.shields;
+  const now = Date.now();
+  
+  // Regenerate shields after delay
+  if (shields.current < shields.maximum) {
+    if (now - shields.lastDamageTime >= shields.regenDelay) {
+      shields.current = Math.min(
+        shields.maximum,
+        shields.current + (shields.regenRate / 60) // Per frame at 60fps
+      );
+    }
+  }
+};
+
+// Armor Nanobot Repair System  
+window.updateArmorRepair = function() {
+  const armor = window.eveDefenseSystems.armor;
+  const capacitor = window.eveDefenseSystems.capacitor;
+  
+  if (armor.nanobots.active && armor.current < armor.maximum) {
+    // Check capacitor
+    if (capacitor.current >= armor.nanobots.capacitorDrain / 60) {
+      // Repair armor
+      const repairAmount = (armor.repairRate * armor.nanobots.efficiency) / 60;
+      armor.current = Math.min(armor.maximum, armor.current + repairAmount);
+      
+      // Drain capacitor
+      capacitor.current -= armor.nanobots.capacitorDrain / 60;
+      
+      // Nanobot effects
+      if (Math.random() < 0.1) window.createNanobotEffect();
+    }
+  }
+};
+
+// Hull Self-Repair System
+window.updateHullRepair = function() {
+  const hull = window.eveDefenseSystems.hull;
+  const capacitor = window.eveDefenseSystems.capacitor;
+  
+  if (hull.selfRepair.active && hull.current < hull.maximum) {
+    if (capacitor.current >= hull.selfRepair.capacitorDrain / 60) {
+      const repairAmount = (hull.repairRate * hull.selfRepair.efficiency) / 60;
+      hull.current = Math.min(hull.maximum, hull.current + repairAmount);
+      
+      capacitor.current -= hull.selfRepair.capacitorDrain / 60;
+      
+      if (Math.random() < 0.05) window.createHullRepairEffect();
+    }
+  }
+};
+
+// Capacitor Management System
+window.updateCapacitor = function() {
+  const cap = window.eveDefenseSystems.capacitor;
+  
+  // Natural recharge (follows EVE's capacitor curve)
+  if (cap.current < cap.maximum) {
+    const capPercentage = cap.current / cap.maximum;
+    const rechargeMultiplier = Math.sqrt(capPercentage) * cap.stability;
+    cap.current = Math.min(
+      cap.maximum,
+      cap.current + (cap.rechargeRate * rechargeMultiplier) / 60
+    );
+  }
+  
+  // Module drain calculations handled in respective systems
+};
+
+// Drone AI System
+window.updateDroneAI = function() {
+  if (!window.eveDroneSystem.autoEngage) return;
+  
+  window.eveDroneSystem.drones.forEach(drone => {
+    if (!drone || !drone.mesh) return;
+    
+    // Find target
+    if (!drone.target || !drone.target.position) {
+      drone.target = window.findNearestHostileForDrone(drone);
+    }
+    
+    if (drone.target) {
+      const targetPos = drone.target.position;
+      const dronePos = drone.position;
+      const distance = dronePos.distanceTo(targetPos);
+      
+      // Move toward target
+      if (distance > drone.optimalRange) {
+        const direction = targetPos.clone().sub(dronePos).normalize();
+        drone.velocity = direction.multiplyScalar(drone.speed);
+        drone.position.add(drone.velocity.multiplyScalar(1/60));
+      } else {
+        // Attack target
+        drone.velocity.multiplyScalar(0.9); // Slow down
+        window.droneAttackTarget(drone, drone.target);
+      }
+      
+      // Update visual position
+      drone.mesh.position.copy(drone.position);
+      
+      // Orient toward target
+      try {
+        drone.mesh.lookAt(targetPos);
+      } catch(e) {}
+    } else {
+      // Return to player if no target
+      if (ship && ship.position) {
+        const playerPos = ship.position;
+        const dronePos = drone.position;
+        const distance = dronePos.distanceTo(playerPos);
+        
+        if (distance > 50) {
+          const direction = playerPos.clone().sub(dronePos).normalize();
+          drone.velocity = direction.multiplyScalar(drone.speed * 0.7);
+          drone.position.add(drone.velocity.multiplyScalar(1/60));
+          drone.mesh.position.copy(drone.position);
+        }
+      }
+    }
+  });
+};
+
+// Drone Combat System  
+window.droneAttackTarget = function(drone, target) {
+  const now = Date.now();
+  if (now - drone.lastAttack < drone.attackDelay) return;
+  
+  // Create drone projectile
+  const projectile = {
+    position: drone.position.clone(),
+    velocity: target.position.clone().sub(drone.position).normalize().multiplyScalar(60),
+    damage: drone.damage,
+    life: 1.0,
+    type: 'drone-projectile',
+    source: 'drone'
+  };
+  
+  // Visual projectile
+  try {
+    const geometry = new THREE.SphereGeometry(0.2);
+    const material = new THREE.MeshBasicMaterial({ 
+      color: 0x00ff66,
+      emissive: 0x00ff66,
+      emissiveIntensity: 0.8
+    });
+    projectile.mesh = new THREE.Mesh(geometry, material);
+    projectile.mesh.position.copy(projectile.position);
+    window.localScene.add(projectile.mesh);
+  } catch (error) {
+    console.warn('Drone projectile visual failed');
+  }
+  
+  if (!window.droneProjectiles) window.droneProjectiles = [];
+  window.droneProjectiles.push(projectile);
+  
+  drone.lastAttack = now;
+};
+
+// Launch Drones System
+window.launchDrone = function(droneType = 'light') {
+  if (!ship || !window.localScene) return;
+  if (window.eveDroneSystem.drones.length >= window.eveDroneSystem.maxDrones) return;
+  
+  const droneSpec = window.eveDroneSystem.droneTypes[droneType];
+  if (!droneSpec) return;
+  
+  const drone = {
+    id: Date.now() + Math.random(),
+    type: droneType,
+    hp: droneSpec.hp,
+    maxHP: droneSpec.hp,
+    damage: droneSpec.damage,
+    speed: droneSpec.speed,
+    optimalRange: droneSpec.range,
+    tracking: droneSpec.tracking,
+    position: ship.position.clone().add(new THREE.Vector3(
+      (Math.random() - 0.5) * 30,
+      Math.random() * 15 + 5,
+      (Math.random() - 0.5) * 30
+    )),
+    velocity: new THREE.Vector3(0, 0, 0),
+    target: null,
+    lastAttack: 0,
+    attackDelay: 1000 / (droneSpec.damage / 30) // Faster attack for lighter drones
+  };
+  
+  // Create drone visual
+  try {
+    const geometry = new THREE.ConeGeometry(droneSpec.size, droneSpec.size * 1.5);
+    const material = new THREE.MeshBasicMaterial({
+      color: droneSpec.color,
+      emissive: droneSpec.color,
+      emissiveIntensity: 0.3
+    });
+    drone.mesh = new THREE.Mesh(geometry, material);
+    drone.mesh.position.copy(drone.position);
+    window.localScene.add(drone.mesh);
+    
+    // Add drone trail effect
+    const trailGeometry = new THREE.CylinderGeometry(0.1, 0.1, droneSpec.size);
+    const trailMaterial = new THREE.MeshBasicMaterial({
+      color: droneSpec.color,
+      transparent: true,
+      opacity: 0.4
+    });
+    drone.trail = new THREE.Mesh(trailGeometry, trailMaterial);
+    drone.trail.position.copy(drone.position);
+    window.localScene.add(drone.trail);
+  } catch (error) {
+    console.warn('Drone visual creation failed');
+  }
+  
+  window.eveDroneSystem.drones.push(drone);
+  console.log(`🤖 ${droneType} drone launched`);
+  
+  // Drain capacitor for drone launch
+  window.eveDefenseSystems.capacitor.current -= 50;
+};
+
+// ══ EVE-STYLE MODULE CYCLING SYSTEM ══
+
+// Get unique module key for tracking
+window.getModuleKey = function(slotType, slotIndex) {
+  return `$"+"{${slotType}}$"+"{${slotIndex}}`;
+};
+
+// Check if module is currently cycling
+window.isModuleCycling = function(slotType, slotIndex) {
+  const moduleKey = window.getModuleKey(slotType, slotIndex);
+  return state.moduleStates.cyclingModules.has(moduleKey);
+};
+
+// Get module integrity (0-100%)
+window.getModuleIntegrity = function(slotType, slotIndex) {
+  const moduleKey = window.getModuleKey(slotType, slotIndex);
+  return state.moduleStates.moduleIntegrity.get(moduleKey) || 100;
+};
+
+// Get module heat level (0-100%)
+window.getModuleHeat = function(slotType, slotIndex) {
+  const moduleKey = window.getModuleKey(slotType, slotIndex);
+  return state.moduleStates.moduleHeat.get(moduleKey) || 0;
+};
+
+// Start module activation cycle
+window.activateModule = function(slotType, slotIndex, isOverheated = false) {
+  const module = state.shipFitting.slots[slotType][slotIndex];
+  if (!module || !module.cycleTime) {
+    console.warn('Cannot activate non-cycling module or empty slot');
+    return false;
+  }
+
+  const moduleKey = window.getModuleKey(slotType, slotIndex);
+  
+  // Check if already cycling
+  if (state.moduleStates.cyclingModules.has(moduleKey)) {
+    console.log('Module already cycling:', moduleKey);
+    return false;
+  }
+
+  // Check module integrity
+  const integrity = window.getModuleIntegrity(slotType, slotIndex);
+  if (integrity <= 0) {
+    window.addComms('Engineering', `$"+"{${module.name}} is burnt out! Repair needed.`);
+    return false;
+  }
+
+  // Check heat level
+  const currentHeat = window.getModuleHeat(slotType, slotIndex);
+  if (currentHeat >= state.moduleStates.maxHeatBeforeShutdown) {
+    window.addComms('Engineering', `$"+"{${module.name}} overheated! Shutting down.`);
+    return false;
+  }
+
+  // Check capacitor requirements
+  if (window.eveDefenseSystems.capacitor.current < module.capDrain) {
+    window.addComms('Engineering', 'Insufficient capacitor for module activation');
+    return false;
+  }
+
+  // Calculate actual cycle time (reduced if overheated)
+  let actualCycleTime = module.cycleTime;
+  if (isOverheated && module.heatBonus) {
+    actualCycleTime *= (1 - module.heatBonus.cycleReduction);
+  }
+
+  // Start the cycle
+  const now = Date.now();
+  state.moduleStates.cyclingModules.set(moduleKey, {
+    cycleStartTime: now,
+    cycleTime: actualCycleTime,
+    isOverheated: isOverheated,
+    moduleData: module
+  });
+
+  console.log(`🔧 Activated $"+"{${module.name}} (cycle: $"+"{${actualCycleTime}ms}, overheated: $"+"{${isOverheated}})`);
+  
+  // Immediate capacitor drain
+  window.eveDefenseSystems.capacitor.current -= module.capDrain;
+  
+  // Add heat if overheated
+  if (isOverheated) {
+    const currentModuleHeat = window.getModuleHeat(slotType, slotIndex);
+    state.moduleStates.moduleHeat.set(moduleKey, Math.min(100, currentModuleHeat + 15));
+  }
+
+  return true;
+};
+
+// Apply module effect when cycle completes
+window.applyModuleEffect = function(slotType, slotIndex, module, isOverheated) {
+  const moduleKey = window.getModuleKey(slotType, slotIndex);
+  
+  switch (module.id) {
+    case 'shield_booster':
+      let shieldBoost = 500;
+      if (isOverheated && module.heatBonus) {
+        shieldBoost *= (1 + module.heatBonus.effectBonus);
+      }
+      
+      // Apply integrity degradation
+      const effectiveness = window.getModuleIntegrity(slotType, slotIndex) / 100;
+      shieldBoost *= effectiveness;
+      
+      window.eveDefenseSystems.shields.current = Math.min(
+        window.eveDefenseSystems.shields.maximum,
+        window.eveDefenseSystems.shields.current + shieldBoost
+      );
+      
+      window.addComms('Engineering', `Shield Booster: +$"+"{${Math.round(shieldBoost)}} shields`);
+      window.createShieldEffect();
+      break;
+      
+    case 'repair_drone': // Hull repair
+      let hullRepair = 80;
+      if (isOverheated && module.heatBonus) {
+        hullRepair *= (1 + module.heatBonus.effectBonus);
+      }
+      
+      const hullEffectiveness = window.getModuleIntegrity(slotType, slotIndex) / 100;
+      hullRepair *= hullEffectiveness;
+      
+      window.eveDefenseSystems.hull.current = Math.min(
+        window.eveDefenseSystems.hull.maximum,
+        window.eveDefenseSystems.hull.current + hullRepair
+      );
+      
+      window.addComms('Engineering', `Hull Repair: +$"+"{${Math.round(hullRepair)}} hull`);
+      if (window.createHullRepairEffect) window.createHullRepairEffect();
+      break;
+      
+    case 'armor_repair':
+      let armorRepair = 120;
+      if (isOverheated && module.heatBonus) {
+        armorRepair *= (1 + module.heatBonus.effectBonus);
+      }
+      
+      const armorEffectiveness = window.getModuleIntegrity(slotType, slotIndex) / 100;
+      armorRepair *= armorEffectiveness;
+      
+      window.eveDefenseSystems.armor.current = Math.min(
+        window.eveDefenseSystems.armor.maximum,
+        window.eveDefenseSystems.armor.current + armorRepair
+      );
+      
+      window.addComms('Engineering', `Armor Repair: +$"+"{${Math.round(armorRepair)}} armor`);
+      if (window.createArmorEffect) window.createArmorEffect();
+      break;
+      
+    case 'energy_absorber':
+      // Calculate energy from recent damage taken
+      const now = Date.now();
+      const recentDamageTotal = state.moduleStates.recentDamage
+        .filter(d => now - d.timestamp < state.moduleStates.damageHistory)
+        .reduce((total, d) => total + d.damage, 0);
+      
+      let energyGain = recentDamageTotal * 0.3;
+      if (isOverheated && module.heatBonus) {
+        energyGain *= (1 + module.heatBonus.effectBonus);
+      }
+      
+      const energyEffectiveness = window.getModuleIntegrity(slotType, slotIndex) / 100;
+      energyGain *= energyEffectiveness;
+      
+      window.eveDefenseSystems.capacitor.current = Math.min(
+        window.eveDefenseSystems.capacitor.maximum,
+        window.eveDefenseSystems.capacitor.current + energyGain
+      );
+      
+      if (energyGain > 0) {
+        window.addComms('Engineering', `Energy Absorber: +$"+"{${Math.round(energyGain)}} capacitor`);
+      }
+      break;
+  }
+  
+  // Apply module damage if overheated
+  if (isOverheated && module.heatBonus && module.heatBonus.damagePerCycle > 0) {
+    const currentIntegrity = window.getModuleIntegrity(slotType, slotIndex);
+    const damagePercent = module.heatBonus.damagePerCycle * 100;
+    const newIntegrity = Math.max(0, currentIntegrity - damagePercent);
+    state.moduleStates.moduleIntegrity.set(moduleKey, newIntegrity);
+    
+    if (newIntegrity <= 25 && currentIntegrity > 25) {
+      window.addComms('Engineering', `⚠️ $"+"{${module.name}} critically damaged!`);
+    }
+  }
+};
+
+// Update all module cycling states
+window.updateModuleCycling = function() {
+  const now = Date.now();
+  
+  // Process cycling modules
+  for (const [moduleKey, cycleData] of state.moduleStates.cyclingModules.entries()) {
+    const elapsed = now - cycleData.cycleStartTime;
+    
+    if (elapsed >= cycleData.cycleTime) {
+      // Cycle complete - apply effect
+      const [slotType, slotIndex] = moduleKey.split('');
+      window.applyModuleEffect(slotType, parseInt(slotIndex), cycleData.moduleData, cycleData.isOverheated);
+      
+      // Remove from cycling
+      state.moduleStates.cyclingModules.delete(moduleKey);
+    }
+  }
+  
+  // Update module heat dissipation
+  for (const [moduleKey, heat] of state.moduleStates.moduleHeat.entries()) {
+    if (heat > 0) {
+      const newHeat = Math.max(0, heat - (state.moduleStates.heatDissipationRate / 60));
+      if (newHeat > 0) {
+        state.moduleStates.moduleHeat.set(moduleKey, newHeat);
+      } else {
+        state.moduleStates.moduleHeat.delete(moduleKey);
+      }
+    }
+  }
+  
+  // Clean old damage records for energy absorber
+  const cutoff = now - state.moduleStates.damageHistory;
+  state.moduleStates.recentDamage = state.moduleStates.recentDamage.filter(d => d.timestamp > cutoff);
+};
+
+// Record damage for energy absorber tracking
+window.recordDamageForEnergyAbsorber = function(damage) {
+  state.moduleStates.recentDamage.push({
+    damage: damage,
+    timestamp: Date.now()
+  });
+  
+  // Limit array size
+  if (state.moduleStates.recentDamage.length > 50) {
+    state.moduleStates.recentDamage = state.moduleStates.recentDamage.slice(-25);
+  }
+};
+
+// ══ MASTER EVE DEFENSE SYSTEMS UPDATE ══
+window.updateEVEDefenseSystems = function(deltaTime) {
+  if (!window.eveDefenseSystems || !window.eveDroneSystem) return;
+  
+  try {
+    // Update module cycling system (NEW)
+    if (typeof window.updateModuleCycling === 'function') {
+      window.updateModuleCycling();
+    }
+    
+    // Update all EVE defense systems
+    window.updateShieldRegeneration();
+    // Note: Armor and hull repair now handled by cycling modules
+    window.updateCapacitor();
+    
+    // Update drone systems
+    window.updateDroneAI();
+    if (typeof window.updateDroneProjectiles === 'function') {
+      window.updateDroneProjectiles();
+    }
+    if (typeof window.autoLaunchDrones === 'function') {
+      window.autoLaunchDrones();
+    }
+    
+    // Update visual effects
+    if (window.updateDefenseEffects) {
+      window.updateDefenseEffects();
+    }
+    
+  } catch (error) {
+    console.warn('EVE systems update error:', error);
+  }
+};
+
+// Initialize EVE defense systems
+setTimeout(() => {
+  console.log('🛡️ EVE Online Defense Systems Initialized');
+  console.log('  • Shield System: Regenerating shields with resistances');  
+  console.log('  • Armor System: Nanobot repair with capacitor drain');
+  console.log('  • Hull System: Self-repair modules');
+  console.log('  • Capacitor: EVE-style energy management');
+  console.log('  • Drones: Auto-launching combat drones');
+  
+  // Auto-launch initial drones
+  setTimeout(() => {
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => window.launchDrone('light'), i * 1000);
+    }
+  }, 2000);
+}, 2000);
+
+
+        function gameLoop() {
   requestAnimationFrame(gameLoop);
 
   if (!scene || !camera || !ship || !turretMount || (!composer && !renderer)) return;
@@ -14305,6 +17181,17 @@ function gameLoop() {
   if (c.active) {
     // First-life flag (used for spawn tuning, auto-aggro, tutorial pacing)
     const isFirstLife = state.player.rebirths === 0;
+    
+    // ── EVE Defense Systems Update ──
+    if (typeof window.updateEVEDefenseSystems === 'function') {
+      window.updateEVEDefenseSystems(dt);
+    }
+    
+    // ── Module Status UI Update (every 10 frames for performance) ──
+    if (typeof window.updateModuleStatusUI === 'function' && state._frameCount % 10 === 0) {
+      window.updateModuleStatusUI();
+    }
+    
     // ── EVE Online-style ship flight ──
     const fl = state.flight;
     fl.thrust = 0; fl.strafe = 0; fl.vertical = 0;
@@ -17296,6 +20183,10 @@ async function init() {
   addDeathFeedEvent('boss', 'DREADNOUGHT defeated by Pilot-Ash — 5,000 EC bounty claimed');
   addDeathFeedEvent('death', 'Pilot-Astra lost to solar flare in Sigma Gate');
   updateQuestOverlayVisibility();
+  
+  // Make gameLoop globally accessible
+  window.gameLoop = gameLoop;
+  
   if (threeReady) gameLoop();
 }
 

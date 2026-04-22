@@ -5,6 +5,7 @@ import { MutationSystem } from '../systems/MutationSystem.js';
 import { NPCSystem } from '../systems/NPCSystem.js';
 import { EconomySystem } from '../systems/EconomySystem.js';
 import { ProceduralGenerator } from '../systems/ProceduralGenerator.js';
+import { ExplorationSystem } from '../systems/ExplorationSystem.js';
 import { SoulFractureSystem } from '../systems/SoulFractureSystem.js';
 import { AscensionSystem } from '../systems/AscensionSystem.js';
 import { CyclePass } from '../systems/CyclePass.js';
@@ -53,6 +54,7 @@ const npc = new NPCSystem();
 const economy = new EconomySystem();
 const rebirth = new RebirthSystem();
 const procedural = new ProceduralGenerator();
+const exploration = new ExplorationSystem();
 const fracture = new SoulFractureSystem();
 const ascension = new AscensionSystem();
 const cyclepass = new CyclePass();
@@ -82,6 +84,7 @@ engine
   .registerSystem('quests', quests)
   .registerSystem('rebirth', rebirth)
   .registerSystem('procedural', procedural)
+  .registerSystem('exploration', exploration)
   .registerSystem('fracture', fracture)
   .registerSystem('ascension', ascension)
   .registerSystem('cyclepass', cyclepass)

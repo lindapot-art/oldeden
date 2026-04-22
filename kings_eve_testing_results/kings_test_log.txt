@@ -1,0 +1,211 @@
+[2026-04-21T21:09:02.800Z] [PAGE ERROR] missing ) after argument list
+[2026-04-21T21:09:02.832Z] [PAGE ERROR] Unexpected token ')'
+[2026-04-21T21:09:02.847Z] [PAGE ERROR] Unexpected token ':'
+[2026-04-21T21:09:02.852Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T21:09:02.853Z] [PAGE ERROR] Unexpected token '}'
+[2026-04-21T21:09:02.854Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T21:09:02.858Z] [PAGE ERROR] Identifier 'camera' has already been declared
+[2026-04-21T21:09:02.859Z] [CONSOLE] 🎯 QA: Immediate activation for QA Board compatibility
+[2026-04-21T21:09:02.860Z] [CONSOLE] 🎯 QA: screen-bridge activated with active class
+[2026-04-21T21:09:02.861Z] [CONSOLE] 🎯 QA: mission-progress-overlay visible
+[2026-04-21T21:09:02.862Z] [CONSOLE] 🎯 QA: quest-overlay visible
+[2026-04-21T21:09:03.140Z] [CONSOLE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[2026-04-21T21:09:03.797Z] Game loaded successfully for EVE testing
+[2026-04-21T21:09:03.800Z] Starting EVE test phase: initialization_and_startup
+[2026-04-21T21:09:03.800Z] EVE Phase 1: Game startup and character initialization
+[2026-04-21T21:09:05.994Z] Game entry initiated successfully
+[2026-04-21T21:09:05.997Z] EVE defense systems detected and ready
+[2026-04-21T21:09:05.997Z] Completed EVE test phase: initialization_and_startup
+[2026-04-21T21:09:08.014Z] Starting EVE test phase: eve_defense_systems_verification
+[2026-04-21T21:09:08.014Z] EVE Phase 2: Verifying EVE Online defense systems
+[2026-04-21T21:09:08.016Z] EVE Defense Systems Status:
+[2026-04-21T21:09:08.016Z]   - EVE Defense Systems: MISSING
+[2026-04-21T21:09:08.017Z]   - EVE Drone System: MISSING
+[2026-04-21T21:09:08.017Z]   - EVE HUD: VISIBLE
+[2026-04-21T21:09:08.017Z]   - Shields: 0 HP
+[2026-04-21T21:09:08.017Z]   - Armor: 0 HP
+[2026-04-21T21:09:08.017Z]   - Hull: 0 HP
+[2026-04-21T21:09:08.017Z]   - Capacitor: 0 Cap
+[2026-04-21T21:09:08.017Z]   - Drones: 0/0
+[2026-04-21T21:09:08.018Z] Completed EVE test phase: eve_defense_systems_verification
+[2026-04-21T21:09:10.048Z] Starting EVE test phase: shield_system_testing
+[2026-04-21T21:09:10.049Z] EVE Phase 3: Testing shield regeneration and resistance systems
+[2026-04-21T21:09:10.052Z] Shield system test: {"error":"EVE systems not found"}
+[2026-04-21T21:09:10.052Z] Completed EVE test phase: shield_system_testing
+[2026-04-21T21:09:12.067Z] Starting EVE test phase: armor_system_testing
+[2026-04-21T21:09:12.068Z] EVE Phase 4: Testing armor nanobot repair systems
+[2026-04-21T21:09:13.077Z] Armor nanobot test: {"error":"EVE systems not found"}
+[2026-04-21T21:09:13.078Z] Completed EVE test phase: armor_system_testing
+[2026-04-21T21:09:15.090Z] Starting EVE test phase: hull_system_testing
+[2026-04-21T21:09:15.090Z] EVE Phase 5: Testing hull self-repair systems
+[2026-04-21T21:09:16.106Z] Hull self-repair test: {"error":"EVE systems not found"}
+[2026-04-21T21:09:16.106Z] Completed EVE test phase: hull_system_testing
+[2026-04-21T21:09:18.120Z] Starting EVE test phase: capacitor_system_testing
+[2026-04-21T21:09:18.120Z] EVE Phase 6: Testing capacitor management and EVE recharge curve
+[2026-04-21T21:09:18.122Z] Capacitor EVE curve test: {"error":"EVE systems not found"}
+[2026-04-21T21:09:18.122Z] Completed EVE test phase: capacitor_system_testing
+[2026-04-21T21:09:20.127Z] Starting EVE test phase: drone_deployment_testing
+[2026-04-21T21:09:20.128Z] EVE Phase 7: Testing drone deployment systems
+[2026-04-21T21:09:25.210Z] Drone deployment test: {"error":"Drone system not found"}
+[2026-04-21T21:09:25.211Z] Completed EVE test phase: drone_deployment_testing
+[2026-04-21T21:09:27.217Z] Starting EVE test phase: drone_ai_combat_testing
+[2026-04-21T21:09:27.217Z] EVE Phase 8: Testing drone AI and proximity combat systems
+[2026-04-21T21:09:32.227Z] Drone AI combat test: {"error":"Drone system not found"}
+[2026-04-21T21:09:32.227Z] Completed EVE test phase: drone_ai_combat_testing
+[2026-04-21T21:09:34.233Z] Starting EVE test phase: weapon_systems_integration
+[2026-04-21T21:09:34.233Z] EVE Phase 9: Testing weapon systems integration with EVE defenses
+[2026-04-21T21:09:43.699Z] Weapon systems integration test completed
+[2026-04-21T21:09:43.699Z] Completed EVE test phase: weapon_systems_integration
+[2026-04-21T21:09:45.713Z] Starting EVE test phase: enemy_combat_operations
+[2026-04-21T21:09:45.714Z] EVE Phase 10: Performing comprehensive combat operations
+[2026-04-21T21:10:31.570Z] Combat operations: 53 actions, estimated 13 enemies engaged
+[2026-04-21T21:10:31.570Z] Completed EVE test phase: enemy_combat_operations
+[2026-04-21T21:10:33.572Z] Starting EVE test phase: mission_system_testing
+[2026-04-21T21:10:33.572Z] EVE Phase 11: Testing mission and quest systems
+[2026-04-21T21:10:33.574Z] Mission system test: {"missionInteractions":1,"missionElements":6}
+[2026-04-21T21:10:33.575Z] Completed EVE test phase: mission_system_testing
+[2026-04-21T21:10:35.588Z] Starting EVE test phase: ore_harvesting_operations
+[2026-04-21T21:10:35.588Z] EVE Phase 12: Testing ore harvesting and mining operations
+[2026-04-21T21:11:06.033Z] Ore harvesting completed: 120 units
+[2026-04-21T21:11:06.034Z] Completed EVE test phase: ore_harvesting_operations
+[2026-04-21T21:11:08.036Z] Starting EVE test phase: ore_market_trading
+[2026-04-21T21:11:08.037Z] EVE Phase 13: Testing ore trading and market systems
+[2026-04-21T21:11:08.040Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147344:94)
+[2026-04-21T21:11:08.041Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147404:96)
+[2026-04-21T21:11:08.042Z] [PAGE ERROR] sellResource is not defined
+HTMLButtonElement.onclick (http://localhost:3847/:297077:186)
+[2026-04-21T21:11:08.042Z] Ore trading test: {"marketTransactions":4,"marketElements":10}
+[2026-04-21T21:11:08.043Z] Completed EVE test phase: ore_market_trading
+[2026-04-21T21:11:10.051Z] Starting EVE test phase: npc_3d_model_verification
+[2026-04-21T21:11:10.052Z] EVE Phase 14: Comprehensive NPC 3D model verification
+[2026-04-21T21:11:10.054Z] NPC 3D Model Verification Results:
+[2026-04-21T21:11:10.055Z]   - DOM NPCs found: 4
+[2026-04-21T21:11:10.055Z]   - NPCs with 3D models: 1
+[2026-04-21T21:11:10.055Z]   - Three.js meshes: 0
+[2026-04-21T21:11:10.055Z]   - Enemy objects: 0
+[2026-04-21T21:11:10.055Z]   - GLB models: 0
+[2026-04-21T21:11:10.055Z]   - Texture elements: 0
+[2026-04-21T21:11:10.056Z] Completed EVE test phase: npc_3d_model_verification
+[2026-04-21T21:11:12.061Z] Starting EVE test phase: comprehensive_endurance_testing
+[2026-04-21T21:11:12.062Z] EVE Phase 15: Comprehensive endurance testing
+[2026-04-21T21:11:36.566Z] Endurance testing: 25 cycles completed, 31/1000 screenshots
+[2026-04-21T21:12:01.872Z] Endurance testing: 50 cycles completed, 36/1000 screenshots
+[2026-04-21T21:12:27.164Z] Endurance testing: 75 cycles completed, 41/1000 screenshots
+[2026-04-21T21:12:52.691Z] Endurance testing: 100 cycles completed, 46/1000 screenshots
+[2026-04-21T21:13:18.005Z] Endurance testing: 125 cycles completed, 51/1000 screenshots
+[2026-04-21T21:13:43.243Z] Endurance testing: 150 cycles completed, 56/1000 screenshots
+[2026-04-21T21:14:08.717Z] Endurance testing: 175 cycles completed, 61/1000 screenshots
+[2026-04-21T21:14:33.985Z] Endurance testing: 200 cycles completed, 66/1000 screenshots
+[2026-04-21T21:14:59.211Z] Endurance testing: 225 cycles completed, 71/1000 screenshots
+[2026-04-21T21:15:24.486Z] Endurance testing: 250 cycles completed, 76/1000 screenshots
+[2026-04-21T21:15:50.044Z] Endurance testing: 275 cycles completed, 82/1000 screenshots
+[2026-04-21T21:16:15.457Z] Endurance testing: 300 cycles completed, 87/1000 screenshots
+[2026-04-21T21:16:40.958Z] Endurance testing: 325 cycles completed, 92/1000 screenshots
+[2026-04-21T21:17:06.321Z] Endurance testing: 350 cycles completed, 97/1000 screenshots
+[2026-04-21T21:17:20.037Z] KING's Screenshot Milestone: 0100_comprehensive_endurance_testing (100/1000)
+[2026-04-21T21:17:31.512Z] Endurance testing: 375 cycles completed, 102/1000 screenshots
+[2026-04-21T21:17:56.724Z] Endurance testing: 400 cycles completed, 107/1000 screenshots
+[2026-04-21T21:18:22.331Z] Endurance testing: 425 cycles completed, 112/1000 screenshots
+[2026-04-21T21:18:47.585Z] Endurance testing: 450 cycles completed, 117/1000 screenshots
+[2026-04-21T21:19:12.952Z] Endurance testing: 475 cycles completed, 122/1000 screenshots
+[2026-04-21T21:19:38.394Z] Endurance testing: 500 cycles completed, 127/1000 screenshots
+[2026-04-21T21:20:03.682Z] Endurance testing: 525 cycles completed, 132/1000 screenshots
+[2026-04-21T21:20:28.883Z] Endurance testing: 550 cycles completed, 137/1000 screenshots
+[2026-04-21T21:20:54.386Z] Endurance testing: 575 cycles completed, 142/1000 screenshots
+[2026-04-21T21:21:19.687Z] Endurance testing: 600 cycles completed, 147/1000 screenshots
+[2026-04-21T21:21:44.924Z] Endurance testing: 625 cycles completed, 152/1000 screenshots
+[2026-04-21T21:22:10.485Z] Endurance testing: 650 cycles completed, 157/1000 screenshots
+[2026-04-21T21:22:35.710Z] Endurance testing: 675 cycles completed, 163/1000 screenshots
+[2026-04-21T21:23:01.054Z] Endurance testing: 700 cycles completed, 168/1000 screenshots
+[2026-04-21T21:23:26.292Z] Endurance testing: 725 cycles completed, 173/1000 screenshots
+[2026-04-21T21:23:51.807Z] Endurance testing: 750 cycles completed, 178/1000 screenshots
+[2026-04-21T21:24:17.113Z] Endurance testing: 775 cycles completed, 183/1000 screenshots
+[2026-04-21T21:24:42.329Z] Endurance testing: 800 cycles completed, 188/1000 screenshots
+[2026-04-21T21:25:06.884Z] PHASE ERROR [comprehensive_endurance_testing]: Attempted to use detached Frame '76D7A0E1A7DECD525CDADC2AF334C455'.
+[2026-04-21T21:25:10.342Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:15.346Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:20.358Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:25.363Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:30.366Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:35.371Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:40.376Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:45.384Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:50.391Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:25:55.406Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:00.413Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:05.423Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:10.436Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:15.451Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:20.451Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:25.457Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:30.464Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:35.471Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:40.482Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:45.494Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:50.499Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:26:55.510Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:00.528Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:05.537Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:10.541Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:15.555Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:20.557Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:25.558Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:30.565Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:35.578Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:40.581Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:45.593Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:50.601Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:27:55.612Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:00.644Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:05.644Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:10.646Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:15.661Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:20.669Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:25.677Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:30.684Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:35.690Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:40.695Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:45.699Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:50.713Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:28:55.719Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:00.722Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:05.728Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:10.732Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:15.746Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:20.757Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:25.773Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:30.782Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:35.795Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:40.809Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:45.816Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:50.818Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:29:55.824Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:00.826Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:05.830Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:10.835Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:15.843Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:20.846Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:25.861Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:30.869Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:35.871Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:40.881Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:45.889Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:50.889Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:30:55.902Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:00.926Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:05.920Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:10.928Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:15.931Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:20.935Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:25.949Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:30.950Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:35.950Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:40.965Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:45.967Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:50.981Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:31:55.993Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:32:01.005Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:32:06.006Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.
+[2026-04-21T21:32:11.014Z] Screenshot error: Protocol error (Page.captureScreenshot): Session closed. Most likely the page has been closed.

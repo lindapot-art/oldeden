@@ -1,0 +1,529 @@
+[2026-04-21T20:24:30.140Z] [PAGE ERROR] missing ) after argument list
+[2026-04-21T20:24:30.373Z] [PAGE ERROR] Failed to parse import map: invalid JSON
+[2026-04-21T20:24:30.391Z] [PAGE ERROR] Unexpected token ')'
+[2026-04-21T20:24:30.398Z] [PAGE ERROR] Unexpected token ':'
+[2026-04-21T20:24:30.401Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T20:24:30.402Z] [PAGE ERROR] Unexpected token '}'
+[2026-04-21T20:24:30.403Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T20:24:30.406Z] [PAGE ERROR] Identifier 'scene' has already been declared
+[2026-04-21T20:24:30.408Z] [CONSOLE] 🎯 QA: Immediate activation for QA Board compatibility
+[2026-04-21T20:24:30.409Z] [CONSOLE] 🎯 QA: screen-bridge activated with active class
+[2026-04-21T20:24:30.410Z] [CONSOLE] 🎯 QA: mission-progress-overlay visible
+[2026-04-21T20:24:30.410Z] [CONSOLE] 🎯 QA: quest-overlay visible
+[2026-04-21T20:24:30.500Z] [CONSOLE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[2026-04-21T20:24:31.121Z] Game loaded for comprehensive testing
+[2026-04-21T20:24:31.165Z] Starting test phase: startup_and_login
+[2026-04-21T20:24:31.165Z] Phase 1: Game startup and character creation
+[2026-04-21T20:24:31.167Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:24:31.181Z] PHASE ERROR [startup_and_login]: SyntaxError: Failed to execute 'querySelector' on 'Document': '#btn-login, button:contains("LOG IN")' is not a valid selector.
+[2026-04-21T20:24:33.183Z] Starting test phase: defense_systems_verification
+[2026-04-21T20:24:33.184Z] Phase 2: Verifying EVE defense systems
+[2026-04-21T20:24:33.187Z] Defense systems verification: 5 systems active
+[2026-04-21T20:24:33.188Z] Testing defense system controls
+[2026-04-21T20:24:34.216Z] Defense control tests completed
+[2026-04-21T20:24:34.217Z] Completed test phase: defense_systems_verification
+[2026-04-21T20:24:36.137Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:24:36.227Z] Starting test phase: drone_deployment
+[2026-04-21T20:24:36.228Z] Phase 3: Testing drone deployment and AI
+[2026-04-21T20:24:41.145Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:24:42.330Z] Drone systems: 0/5 displayed, 0 active
+[2026-04-21T20:24:42.331Z] Completed test phase: drone_deployment
+[2026-04-21T20:24:44.346Z] Starting test phase: weapon_systems_test
+[2026-04-21T20:24:44.347Z] Phase 4: Testing dual gatling guns and missile systems
+[2026-04-21T20:24:46.149Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:24:51.154Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:24:53.608Z] Weapon systems testing completed
+[2026-04-21T20:24:53.609Z] Completed test phase: weapon_systems_test
+[2026-04-21T20:24:55.623Z] Starting test phase: combat_engagement
+[2026-04-21T20:24:55.624Z] Phase 5: Engaging in combat operations
+[2026-04-21T20:24:56.156Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:01.162Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:06.170Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:11.176Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:16.178Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:21.185Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:26.031Z] Combat phase completed: 29 actions, estimated 9 enemies engaged
+[2026-04-21T20:25:26.032Z] Completed test phase: combat_engagement
+[2026-04-21T20:25:26.193Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:28.041Z] Starting test phase: mission_system_test
+[2026-04-21T20:25:28.042Z] Phase 6: Testing mission systems
+[2026-04-21T20:25:28.045Z] Mission system interactions: 4
+[2026-04-21T20:25:28.045Z] Completed test phase: mission_system_test
+[2026-04-21T20:25:30.074Z] Starting test phase: ore_harvesting
+[2026-04-21T20:25:30.075Z] Phase 7: Testing ore harvesting operations
+[2026-04-21T20:25:31.208Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:36.214Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:41.219Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:46.223Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:50.261Z] Ore harvesting completed: 20 units harvested
+[2026-04-21T20:25:50.263Z] Completed test phase: ore_harvesting
+[2026-04-21T20:25:51.229Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:52.263Z] Starting test phase: ore_selling
+[2026-04-21T20:25:52.264Z] Phase 8: Testing ore selling and market operations
+[2026-04-21T20:25:52.267Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147404:96)
+[2026-04-21T20:25:52.269Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147344:94)
+[2026-04-21T20:25:52.270Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147404:96)
+[2026-04-21T20:25:52.271Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147464:102)
+[2026-04-21T20:25:52.271Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147524:98)
+[2026-04-21T20:25:52.272Z] [PAGE ERROR] window._marketTab is not a function
+HTMLButtonElement.onclick (http://localhost:3847/:147584:94)
+[2026-04-21T20:25:52.274Z] Ore selling operations: 12 transactions
+[2026-04-21T20:25:52.274Z] Completed test phase: ore_selling
+[2026-04-21T20:25:54.282Z] Starting test phase: npc_verification
+[2026-04-21T20:25:54.282Z] Phase 9: Verifying NPC 3D model implementations
+[2026-04-21T20:25:54.285Z] NPC 3D Model verification:
+[2026-04-21T20:25:54.285Z]   - NPCs found: 2
+[2026-04-21T20:25:54.285Z]   - With 3D models: 0
+[2026-04-21T20:25:54.285Z]   - Scene meshes: 0
+[2026-04-21T20:25:54.285Z]   - Enemy objects: 0
+[2026-04-21T20:25:54.285Z]   - GLB models: 0
+[2026-04-21T20:25:54.286Z] Completed test phase: npc_verification
+[2026-04-21T20:25:56.234Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:25:56.287Z] Starting test phase: endurance_testing
+[2026-04-21T20:25:56.287Z] Phase 10: Endurance testing - comprehensive gameplay loop
+[2026-04-21T20:26:01.240Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:05.413Z] Endurance testing: 10/50 cycles completed
+[2026-04-21T20:26:06.245Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:11.275Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:15.556Z] Endurance testing: 20/50 cycles completed
+[2026-04-21T20:26:16.271Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:21.276Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:25.651Z] Endurance testing: 30/50 cycles completed
+[2026-04-21T20:26:26.282Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:31.288Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:35.761Z] Endurance testing: 40/50 cycles completed
+[2026-04-21T20:26:36.293Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:41.298Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:45.854Z] Endurance testing: 50/50 cycles completed
+[2026-04-21T20:26:46.303Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:46.854Z] Endurance testing completed: 50 cycles
+[2026-04-21T20:26:46.854Z] Completed test phase: endurance_testing
+[2026-04-21T20:26:51.308Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:26:56.313Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:01.318Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:06.324Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:11.328Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:16.334Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:21.339Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:26.345Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:31.350Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:36.354Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:41.360Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:46.365Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:51.370Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:27:56.375Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:01.380Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:06.385Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:11.391Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:16.396Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:21.401Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:26.406Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:31.411Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:36.416Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:41.421Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:46.426Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:51.431Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:28:56.437Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:01.441Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:06.448Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:11.474Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:16.474Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:21.480Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:26.484Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:31.489Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:36.495Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:41.500Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:46.505Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:51.510Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:29:56.515Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:01.520Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:06.525Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:11.531Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:16.537Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:21.541Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:26.546Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:31.551Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:36.556Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:41.562Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:46.566Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:51.571Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:30:56.574Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:01.583Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:06.588Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:11.593Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:16.598Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:21.603Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:26.608Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:31.611Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:36.618Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:41.624Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:46.629Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:51.634Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:31:56.674Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:01.645Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:06.650Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:11.657Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:16.660Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:21.665Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:26.670Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:31.675Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:36.681Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:41.685Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:46.692Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:51.696Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:32:56.704Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:01.704Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:06.711Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:11.718Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:16.722Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:21.727Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:26.732Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:31.737Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:36.742Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:41.747Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:46.752Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:51.758Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:33:56.766Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:01.768Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:06.773Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:11.779Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:16.784Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:21.789Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:26.794Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:31.800Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:36.805Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:41.810Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:46.815Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:51.820Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:34:56.860Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:01.847Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:06.853Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:11.859Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:16.864Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:21.867Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:26.873Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:31.878Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:36.883Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:41.889Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:46.894Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:51.898Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:35:56.906Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:01.908Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:06.914Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:11.918Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:16.922Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:21.929Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:26.934Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:31.941Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:36.945Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:41.950Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:46.956Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:51.962Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:36:56.969Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:01.971Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:06.976Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:11.981Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:16.986Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:21.991Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:26.996Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:32.001Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:37.007Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:42.012Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:47.017Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:52.022Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:37:57.095Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:02.066Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:07.072Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:12.128Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:17.098Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:22.103Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:27.108Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:32.113Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:37.118Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:42.123Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:47.129Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:52.134Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:38:57.218Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:02.177Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:07.182Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:12.201Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:17.192Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:22.198Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:27.203Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:32.208Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:37.213Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:42.219Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:47.224Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:52.229Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:39:57.234Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:02.308Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:07.278Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:12.283Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:17.289Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:22.294Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:27.299Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:32.304Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:37.309Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:42.314Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:47.319Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:52.325Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:40:57.351Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:02.350Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:07.355Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:12.431Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:17.400Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:22.405Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:27.410Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:32.416Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:37.421Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:42.426Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:47.431Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:52.436Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:41:57.485Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:02.464Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:07.468Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:12.488Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:17.493Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:22.501Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:27.505Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:32.511Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:37.516Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:42.522Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:47.526Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:52.532Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:42:57.571Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:02.558Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:07.564Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:12.568Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:17.573Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:22.579Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:27.582Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:32.590Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:37.595Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:42.599Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:47.605Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:52.609Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:43:57.615Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:02.624Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:07.625Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:12.631Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:17.636Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:22.641Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:27.647Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:32.653Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:37.658Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:42.662Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:47.667Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:52.672Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:44:57.681Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:02.691Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:07.688Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:12.693Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:17.699Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:22.703Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:27.709Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:32.713Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:37.719Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:42.724Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:47.729Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:52.734Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:45:57.787Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:02.787Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:07.797Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:12.805Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:17.810Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:22.815Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:27.820Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:32.825Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:37.831Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:42.833Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:47.841Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:52.846Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:46:57.851Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:02.856Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:07.861Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:12.866Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:17.871Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:22.876Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:27.881Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:32.887Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:37.893Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:42.897Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:47.903Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:52.907Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:47:57.912Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:02.918Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:07.923Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:12.929Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:17.934Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:22.939Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:27.945Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:32.949Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:37.954Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:42.959Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:47.964Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:52.970Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:48:57.974Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:03.031Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:08.002Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:13.007Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:18.012Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:23.017Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:28.022Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:33.027Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:38.033Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:43.038Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:48.043Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:53.048Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:49:58.053Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:03.058Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:08.064Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:13.066Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:18.075Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:23.079Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:28.086Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:33.089Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:38.095Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:43.100Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:48.105Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:53.110Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:50:58.115Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:03.120Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:08.125Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:13.131Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:18.137Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:23.142Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:28.147Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:33.153Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:38.157Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:43.162Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:48.167Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:53.172Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:51:58.177Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:03.183Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:08.189Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:13.194Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:18.198Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:23.203Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:28.209Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:33.214Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:38.218Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:43.224Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:48.229Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:53.235Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:52:58.257Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:03.302Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:08.282Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:13.292Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:18.292Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:23.298Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:28.303Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:33.308Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:38.314Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:43.319Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:48.325Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:53.329Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:53:58.374Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:03.356Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:08.361Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:13.367Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:18.372Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:23.377Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:28.383Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:33.387Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:38.392Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:43.398Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:48.403Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:53.407Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:54:58.449Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:03.418Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:08.424Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:13.429Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:18.433Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:23.439Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:28.444Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:33.449Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:38.454Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:43.460Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:48.465Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:53.470Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:55:58.504Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:03.497Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:08.503Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:13.507Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:18.512Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:23.518Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:28.523Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:33.528Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:38.533Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:43.539Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:48.544Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:53.548Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:56:58.556Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:03.559Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:08.564Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:13.569Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:18.574Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:23.580Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:28.582Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:33.589Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:38.595Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:43.600Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:48.604Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:53.609Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:57:58.615Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:03.620Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:08.625Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:13.631Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:18.635Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:23.641Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:28.647Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:33.651Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:38.655Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:43.662Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:48.667Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:53.672Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:58:58.219Z] [PAGE ERROR] missing ) after argument list
+[2026-04-21T20:58:58.266Z] [PAGE ERROR] Failed to parse import map: invalid JSON
+[2026-04-21T20:58:58.280Z] [PAGE ERROR] Unexpected token ')'
+[2026-04-21T20:58:58.292Z] [PAGE ERROR] Unexpected token ':'
+[2026-04-21T20:58:58.297Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T20:58:58.298Z] [PAGE ERROR] Unexpected token '}'
+[2026-04-21T20:58:58.300Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T20:58:58.302Z] [PAGE ERROR] Identifier 'scene' has already been declared
+[2026-04-21T20:58:58.305Z] [CONSOLE] 🎯 QA: Immediate activation for QA Board compatibility
+[2026-04-21T20:58:58.306Z] [CONSOLE] 🎯 QA: screen-bridge activated with active class
+[2026-04-21T20:58:58.308Z] [CONSOLE] 🎯 QA: mission-progress-overlay visible
+[2026-04-21T20:58:58.363Z] [CONSOLE] 🎯 QA: quest-overlay visible
+[2026-04-21T20:58:58.375Z] [CONSOLE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[2026-04-21T20:58:58.683Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:03.694Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:08.693Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:13.703Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:18.715Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:23.725Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:28.728Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:33.762Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:35.079Z] [PAGE ERROR] missing ) after argument list
+[2026-04-21T20:59:35.093Z] [PAGE ERROR] Failed to parse import map: invalid JSON
+[2026-04-21T20:59:35.094Z] [PAGE ERROR] Unexpected token ')'
+[2026-04-21T20:59:35.097Z] [PAGE ERROR] Unexpected token ':'
+[2026-04-21T20:59:35.101Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T20:59:35.102Z] [PAGE ERROR] Unexpected token '}'
+[2026-04-21T20:59:35.104Z] [PAGE ERROR] Unexpected token '{'
+[2026-04-21T20:59:35.109Z] [PAGE ERROR] Identifier 'scene' has already been declared
+[2026-04-21T20:59:35.110Z] [CONSOLE] 🎯 QA: Immediate activation for QA Board compatibility
+[2026-04-21T20:59:35.111Z] [CONSOLE] 🎯 QA: screen-bridge activated with active class
+[2026-04-21T20:59:35.112Z] [CONSOLE] 🎯 QA: mission-progress-overlay visible
+[2026-04-21T20:59:35.112Z] [CONSOLE] 🎯 QA: quest-overlay visible
+[2026-04-21T20:59:35.117Z] [CONSOLE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[2026-04-21T20:59:38.758Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:43.773Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:48.781Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:53.781Z] Screenshot error: png screenshots do not support 'quality'.
+[2026-04-21T20:59:58.790Z] Screenshot error: png screenshots do not support 'quality'.
