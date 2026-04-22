@@ -451,6 +451,43 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 }
 
 /* ── Create Screen ───────────────────────── */
+/* WoT-Style Direct Aiming Crosshair */
+#wot-crosshair {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px; height: 40px;
+  pointer-events: none;
+  z-index: 900;
+  transition: opacity 0.3s ease;
+}
+
+#wot-crosshair::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 20px; height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+#wot-crosshair::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 2px; height: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+#wot-crosshair.auto-mode::before,
+#wot-crosshair.auto-mode::after {
+  background: rgba(255, 100, 100, 0.8);
+  box-shadow: 0 0 4px rgba(255, 100, 100, 0.5);
+}
+
 #screen-create { padding: 24px 32px 80px; align-items: center; }
 .create-section {
   width: 100%;
@@ -1155,6 +1192,20 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       display: none !important;
       align-items: center;
       justify-content: center;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+    }
+    
+    /* Add close indicator */
+    #screen-create-holo::before {
+      content: "Press ESC to skip";
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      z-index: 101;
     }
 
     #screen-create-holo.active {
@@ -1685,6 +1736,8 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <div id="save-indicator">&#10003; SAVED</div>
 <div id="boss-warning-overlay"><div class="bw-title">&#9888; WARNING &#9888;</div><div class="bw-sub">MASSIVE HOSTILE SIGNATURE</div></div>
 <div id="muzzle-flash-overlay"></div>
+<!-- WoT-Style Direct Aiming Crosshair -->
+<div id="wot-crosshair"></div>
 <div id="webgl-lost-overlay"><div class="wl-title">&#9888; GPU CONNECTION LOST</div><div class="wl-sub">The WebGL context was lost. This may be a driver issue.</div><button class="wl-btn" onclick="location.reload()">&#8635; Reload Game</button></div>
 <div id="glb-loading-overlay">LOADING ASSETS <span id="glb-load-count">0/0</span><div class="glb-bar"><div class="glb-fill" id="glb-load-fill"></div></div></div>
 
@@ -1954,6 +2007,9 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       </button>
       <button class="holo-btn" id="btn-enter-eden">
         → ENTER EDEN →
+      </button>
+      <button class="holo-btn holo-btn-secondary" id="btn-skip-holo" style="margin-left: 20px;">
+        ⊗ SKIP ⊗
       </button>
     </div>
   </div>
@@ -2559,7 +2615,15 @@ function _on(id, evt, fn, opts) { const el = document.getElementById(id); if (el
 const AudioSFX = {
   ctx: null,
   init() {
-    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try { 
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+      // Professional bass enhancement filter
+      this.bassFilter = this.ctx.createBiquadFilter();
+      this.bassFilter.type = 'lowshelf';
+      this.bassFilter.frequency.value = 320;
+      this.bassFilter.gain.value = 8; // +8dB bass boost
+      this.bassFilter.connect(this.ctx.destination);
+    } catch(e) {}
   },
   ensure() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
   getSfxMix() {
@@ -2589,6 +2653,84 @@ const AudioSFX = {
       case 'fire': osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.exponentialRampToValueAtTime(40, now+0.15); gain.gain.setValueAtTime(0.22*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.15); osc.start(now); osc.stop(now+0.15); break;
       case 'hit': osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now+0.08); gain.gain.setValueAtTime(0.1*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.08); osc.start(now); osc.stop(now+0.08); break;
       case 'explode': { const dur = 0.35; const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i/d.length); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); gain.gain.setValueAtTime(0.2*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+dur); src.start(now); return; }
+      
+      // Professional bass-heavy explosion
+      case 'explosion_pro': {
+        const dur = 0.6;
+        const buf = ctx.createBuffer(2, ctx.sampleRate * dur, ctx.sampleRate);
+        const left = buf.getChannelData(0), right = buf.getChannelData(1);
+        for (let i = 0; i < buf.length; i++) {
+          const t = i / buf.length;
+          const envelope = Math.pow(1 - t, 2) * (1 + Math.sin(t * 40) * 0.3);
+          const noise = (Math.random() * 2 - 1) * envelope;
+          // Bass-heavy filtering
+          const bassBoost = Math.sin(t * 20) * envelope * 0.8;
+          left[i] = noise + bassBoost;
+          right[i] = noise * 0.8 + bassBoost;
+        }
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const bassGain = ctx.createGain();
+        src.connect(bassGain);
+        bassGain.connect(this.bassFilter || gain);
+        bassGain.gain.setValueAtTime(0.4 * vol, now);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        src.start(now);
+        return;
+      }
+      
+      // Gatling gun spin-up
+      case 'gatling_spinup': {
+        const dur = 0.8;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(80, now);
+        osc.frequency.exponentialRampToValueAtTime(240, now + dur);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(400, now);
+        filter.frequency.exponentialRampToValueAtTime(800, now + dur);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.gain.setValueAtTime(0.15 * vol, now);
+        gain.gain.setValueAtTime(0.25 * vol, now + dur * 0.7);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.start(now);
+        osc.stop(now + dur);
+        return;
+      }
+      
+      // Gatling gun rapid fire
+      case 'gatling_fire': {
+        const dur = 0.12;
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(160 + Math.random() * 80, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + dur);
+        gain.gain.setValueAtTime(0.18 * vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.start(now);
+        osc.stop(now + dur);
+        return;
+      }
+      
+      // Ship collision
+      case 'collision': {
+        const dur = 0.4;
+        const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) {
+          const t = i / d.length;
+          const metallic = Math.sin(t * 300) * Math.pow(1 - t, 1.5) * 0.6;
+          const crunch = (Math.random() * 2 - 1) * Math.pow(1 - t, 2) * 0.8;
+          d[i] = metallic + crunch;
+        }
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(gain);
+        gain.gain.setValueAtTime(0.25 * vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        src.start(now);
+        return;
+      }
       case 'charge': osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(1200, now+0.6); gain.gain.setValueAtTime(0.05*vol, now); gain.gain.linearRampToValueAtTime(0.12*vol, now+0.6); osc.start(now); osc.stop(now+0.6); break;
       case 'shield_hit': osc.type = 'sine'; osc.frequency.setValueAtTime(2000, now); osc.frequency.exponentialRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.08*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.2); osc.start(now); osc.stop(now+0.2); break;
       case 'jump': osc.type = 'sine'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(2000, now+0.5); gain.gain.setValueAtTime(0.1*vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8); osc.start(now); osc.stop(now+0.8); break;
@@ -2749,6 +2891,48 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
     const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1400;
     o.connect(g); o.start(t); o.stop(t+0.03);
   },
+  
+  // Professional audio methods
+  playExplosion(intensity = 'medium') {
+    if (intensity === 'heavy') {
+      this.play('explosion_pro');
+      // Add debris sound 0.3s later
+      setTimeout(() => this.play('collision'), 300);
+    } else {
+      this.play('explode');
+    }
+  },
+  
+  playGatlingSequence(phase) {
+    switch(phase) {
+      case 'spinup':
+        this.play('gatling_spinup');
+        break;
+      case 'fire':
+        this.play('gatling_fire');
+        break;
+      case 'spindown':
+        // Reverse spin-up for spin-down effect
+        setTimeout(() => {
+          const ctx = this.ctx;
+          if (!ctx) return;
+          const vol = this.getSfxMix();
+          const now = ctx.currentTime;
+          const gain = ctx.createGain();
+          gain.connect(ctx.destination);
+          const osc = ctx.createOscillator();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(240, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+          osc.connect(gain);
+          gain.gain.setValueAtTime(0.2 * vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        }, 10);
+        break;
+    }
+  }
 };
 
 // ================================================================
@@ -2965,6 +3149,13 @@ const state = {
   // ── EVE Speed Control ──
   speedTarget: 0,  // 0-100 percent of max speed
   autoTarget: false,
+  // ── WoT-Style Aiming System ──
+  aimingMode: {
+    mode: 'direct',  // 'direct' = WoT-style direct aiming, 'auto' = auto-targeting
+    crosshairVisible: true,
+    lastToggleTime: 0,
+    aimAssist: 0.15  // slight magnetic aiming in auto mode
+  },
   // ── Gun Room ──
   gunRoomInit: false,
   // ── Warp VFX ──
@@ -3085,7 +3276,12 @@ const state = {
   // ── Death Ticker ──
   deathFeed: [],            // Last 20 server death events
   // ── Weapon System ──
-  activeWeapon: 'railgun',  // 'railgun' or 'laser'
+  activeWeapon: 'railgun',  // 'railgun', 'laser', 'gatling_left', 'gatling_right'
+  gatlingSpinSpeed: 0,       // Current barrel rotation speed (0-1)
+  gatlingFireRate: 80,       // Rounds per second when fully spun up
+  gatlingHeatGeneration: 0.08, // Heat per shot
+  gatlingBarrelRotation: 0,  // Current barrel rotation angle
+  gatlingDualFire: true,     // Fire both gatlings simultaneously
   // ── NPC ships ──
   npcShips: [],
   // ── Past Lives — your dead characters become NPCs ──
@@ -3209,6 +3405,33 @@ function getPlayerShieldRegenMult() {
 }
 function getPlayerTradeMult() {
   return getGenomeMult(35, state.soulMemory.tradeInsight / 100) * getSkillBonus('trading');
+}
+
+// Get current character (combines ship stats with active status)
+function getCurrentCharacter() {
+  if (!state || !state.ship) return null;
+  
+  return {
+    // Ship stats from state.ship
+    hull: state.ship.hull,
+    maxHull: state.ship.maxHull,
+    shield: state.ship.shield,
+    maxShield: state.ship.maxShield,
+    fuel: state.ship.fuel,
+    maxFuel: state.ship.maxFuel,
+    power: state.ship.power,
+    
+    // Active status from combat
+    active: state.combat ? state.combat.active : false,
+    
+    // Combat status
+    dead: state.combat ? state.combat.dead : false,
+    
+    // Player data
+    name: state.player ? state.player.name : '',
+    credits: state.player ? state.player.credits : 0,
+    faction: state.player ? state.player.faction : null
+  };
 }
 
 // ================================================================
@@ -4115,6 +4338,38 @@ function manualTargetEnemy() {
   }
 }
 
+function toggleAimingMode() {
+  const now = performance.now();
+  if (now - state.aimingMode.lastToggleTime < 1000) return; // Prevent spam toggle
+  state.aimingMode.lastToggleTime = now;
+  
+  if (state.aimingMode.mode === 'direct') {
+    state.aimingMode.mode = 'auto';
+    addCombatLog('Auto-Targeting Mode', '#ff6644');
+    showToast('🎯 Auto-Target Mode (T to toggle)');
+  } else {
+    state.aimingMode.mode = 'direct';
+    addCombatLog('Direct Aiming Mode (WoT-Style)', '#44aaff'); 
+    showToast('🎮 Direct Aim Mode (T to toggle)');
+  }
+  
+  updateCrosshair();
+  try { AudioSFX.play('target_lock'); } catch(e) {}
+}
+
+function updateCrosshair() {
+  const crosshair = document.getElementById('wot-crosshair');
+  if (!crosshair) return;
+  
+  if (state.aimingMode.mode === 'direct') {
+    crosshair.style.opacity = state.aimingMode.crosshairVisible ? '1' : '0';
+    crosshair.classList.remove('auto-mode');
+  } else {
+    crosshair.style.opacity = '0.6'; // Dimmed for auto mode
+    crosshair.classList.add('auto-mode');
+  }
+}
+
 function updateTargetingSystem(dtMs) {
   if (state.targetLock.autoMode) {
     if (!state.targetLock.target || state.targetLock.target.hp <= 0) {
@@ -4270,7 +4525,22 @@ function fireActiveGunRoomWeapon() {
   c.heat = Math.min(1, c.heat + 0.08 * _heatOverload); // generic heat
   c.playerHasAttacked = true;
   c._lastFireTime = state.gameTime;
-  _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  // WoT-Style Aiming: Direct vs Auto-Target
+  if (state.aimingMode && state.aimingMode.mode === 'auto' && state.targetLock.target && state.targetLock.locked) {
+    // Auto-target mode: aim at locked target with prediction
+    const targetPos = state.targetLock.target.mesh ? state.targetLock.target.mesh.position : state.targetLock.target.position;
+    if (targetPos) {
+      _laserDir.subVectors(targetPos, camera.position).normalize();
+      // Add slight aim assist for auto mode
+      const directDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      _laserDir.lerp(directDir, 1 - (state.aimingMode.aimAssist || 0.15));
+    } else {
+      _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    }
+  } else {
+    // Direct aiming mode: fire exactly where camera points (WoT-style)
+    _laserDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  }
   _laserOrigin.copy(camera.position).addScaledVector(_laserDir, 1);
   const dir = _laserDir;
   const origin = _laserOrigin;
@@ -4874,6 +5144,166 @@ function fireLaser() {
   AudioSFX.play('laser_fire');
 }
 
+// ================================================================
+//  GATLING GUN WEAPON SYSTEM — Dual massive machine guns with rotating barrels
+// ================================================================
+
+const GATLING_SPIN_UP_TIME = 800;    // ms to reach full spin
+const GATLING_SPIN_DOWN_TIME = 1200; // ms to fully stop spinning  
+const GATLING_MAX_RPM = 4800;        // rounds per minute at full spin
+const GATLING_MIN_FIRE_RATE = 300;   // ms between shots when not spun up
+const GATLING_MAX_FIRE_RATE = 12.5;  // ms between shots at full spin (4800 RPM)
+const GATLING_HEAT_PER_SHOT = 0.02;  // lower heat per shot but rapid fire
+const GATLING_DAMAGE = 0.4;          // lower damage per bullet but high rate
+const GATLING_SPEED = 420;           // projectile speed (faster than laser)
+const GATLING_SPREAD = 0.025;        // bullet spread (realistic inaccuracy)
+const GATLING_AMMO_COST = 0;         // uses energy, not ammo
+let lastGatlingShot = 0;
+let gatlingSpinStart = 0;
+let gatlingSpinning = false;
+let gatlingBarrelAngle = 0;
+let gatlingLeftBarrelAngle = 0;
+let gatlingRightBarrelAngle = 0;
+
+// Gatling gun geometries and materials  
+const _gatlingBulletGeo = new THREE.CylinderGeometry(0.025, 0.04, 0.8, 6);
+const _gatlingTracerGeo = new THREE.CylinderGeometry(0.06, 0.08, 1.2, 6);
+const _gatlingBulletMat = new THREE.MeshBasicMaterial({ 
+  color: 0xffcc00, transparent: true, opacity: 0.9 
+});
+const _gatlingTracerMat = new THREE.MeshBasicMaterial({ 
+  color: 0xff4400, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending 
+});
+const _gatlingMuzzleFlashGeo = new THREE.SphereGeometry(0.3, 8, 6);
+const _gatlingMuzzleFlashMat = new THREE.MeshBasicMaterial({ 
+  color: 0xffaa00, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending 
+});
+
+const _gatlingDir = new THREE.Vector3();
+const _gatlingOriginLeft = new THREE.Vector3();
+const _gatlingOriginRight = new THREE.Vector3();
+
+function fireGatlingGun(gunType = 'dual') {
+  if (c.dead || c.heat >= 0.98) return; // dead or critically overheated
+  if (c.subsystemDamage.weapons > 0) return;
+  
+  const now = performance.now();
+  
+  // Spin up mechanics
+  if (!gatlingSpinning) {
+    gatlingSpinning = true;
+    gatlingSpinStart = now;
+  }
+  
+  const spinProgress = Math.min(1, (now - gatlingSpinStart) / GATLING_SPIN_UP_TIME);
+  const currentFireRate = GATLING_MIN_FIRE_RATE - (GATLING_MIN_FIRE_RATE - GATLING_MAX_FIRE_RATE) * spinProgress;
+  
+  if (now - lastGatlingShot < currentFireRate) return;
+  lastGatlingShot = now;
+  
+  // Heat generation increases as spin-up progresses (more shots per second)
+  const heatMultiplier = 0.5 + spinProgress * 0.5; // 0.5x to 1x heat
+  c.heat = Math.min(1, c.heat + GATLING_HEAT_PER_SHOT * heatMultiplier);
+  c.playerHasAttacked = true;
+  c._lastFireTime = state.gameTime;
+  
+  // Fire based on gun type
+  if (gunType === 'left' || gunType === 'dual') {
+    fireGatlingProjectile('left', spinProgress);
+  }
+  if (gunType === 'right' || gunType === 'dual') {
+    fireGatlingProjectile('right', spinProgress);
+  }
+  
+  // Professional gatling gun audio with bass
+  AudioSFX.play(spinProgress < 0.3 ? 'gatling_spinup' : 'gatling_fire');
+  
+  // Realistic recoil (heavier than laser, lighter than railgun)
+  c.recoilVel = -3 * (0.3 + spinProgress * 0.7); // Increases with spin-up
+  
+  // Screen shake based on spin-up
+  if (state.settings.screenShake) { 
+    c.shakeX += (Math.random() - 0.5) * 0.2 * spinProgress; 
+    c.shakeY -= 0.1 * spinProgress; 
+  }
+  
+  // Update barrel rotation
+  const rotationSpeed = 5 + spinProgress * 25; // Faster as it spins up
+  gatlingLeftBarrelAngle += rotationSpeed;
+  gatlingRightBarrelAngle += rotationSpeed;
+}
+
+function fireGatlingProjectile(side, spinProgress) {
+  _gatlingDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  
+  // Add realistic spread based on spin-up (less accurate when starting)
+  const spreadAmount = GATLING_SPREAD * (1.5 - spinProgress * 0.5); // More spread when spinning up
+  _gatlingDir.x += (Math.random() - 0.5) * spreadAmount;
+  _gatlingDir.y += (Math.random() - 0.5) * spreadAmount;
+  _gatlingDir.normalize();
+  
+  // Gun positioning (left/right mounted guns)
+  const sideOffset = side === 'left' ? -1.2 : 1.2;
+  const origin = side === 'left' ? _gatlingOriginLeft : _gatlingOriginRight;
+  origin.copy(camera.position);
+  origin.addScaledVector(_gatlingDir.clone().cross(camera.up).normalize(), sideOffset);
+  origin.addScaledVector(_gatlingDir, 2); // Forward offset from cockpit
+  
+  // Create projectile group
+  const g = new THREE.Group();
+  
+  // Main bullet (every shot)
+  const bullet = new THREE.Mesh(_gatlingBulletGeo, _gatlingBulletMat);
+  bullet.quaternion.copy(camera.quaternion); 
+  bullet.rotateX(Math.PI / 2);
+  g.add(bullet);
+  
+  // Tracer effect (every 5th shot)
+  if (Math.random() < 0.2 || spinProgress > 0.8) {
+    const tracer = new THREE.Mesh(_gatlingTracerGeo, _gatlingTracerMat);
+    tracer.quaternion.copy(camera.quaternion); 
+    tracer.rotateX(Math.PI / 2);
+    g.add(tracer);
+  }
+  
+  // Muzzle flash (visible effect at gun position)
+  const muzzleFlash = new THREE.Mesh(_gatlingMuzzleFlashGeo, _gatlingMuzzleFlashMat);
+  g.add(muzzleFlash);
+  setTimeout(() => { if (muzzleFlash.parent) muzzleFlash.parent.remove(muzzleFlash); }, 50);
+  
+  g.position.copy(origin);
+  scene.add(g);
+  
+  const gatlingDmgMult = getPowerMultiplier('weapons');
+  const damage = GATLING_DAMAGE * gatlingDmgMult * (0.7 + spinProgress * 0.3); // More damage when spun up
+  
+  c.projectiles.push({ 
+    group: g, 
+    dir: _gatlingDir.clone(), 
+    speed: GATLING_SPEED, 
+    life: 1800, 
+    age: 0, 
+    trailMat: _gatlingBulletMat, 
+    heatMat: null, 
+    slugLight: null, 
+    isGatling: true, 
+    damage: damage,
+    side: side 
+  });
+}
+
+// Gatling spin-down when not firing
+setInterval(() => {
+  const now = performance.now();
+  if (gatlingSpinning && now - lastGatlingShot > 500) {
+    gatlingSpinning = false;
+    // Gradual spin-down audio effect
+    if (now - lastGatlingShot > 800) {
+      AudioSFX.play('gatling_spindown');
+    }
+  }
+}, 100);
+
 // ── Homing Missile System ──
 
 // ── Chrome Pistol: Fast, low damage ──
@@ -5081,10 +5511,23 @@ document.addEventListener('keydown', (e) => {
   else if (key === '4') { state.activeWeapon = 'blaster'; fireBlasterFuturistic(); }
   else if (key === '5') { state.activeWeapon = 'white_blaster'; fireBlasterWhite(); }
   else if (key === '6') { state.activeWeapon = 'turret'; fireBlasterTurret(); }
+  else if (key === '7') { state.activeWeapon = 'gatling_left'; fireGatlingGun('left'); }
+  else if (key === '8') { state.activeWeapon = 'gatling_right'; fireGatlingGun('right'); }
+  else if (key === '9') { state.activeWeapon = 'gatling_dual'; fireGatlingGun('dual'); }
+  else if (key === '9') { state.activeWeapon = 'gatling_dual'; fireGatlingGun('dual'); }
   else if (key === 'm') { fireMissile(); }
   // Enhanced targeting controls
   else if (key === 't') { manualTargetEnemy(); }
   else if (key === 'g') { state.targetLock.target = null; state.targetLock.locked = false; addCombatLog('Target cleared', '#888888'); }
+  else if (key === 't') { toggleAimingMode(); }
+  else if (key === 't') { toggleAimingMode(); }
+  // AI Chat Interface
+  else if (key === 'c') {
+    const input = prompt('💬 Chat with ARIA AI:\n\nAsk for tactical advice, ship status, lore information, or general assistance:', '');
+    if (input && input.trim() && window.AIChatbot) {
+      window.AIChatbot.processInput(input.trim());
+    }
+  }
   else if (key === 'y') { 
     state.targetLock.autoMode = !state.targetLock.autoMode; 
     addCombatLog('Auto-targeting: ' + (state.targetLock.autoMode ? 'ON' : 'OFF'), '#44aaff'); 
@@ -9030,6 +9473,557 @@ for (let i = 0; i < 4; i++) {
 
 // ── Ship ────
 ship = new THREE.Group(); ship.name = 'player-ship';
+
+// Collision Physics System - Realistic damage and effects
+const collisionPhysics = {
+  lastCollisionTime: 0,
+  collisionCooldown: 500,
+  minCollisionVelocity: 8,
+  
+  // Calculate collision damage based on relative velocity  
+  calculateDamage(velocity, objectType = 'unknown') {
+    const speed = Math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2);
+    if (speed < this.minCollisionVelocity) return 0;
+    
+    let baseDamage = (speed - this.minCollisionVelocity) * 1.2;
+    
+    // Object-specific damage modifiers
+    switch(objectType) {
+      case 'asteroid': baseDamage *= 1.8; break;
+      case 'enemy': baseDamage *= 1.3; break;
+      case 'station': baseDamage *= 0.6; break;
+      case 'debris': baseDamage *= 0.8; break;
+      default: baseDamage *= 1.0;
+    }
+    
+    return Math.floor(Math.min(baseDamage, 45));
+  },
+  
+  // Apply collision effects and damage
+  applyCollision(damage, velocity, objectType) {
+    if (damage <= 0) return;
+    
+    const now = performance.now();
+    if (now - this.lastCollisionTime < this.collisionCooldown) return;
+    this.lastCollisionTime = now;
+    
+    const c = getCurrentCharacter();
+    if (!c) return;
+    
+    // Shield-first damage system
+    let remainingDamage = damage;
+    if (c.shield > 0) {
+      const shieldAbsorption = Math.min(c.shield, remainingDamage * 0.65);
+      c.shield = Math.max(0, c.shield - shieldAbsorption);
+      remainingDamage *= 0.35;
+    }
+    
+    // Hull damage
+    const hullDamage = Math.min(c.hull, remainingDamage);
+    c.hull = Math.max(0, c.hull - hullDamage);
+    
+    // Collision audio effects
+    if (damage > 25) {
+      if (AudioSFX.playExplosion) AudioSFX.playExplosion('heavy');
+      else AudioSFX.play('explosion_pro');
+    } else if (damage > 12) {
+      AudioSFX.play('collision');
+    } else {
+      AudioSFX.play('hit');
+    }
+    
+    // Screen shake based on damage
+    const shakeIntensity = Math.min(damage * 0.4, 18);
+    if (typeof screenShake !== 'undefined') {
+      screenShake(shakeIntensity, 350);
+    }
+    
+    // Collision warning
+    const totalDamage = Math.floor(damage);
+    addComms('Ship', `⚠️ Collision! -${totalDamage} damage (${objectType})`);
+    
+    // Critical damage warning
+    if (c.hull < c.maxHull * 0.25) {
+      addComms('Ship', '🚨 CRITICAL: Hull integrity compromised!');
+    }
+    
+    return totalDamage;
+  },
+  
+  // Check collision with object (sphere collision)
+  checkCollision(pos1, pos2, radius1, radius2) {
+    const dx = pos1.x - pos2.x;
+    const dy = pos1.y - pos2.y; 
+    const dz = pos1.z - pos2.z;
+    const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    return distance < (radius1 + radius2);
+  }
+};
+
+// AI Chatbot System - Intelligent companion and tactical advisor
+window.AIChatbot = {
+  isEnabled: false,
+  voiceEnabled: true,
+  speechSynthesis: null,
+  currentVoice: null,
+  lastMessageTime: 0,
+  contextMemory: [],
+  personalityMode: 'tactical',
+  
+  init() {
+    this.speechSynthesis = window.speechSynthesis;
+    
+    if (this.speechSynthesis) {
+      const loadVoices = () => {
+        const voices = this.speechSynthesis.getVoices();
+        this.currentVoice = voices.find(v => 
+          v.name.includes('Zira') || 
+          v.name.includes('Hazel') || 
+          v.name.includes('Female') ||
+          v.gender === 'female'
+        ) || voices[0];
+      };
+      
+      if (this.speechSynthesis.getVoices().length > 0) {
+        loadVoices();
+      } else {
+        this.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    }
+    
+    this.isEnabled = true;
+    this.addMessage('AI', 'ARIA online. Tactical systems initialized.', false);
+    console.log('🤖 AI Chatbot System initialized');
+  },
+  
+  addMessage(sender, message, shouldSpeak = true) {
+    const timestamp = new Date().toLocaleTimeString();
+    const chatEntry = { sender, message, timestamp, id: Date.now() };
+    
+    if (typeof addComms !== 'undefined') {
+      addComms('ARIA', message);
+    }
+    
+    this.contextMemory.push(chatEntry);
+    if (this.contextMemory.length > 20) {
+      this.contextMemory.shift();
+    }
+    
+    if (shouldSpeak && this.voiceEnabled && sender === 'AI') {
+      this.speak(message);
+    }
+    
+    this.lastMessageTime = performance.now();
+  },
+  
+  speak(text) {
+    if (!this.speechSynthesis || !this.currentVoice) return;
+    
+    this.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = this.currentVoice;
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    utterance.volume = (state.settings.masterVol || 1) * 0.6;
+    
+    this.speechSynthesis.speak(utterance);
+  },
+  
+  processInput(userInput) {
+    const input = userInput.toLowerCase().trim();
+    if (!input) return;
+    
+    this.addMessage('Player', userInput, false);
+    
+    const response = this.generateResponse(input);
+    
+    setTimeout(() => {
+      this.addMessage('AI', response, true);
+    }, 300 + Math.random() * 500);
+  },
+  
+  generateResponse(input) {
+    const c = getCurrentCharacter();
+    const gameContext = this.analyzeGameContext(c);
+    
+    if (input.includes('help') || input.includes('advice') || input.includes('what should')) {
+      return this.getTacticalAdvice(gameContext);
+    }
+    
+    if (input.includes('status') || input.includes('hull') || input.includes('shield')) {
+      return this.getStatusReport(c);
+    }
+    
+    if (input.includes('combat') || input.includes('fight') || input.includes('enemy')) {
+      return this.getCombatGuidance(gameContext);
+    }
+    
+    if (input.includes('faction') || input.includes('lore') || input.includes('story')) {
+      return this.getLoreResponse(input);
+    }
+    
+    return this.getConversationalResponse(input, gameContext);
+  },
+  
+  analyzeGameContext(c) {
+    if (!c) return { situation: 'menu', threat: 'none' };
+    
+    const context = {
+      hull: c.hull / c.maxHull,
+      shield: c.shield / c.maxShield,
+      credits: c.credits,
+      threat: 'low',
+      situation: 'exploring'
+    };
+    
+    if (typeof enemies !== 'undefined' && enemies.length > 0) {
+      context.threat = enemies.length > 3 ? 'high' : 'moderate';
+      context.situation = 'combat';
+    } else if (context.hull < 0.3) {
+      context.threat = 'critical';
+      context.situation = 'damaged';
+    }
+    
+    return context;
+  },
+  
+  getTacticalAdvice(context) {
+    const responses = [
+      'Multiple hostiles detected. Recommend evasive maneuvers and prioritizing shield regeneration.',
+      'Hull damage detected. Recommend finding repair station or using hull repair modules.',
+      'All systems nominal. Recommend continuing current mission objectives.',
+      'Shield levels low. Consider defensive positioning until regeneration completes.'
+    ];
+    
+    if (context.threat === 'high') {
+      return responses[0];
+    } else if (context.hull < 0.5) {
+      return responses[1];
+    } else if (context.shield < 0.3) {
+      return responses[3];
+    }
+    
+    return responses[2];
+  },
+  
+  getStatusReport(c) {
+    if (!c) return 'Unable to access ship systems. Please ensure neural link is established.';
+    
+    const hullPct = Math.round((c.hull / c.maxHull) * 100);
+    const shieldPct = Math.round((c.shield / c.maxShield) * 100);
+    
+    let status = `Ship status: Hull ${hullPct}%, Shields ${shieldPct}%`;
+    
+    if (hullPct < 25) status += '. Critical damage detected.';
+    else if (hullPct < 50) status += '. Moderate damage sustained.';
+    else status += '. Ship integrity good.';
+    
+    if (c.credits) status += ` Credit balance: ${c.credits.toLocaleString()} EC.`;
+    
+    return status;
+  },
+  
+  getCombatGuidance(context) {
+    const combatTips = [
+      'Target priority: Eliminate smaller threats first to reduce incoming damage.',
+      'Power management tip: Allocate more power to weapons during offensive phases.',
+      'Shield management: Allow shields to recharge between engagements when possible.',
+      'Positioning advice: Use asteroids and debris for cover during heavy combat.'
+    ];
+    
+    return combatTips[Math.floor(Math.random() * combatTips.length)];
+  },
+  
+  getLoreResponse(input) {
+    const loreResponses = [
+      'The Old Eden galaxy spans over 50,000 light-years. Eight major factions control key territories.',
+      'Rebirth technology allows consciousness transfer upon death. Each rebirth grants new genetic advantages.',
+      'The Hegemony Vanguard maintains order through military might, while the Liberated Coalition fights for freedom.',
+      'Ancient artifacts scattered throughout the galaxy contain secrets of advanced civilizations.'
+    ];
+    
+    return loreResponses[Math.floor(Math.random() * loreResponses.length)];
+  },
+  
+  getConversationalResponse(input, context) {
+    const responses = [
+      'I\'m here to assist with tactical analysis and mission guidance. How may I help?',
+      'ARIA systems are functioning within normal parameters. What information do you require?',
+      'Neural link established. I\'m monitoring ship systems and can provide real-time assistance.',
+      'Standing by for orders. My tactical databases are at your disposal.'
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  },
+  
+  triggerContextualMessage() {
+    const now = performance.now();
+    if (now - this.lastMessageTime < 30000) return;
+    
+    const c = getCurrentCharacter();
+    if (!c || !c.active) return;
+    
+    const context = this.analyzeGameContext(c);
+    
+    if (context.hull < 0.2 && Math.random() < 0.3) {
+      this.addMessage('AI', 'Warning: Hull integrity approaching critical levels. Recommend immediate action.', true);
+    } else if (context.threat === 'high' && Math.random() < 0.2) {
+      this.addMessage('AI', 'Multiple hostile contacts detected. Suggest tactical withdrawal or request reinforcements.', true);
+    }
+  }
+};
+
+// Ship Interior Enhancement System - Advanced 3D cockpit with instrumentation
+window.ShipInteriorSystem = {
+  isInitialized: false,
+  instrumentPanels: [],
+  holographicDisplays: [],
+  cockpitLighting: null,
+  atmosphericEffects: null,
+  
+  init() {
+    if (this.isInitialized) return;
+    
+    this.createInstrumentPanels();
+    this.createHolographicDisplays();
+    this.setupCockpitLighting();
+    this.createAtmosphericEffects();
+    
+    this.isInitialized = true;
+    console.log('🚀 Ship Interior Enhancement System initialized');
+  },
+  
+  createInstrumentPanels() {
+    // Main navigation panel (left side)
+    const navPanel = this.createPanel({
+      position: { x: -2.5, y: 0.5, z: 1 },
+      rotation: { x: 0, y: 0.3, z: 0 },
+      size: { width: 1.2, height: 0.8 },
+      type: 'navigation'
+    });
+    
+    // Weapons control panel (right side)  
+    const weaponsPanel = this.createPanel({
+      position: { x: 2.5, y: 0.5, z: 1 },
+      rotation: { x: 0, y: -0.3, z: 0 },
+      size: { width: 1.2, height: 0.8 },
+      type: 'weapons'
+    });
+    
+    // Central command console (forward center)
+    const commandConsole = this.createPanel({
+      position: { x: 0, y: -0.3, z: 0.5 },
+      rotation: { x: 0.2, y: 0, z: 0 },
+      size: { width: 2, height: 0.6 },
+      type: 'command'
+    });
+    
+    this.instrumentPanels = [navPanel, weaponsPanel, commandConsole];
+    
+    // Add panels to ship
+    this.instrumentPanels.forEach(panel => {
+      if (ship) ship.add(panel);
+    });
+  },
+  
+  createPanel(config) {
+    const panelGroup = new THREE.Group();
+    panelGroup.name = `panel_${config.type}`;
+    
+    // Panel base (dark metal frame)
+    const panelGeometry = new THREE.BoxGeometry(config.size.width, config.size.height, 0.05);
+    const panelMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x2a2a35, 
+      roughness: 0.3, 
+      metalness: 0.8 
+    });
+    const panelBase = new THREE.Mesh(panelGeometry, panelMaterial);
+    panelGroup.add(panelBase);
+    
+    // Screen surface (glowing)
+    const screenGeometry = new THREE.PlaneGeometry(config.size.width * 0.85, config.size.height * 0.85);
+    const screenMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x44aaff, 
+      emissive: 0x002244, 
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.9 
+    });
+    const screenSurface = new THREE.Mesh(screenGeometry, screenMaterial);
+    screenSurface.position.z = 0.026;
+    panelGroup.add(screenSurface);
+    
+    // Add display elements
+    this.addDisplayElements(panelGroup, config.type);
+    
+    // Set position and rotation
+    panelGroup.position.set(config.position.x, config.position.y, config.position.z);
+    panelGroup.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
+    
+    return panelGroup;
+  },
+  
+  addDisplayElements(panelGroup, panelType) {
+    const elementMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x00ffaa, 
+      emissive: 0x004422, 
+      emissiveIntensity: 0.5 
+    });
+    
+    if (panelType === 'navigation') {
+      // Navigation grid lines
+      const gridGeometry = new THREE.BufferGeometry();
+      const gridPoints = [];
+      
+      for (let i = -0.4; i <= 0.4; i += 0.1) {
+        gridPoints.push(-0.4, i, 0.027);
+        gridPoints.push(0.4, i, 0.027);
+        gridPoints.push(i, -0.3, 0.027);
+        gridPoints.push(i, 0.3, 0.027);
+      }
+      
+      gridGeometry.setAttribute('position', new THREE.Float32BufferAttribute(gridPoints, 3));
+      const gridMaterial = new THREE.LineBasicMaterial({ 
+        color: 0x00ffaa, 
+        transparent: true, 
+        opacity: 0.7 
+      });
+      const gridLines = new THREE.LineSegments(gridGeometry, gridMaterial);
+      panelGroup.add(gridLines);
+    } else if (panelType === 'weapons') {
+      // Weapon charge bars
+      for (let i = 0; i < 3; i++) {
+        const barGeometry = new THREE.PlaneGeometry(0.15, 0.02);
+        const chargeBar = new THREE.Mesh(barGeometry, elementMaterial);
+        chargeBar.position.set(-0.2 + (i * 0.2), 0.1, 0.027);
+        chargeBar.name = `weapon_bar_${i}`;
+        panelGroup.add(chargeBar);
+      }
+    } else if (panelType === 'command') {
+      // Ship status indicators
+      const indicators = ['hull', 'shield', 'engine'];
+      indicators.forEach((indicator, index) => {
+        const indicatorGeometry = new THREE.CircleGeometry(0.015, 6);
+        const indicatorMesh = new THREE.Mesh(indicatorGeometry, elementMaterial);
+        const angle = (index / indicators.length) * Math.PI * 2;
+        indicatorMesh.position.set(
+          Math.cos(angle) * 0.2, 
+          Math.sin(angle) * 0.1, 
+          0.027
+        );
+        indicatorMesh.name = `status_${indicator}`;
+        panelGroup.add(indicatorMesh);
+      });
+    }
+  },
+  
+  createHolographicDisplays() {
+    // Central holographic projector
+    const projectorGeometry = new THREE.CylinderGeometry(0.05, 0.08, 0.1, 8);
+    const projectorMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x4488ff, 
+      emissive: 0x112244, 
+      emissiveIntensity: 0.6,
+      metalness: 0.8 
+    });
+    const projector = new THREE.Mesh(projectorGeometry, projectorMaterial);
+    projector.position.set(0, -0.5, 1.5);
+    projector.name = 'holo_projector';
+    
+    this.holographicDisplays = [projector];
+    
+    // Add to ship
+    if (ship) {
+      this.holographicDisplays.forEach(display => {
+        ship.add(display);
+      });
+    }
+  },
+  
+  setupCockpitLighting() {
+    // Instrument panel ambient lighting
+    const ambientLight = new THREE.AmbientLight(0x0066aa, 0.1);
+    ambientLight.name = 'cockpit_ambient';
+    
+    this.cockpitLighting = { ambientLight };
+    
+    // Add to ship
+    if (ship) {
+      ship.add(ambientLight);
+    }
+  },
+  
+  createAtmosphericEffects() {
+    // Engine glow effect behind pilot
+    const engineGlowGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+    const engineGlowMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xff4400, 
+      emissive: 0x442200, 
+      emissiveIntensity: 0.8,
+      transparent: true, 
+      opacity: 0.6 
+    });
+    const engineGlow = new THREE.Mesh(engineGlowGeometry, engineGlowMaterial);
+    engineGlow.position.set(0, -0.5, -1);
+    engineGlow.name = 'engine_glow';
+    
+    this.atmosphericEffects = { engineGlow };
+    
+    // Add to ship
+    if (ship) {
+      this.atmosphericEffects.engineGlow && ship.add(this.atmosphericEffects.engineGlow);
+    }
+  },
+  
+  updateDisplays() {
+    if (!this.isInitialized) return;
+    
+    const c = getCurrentCharacter();
+    if (!c) return;
+    
+    // Update ship status indicators
+    this.updateStatusIndicators(c);
+    
+    // Animate holographic displays
+    this.animateHolographics();
+  },
+  
+  updateStatusIndicators(character) {
+    const statusTypes = {
+      hull: character.hull / character.maxHull,
+      shield: character.shield / character.maxShield,
+      engine: 0.8
+    };
+    
+    Object.entries(statusTypes).forEach(([type, level]) => {
+      const indicator = ship.getObjectByName(`status_${type}`);
+      if (indicator) {
+        // Color based on system health
+        if (level > 0.7) {
+          indicator.material.color.setHex(0x00ff00);
+        } else if (level > 0.3) {
+          indicator.material.color.setHex(0xffff00);
+        } else {
+          indicator.material.color.setHex(0xff0000);
+        }
+        
+        indicator.material.emissiveIntensity = 0.3 + level * 0.5;
+      }
+    });
+  },
+  
+  animateHolographics() {
+    const time = Date.now() * 0.001;
+    
+    // Pulse projector
+    const projector = ship.getObjectByName('holo_projector');
+    if (projector) {
+      projector.material.emissiveIntensity = 0.4 + Math.sin(time * 3) * 0.2;
+    }
+  }
+};
+
 const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.55, metalness: 0.5, envMapIntensity: 1.2 });
 const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.2, metalness: 0.75, emissive: 0x44aaff, emissiveIntensity: 0.4, envMapIntensity: 1.5 });
 const shipCanopyMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35 });
@@ -10186,7 +11180,23 @@ function spawnNail() {
     // Muzzle point light burst — reuse persistent light
     if (window._mfLight) { window._mfLight.intensity = 8; window._mfLight.position.copy(camera.position).addScaledVector(_tmpV3a.set(0, -0.3, -4).applyQuaternion(camera.quaternion), 1); clearTimeout(window._mfLightTimer); window._mfLightTimer = setTimeout(() => { if (window._mfLight) window._mfLight.intensity = 0; }, 60); }
   AudioSFX.play('fire');
-  const dir = _tmpV3a.set(0,0,-1).applyQuaternion(camera.quaternion);
+  // WoT-Style Aiming: Direct vs Auto-Target
+  if (state.aimingMode && state.aimingMode.mode === 'auto' && state.targetLock.target && state.targetLock.locked) {
+    // Auto-target mode: aim at locked target with prediction
+    const targetPos = state.targetLock.target.mesh ? state.targetLock.target.mesh.position : state.targetLock.target.position;
+    if (targetPos) {
+      _tmpV3a.subVectors(targetPos, camera.position).normalize();
+      // Add slight aim assist for auto mode
+      const directDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      _tmpV3a.lerp(directDir, 1 - (state.aimingMode.aimAssist || 0.15));
+    } else {
+      _tmpV3a.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    }
+  } else {
+    // Direct aiming mode: fire exactly where camera points (WoT-style) 
+    _tmpV3a.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  }
+  const dir = _tmpV3a;
   const origin = _tmpV3b.copy(camera.position).addScaledVector(dir, 1);
 
   // Realistic railgun slug — glowing core + plasma trail + spark particles
@@ -11798,6 +12808,9 @@ canvas3d.addEventListener('mousedown', (e) => {
   if (e.button === 0) {
     mouseHeld = true;
     if (state.activeWeapon === 'laser') fireLaser();
+    else if (state.activeWeapon === 'gatling_left') fireGatlingGun('left');
+    else if (state.activeWeapon === 'gatling_right') fireGatlingGun('right');
+    else if (state.activeWeapon === 'gatling_dual') fireGatlingGun('dual');
     else fireRailgun();
   }
   // Right-click = EVE-style click-to-navigate (set autopilot waypoint in 3D)
@@ -12280,7 +13293,13 @@ document.querySelectorAll('#action-bar .action-btn').forEach(btn => {
 
 // Title buttons
 _on('btn-launch', 'click', () => showScreen('gunner'));
-_on('btn-new', 'click', () => { initCreateScreen(); showScreen('create'); });
+_on('btn-new', 'click', () => { 
+  initCreateScreen(); 
+  // Skip resurrection screen and go directly to character creation
+  const createHoloScreen = document.getElementById('screen-create-holo');
+  if (createHoloScreen) createHoloScreen.classList.remove('active');
+  showScreen('create'); 
+});
 _on('btn-continue', 'click', () => {
   if (loadGame()) {
     addComms('AI Director', `Welcome back, pilot ${state.player.name}.`);
@@ -17142,10 +18161,30 @@ setTimeout(() => {
 }, 2000);
 
 
-        function gameLoop() {
+        // Initialize WoT crosshair system
+function initWoTAiming() {
+  if (typeof state.aimingMode !== 'undefined') {
+    updateCrosshair();
+  }
+}
+
+function gameLoop() {
   requestAnimationFrame(gameLoop);
+  // Initialize WoT aiming system
+  setTimeout(() => { initWoTAiming(); }, 1000);
 
   if (!scene || !camera || !ship || !turretMount || (!composer && !renderer)) return;
+  
+  // Update AI chatbot context awareness
+  if (window.AIChatbot && window.AIChatbot.isEnabled && Math.random() < 0.02) {
+    window.AIChatbot.triggerContextualMessage();
+  }
+  
+  // Update ship interior displays
+  if (window.ShipInteriorSystem && window.ShipInteriorSystem.isInitialized) {
+    window.ShipInteriorSystem.updateDisplays();
+  }
+  
   const shouldRenderFrame = c.active || state.screen === 'gunner' || state.screen === 'bridge' || state.screen === 'title';
   try {
     if (!state._frameCount) state._frameCount = 0;
@@ -17245,9 +18284,45 @@ setTimeout(() => {
       fl.speed = maxSpd;
     }
     // Move ship
+    const oldPosition = { x: ship.position.x, y: ship.position.y, z: ship.position.z };
     ship.position.x += fl.velocity.x * dt;
     ship.position.y += fl.velocity.y * dt;
     ship.position.z += fl.velocity.z * dt;
+    
+    // Collision Detection System
+    const shipRadius = 4; // Ship collision radius
+    
+    // Check asteroid collisions
+    if (typeof asteroids !== 'undefined') {
+      asteroids.forEach(asteroid => {
+        if (asteroid && asteroid.position && collisionPhysics.checkCollision(ship.position, asteroid.position, shipRadius, 8)) {
+          const damage = collisionPhysics.calculateDamage(fl.velocity, 'asteroid');
+          if (damage > 0) {
+            collisionPhysics.applyCollision(damage, fl.velocity, 'asteroid');
+            // Bounce effect
+            fl.velocity.x *= -0.4;
+            fl.velocity.y *= -0.4;
+            fl.velocity.z *= -0.4;
+          }
+        }
+      });
+    }
+    
+    // Check enemy collisions
+    if (typeof enemies !== 'undefined') {
+      enemies.forEach(enemy => {
+        if (enemy && enemy.mesh && enemy.mesh.position && collisionPhysics.checkCollision(ship.position, enemy.mesh.position, shipRadius, 5)) {
+          const damage = collisionPhysics.calculateDamage(fl.velocity, 'enemy');
+          if (damage > 0) {
+            collisionPhysics.applyCollision(damage, fl.velocity, 'enemy');
+            // Mutual damage - enemy takes damage too
+            if (enemy.health) {
+              enemy.health = Math.max(0, enemy.health - damage * 0.6);
+            }
+          }
+        }
+      });
+    }
     // Update engine audio pitch/volume based on speed
     AudioSFX.updateEngineAudio(fl.speed, maxSpd, fl.afterburner);
     // ── NPC/Station collision pushback ──
@@ -17378,8 +18453,13 @@ setTimeout(() => {
       }
     }
     if (c.cooling && performance.now() >= c.coolEnd) { c.cooling = false; c.weaponReady = true; }
-    // Continuous laser fire while mouse held (scale fire rate)
-    if (mouseHeld && state.activeWeapon === 'laser' && c.locked && !c.dead) fireLaser(weaponsMult);
+    // Continuous fire while mouse held (scale fire rate)
+    if (mouseHeld && c.locked && !c.dead) {
+      if (state.activeWeapon === 'laser') fireLaser(weaponsMult);
+      else if (state.activeWeapon === 'gatling_left') fireGatlingGun('left');
+      else if (state.activeWeapon === 'gatling_right') fireGatlingGun('right');
+      else if (state.activeWeapon === 'gatling_dual') fireGatlingGun('dual');
+    }
     if (muzzleMat.opacity > 0) muzzleMat.opacity = Math.max(0, muzzleMat.opacity - dt * 8);
 
     // Recoil
@@ -20169,8 +21249,8 @@ async function init() {
 
   // Start
   // Init audio on first user interaction
-  document.addEventListener('click', () => { AudioSFX.init(); MusicPlayer.init(); MusicPlayer.unlockAndStartOpeningSong(); }, { once: true });
-  document.addEventListener('keydown', () => { AudioSFX.init(); MusicPlayer.init(); MusicPlayer.unlockAndStartOpeningSong(); }, { once: true });
+  document.addEventListener('click', () => { AudioSFX.init(); MusicPlayer.init(); MusicPlayer.unlockAndStartOpeningSong(); if(window.AIChatbot) window.AIChatbot.init(); if(window.ShipInteriorSystem) window.ShipInteriorSystem.init(); }, { once: true });
+  document.addEventListener('keydown', () => { AudioSFX.init(); MusicPlayer.init(); MusicPlayer.unlockAndStartOpeningSong(); if(window.AIChatbot) window.AIChatbot.init(); if(window.ShipInteriorSystem) window.ShipInteriorSystem.init(); }, { once: true });
 
   MusicPlayer.init();
 
@@ -20429,6 +21509,27 @@ window.enableDevCheats = () => {
           showScreen('create');
         });
       }
+      
+      // "SKIP" button bypasses resurrection entirely
+      const btnSkipHolo = document.getElementById('btn-skip-holo');
+      if (btnSkipHolo) {
+        btnSkipHolo.addEventListener('click', () => {
+          const createHoloScreen = document.getElementById('screen-create-holo');
+          if (createHoloScreen) createHoloScreen.classList.remove('active');
+          showScreen('create');
+        });
+      }
+      
+      // ESC key closes resurrection screen
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const createHoloScreen = document.getElementById('screen-create-holo');
+          if (createHoloScreen && createHoloScreen.classList.contains('active')) {
+            createHoloScreen.classList.remove('active');
+            showScreen('create');
+          }
+        }
+      });
     });
 </script>
 
