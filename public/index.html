@@ -230,7 +230,7 @@ body[data-screen="settings"] #warp-target-btn {
 @keyframes hazToxic{0%{opacity:0.5;}33%{opacity:0.7;}66%{opacity:0.3;}100%{opacity:0.5;}}
 
 /* ── Music Player ─────────────────────────── */
-#music-player-panel{position:fixed;top:18px;right:18px;z-index:120;background:linear-gradient(180deg,rgba(8,16,28,0.96),rgba(4,8,14,0.92));border:1px solid rgba(107,196,255,0.24);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.42),0 0 28px rgba(107,196,255,0.08);padding:14px 16px 12px;width:min(360px,calc(100vw - 28px));backdrop-filter:blur(18px);transition:max-height 0.28s ease,padding 0.28s ease,transform 0.28s ease,border-color 0.28s ease;overflow:hidden;}
+#music-player-panel{position:fixed;top:18px;right:18px;z-index:80;background:linear-gradient(180deg,rgba(8,16,28,0.96),rgba(4,8,14,0.92));border:1px solid rgba(107,196,255,0.24);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.42),0 0 28px rgba(107,196,255,0.08);padding:14px 16px 12px;width:min(360px,calc(100vw - 28px));backdrop-filter:blur(18px);transition:max-height 0.28s ease,padding 0.28s ease,transform 0.28s ease,border-color 0.28s ease;overflow:hidden;}
 #music-player-panel:hover{transform:translateY(-2px);border-color:rgba(224,177,95,0.34);}
 #music-player-panel .music-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
 #music-player-panel .music-header-main{min-width:0;flex:1;}
@@ -1780,7 +1780,102 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     transform: scale(1);
   }
 }
-</style>
+
+  /* ── Mobile & Responsive Improvements ──────── */
+  
+  /* Better viewport handling */
+  .screen { -webkit-overflow-scrolling: touch; }
+  
+  /* Mobile form improvements */
+  @media (max-width: 600px) {
+    input[type="text"], input[type="password"], input[type="email"], 
+    .account-card input, .title-card input {
+      min-height: 44px !important;
+      font-size: 16px !important;
+      padding: 8px 12px !important;
+      background: rgba(20, 28, 40, 0.9) !important;
+      border: 1px solid rgba(107, 196, 255, 0.3) !important;
+    }
+    
+    .account-card, .title-card {
+      padding: 16px !important;
+    }
+    
+    .title-stack { 
+      padding: 16px 12px 80px !important; 
+      gap: 16px !important; 
+    }
+    
+    /* Enhanced mobile controls */
+    #mobile-controls {
+      bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    #touch-move-zone {
+      left: 8px !important;
+      width: 100px !important;
+      height: 100px !important;
+    }
+    
+    #touch-button-cluster {
+      right: 8px !important;
+    }
+    
+    /* DNA menu mobile */
+    .dna-close-btn {
+      top: calc(15px + env(safe-area-inset-top)) !important;
+      right: calc(20px + env(safe-area-inset-right)) !important;
+      font-size: 28px !important;
+      padding: 8px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+    }
+  }
+  
+  /* Force mobile controls visible on touch */
+  @media (pointer: coarse) {
+    #mobile-controls, #touch-move-zone, #touch-stick, #mobile-look-zone,
+    #touch-button-cluster, #touch-button-row, #touch-joystick-left,
+    #touch-fire, #touch-reload, #touch-boost, #touch-gyro, .touch-ui-element {
+      display: block !important;
+      pointer-events: auto !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+  }
+
+  /* Additional mobile button accessibility fixes */
+  @media (max-width: 600px) {
+    .title-stack {
+      min-height: 100vh !important;
+      height: auto !important;
+      overflow-y: auto !important;
+    }
+    
+    .title-grid {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+    
+    .title-card, .account-card {
+      padding: 14px !important;
+      margin-bottom: 12px !important;
+    }
+    
+    .title-card .btn {
+      min-height: 44px !important;
+      margin: 4px 0 !important;
+      font-size: 14px !important;
+    }
+    
+    /* Ensure all buttons are accessible */
+    button, .btn {
+      min-height: 44px !important;
+      min-width: 44px !important;
+    }
+  }</style>
 
 
 <!-- QA VERIFICATION BANNER — removed only by qa_proxy_live.cjs passing -->
@@ -2058,7 +2153,16 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 </div>
 
 <div class="screen" id="screen-create-holo">
-  <button class="dna-close-btn" onclick="closeDNAMenu()" style="position:absolute;top:15px;right:20px;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;z-index:999;" title="Close DNA Menu">✕</button>
+  <button class="dna-close-btn" onclick="
+      const dnaScreen = document.getElementById('screen-create-holo');
+      const createScreen = document.getElementById('screen-create');
+      if (dnaScreen && dnaScreen.classList.contains('active')) {
+        dnaScreen.classList.remove('active');
+        if (createScreen) {
+          createScreen.classList.add('active');
+        }
+      }
+    " style="position:absolute;top:15px;right:20px;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;z-index:9999;padding:8px;min-width:44px;min-height:44px;" title="Close DNA Menu">✕</button>
   <div class="holo-panel">
     <h1 class="holo-title">GENETIC RESURRECTION</h1>
     <p class="holo-subtitle">⬢ DNA RECOMBINATION PROTOCOL ⬢</p>
