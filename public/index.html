@@ -21864,8 +21864,29 @@ function gameLoop() {
     if (fl.speed > 5) {
       const _fuelEfficiency = c.kills >= 100 ? 0.5 : c.kills >= 50 ? 0.7 : 1; // Fuel efficiency tiers: 30% at 50 kills, 50% at 100
       const fuelBurn = dt * 0.08 * (fl.afterburner ? 3 * _fuelEfficiency : 1);
+      const _fuelBefore = state.ship.fuel;
       state.ship.fuel = Math.max(0, state.ship.fuel - fuelBurn);
-      if (state.ship.fuel <= 0) { fl.afterburner = false; }
+      // Low fuel warnings (once per threshold crossing)
+      if (_fuelBefore > 25 && state.ship.fuel <= 25) {
+        addComms('EDEN AI', '\u26FD Fuel reserve at 25% — dock soon.');
+        AudioSFX.play('click');
+      } else if (_fuelBefore > 10 && state.ship.fuel <= 10) {
+        addComms('EDEN AI', '\u26A0 CRITICAL FUEL — 10%! Dock immediately.');
+        AudioSFX.play('boss_warn');
+        showToast('\u26FD LOW FUEL');
+      }
+      if (state.ship.fuel <= 0) {
+        if (fl.afterburner) {
+          fl.afterburner = false;
+          if (!c._fuelDryAnnounced) {
+            c._fuelDryAnnounced = true;
+            addComms('EDEN AI', '\u26A0 Fuel exhausted — afterburner offline, 30% thrust.');
+            AudioSFX.play('shield_break');
+          }
+        }
+      } else if (c._fuelDryAnnounced && state.ship.fuel > 15) {
+        c._fuelDryAnnounced = false;
+      }
     }
     // ── Hull damage smoke trail — intermittent smoke when critically damaged ──
     if (c.hull < c.maxHull * 0.3 && fl.speed > 2 && !c.dead) {
