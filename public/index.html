@@ -3359,6 +3359,7 @@ const state = {
     enemyBolts: [],
     asteroids: [],
     dmgNumbers: [],
+    paused: false,
     streak: 0, streakTimer: 0, bestStreak: 0, streakMultiplier: 1,
     shakeX: 0, shakeY: 0,
     hitMarkerTimer: 0,      // crosshair flash on hit
@@ -11580,9 +11581,38 @@ function spawnLootDrop(pos, type, creditValue, rarity) {
   c.lootDrops.push({ group: g, type, age: 0, creditValue: creditValue || 50, rarity: _r });
 }
 
+function togglePause(forceState) {
+  if (!c.active || c.dead) return;
+  const _next = typeof forceState === 'boolean' ? forceState : !c.paused;
+  c.paused = _next;
+  let ov = document.getElementById('pause-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'pause-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:220;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(5,8,15,0.78);backdrop-filter:blur(6px);color:#cfe3ff;font-family:"Segoe UI",system-ui,sans-serif;letter-spacing:0.08em;pointer-events:auto;';
+    ov.innerHTML = '<div style="font-size:3rem;font-weight:800;color:#ffcc44;text-shadow:0 0 30px rgba(255,204,68,0.6);margin-bottom:0.2em;">\u275A\u275A PAUSED</div>' +
+      '<div style="opacity:0.6;font-size:0.9rem;margin-bottom:2em;">ESC to resume &bull; Shift+ESC to exit to bridge</div>' +
+      '<button id="pause-resume" class="btn" style="min-width:220px;margin:0.3em;">\u25B6 RESUME</button>' +
+      '<button id="pause-exit" class="btn" style="min-width:220px;margin:0.3em;border-color:var(--danger);color:var(--danger);">\u2715 EXIT TO BRIDGE</button>';
+    document.body.appendChild(ov);
+    document.getElementById('pause-resume').addEventListener('click', () => togglePause(false));
+    document.getElementById('pause-exit').addEventListener('click', () => { togglePause(false); exitGunnerMode(); });
+  }
+  ov.style.display = _next ? 'flex' : 'none';
+  if (_next) {
+    if (document.pointerLockElement) document.exitPointerLock();
+    mouseHeld = false;
+    if (typeof keysDown !== 'undefined' && keysDown.clear) keysDown.clear();
+  } else {
+    try { canvas3d.requestPointerLock?.(); } catch(_e) {}
+  }
+}
+
 function exitGunnerMode(skipScreenChange) {
   c.active = false;
   c.locked = false;
+  c.paused = false;
+  const _pov = document.getElementById('pause-overlay'); if (_pov) _pov.style.display = 'none';
   mouseHeld = false;
   if (document.pointerLockElement) document.exitPointerLock();
   // Clean up all 3D objects (guard each removal) + dispose GPU resources
@@ -12254,7 +12284,7 @@ function renderHUD(dtMs) {
       if (Math.abs(_asx - cx) < 40 && Math.abs(_asy - cy) < 40) { _aimingAtEnemy = true; break; }
     }
   }
-  const crossColor = killActive ? '#ffcc00' : hitActive ? '#ff4444' : _aimingAtEnemy ? '#ff3333' : c.lockedTarget ? '#44ff44' : primary;
+  const crossColor = killActive ? '#ffcc00' : hitActive ? '#ff4444' : _aimingAtEnemy ? '#ff3333' : (state.targetLock && state.targetLock.locked) ? '#44ff44' : primary;
   const crossSize = killActive ? 36 : hitActive ? 33 : 30;
   hudCtx.strokeStyle = crossColor; hudCtx.lineWidth = hitActive ? 2.5 : 1.5; hudCtx.globalAlpha = 0.8;
   hudCtx.beginPath(); hudCtx.arc(cx, cy, crossSize, 0, Math.PI*2); hudCtx.stroke();
@@ -13937,7 +13967,11 @@ const _cachedChatInput = document.getElementById('chatbot-input');
 document.addEventListener('keydown', (e) => {
   // Don't process game keys while typing in chatbot
   if (document.activeElement === _cachedChatInput) { if (e.key === 'Escape') { _cachedChatInput.blur(); } return; }
-  if (e.key === 'Escape' && c.active && !c.dead) { exitGunnerMode(); return; }
+  if (e.key === 'Escape' && c.active && !c.dead) {
+    if (e.shiftKey) { exitGunnerMode(); return; }
+    togglePause();
+    return;
+  }
   // R = reload ammo (1.5s reload animation)
   if ((e.key === 'r' || e.key === 'R') && c.active) {
     if (c.ammo < c.maxAmmo && !c._reloading) {
@@ -19250,7 +19284,8 @@ function gameLoop() {
   try {
     if (!state._frameCount) state._frameCount = 0;
     state._frameCount++;
-    const rawDt = Math.min(clock.getDelta(), 0.1);
+    const rawDt = c.paused ? 0 : Math.min(clock.getDelta(), 0.1);
+    if (c.paused) clock.getDelta(); // drain accumulator so unpause doesn't lurch
     // Kill-cam slow-mo effect
     const _killCamMult = (c._killCamTimer > 0) ? 0.3 : 1;
     if (c._killCamTimer > 0) c._killCamTimer -= rawDt * 1000;
