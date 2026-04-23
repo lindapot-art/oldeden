@@ -14181,11 +14181,16 @@ document.addEventListener('keydown', (e) => {
       for (let _li = c.lootDrops.length - 1; _li >= 0; _li--) {
         const _ld = c.lootDrops[_li];
         if (_ld.mesh && _ld.mesh.position.distanceTo(ship.position) < 100) {
-          // Auto-collect
-          if (_ld.type === 'credits') { state.player.credits += (_ld.value || 10); }
-          else if (_ld.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 3); }
-          else if (_ld.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 5); }
-          else if (_ld.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5); }
+          // Auto-collect — floating pickup label for all loot types
+          const _pickupPos = _ld.mesh.position.clone();
+          let _pickupText = null, _pickupColor = '#44ddff';
+          if (_ld.type === 'credits') { const _v = (_ld.value || 10); state.player.credits += _v; _pickupText = '+' + _v + ' EC'; _pickupColor = '#ffdd44'; }
+          else if (_ld.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 3); _pickupText = '+3 AMMO'; _pickupColor = '#ff8844'; }
+          else if (_ld.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 5); _pickupText = '+5 FUEL'; _pickupColor = '#44ffaa'; }
+          else if (_ld.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5); _pickupText = '+5 HULL'; _pickupColor = '#44aaff'; }
+          if (_pickupText && c.dmgNumbers) {
+            c.dmgNumbers.push({ text: _pickupText, px: _pickupPos.x, py: _pickupPos.y, pz: _pickupPos.z, age: 0, color: _pickupColor });
+          }
           scene.remove(_ld.mesh); if (_ld.mesh.geometry) _ld.mesh.geometry.dispose(); if (_ld.mesh.material) _ld.mesh.material.dispose();
           c.lootDrops.splice(_li, 1); _collected++;
         }
