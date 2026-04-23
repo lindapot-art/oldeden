@@ -12070,7 +12070,8 @@ function renderHUD(dtMs) {
     const enemyCount = c.enemies.length;
     const threatLevel = enemyCount === 0 ? 'CLEAR' : enemyCount <= 2 ? 'LOW' : enemyCount <= 5 ? 'MEDIUM' : enemyCount <= 8 ? 'HIGH' : 'CRITICAL';
     const threatColor = enemyCount === 0 ? '#00ff88' : enemyCount <= 2 ? '#44aaff' : enemyCount <= 5 ? '#ffaa00' : enemyCount <= 8 ? '#ff6600' : '#ff2222';
-    const _tly = sry + (c.streak >= 3 ? 95 : 70);
+    // sry+60 is AGE line; must land past it. Previously 70 (only +10) overlapped.
+    const _tly = sry + (c.streak >= 3 ? 108 : 80);
     hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566';
     hudCtx.fillText('THREAT', srx, _tly);
     hudCtx.fillStyle = threatColor; hudCtx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
@@ -12085,7 +12086,7 @@ function renderHUD(dtMs) {
 
   // ── Active Encounter / Hazard HUD Indicator (top-right, below streak) ──
   {
-    let _hudStatusY = sry + (c.streak >= 3 ? 110 : 85);
+    let _hudStatusY = sry + (c.streak >= 3 ? 124 : 98);
     // Active encounter
     if (state._activeEncounter) {
       const enc = state._activeEncounter;
