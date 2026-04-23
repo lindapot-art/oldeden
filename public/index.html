@@ -9449,6 +9449,17 @@ function checkAndClaimMilestones() {
       p.edenTokens += m.reward;
       claimed++;
       addComms('EDEN Tokens', `Milestone "${m.name}" claimed! +${m.reward} EDEN`);
+      // Big feedback — toast + floating banner in-world
+      try {
+        if (typeof showToast === 'function') showToast('\uD83C\uDFC6 MILESTONE: ' + m.name + '  +' + m.reward + ' EDEN');
+        if (c && c.dmgNumbers && typeof ship !== 'undefined' && ship?.position) {
+          c.dmgNumbers.push({
+            text: '\uD83C\uDFC6 +' + m.reward + ' EDEN',
+            px: ship.position.x, py: ship.position.y + 6, pz: ship.position.z,
+            age: 0, color: '#ffcc44'
+          });
+        }
+      } catch(_e) {}
     }
   });
   if (claimed > 0) {
@@ -20204,6 +20215,14 @@ function gameLoop() {
         addComms('EDEN AI', '\u2728 Wave cleared! +' + _waveClearBonus + ' EC, +3 hull repair.');
         addCombatLog('Wave clear bonus — +' + _waveClearBonus + ' EC', '#44ff88');
         AudioSFX.play('quest_complete');
+        try {
+          if (typeof showToast === 'function') showToast('\u2728 WAVE CLEAR  +' + _waveClearBonus + ' EC  +3 HULL');
+          if (c.dmgNumbers) c.dmgNumbers.push({
+            text: '\u2728 WAVE CLEAR',
+            px: ship.position.x, py: ship.position.y + 8, pz: ship.position.z,
+            age: 0, color: '#44ff88'
+          });
+        } catch(_e) {}
       }
     }
     const _inBreather = c._breatherStart > 0 && (state.gameTime - c._breatherStart < 4000);
