@@ -20706,6 +20706,10 @@ function gameLoop() {
               addComms('EDEN AI', '\u2B50 COMMANDER DOWN! +' + cmdBonus + ' EC bonus, +3 SM');
               addCombatLog('Fleet Commander destroyed — bonus +' + cmdBonus + ' EC', '#ffcc00');
               AudioSFX.play('quest_complete');
+              try {
+                if (typeof showToast==='function') showToast('⭐ COMMANDER DOWN  +' + cmdBonus + ' EC  +3 SM');
+                if (c.dmgNumbers) c.dmgNumbers.push({ text: '⭐ COMMANDER +' + cmdBonus + ' EC', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ffcc00' });
+              } catch(_e) {}
               // Reinforcement call — 2-4 enemies warp in when commander dies
               const _reinfCount = 2 + Math.floor(Math.random() * 3);
               addComms('Intercepted Comms', '\u26A0\uFE0F Enemy reinforcements inbound! ' + _reinfCount + ' contacts!');
@@ -20726,6 +20730,10 @@ function gameLoop() {
               addComms('Bounty Board', '\uD83C\uDFAF BOUNTY COLLECTED! +' + bountyReward + ' EC, +2 SM — Rank: ' + _bhRank);
               addCombatLog('Bounty collected — +' + bountyReward + ' EC bonus (' + _bhRank + ')', '#ffcc00');
               AudioSFX.play('quest_complete');
+              try {
+                if (typeof showToast==='function') showToast('🎯 BOUNTY COLLECTED  +' + bountyReward + ' EC');
+                if (c.dmgNumbers) c.dmgNumbers.push({ text: '🎯 BOUNTY +' + bountyReward + ' EC', px: e.group.position.x, py: e.group.position.y + 4, pz: e.group.position.z, age: 0, color: '#ffcc00' });
+              } catch(_e) {}
             }
             // Elite kill bonus — bounty hunter: 3x credits + combat log
             if (e._isElite) {
@@ -20733,6 +20741,10 @@ function gameLoop() {
               state.player.credits += _eliteBonus;
               addComms('EDEN AI', '\uD83D\uDD25 ELITE ' + (e.type || 'hostile').toUpperCase() + ' DESTROYED! +' + _eliteBonus + ' EC bonus');
               addCombatLog('Elite eliminated — bonus +' + _eliteBonus + ' EC', '#ff4422');
+              try {
+                if (typeof showToast==='function') showToast('🔥 ELITE DOWN  +' + _eliteBonus + ' EC');
+                if (c.dmgNumbers) c.dmgNumbers.push({ text: '🔥 ELITE +' + _eliteBonus + ' EC', px: e.group.position.x, py: e.group.position.y + 3, pz: e.group.position.z, age: 0, color: '#ff4422' });
+              } catch(_e) {}
               // Power siphon — killing elites restores 15% shield
               state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + state.ship.maxShield * 0.15);
               addCombatLog('POWER SIPHON — +15% shield from elite', '#44ccff');
