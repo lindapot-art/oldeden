@@ -12792,6 +12792,22 @@ function renderHUD(dtMs) {
   // Player dot
   hudCtx.globalAlpha = 0.9; hudCtx.fillStyle = '#00ff88';
   hudCtx.beginPath(); hudCtx.arc(mapCx, mapCy, 3, 0, Math.PI*2); hudCtx.fill();
+  // Forward-facing wedge (shows where the turret is aimed relative to radar)
+  {
+    const _fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    // Canvas angle: 0=right(+X), PI/2=down(+Z). atan2(z, x) maps world-XZ onto canvas.
+    const _heading = Math.atan2(_fwd.z, _fwd.x);
+    const _wedge = Math.PI / 5; // 36° cone each side
+    hudCtx.save();
+    hudCtx.globalAlpha = 0.22;
+    hudCtx.fillStyle = '#44ddff';
+    hudCtx.beginPath();
+    hudCtx.moveTo(mapCx, mapCy);
+    hudCtx.arc(mapCx, mapCy, mapR, _heading - _wedge, _heading + _wedge);
+    hudCtx.closePath();
+    hudCtx.fill();
+    hudCtx.restore();
+  }
   // Enemy dots (type-based colors)
   c.enemies.forEach(e => {
     const dx = e.group.position.x - ship.position.x;
@@ -22216,18 +22232,21 @@ function gameLoop() {
 
     // ── Kill Feed (right side, below target info) ──
     if (c._killFeed && c._killFeed.length > 0) {
-      const _kfX = hudCanvas.width - 170, _kfBaseY = 160;
+      const _kfX = hudCanvas.width - 180, _kfBaseY = 160;
       const now = performance.now();
-      hudCtx.font = '9px "Segoe UI", system-ui, sans-serif';
+      hudCtx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
       hudCtx.textAlign = 'left';
       for (let ki = c._killFeed.length - 1; ki >= 0; ki--) {
         const kf = c._killFeed[ki];
         const age = now - kf.time;
         if (age > 5000) { c._killFeed.splice(ki, 1); continue; }
         const alpha = age < 200 ? age / 200 : age > 4000 ? 1 - (age - 4000) / 1000 : 1;
-        hudCtx.globalAlpha = alpha * 0.7;
+        hudCtx.globalAlpha = alpha * 0.9;
+        // Dark shadow for readability over bright space backgrounds
+        hudCtx.fillStyle = 'rgba(0,0,0,0.7)';
+        hudCtx.fillText(kf.text, _kfX + 1, _kfBaseY + ki * 15 + 1);
         hudCtx.fillStyle = kf.color;
-        hudCtx.fillText(kf.text, _kfX, _kfBaseY + ki * 13);
+        hudCtx.fillText(kf.text, _kfX, _kfBaseY + ki * 15);
       }
       hudCtx.globalAlpha = 1;
       hudCtx.textAlign = 'left';
