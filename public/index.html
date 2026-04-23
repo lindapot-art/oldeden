@@ -11127,7 +11127,7 @@ function spawnSystemLoot() {
   }
 }
 
-const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 18, NAIL_SPEED = 400;
+const SPAWN_RADIUS = 250, SPAWN_INTERVAL = 2200, ENEMY_SPEED = 12, NAIL_SPEED = 400;
 const CHARGE_TIME = 350, COOLDOWN_TIME = 200, MOUSE_SENS = 0.002;
 const FIRST_LAUNCH_SAFE_MS = 45000;
 const RETURN_LAUNCH_SAFE_MS = 12000;
@@ -11254,7 +11254,9 @@ function enterGunnerMode() {
     addComms('EDEN AI', '\u{1F6E1} Hull Plating Upgrade: +20% max hull (veteran bonus)');
   }
   AudioSFX.startAmbience();
-  AudioSFX.startBGM();
+  // BGM paused on entering playgame — player controls via jukebox toggle (J key)
+  if (state._bgmAutoplay) AudioSFX.startBGM();
+  else AudioSFX.stopBGM();
   AudioSFX.startEngineHum();
   if (shouldUseMobileFlightUI()) c.locked = true;
   else canvas3d.requestPointerLock()?.catch?.(() => {});
@@ -19440,40 +19442,8 @@ function gameLoop() {
     ship.position.y += fl.velocity.y * dt;
     ship.position.z += fl.velocity.z * dt;
     
-    // Collision Detection System
-    const shipRadius = 4; // Ship collision radius
-    
-    // Check asteroid collisions
-    if (typeof asteroids !== 'undefined') {
-      asteroids.forEach(asteroid => {
-        if (asteroid && asteroid.position && collisionPhysics.checkCollision(ship.position, asteroid.position, shipRadius, 8)) {
-          const damage = collisionPhysics.calculateDamage(fl.velocity, 'asteroid');
-          if (damage > 0) {
-            collisionPhysics.applyCollision(damage, fl.velocity, 'asteroid');
-            // Bounce effect
-            fl.velocity.x *= -0.4;
-            fl.velocity.y *= -0.4;
-            fl.velocity.z *= -0.4;
-          }
-        }
-      });
-    }
-    
-    // Check enemy collisions
-    if (typeof enemies !== 'undefined') {
-      enemies.forEach(enemy => {
-        if (enemy && enemy.mesh && enemy.mesh.position && collisionPhysics.checkCollision(ship.position, enemy.mesh.position, shipRadius, 5)) {
-          const damage = collisionPhysics.calculateDamage(fl.velocity, 'enemy');
-          if (damage > 0) {
-            collisionPhysics.applyCollision(damage, fl.velocity, 'enemy');
-            // Mutual damage - enemy takes damage too
-            if (enemy.health) {
-              enemy.health = Math.max(0, enemy.health - damage * 0.6);
-            }
-          }
-        }
-      });
-    }
+    // Collision Detection — handled in main update loop with c.asteroids/c.enemies (see ~21569)
+    // (legacy global-array collision block removed — those globals never existed)
     // Update engine audio pitch/volume based on speed
     AudioSFX.updateEngineAudio(fl.speed, maxSpd, fl.afterburner);
     // ── NPC/Station collision pushback ──
@@ -21606,6 +21576,47 @@ function gameLoop() {
             fl.velocity.z = pushDir.z * pushForce;
             ship.position.addScaledVector(pushDir, effectiveRadius - dist + 2);
             if (state.ship.hull <= 0 && !c.dead) { playerDeathSequence('Destroyed by asteroid collision'); }
+          }
+        }
+      }
+    }
+
+    // Enemy ramming collision — share cooldown but separate check
+    if (!c.godMode && !c.dead && performance.now() > c.deathImmunityUntil) {
+      if (!c._enemyRamCooldown) c._enemyRamCooldown = 0;
+      if (performance.now() > c._enemyRamCooldown && c.enemies && c.enemies.length) {
+        for (let _ei = 0; _ei < c.enemies.length; _ei++) {
+          const en = c.enemies[_ei];
+          if (!en || !en.group || !en.group.position) continue;
+          const eDist = en.group.position.distanceTo(ship.position);
+          const eRadius = (en.cfg && en.cfg.scale ? en.cfg.scale * 4 : 4) + 3;
+          if (eDist < eRadius) {
+            const eDmg = (en.isBoss ? 35 : en._isElite ? 22 : 12) + Math.random() * 6;
+            const hadShield = state.ship.shield > 0;
+            c._damageSources['Ramming'] = (c._damageSources['Ramming'] || 0) + eDmg;
+            if (state.ship.shield > 0) {
+              const _ab = Math.min(state.ship.shield, eDmg);
+              state.ship.shield -= _ab;
+              const _ov = eDmg - _ab;
+              if (_ov > 0) state.ship.hull = Math.max(0, state.ship.hull - _ov * 0.6);
+            } else if (c.shieldGateTimer <= 0) { state.ship.hull = Math.max(0, state.ship.hull - eDmg * 0.6); }
+            // Mutual damage to enemy
+            en.hp = Math.max(0, (en.hp || 100) - eDmg * 0.7);
+            en.hitFlash = 250;
+            c.damageFlash = 350;
+            if (hadShield) { AudioSFX.play('shield_hit'); triggerShieldShimmer(); } else { AudioSFX.play('hull_hit'); }
+            c._enemyRamCooldown = performance.now() + 600;
+            addComms('EDEN AI', '\u26a0 Hostile rammed!');
+            if (typeof showToast==='function') showToast('\u26a0 RAMMING DAMAGE  -' + Math.floor(eDmg) + ' HP');
+            // Push apart
+            const ePush = new THREE.Vector3().subVectors(ship.position, en.group.position).normalize();
+            const ePushF = Math.max(15, fl.speed * 0.5);
+            fl.velocity.x = ePush.x * ePushF;
+            fl.velocity.y = ePush.y * ePushF * 0.5;
+            fl.velocity.z = ePush.z * ePushF;
+            ship.position.addScaledVector(ePush, eRadius - eDist + 1);
+            if (state.ship.hull <= 0 && !c.dead) { playerDeathSequence('Destroyed by ramming collision'); }
+            break;
           }
         }
       }
