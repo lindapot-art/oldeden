@@ -2011,6 +2011,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <div><b>G</b> — shield cell</div>
         <div><b>N</b> — scanner pulse</div>
         <div><b>P</b> — autopilot to nearest target</div>
+        <div><b>Shift+P</b> — toggle ammo type (railgun)</div>
       </div>
       <div>
         <div style="color:#88ff88;font-weight:600;margin-bottom:6px;">INTERFACE</div>
@@ -13989,10 +13990,14 @@ document.addEventListener('keydown', (e) => {
     c._wingman.mode = _modes[(_ci + 1) % 3];
     addComms('Wingman', 'Roger. Mode: ' + c._wingman.mode.toUpperCase() + '.');
   }
-  // Ammo type toggle: P key — standard ↔ armor-piercing
-  if ((e.key === 'p' || e.key === 'P') && c.active && !c.dead) {
+  // Ammo type toggle: Shift+P — standard ↔ armor-piercing (P alone = autopilot)
+  if ((e.key === 'p' || e.key === 'P') && e.shiftKey && c.active && !c.dead) {
     c._ammoType = c._ammoType === 'ap' ? 'standard' : 'ap';
     addComms('Weapons', '\uD83D\uDD2B Ammo: ' + (c._ammoType === 'ap' ? 'ARMOR-PIERCING (+40% dmg, +50% heat)' : 'STANDARD'));
+    AudioSFX.play('click');
+    showToast('Ammo: ' + (c._ammoType === 'ap' ? 'AP' : 'STD'));
+    e.preventDefault(); e.stopImmediatePropagation();
+    return;
   }
   // Taunt: Y key — draw aggro, +50% score from taunted kills for 10s
   if ((e.key === 'y' || e.key === 'Y') && c.active && !c.dead && (!c._tauntCooldown || state.gameTime > c._tauntCooldown)) {
