@@ -12369,6 +12369,19 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
     hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
     hudCtx.fillRect(wrx, wry+48, 180*(c.ammo/c.maxAmmo), 6);
+    // Reload visual feedback — pulse orange progress bar
+    if (c._reloading) {
+      if (!c._reloadStartT) c._reloadStartT = performance.now();
+      const _rp = Math.min(1, (performance.now() - c._reloadStartT) / 1500);
+      hudCtx.fillStyle = '#1a0a00'; hudCtx.fillRect(wrx, wry+56, 180, 4);
+      const _pulseA = 0.6 + 0.4 * Math.sin(performance.now() / 100);
+      hudCtx.fillStyle = 'rgba(255,170,34,' + _pulseA.toFixed(2) + ')';
+      hudCtx.fillRect(wrx, wry+56, 180*_rp, 4);
+      hudCtx.fillStyle = '#ffaa22'; hudCtx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
+      hudCtx.fillText('RELOADING ' + Math.round(_rp*100) + '%', wrx, wry+70);
+    } else {
+      c._reloadStartT = 0;
+    }
   } else if (isGatling) {
     const heatPct = Math.min(1, (c.heat || 0));
     const heatColor = heatPct < 0.5 ? '#44ff44' : heatPct < 0.8 ? warning : danger;
