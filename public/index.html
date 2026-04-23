@@ -3506,7 +3506,7 @@ const state = {
   // ── Death Ticker ──
   deathFeed: [],            // Last 20 server death events
   // ── Weapon System ──
-  activeWeapon: 'railgun',  // 'railgun', 'laser', 'gatling_left', 'gatling_right'
+  activeWeapon: 'gatling_dual',  // default: visible dual gatling guns (was 'railgun'); 'railgun', 'laser', 'gatling_left', 'gatling_right', 'gatling_dual'
   gatlingSpinSpeed: 0,       // Current barrel rotation speed (0-1)
   gatlingFireRate: 80,       // Rounds per second when fully spun up
   gatlingHeatGeneration: 0.08, // Heat per shot
@@ -5490,6 +5490,16 @@ function fireGatlingGun(gunType = 'dual') {
   const rotationSpeed = 5 + spinProgress * 25; // Faster as it spins up
   gatlingLeftBarrelAngle += rotationSpeed;
   gatlingRightBarrelAngle += rotationSpeed;
+
+  // Flash the cockpit muzzle rings (visible muzzle glow on the gatling guns)
+  try {
+    if (gatlingGunL?.userData?.muzzleMat && (gunType === 'left' || gunType === 'dual')) {
+      gatlingGunL.userData.muzzleMat.opacity = 1;
+    }
+    if (gatlingGunR?.userData?.muzzleMat && (gunType === 'right' || gunType === 'dual')) {
+      gatlingGunR.userData.muzzleMat.opacity = 1;
+    }
+  } catch(_e) {}
 }
 
 function fireGatlingProjectile(side, spinProgress) {
@@ -10382,16 +10392,63 @@ const seatMat = new THREE.MeshStandardMaterial({ color: 0x2a3540, transparent: t
 { const aR = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,0.4), seatMat); aR.position.set(0.35,-0.35,0); cockpit.add(aR); }
 { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.3,8), frameMat); sp.position.set(0,-0.75,0.1); cockpit.add(sp); }
 
-// Railgun barrels + glow
+// Dual gatling gun barrel clusters — replaces the old single-tube railgun
+// visuals. Each cluster is a group of 6 barrels arranged radially around a
+// central axis; the inner cluster rotates during firing (driven by
+// gatlingLeftBarrelAngle / gatlingRightBarrelAngle in the game loop).
+// railL / railR / railGlowMatL / railGlowMatR references are preserved so
+// the railgun charge/heat code continues to work (the glow mat now tints
+// the gatling housing instead of a solid tube).
 const railMat = new THREE.MeshStandardMaterial({ color: 0x556677, transparent: true, opacity: 0.8, roughness: 0.3, metalness: 0.9 });
 railGlowMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
 railGlowMatR = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0 });
-railL = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5,8), railMat);
-railL.rotation.x=Math.PI/2; railL.position.set(-0.18,-0.3,-2.0); cockpit.add(railL);
-railR = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5,8), railMat);
-railR.rotation.x=Math.PI/2; railR.position.set(0.18,-0.3,-2.0); cockpit.add(railR);
-{ const rgL = new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.10,5,8), railGlowMatL); rgL.rotation.set(Math.PI/2,0,0); rgL.position.set(-0.18,-0.3,-2.0); cockpit.add(rgL); }
-{ const rgR = new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.10,5,8), railGlowMatR); rgR.rotation.set(Math.PI/2,0,0); rgR.position.set(0.18,-0.3,-2.0); cockpit.add(rgR); }
+
+function _buildGatlingCluster(side) {
+  const grp = new THREE.Group();
+  const sideX = side === 'left' ? -0.28 : 0.28;
+  grp.position.set(sideX, -0.32, -2.0);
+  // Rear housing — dark receiver
+  const housingMat = new THREE.MeshStandardMaterial({ color: 0x1c1f25, roughness: 0.55, metalness: 0.9 });
+  const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.9, 12), housingMat);
+  housing.rotation.x = Math.PI / 2; housing.position.z = 1.6;
+  grp.add(housing);
+  // Heat-tinted glow ring around housing (reuses railGlowMat for railgun charge compat)
+  const glowRing = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.2, 12), side === 'left' ? railGlowMatL : railGlowMatR);
+  glowRing.rotation.x = Math.PI / 2; glowRing.position.z = 1.1;
+  grp.add(glowRing);
+  // Rotating 6-barrel cluster
+  const cluster = new THREE.Group();
+  cluster.name = 'gatling-cluster-' + side;
+  const barrelMat = new THREE.MeshStandardMaterial({ color: 0x8892a0, roughness: 0.35, metalness: 0.95 });
+  const barrelGeo = new THREE.CylinderGeometry(0.035, 0.035, 3.0, 8);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const b = new THREE.Mesh(barrelGeo, barrelMat);
+    b.rotation.x = Math.PI / 2;
+    b.position.set(Math.cos(a) * 0.09, Math.sin(a) * 0.09, 0);
+    cluster.add(b);
+  }
+  // Central spindle
+  const spindle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.1, 8), housingMat);
+  spindle.rotation.x = Math.PI / 2;
+  cluster.add(spindle);
+  grp.add(cluster);
+  // Muzzle flash ring (lit on fire, fades every frame)
+  const muzzleMat2 = new THREE.MeshBasicMaterial({ color: 0xffaa22, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.045, 6, 14), muzzleMat2);
+  muzzleRing.position.z = -1.55;
+  grp.add(muzzleRing);
+  grp.userData = { cluster, muzzleMat: muzzleMat2 };
+  return grp;
+}
+
+// Build two visible gatling guns in the cockpit — left + right
+const gatlingGunL = _buildGatlingCluster('left');
+const gatlingGunR = _buildGatlingCluster('right');
+cockpit.add(gatlingGunL);
+cockpit.add(gatlingGunR);
+// Preserve legacy refs so railgun charge code (railL/railR opacity) still works
+railL = gatlingGunL; railR = gatlingGunR;
 muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
 const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.3,12,12), muzzleMat);
 muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
@@ -18533,6 +18590,23 @@ function gameLoop() {
   setTimeout(() => { initWoTAiming(); }, 1000);
 
   if (!scene || !camera || !ship || !turretMount || (!composer && !renderer)) return;
+
+  // Spin the visible gatling barrel clusters + fade muzzle flash.
+  // gatlingLeftBarrelAngle / gatlingRightBarrelAngle are bumped in fireGatlingGun.
+  try {
+    if (typeof gatlingGunL !== 'undefined' && gatlingGunL) {
+      const cl = gatlingGunL.userData?.cluster;
+      if (cl) cl.rotation.z = gatlingLeftBarrelAngle * 0.02;
+      const mm = gatlingGunL.userData?.muzzleMat;
+      if (mm && mm.opacity > 0) mm.opacity = Math.max(0, mm.opacity - 0.15);
+    }
+    if (typeof gatlingGunR !== 'undefined' && gatlingGunR) {
+      const cl = gatlingGunR.userData?.cluster;
+      if (cl) cl.rotation.z = -gatlingRightBarrelAngle * 0.02;
+      const mm = gatlingGunR.userData?.muzzleMat;
+      if (mm && mm.opacity > 0) mm.opacity = Math.max(0, mm.opacity - 0.15);
+    }
+  } catch(_barrelErr) {}
   
   // Update AI chatbot context awareness
   if (window.AIChatbot && window.AIChatbot.isEnabled && Math.random() < 0.02) {
