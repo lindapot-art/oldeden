@@ -2023,7 +2023,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <div><b>F11</b> — fullscreen</div>
       </div>
     </div>
-    <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #2a4f7f;font-size:0.82rem;color:#8a9fb5;text-align:center;">Tip: press <b style="color:#ffee66;">T</b> to acquire a target — after 2 seconds the lock turns solid and <b style="color:#ffee66;">M</b> will launch a homing missile.</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #2a4f7f;font-size:0.82rem;color:#8a9fb5;text-align:center;">Tip: press <b style="color:#ffee66;">T</b> to acquire a target — after 2 seconds the lock turns solid and <b style="color:#ffee66;">M</b> will launch a homing missile.<br/><span style="color:#ffcc44;">MODULES:</span> <b>Ctrl+9</b> shield · <b>Ctrl+0</b> energy absorber · <b>Ctrl+Q</b> hull repair · <b>Alt+9</b> overcharge · <b>Alt+0</b> gravity well</div>
   </div>
 </div>
 
@@ -14037,16 +14037,17 @@ document.addEventListener('keydown', (e) => {
     } else { addComms('Targeting', '\u26A0 No targets in range (120m)'); }
   }
   
-  // ── MODULE ACTIVATION KEYBINDS ──
-  // Shield Booster: 9 key (mid slot 0)
-  if ((e.key === '9') && c.active && !c.dead && state.shipFitting.slots.mid[0] && state.shipFitting.slots.mid[0].cycleTime) {
+  // ── MODULE ACTIVATION KEYBINDS (gated by Ctrl to avoid weapon-key conflicts) ──
+  // Shield Booster: Ctrl+9 (mid slot 0) — 9 alone fires gatling_dual
+  if ((e.key === '9') && e.ctrlKey && c.active && !c.dead && state.shipFitting.slots.mid[0] && state.shipFitting.slots.mid[0].cycleTime) {
     const isOverheated = e.shiftKey;
     if (typeof window.activateModule === 'function') {
       window.activateModule('mid', 0, isOverheated);
     }
+    e.preventDefault();
   }
-  // Energy Absorber: 0 key (mid slot 3 where energy_absorber usually is)
-  if ((e.key === '0') && c.active && !c.dead) {
+  // Energy Absorber: Ctrl+0 — 0 alone fires plasma cannon
+  if ((e.key === '0') && e.ctrlKey && c.active && !c.dead) {
     // Find energy absorber in mid slots
     const energyAbsorberSlot = state.shipFitting.slots.mid.findIndex(m => m && m.id === 'energy_absorber');
     if (energyAbsorberSlot >= 0) {
@@ -14056,12 +14057,13 @@ document.addEventListener('keydown', (e) => {
       }
     }
   }
-  // Hull Repair: Q key (low slot 0)
-  if ((e.key === 'q' || e.key === 'Q') && c.active && !c.dead && state.shipFitting.slots.low[0] && state.shipFitting.slots.low[0].cycleTime) {
+  // Hull Repair module: Ctrl+Q (was Q — conflicted with weapon cycle)
+  if ((e.key === 'q' || e.key === 'Q') && e.ctrlKey && c.active && !c.dead && state.shipFitting.slots.low[0] && state.shipFitting.slots.low[0].cycleTime) {
     const isOverheated = e.shiftKey;
     if (typeof window.activateModule === 'function') {
       window.activateModule('low', 0, isOverheated);
     }
+    e.preventDefault();
   }
   // Scavenger drone: O key — collect distant loot, 20s cooldown
   if ((e.key === 'o' || e.key === 'O') && c.active && !c.dead && (!c._scavDroneCooldown || state.gameTime > c._scavDroneCooldown)) {
@@ -14122,8 +14124,8 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('FLARE LAUNCHED — 4s distraction', '#ffaa44');
     AudioSFX.play('explosion');
   }
-  // Overcharge shot: 9 key — next shot does 5x damage, costs 5 ammo, 20s cooldown
-  if (e.key === '9' && c.active && !c.dead && (!c._overchargeCD || state.gameTime > c._overchargeCD) && c.ammo >= 5) {
+  // Overcharge shot: Alt+9 — next shot does 5x damage, costs 5 ammo, 20s cooldown (9 alone = gatling)
+  if (e.key === '9' && e.altKey && c.active && !c.dead && (!c._overchargeCD || state.gameTime > c._overchargeCD) && c.ammo >= 5) {
     c._overchargeNext = true;
     c.ammo -= 4; // 1 more consumed on fire = 5 total
     c._overchargeCD = state.gameTime + 20000;
@@ -14131,8 +14133,8 @@ document.addEventListener('keydown', (e) => {
     addCombatLog('OVERCHARGE PRIMED — next shot 5x', '#ff8800');
     AudioSFX.play('lock_on');
   }
-  // Gravity well: 0 key — pull enemies within 40m toward player for 3s, 30s CD
-  if (e.key === '0' && c.active && !c.dead && (!c._gravWellCD || state.gameTime > c._gravWellCD)) {
+  // Gravity well: Alt+0 — pull enemies within 40m toward player for 3s, 30s CD (0 alone = plasma)
+  if (e.key === '0' && e.altKey && c.active && !c.dead && (!c._gravWellCD || state.gameTime > c._gravWellCD)) {
     c._gravWellActive = state.gameTime + 3000;
     c._gravWellCD = state.gameTime + 30000;
     addComms('Tactical', '\u{1F300} Gravity well deployed! Enemies being pulled in!');
