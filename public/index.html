@@ -13098,14 +13098,14 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
     hudCtx.restore();
   }
 
-  // ── Age + Character Skills (right side, below score) ──
-  const skillX = W - 200, skillY = sry + 80;
-  hudCtx.font = '10px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566';
-  hudCtx.fillText('AGE: ' + Math.floor(state.player.age) + ' yrs', skillX, skillY);
+  // ── Character Skills (right side, well below score/threat/hazard cluster)
+  //    Was at sry+80 which collided with THREAT(sry+80)/HAZARD(sry+98).
+  //    AGE removed (already shown at sry+60 in score block).
+  const skillX = W - 200, skillY = sry + 130;
   // Show top 3 skills by level
   const skillEntries = Object.entries(state.skills).sort((a, b) => b[1] - a[1]).slice(0, 3);
   skillEntries.forEach(([name, level], i) => {
-    const sy2 = skillY + 16 + i * 14;
+    const sy2 = skillY + i * 14;
     const ceiling = getSkillCeiling(name);
     const pct = ceiling > 0 ? (level / ceiling) : 0;
     hudCtx.font = '9px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#556677';
@@ -21360,7 +21360,9 @@ function gameLoop() {
     // ── Target Info Box (HUD overlay) ──
     if (state.targetLock.locked && state.targetLock.target) {
       const tgt = state.targetLock.target;
-      const infoX = hudCanvas.width - 170, infoY = 80;
+      // Was y=80 — directly overlapping SCORE/KILLS/AGE/THREAT stack.
+      // Push below the whole top-right cluster (score block ends ~sry+180).
+      const infoX = hudCanvas.width - 170, infoY = 200;
       // Background panel
       hudCtx.fillStyle = 'rgba(13,17,23,0.75)';
       hudCtx.fillRect(infoX, infoY, 155, 68);
@@ -21433,20 +21435,22 @@ function gameLoop() {
     }
 
     // ── Speed readout on HUD ──
-    // ── Comms overlay (last 3 messages) ──
+    // ── Comms overlay (last 3 messages) — moved to bottom-CENTER-RIGHT
+    //    to avoid overlap with CREDITS/SM column at x=24
     if (state.commsLog && state.commsLog.length > 0) {
       const recentComms = state.commsLog.slice(0, 3);
       hudCtx.font = '9px "Segoe UI"';
       hudCtx.textAlign = 'left';
+      const _commsX = Math.floor(hudCanvas.width * 0.28);
       recentComms.forEach((msg, idx) => {
-        const oy = hudCanvas.height - 65 - idx * 14;
-        hudCtx.globalAlpha = 0.6 - idx * 0.15;
+        const oy = hudCanvas.height - 18 - idx * 12;
+        hudCtx.globalAlpha = 0.55 - idx * 0.15;
         hudCtx.fillStyle = '#44aaff';
         const senderText = (msg.sender || msg.from || 'SYS') + ': ';
-        hudCtx.fillText(senderText, 20, oy);
+        hudCtx.fillText(senderText, _commsX, oy);
         hudCtx.fillStyle = '#8899aa';
-        const msgText = (msg.text || msg.message || '').substring(0, 50);
-        hudCtx.fillText(msgText, 20 + hudCtx.measureText(senderText).width, oy);
+        const msgText = (msg.text || msg.message || msg.msg || '').substring(0, 50);
+        hudCtx.fillText(msgText, _commsX + hudCtx.measureText(senderText).width, oy);
       });
       hudCtx.globalAlpha = 1;
     }
@@ -21454,26 +21458,26 @@ function gameLoop() {
 
     const maxSpd3 = fl.maxSpeed * (fl.afterburner ? fl.afterburnerMult : 1) * enginesMult * state.upgrades.engineSpeed * getPlayerSpeedMult();
     const speedPct = Math.min(100, Math.round((fl.speed / maxSpd3) * 100));
+    // SYS / STA / Coords / TGT — moved to bottom-RIGHT to avoid CREDITS overlap
+    const _infoX = hudCanvas.width - 320;
     hudCtx.font = '10px "Segoe UI"';
-    hudCtx.fillStyle = speedPct > 75 ? '#ff8844' : speedPct > 30 ? '#44aaff' : '#557799';
     hudCtx.textAlign = 'left';
-    hudCtx.fillText('SPD ' + speedPct + '%  ' + Math.round(fl.speed) + ' m/s', 20, hudCanvas.height - 30);
     hudCtx.fillStyle = '#557799';
-    hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), 20, hudCanvas.height - 44);
-    // Station distance (bottom-left)
+    hudCtx.fillText('SYS ' + (state.location.systemIndex + 1) + '/' + (state.starSystems?.length || '?') + '  ' + (state.starSystems?.[state.location.systemIndex]?.name || ''), _infoX, hudCanvas.height - 44);
+    // Station distance
     if (stationModels[0]?.position) {
       const stDist = Math.round(ship.position.distanceTo(stationModels[0].position));
       hudCtx.fillStyle = stDist < 80 ? '#00ff88' : stDist < 200 ? '#44aaff' : '#557799';
-      hudCtx.fillText('STA ' + stDist + 'm' + (stDist < 80 ? ' [DOCK]' : ''), 130, hudCanvas.height - 30);
+      hudCtx.fillText('STA ' + stDist + 'm' + (stDist < 80 ? ' [DOCK]' : ''), _infoX, hudCanvas.height - 30);
     }
-    // Coordinates (bottom-left, subtle)
+    // Coordinates (subtle)
     hudCtx.fillStyle = '#334455'; hudCtx.font = '8px "Segoe UI"';
-    hudCtx.fillText('X:' + Math.round(ship.position.x) + ' Y:' + Math.round(ship.position.y) + ' Z:' + Math.round(ship.position.z), 20, hudCanvas.height - 4);
+    hudCtx.fillText('X:' + Math.round(ship.position.x) + ' Y:' + Math.round(ship.position.y) + ' Z:' + Math.round(ship.position.z), _infoX, hudCanvas.height - 4);
     // Target distance
     if (state.targetLock && state.targetLock.target && state.targetLock.target.group) {
       const tDist = Math.round(state.targetLock.target.group.position.distanceTo(ship.position));
       hudCtx.fillStyle = '#ff6666';
-      hudCtx.fillText('TGT ' + tDist + 'm', 20, hudCanvas.height - 16);
+      hudCtx.fillText('TGT ' + tDist + 'm', _infoX, hudCanvas.height - 16);
     }
     renderLibraryLabels();
   } else if (state.screen === 'title') {
