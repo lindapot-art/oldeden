@@ -3578,26 +3578,9 @@ function shouldUseMobileFlightUI() {
   return isMobile || isSmallScreen || hasManualToggle;
 }
 
-// Mobile controls manual toggle function
-function toggleMobileControls() {
-  const mobileControls = document.getElementById('mobile-controls');
-  const body = document.body;
-  const btn = document.getElementById('mobile-toggle-btn');
-  
-  if (body.classList.contains('mobile-forced')) {
-    // Disable mobile UI
-    body.classList.remove('mobile-forced');
-    mobileControls.classList.remove('active');
-    btn.textContent = '📱 Mobile UI';
-    btn.style.background = 'var(--accent)';
-  } else {
-    // Enable mobile UI
-    body.classList.add('mobile-forced');
-    mobileControls.classList.add('active');
-    btn.textContent = '🖥️ Desktop';
-    btn.style.background = '#ff6b6b';
-  }
-}
+// Note: toggleMobileControls() is defined later in the module (near line ~21873)
+// The earlier duplicate was removed to fix "already declared" SyntaxError that
+// prevented the entire module from executing (broke game init, weapons, HUD).
 
 // Show mobile toggle on any device with touch or small screen
 window.addEventListener('load', () => {
@@ -9480,6 +9463,23 @@ let starLight, fillLight, rimLight, hemiLight;
 let railGlowMatL, railGlowMatR, muzzleMat, railL, railR;
 let threeReady = false;
 let shieldShimmerMat, shieldShimmerGeo, shieldShimmer;
+
+// QA debug exposure — lets headless tests inspect live game state without
+// breaking module encapsulation. Do not rely on these from production code.
+window.__qa = window.__qa || {};
+window.__qa.state = state;
+window.__qa.c = c;
+window.__qa.showScreen = (s) => showScreen(s);
+Object.defineProperty(window.__qa, 'scene', { get: () => scene });
+Object.defineProperty(window.__qa, 'camera', { get: () => camera });
+Object.defineProperty(window.__qa, 'threeReady', { get: () => threeReady });
+// Weapon functions are hoisted declarations, so we can expose them here
+try {
+  window.__qa.fireLaser = fireLaser;
+  window.__qa.fireRailgun = fireRailgun;
+  window.__qa.fireGatlingGun = fireGatlingGun;
+  window.__qa.firePistol = typeof firePistol !== 'undefined' ? firePistol : null;
+} catch (_e) { /* some fns may not be hoisted yet */ }
 let shieldShimmerTimer = 0;
 let starLayers = [];
 
@@ -19384,7 +19384,7 @@ function gameLoop() {
       const p = c.projectiles[i];
       p.age += dtMs;
       p.group.position.addScaledVector(p.dir, p.speed * dt);
-      p.trailMat.opacity = Math.max(0, 0.6 - p.age/3000);
+      if (p.trailMat) p.trailMat.opacity = Math.max(0, 0.6 - p.age/3000);
       let hit = false;
       for (let j = c.enemies.length - 1; j >= 0; j--) {
         const e = c.enemies[j];
