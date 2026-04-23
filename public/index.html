@@ -13659,11 +13659,29 @@ canvas3d.addEventListener('touchstart', (e) => {
   lookZone.addEventListener('touchcancel', endLookTouch);
   let fireInterval = null;
   window._clearMobileFireInterval = () => { clearInterval(fireInterval); fireInterval = null; };
+  // Route mobile fire to whichever weapon is active (was hardcoded to
+  // laser/railgun, so plasma/beam/swarm/gatling/etc never fired on touch)
+  function _mobileFireActive() {
+    if (!c.active) return;
+    const aw = state.activeWeapon;
+    if (aw === 'laser') fireLaser();
+    else if (aw === 'gatling_left') fireGatlingGun('left');
+    else if (aw === 'gatling_right') fireGatlingGun('right');
+    else if (aw === 'gatling_dual') fireGatlingGun('dual');
+    else if (aw === 'plasma') firePlasmaCannon();
+    else if (aw === 'beam') fireBeamLance();
+    else if (aw === 'swarm') fireSwarmPod();
+    else if (aw === 'pistol') firePistol();
+    else if (aw === 'blaster') fireBlasterFuturistic();
+    else if (aw === 'white_blaster') fireBlasterWhite();
+    else if (aw === 'turret') fireBlasterTurret();
+    else fireRailgun();
+  }
   fireBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     clearInterval(fireInterval); // Prevent leak on rapid touch
-    if (c.active) { state.activeWeapon === 'laser' ? fireLaser() : fireRailgun(); }
-    fireInterval = setInterval(() => { if (c.active) { state.activeWeapon === 'laser' ? fireLaser() : fireRailgun(); } }, 200);
+    _mobileFireActive();
+    fireInterval = setInterval(_mobileFireActive, 200);
   }, { passive: false });
   fireBtn.addEventListener('touchend', () => { clearInterval(fireInterval); fireInterval = null; });
   fireBtn.addEventListener('touchcancel', () => { clearInterval(fireInterval); fireInterval = null; });
