@@ -21918,7 +21918,7 @@ function gameLoop() {
         if (ship.position.distanceTo(_cr.mesh.position) < 8) {
           // Collect!
           const _ct = _cr.type;
-          if (_ct === 'repair_kit') { c.hull = Math.min(c.maxHull, c.hull + 10); addComms('Salvage', '\uD83D\uDCE6 Repair Kit! +10 hull'); }
+          if (_ct === 'repair_kit') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 10); addComms('Salvage', '\uD83D\uDCE6 Repair Kit! +10 hull'); }
           else if (_ct === 'ammo_box') { c.ammo = Math.min(c.maxAmmo, c.ammo + 5); addComms('Salvage', '\uD83D\uDCE6 Ammo Box! +5 ammo'); }
           else if (_ct === 'credit_stash') { state.player.credits += 50; addComms('Salvage', '\uD83D\uDCE6 Credit Stash! +50 EC'); }
           else if (_ct === 'fuel_cell') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 15); addComms('Salvage', '\uD83D\uDCE6 Fuel Cell! +15 fuel'); }
@@ -22072,7 +22072,7 @@ function gameLoop() {
       }
     }
     // ── Hull damage smoke trail — intermittent smoke when critically damaged ──
-    if (c.hull < c.maxHull * 0.3 && fl.speed > 2 && !c.dead) {
+    if (state.ship.hull < state.ship.maxHull * 0.3 && fl.speed > 2 && !c.dead) {
       if (!c._nextSmoke || state.gameTime > c._nextSmoke) {
         c._nextSmoke = state.gameTime + 80 + Math.random() * 120;
         if (!c._smokePool) c._smokePool = [];
