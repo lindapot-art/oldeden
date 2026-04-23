@@ -2000,18 +2000,25 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <div><b>Q</b> — cycle next weapon (Shift+Q reverse)</div>
         <div><b>1‑9</b> — direct weapon select</div>
         <div><b>0 / − / =</b> — Plasma / Beam / Swarm</div>
-        <div><b>M</b> — launch homing missile (hold for lock)</div>
+        <div><b>M</b> — mining toggle (nearest asteroid)</div>
+        <div><b>V</b> — launch homing missile (hold for lock)</div>
         <div><b>R</b> — reload</div>
       </div>
       <div>
         <div style="color:#44ccff;font-weight:600;margin-bottom:6px;">SYSTEMS</div>
-        <div><b>T</b> — target nearest hostile</div>
-        <div><b>E</b> — EMP grenade</div>
-        <div><b>F</b> — repair kit</div>
-        <div><b>G</b> — shield cell</div>
-        <div><b>N</b> — scanner pulse</div>
+        <div><b>T</b> — chatbot / comms panel</div>
+        <div><b>E</b> — emergency jump (warp 300m)</div>
+        <div><b>F</b> — stealth cloak (drains fuel)</div>
+        <div><b>G</b> — enter stargate (if in range)</div>
+        <div><b>N</b> — EMP blast (disables enemies)</div>
+        <div><b>V</b> — launch homing missile</div>
+        <div><b>C</b> — heat sink burst (dump heat)</div>
+        <div><b>L</b> — weapon overload (5s, 30s CD)</div>
+        <div><b>U</b> — target painter (+30% dmg)</div>
+        <div><b>J</b> — toggle combat log</div>
         <div><b>P</b> — autopilot to nearest target</div>
         <div><b>Shift+P</b> — toggle ammo type (railgun)</div>
+        <div><b>Shift+F / Shift+N / Shift+V</b> — starmap / scan / wormhole</div>
       </div>
       <div>
         <div style="color:#88ff88;font-weight:600;margin-bottom:6px;">INTERFACE</div>
@@ -2023,7 +2030,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
         <div><b>F11</b> — fullscreen</div>
       </div>
     </div>
-    <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #2a4f7f;font-size:0.82rem;color:#8a9fb5;text-align:center;">Tip: press <b style="color:#ffee66;">T</b> to acquire a target — after 2 seconds the lock turns solid and <b style="color:#ffee66;">M</b> will launch a homing missile.<br/><span style="color:#ffcc44;">MODULES:</span> <b>Ctrl+9</b> shield · <b>Ctrl+0</b> energy absorber · <b>Ctrl+Q</b> hull repair · <b>Alt+9</b> overcharge · <b>Alt+0</b> gravity well</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #2a4f7f;font-size:0.82rem;color:#8a9fb5;text-align:center;">Tip: tap <b style="color:#ffee66;">T</b> for chatbot · autopilot on <b style="color:#ffee66;">P</b> acquires a target · <b style="color:#ffee66;">V</b> launches homing missile.<br/><span style="color:#ffcc44;">MODULES:</span> <b>Ctrl+9</b> shield · <b>Ctrl+0</b> energy absorber · <b>Ctrl+Q</b> hull repair · <b>Alt+9</b> overcharge · <b>Alt+0</b> gravity well<br/><span style="color:#aa88ff;">ABILITIES:</span> <b>Shift+Q/Z/X/C/V/B</b> · <span style="color:#88ddff;">CONSUMABLES:</span> <b>Shift+R/S/E</b> · <span style="color:#ffaaaa;">POWER:</span> <b>Ctrl+1..4</b></div>
   </div>
 </div>
 
@@ -6107,12 +6114,8 @@ document.addEventListener('keydown', (e) => {
   else if (key === '0') { state.activeWeapon = 'plasma'; firePlasmaCannon(); }
   else if (key === '-') { state.activeWeapon = 'beam'; fireBeamLance(); }
   else if (key === '=') { state.activeWeapon = 'swarm'; fireSwarmPod(); }
-  else if (key === 'm') { fireMissile(); }
-  // Enhanced targeting controls
-  else if (key === 't') { manualTargetEnemy(); }
-  else if (key === 'g') { state.targetLock.target = null; state.targetLock.locked = false; addCombatLog('Target cleared', '#888888'); }
-  else if (key === 't') { toggleAimingMode(); }
-  else if (key === 't') { toggleAimingMode(); }
+  // Enhanced targeting controls (Shift+G clears lock; M=mining, T=chatbot in other listener)
+  else if (key === 'g' && e.shiftKey) { state.targetLock.target = null; state.targetLock.locked = false; addCombatLog('Target cleared', '#888888'); }
   // AI Chat Interface
   else if (key === 'c') {
     const input = prompt('💬 Chat with ARIA AI:\n\nAsk for tactical advice, ship status, lore information, or general assistance:', '');
@@ -6124,17 +6127,17 @@ document.addEventListener('keydown', (e) => {
     state.targetLock.autoMode = !state.targetLock.autoMode; 
     addCombatLog('Auto-targeting: ' + (state.targetLock.autoMode ? 'ON' : 'OFF'), '#44aaff'); 
   }
-  // Special abilities
-  else if (key === 'q') { activateAbility('shield_boost'); }
-  else if (key === 'z') { activateAbility('weapon_overdrive'); }
-  else if (key === 'x') { activateAbility('time_dilation'); }
-  else if (key === 'c') { activateAbility('stealth_cloak'); }
-  else if (key === 'v') { activateAbility('energy_drain'); }
-  else if (key === 'b') { activateAbility('gravity_well'); }
-  // Consumables
-  else if (key === 'r') { window._activateConsumable('Repair Kit'); }
-  else if (key === 's') { window._activateConsumable('Shield Cell'); }
-  else if (key === 'e') { window._activateConsumable('EMP Grenade'); }
+  // Special abilities — gated behind Shift to avoid conflicting with weapon-cycle / flight keys
+  else if (key === 'q' && e.shiftKey) { activateAbility('shield_boost'); e.preventDefault(); }
+  else if (key === 'z' && e.shiftKey) { activateAbility('weapon_overdrive'); e.preventDefault(); }
+  else if (key === 'x' && e.shiftKey) { activateAbility('time_dilation'); e.preventDefault(); }
+  else if (key === 'c' && e.shiftKey) { activateAbility('stealth_cloak'); e.preventDefault(); }
+  else if (key === 'v' && e.shiftKey) { activateAbility('energy_drain'); e.preventDefault(); }
+  else if (key === 'b' && e.shiftKey) { activateAbility('gravity_well'); e.preventDefault(); }
+  // Consumables — gated behind Shift to avoid firing on reload (R) / reverse (S) / E-jump (E)
+  else if (key === 'r' && e.shiftKey) { window._activateConsumable('Repair Kit'); e.preventDefault(); }
+  else if (key === 's' && e.shiftKey) { window._activateConsumable('Shield Cell'); e.preventDefault(); }
+  else if (key === 'e' && e.shiftKey) { window._activateConsumable('EMP Grenade'); e.preventDefault(); }
 }, true);
 
 // Show consumable hints on HUD
@@ -13955,12 +13958,12 @@ document.addEventListener('keydown', (e) => {
   // Missile fire: F key
   // Missile fire: V key
   if ((e.key === 'v' || e.key === 'V') && c.active && !c.dead) { fireMissile(); }
-  // Power allocation presets: 1=balanced, 2=weapons, 3=shields, 4=engines
-  if (c.active && !c.dead) {
-    if (e.key === '1') { state.powerAlloc = { weapons: 34, shields: 33, engines: 33 }; showToast('\u26A1 Power: BALANCED'); addComms('Engineering', 'Power distribution balanced.'); }
-    if (e.key === '2') { state.powerAlloc = { weapons: 60, shields: 20, engines: 20 }; showToast('\u2694 Power: WEAPONS'); addComms('Engineering', 'Diverting power to weapons systems.'); }
-    if (e.key === '3') { state.powerAlloc = { weapons: 20, shields: 60, engines: 20 }; showToast('\uD83D\uDEE1 Power: SHIELDS'); addComms('Engineering', 'Boosting shield regeneration.'); }
-    if (e.key === '4') { state.powerAlloc = { weapons: 20, shields: 20, engines: 60 }; showToast('\uD83D\uDE80 Power: ENGINES'); addComms('Engineering', 'Full power to engines.'); }
+  // Power allocation presets — gated behind Ctrl to avoid firing weapons 1-4 simultaneously
+  if (c.active && !c.dead && e.ctrlKey) {
+    if (e.key === '1') { state.powerAlloc = { weapons: 34, shields: 33, engines: 33 }; showToast('\u26A1 Power: BALANCED'); addComms('Engineering', 'Power distribution balanced.'); e.preventDefault(); }
+    if (e.key === '2') { state.powerAlloc = { weapons: 60, shields: 20, engines: 20 }; showToast('\u2694 Power: WEAPONS'); addComms('Engineering', 'Diverting power to weapons systems.'); e.preventDefault(); }
+    if (e.key === '3') { state.powerAlloc = { weapons: 20, shields: 60, engines: 20 }; showToast('\uD83D\uDEE1 Power: SHIELDS'); addComms('Engineering', 'Boosting shield regeneration.'); e.preventDefault(); }
+    if (e.key === '4') { state.powerAlloc = { weapons: 20, shields: 20, engines: 60 }; showToast('\uD83D\uDE80 Power: ENGINES'); addComms('Engineering', 'Full power to engines.'); e.preventDefault(); }
   }
   // Wingman call: X key
   if ((e.key === 'x' || e.key === 'X') && c.active && !c.dead) { callWingman(); }
@@ -18369,8 +18372,8 @@ document.addEventListener('keydown', (e) => {
     showLibraryLabelsFlag = !showLibraryLabelsFlag;
     addComms('System', 'Library labels: ' + (showLibraryLabelsFlag ? 'ON' : 'OFF'));
   }
-  // G = enter stargate
-  if (e.key === 'g' || e.key === 'G') {
+  // G = enter stargate (bare G; clear-target moved to Shift+G)
+  if ((e.key === 'g' || e.key === 'G') && !e.shiftKey && !e.ctrlKey && !e.altKey) {
     if (stargateGroup && ship.position.distanceTo(stargateGroup.position) < 40) {
       if (state.inAltUniverse) exitAltUniverse();
       else enterAltUniverse();
@@ -18396,19 +18399,21 @@ document.addEventListener('keydown', (e) => {
       }
     }
   }
-  // F = warp (exit gunner first so 3D scene is cleaned)
-  if (e.key === 'f' || e.key === 'F') {
+  // Shift+F = warp to starmap (bare F = stealth mode in gunner)
+  if ((e.key === 'f' || e.key === 'F') && e.shiftKey) {
     if (c.dead) return;
     if (c.active) exitGunnerMode(true);
     showScreen('starmap');
+    e.preventDefault();
   }
-  // N = anomaly scanner
-  if (e.key === 'n' || e.key === 'N') {
+  // Shift+N = anomaly scanner (bare N = EMP blast)
+  if ((e.key === 'n' || e.key === 'N') && e.shiftKey) {
     if (c.dead) return;
     scanForAnomalies();
+    e.preventDefault();
   }
-  // V = wormhole scanner/transit
-  if (e.key === 'v' || e.key === 'V') {
+  // Shift+V = wormhole scanner/transit (bare V = missile fire)
+  if ((e.key === 'v' || e.key === 'V') && e.shiftKey) {
     if (c.dead) return;
     if (state._wormholeReady) {
       attemptWormholeTransit();
