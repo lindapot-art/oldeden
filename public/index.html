@@ -11894,10 +11894,13 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
     hudCtx.fillStyle = '#00ff88'; hudCtx.fillRect(wrx, wry+48, 180*(1-c.heat), 6);
   }
-  hudCtx.fillStyle = '#445566'; hudCtx.fillText('HEAT', wrx, wry+72);
-  hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx+40, wry+64, 140, 6);
-  hudCtx.fillStyle = c.heat > 0.7 ? danger : c.heat > 0.4 ? warning : primary;
-  hudCtx.fillRect(wrx+40, wry+64, 140*c.heat, 6);
+  // Secondary HEAT bar — skip for gatling/railgun which already show heat/charge above
+  if (!isGatling && !isRailgun) {
+    hudCtx.fillStyle = '#445566'; hudCtx.fillText('HEAT', wrx, wry+72);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx+40, wry+64, 140, 6);
+    hudCtx.fillStyle = c.heat > 0.7 ? danger : c.heat > 0.4 ? warning : primary;
+    hudCtx.fillRect(wrx+40, wry+64, 140*c.heat, 6);
+  }
   if (isRailgun) {
     hudCtx.fillStyle = c.weaponReady ? accent : warning;
     hudCtx.fillText(c.weaponReady ? '\u25CF READY' : c.charging ? '\u25D0 CHARGING' : '\u25CB COOLING', wrx, wry+92);
@@ -17580,6 +17583,9 @@ async function replaceShipWithGLB() {
     playerShipGLB = model.clone();
     playerShipGLB.scale.setScalar(1.5);
     playerShipGLB.position.set(0, -1, 0);
+    // Gunner is first-person cockpit view — player is INSIDE the ship, so hide hull mesh
+    // (prevents giant ship mesh from obscuring the crosshair / HUD center)
+    playerShipGLB.visible = false;
     // Hide procedural meshes
     ship.children.forEach(ch => {
       if (ch !== turretMount && ch !== playerShipGLB && ch.isMesh) ch.visible = false;
