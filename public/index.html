@@ -9166,11 +9166,12 @@ window._repairHull = () => {
   const dmg = state.ship.maxHull - state.ship.hull;
   if (dmg < 1) return;
   const cost = Math.ceil(dmg * state.economy.repairCostPerHp);
-  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for repair.'); return; }
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for repair.'); if (typeof showToast==='function') showToast('❌ Insufficient credits'); return; }
   state.player.credits -= cost;
   state.ship.hull = state.ship.maxHull;
   AudioSFX.play('charge');
   addComms('Station', `Hull fully repaired. (-${cost} EC)`);
+  if (typeof showToast==='function') showToast('🔧 HULL REPAIRED  -' + cost + ' EC');
   gainSkillXP('engineering', 0.1);
   renderStation();
 };
@@ -9178,33 +9179,36 @@ window._buyAmmo = () => {
   const needed = state.combat.maxAmmo - state.combat.ammo;
   if (needed < 1) return;
   const cost = Math.ceil((needed / 10) * state.economy.ammoCostPer10);
-  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for ammo.'); return; }
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for ammo.'); if (typeof showToast==='function') showToast('❌ Insufficient credits'); return; }
   state.player.credits -= cost;
   state.combat.ammo = state.combat.maxAmmo;
   AudioSFX.play('reload');
   addComms('Station', `Ammo restocked. (-${cost} EC)`);
+  if (typeof showToast==='function') showToast('🔫 AMMO RESTOCKED  -' + cost + ' EC');
   renderStation();
 };
 window._refuel = () => {
   const needed = state.ship.maxFuel - state.ship.fuel;
   if (needed < 1) return;
   const cost = Math.ceil(needed * 0.5);
-  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for fuel.'); return; }
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for fuel.'); if (typeof showToast==='function') showToast('❌ Insufficient credits'); return; }
   state.player.credits -= cost;
   state.ship.fuel = state.ship.maxFuel;
   AudioSFX.play('dock');
   addComms('Station', `Ship refueled. (-${cost} EC)`);
+  if (typeof showToast==='function') showToast('⛽ REFUELED  -' + cost + ' EC');
   renderStation();
 };
 window._rearmMissiles = () => {
   const needed = c.maxMissiles - c.missiles;
   if (needed < 1) { addComms('Station', 'Missiles full.'); return; }
   const cost = needed * 50;
-  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for missiles.'); return; }
+  if (state.player.credits < cost) { addComms('Station', 'Insufficient credits for missiles.'); if (typeof showToast==='function') showToast('❌ Insufficient credits'); return; }
   state.player.credits -= cost;
   c.missiles = c.maxMissiles;
   AudioSFX.play('reload');
   addComms('Station', `Missiles rearmed. (-${cost} EC)`);
+  if (typeof showToast==='function') showToast('🚀 MISSILES REARMED  -' + cost + ' EC');
   renderStation();
 };
 window._upgradeTractor = () => {
@@ -14194,10 +14198,12 @@ document.addEventListener('keydown', (e) => {
           // Auto-collect — floating pickup label for all loot types
           const _pickupPos = _ld.mesh.position.clone();
           let _pickupText = null, _pickupColor = '#44ddff';
-          if (_ld.type === 'credits') { const _v = (_ld.value || 10); state.player.credits += _v; _pickupText = '+' + _v + ' EC'; _pickupColor = '#ffdd44'; }
-          else if (_ld.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 3); _pickupText = '+3 AMMO'; _pickupColor = '#ff8844'; }
-          else if (_ld.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 5); _pickupText = '+5 FUEL'; _pickupColor = '#44ffaa'; }
-          else if (_ld.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5); _pickupText = '+5 HULL'; _pickupColor = '#44aaff'; }
+          if (_ld.type === 'credits') { const _v = (_ld.creditValue || _ld.value || 50); state.player.credits += _v; _pickupText = '+' + _v + ' EC'; _pickupColor = '#ffdd44'; }
+          else if (_ld.type === 'ammo') { c.ammo = Math.min(c.maxAmmo, c.ammo + 6); _pickupText = '+6 AMMO'; _pickupColor = '#ff8844'; }
+          else if (_ld.type === 'fuel') { state.ship.fuel = Math.min(state.ship.maxFuel || 100, state.ship.fuel + 20); _pickupText = '+20 FUEL'; _pickupColor = '#44ffaa'; }
+          else if (_ld.type === 'health') { state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 15); _pickupText = '+15 HULL'; _pickupColor = '#44aaff'; }
+          else if (_ld.type === 'shield') { state.ship.shield = Math.min(state.ship.maxShield, state.ship.shield + 20); _pickupText = '+20 SHIELD'; _pickupColor = '#44ccff'; }
+          else if (_ld.type === 'scoreboost') { const _sb = 100 + Math.floor(c.kills * 5); c.score += _sb; _pickupText = '+' + _sb + ' SCORE'; _pickupColor = '#cc44ff'; }
           if (_pickupText && c.dmgNumbers) {
             c.dmgNumbers.push({ text: _pickupText, px: _pickupPos.x, py: _pickupPos.y, pz: _pickupPos.z, age: 0, color: _pickupColor });
           }
