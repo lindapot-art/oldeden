@@ -19857,7 +19857,7 @@ function gameLoop() {
         const hitThreshSq = (3 * (e.cfg.scale || 1)) ** 2;
         if (p.group.position.distanceToSquared(e.group.position) < hitThreshSq) {
           // Apply genome damage multiplier + weapon-specific damage + crit chance
-          const baseDmg = p.isLaser ? (p.damage || 0.65) : 1.0;
+          const baseDmg = p.isLaser ? (p.damage || 0.65) : (p.damage || 1.0);
           let genomeDmg = baseDmg * (p.isLaser ? getPlayerLaserDamageMult() : getPlayerDamageMult());
           // Weapon switch bonus — +20% damage for 3s after switching
           if (c._weaponSwitchBonus && state.gameTime < c._weaponSwitchBonus) genomeDmg *= 1.2;
