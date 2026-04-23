@@ -9754,10 +9754,20 @@ function saveGame() {
     premium: state.premium,
     world: state.world,
   };
-  try { localStorage.setItem('oe-save', JSON.stringify(data)); }
+  let _ok = false;
+  try { localStorage.setItem('oe-save', JSON.stringify(data)); _ok = true; }
   catch (e) { addComms('System', 'Save failed — storage full.'); }
   // Also save to server
   if (state.socket) state.socket.emit('game:save', data);
+  // Flash save indicator for user feedback on every save
+  if (_ok) {
+    const _si = document.getElementById('save-indicator');
+    if (_si) {
+      if (saveGame._hideTimer) clearTimeout(saveGame._hideTimer);
+      _si.classList.add('show');
+      saveGame._hideTimer = setTimeout(() => _si.classList.remove('show'), 1500);
+    }
+  }
 }
 
 function loadGame() {
@@ -22062,8 +22072,6 @@ function gameLoop() {
     if (!c.dead && state.gameTime - c.lastAutoSave > 60000) {
       c.lastAutoSave = state.gameTime;
       saveGame();
-      const _si = document.getElementById('save-indicator');
-      if (_si) { _si.classList.add('show'); setTimeout(() => _si.classList.remove('show'), 1500); }
     }
 
     renderHUD(dtMs);
