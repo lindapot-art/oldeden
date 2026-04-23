@@ -12811,7 +12811,8 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
       const ty = (-_tmpV3a.y * 0.5 + 0.5) * H;
       const tDist = tgt.group.position.distanceTo(ship.position);
       const lockProg = state.targetLock.lockTimer;
-      const bracketSize = 18 + (1 - lockProg) * 20;
+      // Clamp bracket size to sane range (lockTimer can overshoot and go negative)
+      const bracketSize = Math.max(8, 18 + (1 - Math.max(0, Math.min(1, lockProg))) * 20);
       hudCtx.save();
       hudCtx.strokeStyle = state.targetLock.locked ? '#ff2222' : '#ffaa00';
       hudCtx.lineWidth = state.targetLock.locked ? 2 : 1.5;
@@ -17631,6 +17632,7 @@ document.addEventListener('keydown', (e) => {
   // T = chatbot toggle (release pointer lock to allow typing)
   if (e.key === 't' || e.key === 'T') {
     const panel = document.getElementById('chatbot-panel');
+    if (!panel) return;
     panel.classList.toggle('open');
     state.chatbot.visible = panel.classList.contains('open');
     if (state.chatbot.visible) {
@@ -19383,6 +19385,9 @@ function gameLoop() {
     for (let i = c.projectiles.length - 1; i >= 0; i--) {
       const p = c.projectiles[i];
       p.age += dtMs;
+      // Null-guard: drop malformed projectiles (missing group/dir) instead of
+      // spamming the console every frame.
+      if (!p.group || !p.group.position || !p.dir) { c.projectiles.splice(i, 1); continue; }
       p.group.position.addScaledVector(p.dir, p.speed * dt);
       if (p.trailMat) p.trailMat.opacity = Math.max(0, 0.6 - p.age/3000);
       let hit = false;
@@ -21674,7 +21679,14 @@ window.enableDevCheats = () => {
         if (progress < 1) {
           requestAnimationFrame(renderOpening);
         } else {
-          transitionToCharacterCreation();
+          // Guard: if user already navigated past the opening (e.g. skipped via
+          // keyboard/quick-click), do not force-open the resurrection screen on
+          // top of active gameplay. Only transition when opening screen is still
+          // the active one.
+          const openingActive = document.getElementById('screen-opening')?.classList.contains('active');
+          if (openingActive) {
+            transitionToCharacterCreation();
+          }
         }
       }
 

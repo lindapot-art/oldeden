@@ -100,10 +100,42 @@ echo The game server will start on http://localhost:3847
 echo ^(If port 3847 is busy, it will auto-rotate to the next available port^)
 echo Press Ctrl+C to stop the server
 echo.
+echo ========================================
+echo   WEAPON SYSTEM - DUAL GATLING GUNS
+echo ========================================
+echo.
+echo [COMBAT CONTROLS]
+echo   Key 1-6: Standard weapons ^(laser, railgun, pistol, blaster, etc.^)
+echo   Key 7: Left Gatling Gun
+echo   Key 8: Right Gatling Gun  
+echo   Key 9: *** DUAL GATLING GUNS *** ^(RECOMMENDED^)
+echo   Key M: Homing Missiles
+echo   Key T: Manual Target Lock
+echo   Key G: Clear Target
+echo.
+echo [DUAL GATLING FEATURES]
+echo   - 4800 RPM ^(80 rounds/second^) when fully spun up
+echo   - Realistic spin-up mechanics with increasing fire rate
+echo   - Dual-mounted guns fire simultaneously for maximum firepower
+echo   - Bullet spread and tracer effects for realism
+echo   - Progressive recoil and screen shake
+echo   - Heat management system
+echo.
 echo ----------------------------------------
 echo.
 
+REM Launch the game server
+echo [LAUNCHING] Starting Old Eden server...
+echo.
 node src/core/index.js
+
+REM If we get here, the server stopped
+echo.
+echo ========================================
+echo   SERVER STOPPED
+echo ========================================
+echo.
+pause
 
 REM If the server exits, pause so user can see any error messages
 if %ERRORLEVEL% NEQ 0 (
