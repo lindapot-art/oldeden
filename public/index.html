@@ -499,6 +499,30 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
   padding: 22px;
   box-shadow: var(--chrome-shadow);
 }
+/* Wizard: one step at a time, NO boxes (user: "dont box antying") */
+.wizard-step {
+  display: none;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 20px;
+  padding: 16px 8px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: wizard-fade 0.32s ease;
+}
+.wizard-step.wizard-active { display: block; }
+.wizard-step-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  text-align: center;
+  opacity: 0.75;
+}
+@keyframes wizard-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .create-section h3 {
   font-size: 1rem;
   font-weight: 600;
@@ -2183,11 +2207,13 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 <!-- ════════════════════════════════════════════ -->
 <div class="screen" id="screen-create">
   <h2 class="holo-header">Create Your Pilot</h2>
-  <div class="create-section holo-panel-base">
+  <div class="wizard-step wizard-active" data-step="1">
+    <div class="wizard-step-label">Step 1 of 3 &mdash; Choose Your Faction</div>
     <h3 style="color:var(--gold);">Choose Your Faction</h3>
     <div id="faction-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:1rem 0;"></div>
   </div>
-  <div class="create-section holo-panel-base">
+  <div class="wizard-step" data-step="2">
+    <div class="wizard-step-label">Step 2 of 3 &mdash; Genome Sequence</div>
     <h3>Genome &mdash; 256 Gene Sequence</h3>
     <div class="genome-row">
       <canvas id="genome-canvas" width="256" height="256"></canvas>
@@ -2197,14 +2223,17 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       <button class="btn btn-sm" id="btn-reroll">&#8635; Randomize Genome</button>
     </div>
   </div>
-  <div class="create-section holo-panel-base">
+  <div class="wizard-step" data-step="3">
+    <div class="wizard-step-label">Step 3 of 3 &mdash; Name Your Pilot</div>
     <label style="color:var(--muted);display:block;margin-bottom:0.5rem;">Pilot Name</label>
     <input type="text" id="pilot-name" maxlength="24" placeholder="Enter pilot name..." style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;width:min(200px, 80vw);font-size:1rem;max-width:300px;">
     <div class="create-help" id="create-account-summary">No account linked yet. You can still play free, or return to the title screen to sign up and connect a wallet.</div>
   </div>
-  <div class="btn-row" style="justify-content:center;margin-top:1rem;">
+  <div class="btn-row" style="justify-content:center;margin-top:1rem;gap:12px;">
     <button class="btn" id="btn-back-title">&larr; Back</button>
-    <button class="btn" id="btn-create-char">Create Pilot &rarr;</button>
+    <button class="btn" id="btn-wizard-prev" style="display:none;">&larr; Previous</button>
+    <button class="btn" id="btn-wizard-next">Next &rarr;</button>
+    <button class="btn" id="btn-create-char" style="display:none;">Create Pilot &rarr;</button>
   </div>
 </div>
 
@@ -2929,13 +2958,40 @@ const AudioSFX = {
         return;
       }
       
-      // Gatling gun rapid fire
+      // Gatling gun rapid fire — earth machine-gun BRRT (transient click + body thump + noise burst)
       case 'gatling_fire': {
-        const dur = 0.12;
+        const dur = 0.09;
+        // Sharp transient click (high-freq snap like a real firing pin)
         osc.type = 'square';
-        osc.frequency.setValueAtTime(160 + Math.random() * 80, now);
-        osc.frequency.exponentialRampToValueAtTime(60, now + dur);
-        gain.gain.setValueAtTime(0.18 * vol, now);
+        osc.frequency.setValueAtTime(900 + Math.random() * 120, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + dur * 0.4);
+        // Body thump
+        const bodyOsc = ctx.createOscillator();
+        bodyOsc.type = 'sawtooth';
+        bodyOsc.frequency.setValueAtTime(140, now);
+        bodyOsc.frequency.exponentialRampToValueAtTime(55, now + dur);
+        const bodyGain = ctx.createGain();
+        bodyGain.gain.setValueAtTime(0.22 * vol, now);
+        bodyGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        bodyOsc.connect(bodyGain);
+        bodyGain.connect(this.bassFilter || gain);
+        bodyOsc.start(now); bodyOsc.stop(now + dur);
+        // Noise burst for gunpowder pop
+        const nBuf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+        const nD = nBuf.getChannelData(0);
+        for (let i = 0; i < nD.length; i++) {
+          const t = i / nD.length;
+          nD[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.5);
+        }
+        const nSrc = ctx.createBufferSource(); nSrc.buffer = nBuf;
+        const nGain = ctx.createGain();
+        nGain.gain.setValueAtTime(0.35 * vol, now);
+        nGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        const hpf = ctx.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 800;
+        nSrc.connect(hpf); hpf.connect(nGain); nGain.connect(gain);
+        nSrc.start(now); nSrc.stop(now + dur);
+        // Main envelope for transient
+        gain.gain.setValueAtTime(0.28 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
         osc.start(now);
         osc.stop(now + dur);
@@ -9620,6 +9676,43 @@ camera = new THREE.PerspectiveCamera(75, 1, 1.0, 50000);
 // Lighting — bright space sunlight for visibility
 scene.add(new THREE.AmbientLight(0x223344, 0.3));
 
+// ═══ PROGRAMMATIC SUN — visible disc + radiating PointLight ═══
+// User: "elluminate the solar system with programmatic light emmanating from vector sun"
+(function createProgrammaticSun() {
+  const SUN_POS = new THREE.Vector3(1200, 350, -900); // offset from origin so flying toward it feels cinematic
+  // Core disc (BasicMaterial so it's unlit and glows at full brightness)
+  const sunCore = new THREE.Mesh(
+    new THREE.SphereGeometry(70, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0xfff1b8 })
+  );
+  sunCore.position.copy(SUN_POS);
+  sunCore.name = 'sun-core';
+  scene.add(sunCore);
+  // Outer corona (additive, translucent)
+  const corona = new THREE.Mesh(
+    new THREE.SphereGeometry(140, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffcc55, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  corona.position.copy(SUN_POS);
+  corona.name = 'sun-corona';
+  scene.add(corona);
+  // Flare sprite (billboard-ish Plane + additive)
+  const flare = new THREE.Mesh(
+    new THREE.SphereGeometry(220, 24, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff8833, transparent: true, opacity: 0.09, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  flare.position.copy(SUN_POS);
+  flare.name = 'sun-flare';
+  scene.add(flare);
+  // PointLight radiating warm light across the whole solar-system radius
+  const sunLight = new THREE.PointLight(0xffe6a8, 2.2, 8000, 1.2);
+  sunLight.position.copy(SUN_POS);
+  sunLight.name = 'sun-light';
+  scene.add(sunLight);
+  // Expose for animation/tests
+  window.__sun = { core: sunCore, corona, flare, light: sunLight, position: SUN_POS };
+})();
+
 // Persistent muzzle flash point light (reused per shot)
 window._mfLight = new THREE.PointLight(0x88ccff, 0, 20);
 scene.add(window._mfLight);
@@ -10434,7 +10527,7 @@ function _buildGatlingCluster(side) {
   // Rotating 6-barrel cluster
   const cluster = new THREE.Group();
   cluster.name = 'gatling-cluster-' + side;
-  const barrelMat = new THREE.MeshStandardMaterial({ color: 0x8892a0, roughness: 0.35, metalness: 0.95 });
+  const barrelMat = new THREE.MeshStandardMaterial({ color: 0x2a2e34, roughness: 0.75, metalness: 0.35 });
   const barrelGeo = new THREE.CylinderGeometry(0.035, 0.035, 3.0, 8);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
@@ -10480,15 +10573,10 @@ const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6), new THREE.Me
 screenMesh.position.set(0,-0.55,-0.8); screenMesh.rotation.x = -0.3 + Math.PI; cockpit.add(screenMesh);
 
 
-// ── Dashboard Gun Model (from GLB) ──
+// ── Dashboard Gun Model: REMOVED (user explicitly rejected chrome) ──
+// Previously loaded 'pistol_chrome' GLB as cockpit decoration which showed
+// up as a shiny chrome pistol on the dashboard. User wants zero chrome.
 let dashboardGunModel = null;
-loadGLBModel('pistol_chrome').then(model => {
-  dashboardGunModel = model.clone();
-  dashboardGunModel.scale.setScalar(0.15);
-  dashboardGunModel.position.set(0.6, -0.65, -1.0);
-  dashboardGunModel.rotation.set(0, -0.3, -0.1);
-  cockpit.add(dashboardGunModel);
-}).catch(() => {});
 
 // ── Dashboard Display Screen (holographic) ──
 const holoScreenGeo = new THREE.PlaneGeometry(0.5, 0.3);
@@ -10834,7 +10922,7 @@ function enterGunnerMode() {
   if (typeof spawnSystemPlanets === 'function') spawnSystemPlanets();
   if (typeof spawnSystemLoot === 'function') spawnSystemLoot();
   // GLB loading with progress tracking
-  const _glbTasks = ['enemy','railgun_turret','cockpit','dashboard_gun','ship_library','player_ship'];
+  const _glbTasks = ['enemy','cockpit','ship_library','player_ship'];
   let _glbDone = 0;
   const _glbOverlay = document.getElementById('glb-loading-overlay');
   const _glbCount = document.getElementById('glb-load-count');
@@ -10842,9 +10930,9 @@ function enterGunnerMode() {
   if (_glbOverlay) { _glbOverlay.classList.add('active'); if (_glbCount) _glbCount.textContent = '0/' + _glbTasks.length; }
   const _glbTick = () => { _glbDone++; if (_glbCount) _glbCount.textContent = _glbDone + '/' + _glbTasks.length; if (_glbFill) _glbFill.style.width = Math.round(_glbDone/_glbTasks.length*100) + '%'; if (_glbDone >= _glbTasks.length && _glbOverlay) setTimeout(() => _glbOverlay.classList.remove('active'), 800); };
   preloadEnemyModel().then(_glbTick).catch(_glbTick);
-  loadRailgunTurretGLB().then(_glbTick).catch(_glbTick);
+  // loadRailgunTurretGLB() disabled — user wants gatling-only cockpit, no railgun GLB.
   loadCockpitGLB().then(_glbTick).catch(_glbTick);
-  loadDashboardGun().then(_glbTick).catch(_glbTick);
+  // loadDashboardGun() disabled — chrome pistol rejected by user.
   spawnShipLibrary().then(_glbTick).catch(_glbTick);
   replaceShipWithGLB().then(_glbTick).catch(_glbTick);
   spawnEscortWingmen();
@@ -13744,6 +13832,37 @@ _on('btn-settings-back', 'click', () => {
 _on('btn-reroll', 'click', randomizeGenome);
 _on('btn-create-char', 'click', createCharacter);
 _on('btn-back-title', 'click', () => showScreen('title'));
+
+// ── Wizard-style step navigation (user: "wizzard style step by step pilot creation") ──
+(function initCreateWizard() {
+  let currentStep = 1;
+  const totalSteps = 3;
+  function showStep(n) {
+    currentStep = Math.max(1, Math.min(totalSteps, n));
+    document.querySelectorAll('#screen-create .wizard-step').forEach(el => {
+      el.classList.toggle('wizard-active', Number(el.getAttribute('data-step')) === currentStep);
+    });
+    const prevBtn = document.getElementById('btn-wizard-prev');
+    const nextBtn = document.getElementById('btn-wizard-next');
+    const createBtn = document.getElementById('btn-create-char');
+    if (prevBtn) prevBtn.style.display = currentStep > 1 ? 'inline-flex' : 'none';
+    if (nextBtn) nextBtn.style.display = currentStep < totalSteps ? 'inline-flex' : 'none';
+    if (createBtn) createBtn.style.display = currentStep === totalSteps ? 'inline-flex' : 'none';
+  }
+  _on('btn-wizard-next', 'click', () => showStep(currentStep + 1));
+  _on('btn-wizard-prev', 'click', () => showStep(currentStep - 1));
+  // Reset to step 1 whenever the create screen becomes visible
+  try {
+    const createScreen = document.getElementById('screen-create');
+    if (createScreen) {
+      const mo = new MutationObserver(() => {
+        if (createScreen.classList.contains('active')) showStep(1);
+      });
+      mo.observe(createScreen, { attributes: true, attributeFilter: ['class'] });
+    }
+  } catch(_) {}
+  window.__wizardShowStep = showStep;
+})();
 _on('music-toggle', 'click', () => MusicPlayer.toggle());
 _on('music-prev', 'click', () => MusicPlayer.prev());
 _on('music-next', 'click', () => MusicPlayer.next(true));
@@ -15268,7 +15387,32 @@ function loadGLBModel(key) {
             model.traverse(child => {
               if (child.isMesh) {
                 child.frustumCulled = true;
-                if (child.material) child.material.precision = 'mediump';
+                if (child.material) {
+                  child.material.precision = 'mediump';
+                  // ── Chrome purge + emissive window lights ──
+                  // User: "remove any chroms" + "ellumnate spaceships windos"
+                  // Heuristic: materials with high metalness+low roughness read as
+                  // chrome; knock them down to matte gunmetal.
+                  const mat = child.material;
+                  if (mat.metalness !== undefined && mat.metalness > 0.7 && mat.roughness !== undefined && mat.roughness < 0.3) {
+                    mat.metalness = 0.4;
+                    mat.roughness = 0.65;
+                    if (mat.color && mat.color.r + mat.color.g + mat.color.b > 2.4) {
+                      mat.color.setHex(0x3a3f48);
+                    }
+                  }
+                  // Emissive window glow: if mesh name hints at windows/lights OR
+                  // material is a strong blue/cyan on a ship role, turn it into a
+                  // glowing window.
+                  const nm = (child.name || '').toLowerCase();
+                  const isWindowHint = nm.includes('window') || nm.includes('light') || nm.includes('glass') || nm.includes('canopy') || nm.includes('viewport');
+                  const isShipRole = asset.role === 'npc' || asset.role === 'enemy' || asset.role === 'boss' || asset.role === 'police' || asset.role === 'station' || asset.role === 'cockpit';
+                  if (isShipRole && (isWindowHint || (mat.color && mat.color.b > 0.55 && mat.color.r < 0.45))) {
+                    if (!mat.emissive) mat.emissive = new THREE.Color(0xffc044);
+                    else mat.emissive.setHex(0xffc044);
+                    mat.emissiveIntensity = 1.4;
+                  }
+                }
               }
             });
             state.loadedModels[key] = model;
