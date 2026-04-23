@@ -20265,7 +20265,21 @@ function gameLoop() {
           }
           e.hp -= genomeDmg;
           e.hitFlash = 150;
-          // Vampire rounds — 3% of damage dealt restores hull
+          // Floating damage number (throttled per-enemy to avoid flood from rapid-fire weapons)
+          if (genomeDmg >= 1) {
+            const _now = performance.now();
+            if (!e._lastDmgT || _now - e._lastDmgT > 180) {
+              e._lastDmgT = _now;
+              e._dmgAccum = genomeDmg;
+              const _dmgColor = genomeDmg >= 50 ? '#ff4400' : genomeDmg >= 20 ? '#ffaa22' : '#ffdd88';
+              c.dmgNumbers.push({ text: '-' + Math.round(genomeDmg), px: e.group.position.x + (Math.random()-0.5)*2, py: e.group.position.y + 2 + Math.random()*1.5, pz: e.group.position.z, age: 0, color: _dmgColor });
+            } else {
+              // Accumulate into the most recent number for this enemy
+              e._dmgAccum = (e._dmgAccum || 0) + genomeDmg;
+              const _last = c.dmgNumbers[c.dmgNumbers.length - 1];
+              if (_last && _last.age < 400) _last.text = '-' + Math.round(e._dmgAccum);
+            }
+          }
           const _vampHeal = genomeDmg * 0.03;
           if (_vampHeal > 0.1) {
             state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + _vampHeal);
