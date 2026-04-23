@@ -5977,7 +5977,6 @@ document.addEventListener('keydown', (e) => {
   else if (key === '7') { state.activeWeapon = 'gatling_left'; fireGatlingGun('left'); }
   else if (key === '8') { state.activeWeapon = 'gatling_right'; fireGatlingGun('right'); }
   else if (key === '9') { state.activeWeapon = 'gatling_dual'; fireGatlingGun('dual'); }
-  else if (key === '9') { state.activeWeapon = 'gatling_dual'; fireGatlingGun('dual'); }
   else if (key === '0') { state.activeWeapon = 'plasma'; firePlasmaCannon(); }
   else if (key === '-') { state.activeWeapon = 'beam'; fireBeamLance(); }
   else if (key === '=') { state.activeWeapon = 'swarm'; fireSwarmPod(); }
@@ -10688,6 +10687,60 @@ cockpit.add(gatlingGunL);
 cockpit.add(gatlingGunR);
 // Preserve legacy refs so railgun charge code (railL/railR opacity) still works
 railL = gatlingGunL; railR = gatlingGunR;
+
+// ── Cockpit-mounted vector emitters for new weapons (hidden by default) ──
+// Plasma coil: torus stack + glowing core
+const plasmaEmitter = new THREE.Group();
+{
+  const coilMat = new THREE.MeshStandardMaterial({ color: 0x223322, emissive: 0x44ff66, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.4 });
+  for (let i = 0; i < 3; i++) {
+    const t = new THREE.Mesh(new THREE.TorusGeometry(0.18 + i * 0.05, 0.04, 6, 16), coilMat);
+    t.position.z = -1.6 - i * 0.18;
+    t.rotation.y = Math.PI / 2;
+    plasmaEmitter.add(t);
+  }
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), new THREE.MeshBasicMaterial({ color: 0x88ff44, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
+  orb.position.set(0, 0, -2.2);
+  plasmaEmitter.add(orb);
+  plasmaEmitter.position.set(0, -0.35, 0);
+  plasmaEmitter.visible = false;
+}
+cockpit.add(plasmaEmitter);
+
+// Beam lance emitter: long thin barrel + crystal tip
+const beamEmitter = new THREE.Group();
+{
+  const barrelMat = new THREE.MeshStandardMaterial({ color: 0x1a0a2a, emissive: 0xff44ff, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.7 });
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 1.4, 8), barrelMat);
+  barrel.rotation.x = Math.PI / 2;
+  barrel.position.set(0, -0.3, -1.8);
+  beamEmitter.add(barrel);
+  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), new THREE.MeshBasicMaterial({ color: 0xff88ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
+  crystal.position.set(0, -0.3, -2.4);
+  beamEmitter.add(crystal);
+  beamEmitter.visible = false;
+}
+cockpit.add(beamEmitter);
+
+// Swarm pod rack: 4 missile cones in a 2x2 grid
+const swarmEmitter = new THREE.Group();
+{
+  const podMat = new THREE.MeshStandardMaterial({ color: 0x331a0a, emissive: 0xff4422, emissiveIntensity: 0.3, roughness: 0.6, metalness: 0.5 });
+  for (let i = 0; i < 4; i++) {
+    const cx = (i % 2 === 0) ? -0.2 : 0.2;
+    const cy = (i < 2) ? -0.2 : -0.4;
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.4, 5), podMat);
+    cone.rotation.x = -Math.PI / 2;
+    cone.position.set(cx, cy, -1.7);
+    swarmEmitter.add(cone);
+  }
+  swarmEmitter.visible = false;
+}
+cockpit.add(swarmEmitter);
+
+// Expose for the per-frame cockpit updater
+window.__cockpitEmitters = { plasma: plasmaEmitter, beam: beamEmitter, swarm: swarmEmitter };
+
 muzzleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
 const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.3,12,12), muzzleMat);
 muzzle.position.set(0,-0.3,-4.2); cockpit.add(muzzle);
@@ -18911,6 +18964,24 @@ function gameLoop() {
       if (cl) cl.rotation.z = -gatlingRightBarrelAngle * 0.02;
       const mm = gatlingGunR.userData?.muzzleMat;
       if (mm && mm.opacity > 0) mm.opacity = Math.max(0, mm.opacity - 0.15);
+    }
+    // ── Swap cockpit weapon emitter visibility based on activeWeapon ──
+    {
+      const aw = state.activeWeapon || '';
+      const isGat = aw.indexOf('gatling') === 0;
+      if (typeof gatlingGunL !== 'undefined' && gatlingGunL) gatlingGunL.visible = isGat || aw === 'railgun' || aw === 'laser';
+      if (typeof gatlingGunR !== 'undefined' && gatlingGunR) gatlingGunR.visible = isGat || aw === 'railgun' || aw === 'laser';
+      const em = window.__cockpitEmitters;
+      if (em) {
+        em.plasma.visible = (aw === 'plasma');
+        em.beam.visible = (aw === 'beam');
+        em.swarm.visible = (aw === 'swarm');
+        // Pulse the plasma orb when active
+        if (em.plasma.visible) {
+          const orb = em.plasma.children[em.plasma.children.length - 1];
+          if (orb && orb.material) orb.material.opacity = 0.6 + 0.35 * Math.sin(performance.now() * 0.006);
+        }
+      }
     }
   } catch(_barrelErr) {}
   
