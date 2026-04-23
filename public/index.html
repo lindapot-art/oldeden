@@ -5598,8 +5598,30 @@ const _gatlingOriginLeft = new THREE.Vector3();
 const _gatlingOriginRight = new THREE.Vector3();
 
 function fireGatlingGun(gunType = 'dual') {
-  if (c.dead || c.heat >= 0.98) return; // dead or critically overheated
-  if (c.subsystemDamage.weapons > 0) return;
+  if (c.dead) return;
+  if (c.heat >= 0.98) {
+    // Critically overheated — feedback
+    if (!c._overheated) {
+      c._overheated = true;
+      AudioSFX.play('click');
+      showToast('⚠ GATLING OVERHEAT — cooling down');
+    }
+    return;
+  }
+  // Auto-clear overheat once heat drops below 0.5
+  if (c._overheated && c.heat < 0.5) {
+    c._overheated = false;
+    showToast('Gatling cooled — ready');
+  }
+  if (c.subsystemDamage.weapons > 0) {
+    const _now2 = performance.now();
+    if (!c._lastDryFire || _now2 - c._lastDryFire > 700) {
+      c._lastDryFire = _now2;
+      AudioSFX.play('click');
+      showToast('Weapons jammed — repair subsystem');
+    }
+    return;
+  }
   
   const now = performance.now();
   
