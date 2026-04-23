@@ -4853,7 +4853,16 @@ function fireActiveGunRoomWeapon() {
   // Simulate projectile for all weapons (demo: use laser visuals for all except railgun_turret)
   if (activeWep.key === 'railgun_turret') {
     // Use railgun projectile
-    if (c.ammo <= 0 || !c.weaponReady) return;
+    if (!c.weaponReady) return;
+    if (c.ammo <= 0) {
+      const _now = performance.now();
+      if (!c._lastDryFire || _now - c._lastDryFire > 700) {
+        c._lastDryFire = _now;
+        AudioSFX.play('click');
+        if (typeof showToast === 'function') showToast('Out of ammo — press R to reload');
+      }
+      return;
+    }
     if (c.subsystemDamage.weapons > 0) { addComms('DAMAGE', 'Weapons jammed! Repairs in progress...'); return; }
     c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
     c.playerHasAttacked = true;
@@ -11838,7 +11847,17 @@ function loadLargeModels() {
 }
 
 function fireRailgun() {
-  if (c.dead || !c.weaponReady || c.ammo <= 0) return;
+  if (c.dead || !c.weaponReady) return;
+  if (c.ammo <= 0) {
+    // Dry-fire feedback — player was silently blocked before (no ammo).
+    const _now = performance.now();
+    if (!c._lastDryFire || _now - c._lastDryFire > 700) {
+      c._lastDryFire = _now;
+      AudioSFX.play('click');
+      if (typeof showToast === 'function') showToast('Out of ammo — press R to reload');
+    }
+    return;
+  }
   if (c.subsystemDamage.weapons > 0) return;
   c.weaponReady = false; c.charging = true; c.chargeStart = performance.now();
   c.playerHasAttacked = true;
