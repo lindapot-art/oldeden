@@ -20778,6 +20778,19 @@ function gameLoop() {
             if (e.isBoss) {
               c.bossActive = false; state.player.lifetimeStats.bossKills++; c.bossKills = (c.bossKills || 0) + 1;
               addComms('AI Director', 'Boss destroyed! +500 points');
+              // Big boss-kill payout + feedback (was silent bonus)
+              const _bossBonus = 200 + c.cycle * 50;
+              state.player.credits += _bossBonus;
+              c.score += 500;
+              try {
+                if (typeof showToast === 'function') showToast('\uD83D\uDC51 BOSS DEFEATED  +' + _bossBonus + ' EC  +500 SCORE');
+                if (c.dmgNumbers) c.dmgNumbers.push({
+                  text: '\uD83D\uDC51 BOSS DOWN +' + _bossBonus + ' EC',
+                  px: e.group.position.x, py: e.group.position.y + 5, pz: e.group.position.z,
+                  age: 0, color: '#ffaa00'
+                });
+                if (typeof AudioSFX !== 'undefined' && AudioSFX.play) AudioSFX.play('karma_legendary');
+              } catch(_e) {}
               // Multi-stage boss explosion — 3 staggered blasts (tracked for cleanup)
               const bpx = e.group.position.x, bpy = e.group.position.y, bpz = e.group.position.z;
               const bossScale = (e.cfg.scale||1);
