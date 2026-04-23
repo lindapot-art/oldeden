@@ -7815,6 +7815,7 @@ function jumpToSystem(idx) {
       
       addComms('Navigation', 'No jump route to that system. Select a connected system or find a wormhole.');
       AudioSFX.play('shield_hit');
+      if (typeof showToast==='function') showToast('\u274c NO JUMP ROUTE');
       return;
     }
     
@@ -7830,6 +7831,7 @@ function jumpToSystem(idx) {
     if (state.ship.fuel < fuelCost) {
       addComms('Navigation', `Insufficient fuel for jump. Need ${fuelCost}, have ${Math.floor(state.ship.fuel)}.`);
       AudioSFX.play('shield_hit');
+      if (typeof showToast==='function') showToast('\u26fd INSUFFICIENT FUEL  need ' + fuelCost);
       return;
     }
     
@@ -7855,6 +7857,7 @@ function jumpToSystem(idx) {
     // Emergency jump - hull damage
     state.ship.hull = Math.max(1, state.ship.hull - 10);
     addComms('Engineering', 'Emergency jump — hull integrity compromised!');
+    if (typeof showToast==='function') showToast('\u26a0 EMERGENCY JUMP  -10 HULL');
   }
   
   gainSkillXP('piloting', 0.04);
@@ -7877,6 +7880,7 @@ function jumpToSystem(idx) {
   
   // Enhanced arrival messages with procedural data
   let arrivalMessages = [`Jumped to ${targetSystem.name}.`];
+  if (typeof showToast==='function') showToast('\ud83c\udf0c ARRIVED  ' + targetSystem.name);
   
   if (targetSystem.hasStation) {
     arrivalMessages.push('Station detected — docking available.');
