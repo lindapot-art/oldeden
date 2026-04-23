@@ -8441,11 +8441,13 @@ function updateQuestProgress(system) {
     if (q.objectives.every(o => (o.current || 0) >= o.required)) {
       q.completed = true; 
       q.active = false;
+      const _qReward = q.rewards?.credits || 0;
       if (!state.socket || !state.connected) { 
-        state.player.credits += q.rewards?.credits || 0; 
+        state.player.credits += _qReward;
       }
-      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + (q.rewards?.credits || 0) + ' EC');
+      addComms('Mission', 'COMPLETED: ' + (q.title || q.name) + ' — +' + _qReward + ' EC');
       AudioSFX.play('quest_complete');
+      try { if (typeof showToast==='function') showToast('\u2705 QUEST COMPLETE  ' + (q.title || q.name) + '  +' + _qReward + ' EC'); } catch(_e) {}
     }
   });
 }
@@ -20841,6 +20843,7 @@ function gameLoop() {
                   state.player.credits += _rescueReward;
                   addComms('Emergency', `Freighter rescued! +${_rescueReward} EC bounty.`);
                   AudioSFX.play('quest_complete');
+                  try { if (typeof showToast==='function') showToast('\ud83d\udef0\ufe0f FREIGHTER RESCUED  +' + _rescueReward + ' EC'); } catch(_e) {}
                   state._activeEncounter = null;
                 }
               } else if (state._activeEncounter.repBonus && sys && sys.controllingFaction) {
@@ -20856,9 +20859,11 @@ function gameLoop() {
               });
               if (q.objectives.every(o => (o.current || 0) >= o.required)) {
                 q.completed = true; q.active = false;
-                if (!state.socket || !state.connected) { state.player.credits += q.rewards?.credits || 0; }
-                addComms('Mission', `COMPLETED: ${q.title || q.name} — +${q.rewards?.credits || 0} EC`);
+                const _qReward = q.rewards?.credits || 0;
+                if (!state.socket || !state.connected) { state.player.credits += _qReward; }
+                addComms('Mission', `COMPLETED: ${q.title || q.name} — +${_qReward} EC`);
                 AudioSFX.play('quest_complete');
+                try { if (typeof showToast==='function') showToast('\u2705 QUEST COMPLETE  ' + (q.title || q.name) + '  +' + _qReward + ' EC'); } catch(_e) {}
               }
             });
             AudioSFX.play('explode');
