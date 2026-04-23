@@ -3044,6 +3044,32 @@ case 'warp_arrive': osc.type='sine'; osc.frequency.setValueAtTime(2000,now); osc
       case 'laser_fire': osc.type='sawtooth'; osc.frequency.setValueAtTime(1200,now); osc.frequency.exponentialRampToValueAtTime(3000,now+0.06); gain.gain.setValueAtTime(0.07*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.08); osc.start(now); osc.stop(now+0.08); break;
       case 'scanPulse': osc.type='sine'; osc.frequency.setValueAtTime(600,now); osc.frequency.linearRampToValueAtTime(1800,now+0.3); osc.frequency.exponentialRampToValueAtTime(400,now+0.8); gain.gain.setValueAtTime(0.08*vol,now); gain.gain.linearRampToValueAtTime(0.12*vol,now+0.3); gain.gain.exponentialRampToValueAtTime(0.001,now+0.8); osc.start(now); osc.stop(now+0.8); break;
       case 'reload': { osc.disconnect(); const dur3=0.15; const buf3=ctx.createBuffer(1,ctx.sampleRate*dur3,ctx.sampleRate); const d3=buf3.getChannelData(0); for(let i=0;i<d3.length;i++) d3[i]=(Math.random()*2-1)*(1-i/d3.length)*0.5; const src3=ctx.createBufferSource(); src3.buffer=buf3; const lp3=ctx.createBiquadFilter(); lp3.type='lowpass'; lp3.frequency.value=400; src3.connect(lp3); lp3.connect(gain); gain.gain.setValueAtTime(0.12*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+dur3); src3.start(now); return; }
+      case 'plasma_fire': { // Deep power-up + thump
+        osc.disconnect();
+        const o1=ctx.createOscillator(); o1.type='sine'; o1.frequency.setValueAtTime(80,now); o1.frequency.exponentialRampToValueAtTime(220,now+0.18);
+        const o2=ctx.createOscillator(); o2.type='triangle'; o2.frequency.setValueAtTime(160,now); o2.frequency.exponentialRampToValueAtTime(440,now+0.18);
+        const g1=ctx.createGain(); g1.gain.setValueAtTime(0.18*vol,now); g1.gain.exponentialRampToValueAtTime(0.001,now+0.35);
+        o1.connect(g1); o2.connect(g1); g1.connect(ctx.destination);
+        o1.start(now); o2.start(now); o1.stop(now+0.35); o2.stop(now+0.35);
+        return;
+      }
+      case 'beam_hum': { // Continuous magenta beam — short tonal sweep
+        osc.type='sawtooth'; osc.frequency.setValueAtTime(1800,now); osc.frequency.linearRampToValueAtTime(2200,now+0.12);
+        const filt=ctx.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value=2000; filt.Q.value=8;
+        osc.disconnect(); osc.connect(filt); filt.connect(gain);
+        gain.gain.setValueAtTime(0.05*vol,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.14);
+        osc.start(now); osc.stop(now+0.14); break;
+      }
+      case 'swarm_volley': { // 4-tube launcher — punchy thump cluster
+        osc.disconnect();
+        for (let i=0;i<4;i++){
+          const ot=ctx.createOscillator(); ot.type='square'; ot.frequency.setValueAtTime(180,now+i*0.07);
+          ot.frequency.exponentialRampToValueAtTime(60,now+i*0.07+0.08);
+          const gt=ctx.createGain(); gt.gain.setValueAtTime(0.10*vol,now+i*0.07); gt.gain.exponentialRampToValueAtTime(0.001,now+i*0.07+0.10);
+          ot.connect(gt); gt.connect(ctx.destination); ot.start(now+i*0.07); ot.stop(now+i*0.07+0.12);
+        }
+        return;
+      }
     }
   },
   ambience: null,
@@ -5760,7 +5786,7 @@ function firePlasmaCannon() {
   c.projectiles.push({ group: g, dir, speed: 180, life: 3500, age: 0, damage, isPlasma: true, splashRadius: 8 });
   c.recoilVel = -3.2;
   if (state.settings.screenShake) { c.shakeX += (Math.random()-0.5)*0.3; c.shakeY -= 0.12; }
-  AudioSFX.play('charge');
+  AudioSFX.play('plasma_fire');
 }
 
 // ── Beam Lance: continuous short-range energy beam ──
@@ -5809,7 +5835,7 @@ function fireBeamLance() {
       if (typeof onEnemyKilled === 'function') { try { onEnemyKilled(hitBest); } catch(_){} }
     }
   }
-  AudioSFX.play('laser_fire');
+  AudioSFX.play('beam_hum');
 }
 
 // ── Swarm Missile Pod: 4 rapid-fire dumb-fire micro-missiles ──
@@ -5846,7 +5872,7 @@ function fireSwarmPod() {
     }, i * 70);
   }
   c.recoilVel = -2.2;
-  AudioSFX.play('boost');
+  AudioSFX.play('swarm_volley');
 }
 
 // QA bridge
@@ -11153,6 +11179,7 @@ function enterGunnerMode() {
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Press F near a stargate to warp to new systems. Explore the frontier!'); }, 25000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'); }, 40000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Your genome shapes your potential. Trade, fight, and explore to grow skills.'); }, 60000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'Weapon keys: 1-9 lasers/blasters/gatling, 0=Plasma, -=Beam, ==Swarm, M=Missile.'); }, 12000),
     );
   }
 }
