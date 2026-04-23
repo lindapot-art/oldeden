@@ -20607,6 +20607,21 @@ function gameLoop() {
               c._salvageCrates.push({ mesh: _crateMesh, type: _crateTypes[Math.floor(Math.random() * _crateTypes.length)], life: 15000 });
             }
           }
+          // Plasma splash — deals 50% of projectile damage to all enemies in splashRadius
+          if (p.isPlasma && p.splashRadius) {
+            const _splashR2 = p.splashRadius * p.splashRadius;
+            const _splashDmg = (p.damage || 1.0) * 0.5;
+            for (let _si = 0; _si < c.enemies.length; _si++) {
+              const _se = c.enemies[_si];
+              if (_se === e || _se.hp <= 0) continue;
+              if (_se.group.position.distanceToSquared(p.group.position) < _splashR2) {
+                _se.hp -= _splashDmg; _se.hitFlash = 180;
+                spawnImpactSparks(_se.group.position, 0x88ff44);
+                c.dmgNumbers.push({ text: 'SPLASH -' + _splashDmg.toFixed(0), px: _se.group.position.x, py: _se.group.position.y + 3, pz: _se.group.position.z, age: 0, color: '#88ff44' });
+              }
+            }
+            if (typeof spawnExplosionAt === 'function') spawnExplosionAt(p.group.position, 0x88ff44, p.splashRadius * 0.6);
+          }
           hit = true; break;
         }
       }
