@@ -13108,21 +13108,35 @@ hudCtx.fillText('RADAR', mapCx-15, mapCy+mapR+12);
   // Boss HP bar (top-center)
   const boss = c.enemies.find(e => e.isBoss);
   if (boss) {
-    const bw = 300, bh = 12, bx = cx - bw/2, by = 60;
+    const bw = 420, bh = 18, bx = cx - bw/2, by = 68;
     const _bHpPct = boss.hp / boss.maxHp;
     const _bPhaseLabel = _bHpPct < 0.25 ? ' \u2620 DESPERATE' : _bHpPct < 0.5 ? ' \u26a0 ENRAGED' : '';
     const _bPhaseColor = _bHpPct < 0.25 ? '#ff0000' : _bHpPct < 0.5 ? '#ff6600' : '#ff2200';
-    hudCtx.fillStyle = '#445566'; hudCtx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
-    hudCtx.fillText('\u26a0 BOSS' + _bPhaseLabel, bx, by-6);
+    // Pulsing glow when desperate
+    const _pulse = _bHpPct < 0.25 ? 0.5 + 0.5 * Math.sin(performance.now() * 0.012) : 1;
+    hudCtx.save();
+    if (_bHpPct < 0.5) {
+      hudCtx.shadowColor = _bPhaseColor;
+      hudCtx.shadowBlur = _bHpPct < 0.25 ? 20 * _pulse : 10;
+    }
+    // Boss name + phase label
+    const _bName = (boss.bossName || 'BOSS').toUpperCase();
+    hudCtx.textAlign = 'left';
+    hudCtx.fillStyle = '#ffcc88'; hudCtx.font = 'bold 15px "Segoe UI", system-ui, sans-serif';
+    hudCtx.fillText('\u26a0 ' + _bName + _bPhaseLabel, bx, by-8);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(bx, by, bw, bh);
     hudCtx.fillStyle = _bPhaseColor; hudCtx.fillRect(bx, by, bw*_bHpPct, bh);
     // Phase threshold markers at 50% and 25%
-    hudCtx.strokeStyle = '#ffffff33'; hudCtx.lineWidth = 1;
+    hudCtx.strokeStyle = '#ffffff55'; hudCtx.lineWidth = 1;
     hudCtx.beginPath(); hudCtx.moveTo(bx + bw*0.5, by); hudCtx.lineTo(bx + bw*0.5, by+bh); hudCtx.stroke();
     hudCtx.beginPath(); hudCtx.moveTo(bx + bw*0.25, by); hudCtx.lineTo(bx + bw*0.25, by+bh); hudCtx.stroke();
-    hudCtx.strokeStyle = '#ff4422'; hudCtx.lineWidth = 1; hudCtx.strokeRect(bx, by, bw, bh);
-    // HP percentage text
-    hudCtx.font = '9px "Segoe UI"'; hudCtx.fillStyle = '#ffffff'; hudCtx.fillText(Math.ceil(_bHpPct*100) + '%', bx + bw + 8, by + 10);
+    hudCtx.strokeStyle = '#ff4422'; hudCtx.lineWidth = 2; hudCtx.strokeRect(bx, by, bw, bh);
+    hudCtx.restore();
+    // HP percentage text + raw HP
+    hudCtx.font = 'bold 11px "Segoe UI"'; hudCtx.fillStyle = '#ffffff';
+    hudCtx.textAlign = 'center';
+    hudCtx.fillText(Math.ceil(boss.hp) + ' / ' + boss.maxHp + '  (' + Math.ceil(_bHpPct*100) + '%)', cx, by + bh/2 + 4);
+    hudCtx.textAlign = 'left';
   }
 
   // ── Compass / Bearing Indicator (top-center strip) ──
