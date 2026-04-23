@@ -14032,6 +14032,18 @@ window.addEventListener('wheel', (e) => {
 document.addEventListener('keydown', (e) => {
   // Don't process game keys while typing in chatbot
   if (document.activeElement === _cachedChatInput) { if (e.key === 'Escape') { _cachedChatInput.blur(); } return; }
+  // H key: hijack nearest sentry
+  if ((e.key === 'h' || e.key === 'H') && c.active && !c.dead) {
+    tryHijackSentry();
+    e.preventDefault();
+    return;
+  }
+  // Q key: release hijack
+  if ((e.key === 'q' || e.key === 'Q') && c.active && !c.dead) {
+    releaseHijackSentry();
+    e.preventDefault();
+    return;
+  }
   // ── V key: cycle view presets (cockpit → close → far → wide → snap-origin) ──
   if ((e.key === 'v' || e.key === 'V') && c.active && !c.dead) {
     const _presets = [0, 30, 120, 600];
@@ -17429,6 +17441,122 @@ function updateNPCShips(dt) {
 //  NPC STATIONS — Procedural 3D
 // ================================================================
 let stationModels = [];
+
+// ═══ SENTRY GUNS (protect stations, can be hijacked) ═══
+let sentryGuns = [];
+let playerHijackedSentry = null;
+function spawnSentryGun(pos, parentStation) {
+  const geo = new THREE.CylinderGeometry(0.7, 1.2, 2.8, 10);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x8888aa, metalness: 0.7, roughness: 0.3 });
+  const gun = new THREE.Mesh(geo, mat);
+  gun.position.copy(pos);
+  gun.userData.hp = 300;
+  gun.userData.maxHp = 300;
+  gun.userData.parentStation = parentStation;
+  gun.userData.isSentry = true;
+  gun.userData.isHijacked = false;
+  gun.userData.cooldown = 0;
+  scene.add(gun);
+  sentryGuns.push(gun);
+  return gun;
+}
+
+function updateSentryGuns(dt) {
+  for (const gun of sentryGuns) {
+    if (!gun.parent) continue;
+    // If hijacked, player controls aim/fire
+    if (gun.userData.isHijacked && playerHijackedSentry === gun) {
+      // Aim at mouse reticle or nearest station
+      // Fire on click or key (handled elsewhere)
+      continue;
+    }
+    // Otherwise, auto-target nearest hostile (criminal, wanted, or player if wanted)
+    let bestTarget = null, bestDist = 80;
+    for (const n of (criminalShips||[])) {
+      if (!n.group) continue;
+      const d = gun.position.distanceTo(n.group.position);
+      if (d < bestDist) { bestDist = d; bestTarget = n.group; }
+    }
+    for (const p of (policeShips||[])) {
+      if (!p) continue;
+      if (p.userData.isHostile) {
+        const d = gun.position.distanceTo(p.position);
+        if (d < bestDist) { bestDist = d; bestTarget = p; }
+      }
+    }
+    // Target player if wanted
+    if (state.player.isWanted && ship) {
+      const d = gun.position.distanceTo(ship.position);
+      if (d < bestDist) { bestDist = d; bestTarget = ship; }
+    }
+    // Fire if target in range
+    if (bestTarget && gun.userData.cooldown <= 0) {
+      fireSentryGun(gun, bestTarget);
+      gun.userData.cooldown = 1.2 + Math.random()*0.5;
+    }
+    if (gun.userData.cooldown > 0) gun.userData.cooldown -= dt;
+  }
+}
+
+function fireSentryGun(gun, target) {
+  // Visual: draw a red/yellow beam
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffcc44, transparent: true, opacity: 0.7 });
+  const beamGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 6);
+  const beam = new THREE.Mesh(beamGeo, beamMat);
+  const dir = target.position.clone().sub(gun.position).normalize();
+  const dist = gun.position.distanceTo(target.position);
+  beam.scale.set(1, dist/2, 1);
+  beam.position.copy(gun.position).add(dir.clone().multiplyScalar(dist/2));
+  beam.lookAt(target.position);
+  scene.add(beam);
+  setTimeout(()=>scene.remove(beam), 120);
+  // Damage
+  if (target.userData && typeof target.userData.hp === 'number') {
+    target.userData.hp -= 40 + Math.random()*20;
+    if (target.userData.hp <= 0 && target.userData.isSentry) {
+      // Sentry destroyed
+      scene.remove(target);
+      sentryGuns = sentryGuns.filter(g=>g!==target);
+    }
+  }
+  // If player, trigger wanted
+  if (target === ship) {
+    setPlayerWanted();
+  }
+}
+
+function setPlayerWanted() {
+  if (!state.player.isWanted) {
+    state.player.isWanted = true;
+    addComms('EDEN Police', 'You are now WANTED. Police will engage.');
+    for (let i = 0; i < 2; ++i) spawnPolicePatrol();
+  }
+}
+
+// Hijack sentry (player must be close)
+function tryHijackSentry() {
+  if (playerHijackedSentry) { addComms('System', 'Already hijacking a sentry.'); return; }
+  let best = null, bestDist = 12;
+  for (const gun of sentryGuns) {
+    const d = ship.position.distanceTo(gun.position);
+    if (d < bestDist) { bestDist = d; best = gun; }
+  }
+  if (best) {
+    best.userData.isHijacked = true;
+    playerHijackedSentry = best;
+    addComms('System', 'Sentry hijacked! Use [FIRE] to shoot. Attacking stations will make you WANTED.');
+  } else {
+    addComms('System', 'No sentry in range to hijack.');
+  }
+}
+
+function releaseHijackSentry() {
+  if (playerHijackedSentry) {
+    playerHijackedSentry.userData.isHijacked = false;
+    playerHijackedSentry = null;
+    addComms('System', 'Released sentry control.');
+  }
+}
 let glbSceneObjects = [];   // GLB models added to scene (cleaned up on exit gunner)
 let libraryLabels = [];     // Ship library HUD labels (cleaned up on exit gunner)
 
@@ -17459,6 +17587,9 @@ async function spawnStationModel() {
     }
     scene.add(inst);
     stationModels.push(inst);
+    // Spawn 2 sentry guns per station
+    spawnSentryGun(inst.position.clone().add(new THREE.Vector3(18, 2, 0)), inst);
+    spawnSentryGun(inst.position.clone().add(new THREE.Vector3(-18, 2, 0)), inst);
     if (state._lastStationDeployMessage !== deployMessage) {
       state._lastStationDeployMessage = deployMessage;
       addComms('System', deployMessage);
@@ -17480,6 +17611,9 @@ async function spawnStationModel() {
           );
           scene.add(secInst);
           stationModels.push(secInst);
+                    // Sentries for outpost
+                    spawnSentryGun(secInst.position.clone().add(new THREE.Vector3(12, 2, 0)), secInst);
+                    spawnSentryGun(secInst.position.clone().add(new THREE.Vector3(-12, 2, 0)), secInst);
           addStationBeacons(secInst);
           addComms('System', `Outpost ${_secondaryKey.replace(/_/g, ' ')} online.`);
         }
