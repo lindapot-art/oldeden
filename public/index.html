@@ -2032,6 +2032,11 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
     </div>
 <div id="save-indicator">&#10003; SAVED</div>
 <div id="boss-warning-overlay"><div class="bw-title">&#9888; WARNING &#9888;</div><div class="bw-sub">MASSIVE HOSTILE SIGNATURE</div></div>
+<div id="streak-banner" style="position:fixed;top:22vh;left:50%;transform:translateX(-50%) scale(0.9);padding:14px 36px;background:linear-gradient(180deg,rgba(28,10,4,0.92),rgba(42,14,4,0.92));border:2px solid #ffaa22;border-radius:12px;color:#ffcc44;font:900 1.8rem/1 'Segoe UI',system-ui,sans-serif;letter-spacing:4px;text-shadow:0 0 24px rgba(255,170,34,0.8),0 0 60px rgba(255,100,0,0.6);z-index:18;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .35s ease,transform .35s cubic-bezier(.34,1.56,.64,1),visibility .35s;"></div>
+<style>
+#streak-banner.active{opacity:1;visibility:visible;transform:translateX(-50%) scale(1);animation:streakPulse 1.2s ease-in-out infinite;}
+@keyframes streakPulse{0%,100%{filter:drop-shadow(0 0 12px rgba(255,170,34,0.6));}50%{filter:drop-shadow(0 0 28px rgba(255,200,80,1));}}
+</style>
 <div id="muzzle-flash-overlay"></div>
 <!-- WoT-Style Direct Aiming Crosshair -->
 <div id="wot-crosshair"></div>
