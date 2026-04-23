@@ -12258,6 +12258,26 @@ function renderHUD(dtMs) {
   const crossSize = killActive ? 36 : hitActive ? 33 : 30;
   hudCtx.strokeStyle = crossColor; hudCtx.lineWidth = hitActive ? 2.5 : 1.5; hudCtx.globalAlpha = 0.8;
   hudCtx.beginPath(); hudCtx.arc(cx, cy, crossSize, 0, Math.PI*2); hudCtx.stroke();
+  // Missile-lock progress arc (overlays the crosshair ring)
+  if (state.targetLock && state.targetLock.target && state.targetLock.target.hp > 0 && state.targetLock.lockTimer > 0) {
+    const _lp = Math.min(1, state.targetLock.lockTimer / 2000);
+    const _locked = state.targetLock.locked;
+    hudCtx.save();
+    hudCtx.strokeStyle = _locked ? '#ff2200' : '#ffaa22';
+    hudCtx.lineWidth = 3;
+    hudCtx.globalAlpha = _locked ? (0.6 + 0.4 * Math.sin(performance.now() * 0.015)) : 0.85;
+    hudCtx.beginPath();
+    hudCtx.arc(cx, cy, crossSize + 5, -Math.PI/2, -Math.PI/2 + Math.PI*2*_lp);
+    hudCtx.stroke();
+    if (_locked) {
+      hudCtx.fillStyle = '#ff2200';
+      hudCtx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
+      hudCtx.textAlign = 'center';
+      hudCtx.fillText('LOCK', cx, cy - crossSize - 10);
+      hudCtx.textAlign = 'left';
+    }
+    hudCtx.restore();
+  }
   hudCtx.fillStyle = crossColor; hudCtx.globalAlpha = 0.9;
   hudCtx.beginPath(); hudCtx.arc(cx, cy, 2, 0, Math.PI*2); hudCtx.fill();
   hudCtx.globalAlpha = 0.5;
