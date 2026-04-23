@@ -1266,10 +1266,11 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
       content: "Press ESC to skip";
       position: absolute;
       top: 20px;
-      right: 20px;
+      right: 70px; /* moved left so it doesn't overlap the ✕ close button */
       color: rgba(255, 255, 255, 0.6);
       font-size: 0.9rem;
       z-index: 101;
+      pointer-events: none; /* CRITICAL: pseudo-element must not swallow button clicks */
     }
 
     #screen-create-holo.active {
@@ -2217,16 +2218,7 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 </div>
 
 <div class="screen" id="screen-create-holo">
-  <button class="dna-close-btn" onclick="
-      const dnaScreen = document.getElementById('screen-create-holo');
-      const createScreen = document.getElementById('screen-create');
-      if (dnaScreen && dnaScreen.classList.contains('active')) {
-        dnaScreen.classList.remove('active');
-        if (createScreen) {
-          createScreen.classList.add('active');
-        }
-      }
-    " style="position:absolute;top:15px;right:20px;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;z-index:9999;padding:8px;min-width:44px;min-height:44px;" title="Close DNA Menu">✕</button>
+  <button class="dna-close-btn" id="btn-dna-close" style="position:absolute;top:15px;right:20px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:24px;cursor:pointer;z-index:9999;padding:6px 12px;min-width:44px;min-height:44px;line-height:1;pointer-events:auto;" title="Close DNA Menu">✕</button>
   <div class="holo-panel">
     <h1 class="holo-title">GENETIC RESURRECTION</h1>
     <p class="holo-subtitle">⬢ DNA RECOMBINATION PROTOCOL ⬢</p>
@@ -9483,6 +9475,23 @@ try {
   window.__qa.fireRailgun = fireRailgun;
   window.__qa.fireGatlingGun = fireGatlingGun;
   window.__qa.firePistol = typeof firePistol !== 'undefined' ? firePistol : null;
+  window.__qa.createEnemy = (t) => { try { return createEnemy(t || 'fighter'); } catch(_){} };
+  // Spawn an enemy directly in front of the camera — used by QA harnesses
+  // to reliably validate combat (previously enemies spawned in random
+  // directions and the bot never lined them up with the crosshair).
+  window.__qa.spawnEnemyInFront = (dist, type) => {
+    try {
+      const before = c.enemies.length;
+      createEnemy(type || 'fighter');
+      const e = c.enemies[c.enemies.length - 1];
+      if (!e || c.enemies.length === before) return null;
+      const d = (typeof dist === 'number') ? dist : 120;
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      e.group.position.copy(camera.position).addScaledVector(fwd, d);
+      e.group.lookAt(ship.position);
+      return e;
+    } catch(_) { return null; }
+  };
 } catch (_e) { /* some fns may not be hoisted yet */ }
 // QA input simulation — bypasses pointer-lock gate so automated runs can move
 window.__qa.press = (k) => { try { keysDown.add(k.toLowerCase()); } catch(_e){} };
@@ -12036,11 +12045,14 @@ function renderHUD(dtMs) {
   hudCtx.fillText('\u231A ' + _survDisp + ' alive', srx + 160, sry+44);
   // Age & Lives display
   hudCtx.fillStyle = '#556677'; hudCtx.fillText('AGE ' + Math.floor(state.player.age) + '  |  LIVES ' + state.player.rebirths, srx, sry+60);
-  // Adaptive difficulty label
+  // Adaptive difficulty label — right-aligned so long labels (NIGHTMARE 8.0x) don't clip
   { const _diffVal = Math.min(8, 1 + (state.player.rebirths || 0) * 0.2 + (c.cycle - 1) * 0.12);
     const _diffLabel = _diffVal >= 6 ? 'NIGHTMARE' : _diffVal >= 4 ? 'BRUTAL' : _diffVal >= 2.5 ? 'HARD' : _diffVal >= 1.5 ? 'NORMAL' : 'EASY';
     const _diffColor = _diffVal >= 6 ? '#ff0044' : _diffVal >= 4 ? '#ff6600' : _diffVal >= 2.5 ? '#ffcc00' : '#88ccff';
-    hudCtx.fillStyle = _diffColor; hudCtx.fillText('\u2694 ' + _diffLabel + ' (' + _diffVal.toFixed(1) + 'x)', srx + 160, sry+60); }
+    hudCtx.save();
+    hudCtx.fillStyle = _diffColor; hudCtx.textAlign = 'right';
+    hudCtx.fillText('\u2694 ' + _diffLabel + ' (' + _diffVal.toFixed(1) + 'x)', W - 16, sry+60);
+    hudCtx.restore(); }
   // Kill streak — escalating visual drama
   if (c.streak >= 3) {
     const streakColor = c.streak >= 20 ? '#ff0000' : c.streak >= 15 ? '#ff2200' : c.streak >= 10 ? '#ff4400' : c.streak >= 5 ? '#ffcc00' : '#ff8800';
@@ -22020,6 +22032,18 @@ window.enableDevCheats = () => {
         btnSkipHolo.addEventListener('click', () => {
           const createHoloScreen = document.getElementById('screen-create-holo');
           if (createHoloScreen) createHoloScreen.classList.remove('active');
+          showScreen('create');
+        });
+      }
+
+      // ✕ DNA close button — previously had inline onclick that was blocked
+      // by the ::before pseudo-element. Bind properly + use closeDNAMenu().
+      const btnDnaClose = document.getElementById('btn-dna-close');
+      if (btnDnaClose) {
+        btnDnaClose.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const screen = document.getElementById('screen-create-holo');
+          if (screen) screen.classList.remove('active');
           showScreen('create');
         });
       }

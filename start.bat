@@ -101,6 +101,27 @@ echo ^(If port 3847 is busy, it will auto-rotate to the next available port^)
 echo Press Ctrl+C to stop the server
 echo.
 echo ========================================
+echo   BUILD INFO (2026-04-22 QA BATCH)
+echo ========================================
+echo.
+echo [RECENT FIXES]
+echo   - DNA menu X-close button now works (pseudo-element was blocking clicks)
+echo   - EASY/NORMAL/HARD/BRUTAL/NIGHTMARE difficulty label no longer clips at right edge
+echo   - Duplicate HEAT bar removed for gatling/railgun
+echo   - playerShipGLB hidden in gunner view (was clipping crosshair)
+echo   - cockpit_new.glb disabled (was exterior shuttle hull blocking view)
+echo   - addComms 3s dedup (no more triple-stacked hazard spam)
+echo   - Top-right HUD stack vertical spacing fixed (AGE/THREAT/HAZARD)
+echo   - Comms overlay moved to right-bottom, skills block below THREAT cluster
+echo   - __qa bridge exposes: fireLaser, fireGatlingGun, fireRailgun,
+echo     createEnemy, spawnEnemyInFront(dist,type) for headless combat QA
+echo.
+echo [QA HARNESSES - run in a second terminal while server is up]
+echo   node qa_deep_gameplay.cjs   ^(80-frame gameplay: move + fire + spawn + screenshot^)
+echo   node qa_board.cjs            ^(full 5-specialist QA board^)
+echo   node qa_proxy_live.cjs       ^(quick headless smoke test^)
+echo.
+echo ========================================
 echo   WEAPON SYSTEM - DUAL GATLING GUNS
 echo ========================================
 echo.

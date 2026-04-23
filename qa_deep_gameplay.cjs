@@ -88,13 +88,11 @@ const log = (m) => console.log(m);
         qa.press(strafe);
         setTimeout(() => qa.release(strafe), 800);
       }
-      // Force enemy spawn every 4 frames if none alive
-      if (qa.c?.enemies?.length === 0 && idx % 2 === 0) {
-        try {
-          if (typeof spawnEnemy === 'function') spawnEnemy();
-          // fallback: bump spawn timer to be way past trigger
-          if (qa.c) qa.c.enemySpawnTimer = 99999;
-        } catch(_) {}
+      // Force enemy spawn directly in front of crosshair every 3 frames
+      // if fewer than 2 enemies alive. Uses __qa.spawnEnemyInFront which
+      // teleports the spawn 120m ahead of camera so the bot reliably shoots it.
+      if ((qa.c?.enemies?.length || 0) < 2 && idx % 3 === 0) {
+        try { qa.spawnEnemyInFront?.(120, 'fighter'); } catch(_) {}
       }
       // Fire weapons
       try {
@@ -113,12 +111,16 @@ const log = (m) => console.log(m);
       const qa = window.__qa || {};
       const c = qa.c, s = qa.state;
       const ship = qa.ship?.();
+      // Hull lives on state.ship.hull (not c.hull) — fix QA field lookup
+      const shipState = s?.ship || {};
       return {
         screen: document.querySelector('.screen.active')?.id,
         locked: c?.locked,
         weapon: s?.activeWeapon,
-        hull: c?.hull,
-        shield: c?.shield,
+        hull: shipState.hull,
+        maxHull: shipState.maxHull,
+        shield: shipState.shield,
+        maxShield: shipState.maxShield,
         heat: Number((c?.heat || 0).toFixed(2)),
         kills: c?.kills,
         cycle: c?.cycle,
