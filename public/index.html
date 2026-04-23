@@ -10923,10 +10923,11 @@ const LOOT_TYPES = [
 
 // Loot rarity tiers
 const LOOT_RARITIES = [
-  { name: 'Common',   chance: 0.55, mult: 1.0, color: '#aaaaaa', glowHex: 0xaaaaaa },
-  { name: 'Uncommon', chance: 0.25, mult: 1.5, color: '#44ff44', glowHex: 0x44ff44 },
-  { name: 'Rare',     chance: 0.13, mult: 2.5, color: '#4488ff', glowHex: 0x4488ff },
-  { name: 'Epic',     chance: 0.07, mult: 5.0, color: '#cc44ff', glowHex: 0xcc44ff },
+  { name: 'Common',    chance: 0.54, mult: 1.0,  color: '#aaaaaa', glowHex: 0xaaaaaa },
+  { name: 'Uncommon',  chance: 0.25, mult: 1.5,  color: '#44ff44', glowHex: 0x44ff44 },
+  { name: 'Rare',      chance: 0.13, mult: 2.5,  color: '#4488ff', glowHex: 0x4488ff },
+  { name: 'Epic',      chance: 0.07, mult: 5.0,  color: '#cc44ff', glowHex: 0xcc44ff },
+  { name: 'Legendary', chance: 0.01, mult: 12.0, color: '#ffaa00', glowHex: 0xffaa00 },
 ];
 function rollRarity() {
   const r = Math.random();
@@ -11451,6 +11452,14 @@ function spawnLootDrop(pos, type, creditValue, rarity) {
     mesh.scale.setScalar(sc);
     lootGlow.material.color.setHex(_r.glowHex);
     lootGlow.material.opacity = 0.3 + _r.mult * 0.05;
+  }
+  // Legendary drop — announce + play chime
+  if (_r.name === 'Legendary') {
+    try {
+      addComms('EDEN AI', `★ LEGENDARY DROP — ${type.toUpperCase()} worth ${creditValue} EC!`);
+      if (typeof addCombatLog === 'function') addCombatLog('★ LEGENDARY LOOT ★', '#ffaa00');
+      AudioSFX.play('quest_complete');
+    } catch(_){}
   }
   scene.add(g);
   c.lootDrops.push({ group: g, type, age: 0, creditValue: creditValue || 50, rarity: _r });
