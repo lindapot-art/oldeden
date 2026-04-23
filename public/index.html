@@ -3875,6 +3875,18 @@ function gainSkillXP(skillName, amount) {
   const newLevel = Math.floor(state.skills[skillName]);
   if (newLevel > prevLevel && newLevel > 0) {
     addComms('Skills', `${skillName.charAt(0).toUpperCase() + skillName.slice(1)} leveled to ${newLevel}/${ceiling}!`);
+    // Big visual toast + floating banner for skill level-up
+    try {
+      if (typeof showToast === 'function') showToast('\u2B50 ' + skillName.toUpperCase() + ' LEVEL ' + newLevel + '!');
+      if (c && c.active && c.dmgNumbers) {
+        c.dmgNumbers.push({
+          text: '\u2B50 ' + skillName.toUpperCase() + ' LV' + newLevel,
+          px: ship.position.x, py: ship.position.y + 8, pz: ship.position.z,
+          age: 0, color: '#ffdd44'
+        });
+      }
+      if (typeof AudioSFX !== 'undefined' && AudioSFX.play) AudioSFX.play('reload');
+    } catch(_e) {}
   }
 }
 function getSkillBonus(skillName) {
