@@ -1977,6 +1977,55 @@ html, body { margin: 0; padding: 0; font-family: 'Bahnschrift', 'Segoe UI Variab
 </div>
 <div id="qa-unverified-banner">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
 
+<!-- Controls help overlay (press H in gunner mode) -->
+<div id="controls-overlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,8,16,0.88);backdrop-filter:blur(6px);z-index:99999;pointer-events:none;transition:opacity .35s ease;opacity:0;font-family:'Segoe UI',system-ui,sans-serif;color:#cfe9ff;">
+  <div style="max-width:820px;width:min(92vw,820px);background:linear-gradient(180deg,rgba(10,18,34,0.96),rgba(6,10,20,0.96));border:1px solid #2a5f8f;border-radius:14px;padding:22px 28px;box-shadow:0 0 60px rgba(68,170,255,0.25);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:1.2rem;font-weight:700;letter-spacing:1px;color:#66ccff;">⚡ PILOT CONTROLS</div>
+      <div style="font-size:0.8rem;color:#668;">H or click to dismiss</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;font-size:0.92rem;line-height:1.55;">
+      <div>
+        <div style="color:#ffaa44;font-weight:600;margin-bottom:6px;">FLIGHT</div>
+        <div><b>W / S</b> — thrust forward / reverse</div>
+        <div><b>A / D</b> — strafe left / right</div>
+        <div><b>Space / C</b> — up / down</div>
+        <div><b>Shift</b> — afterburner (boost)</div>
+        <div><b>A A</b> / <b>D D</b> — barrel roll dodge</div>
+        <div><b>Mouse</b> — look / aim</div>
+      </div>
+      <div>
+        <div style="color:#ff6644;font-weight:600;margin-bottom:6px;">COMBAT</div>
+        <div><b>LMB</b> — fire active weapon</div>
+        <div><b>Q</b> — cycle next weapon (Shift+Q reverse)</div>
+        <div><b>1‑9</b> — direct weapon select</div>
+        <div><b>0 / − / =</b> — Plasma / Beam / Swarm</div>
+        <div><b>M</b> — launch homing missile (hold for lock)</div>
+        <div><b>R</b> — reload</div>
+      </div>
+      <div>
+        <div style="color:#44ccff;font-weight:600;margin-bottom:6px;">SYSTEMS</div>
+        <div><b>T</b> — target nearest hostile</div>
+        <div><b>E</b> — EMP grenade</div>
+        <div><b>F</b> — repair kit</div>
+        <div><b>G</b> — shield cell</div>
+        <div><b>N</b> — scanner pulse</div>
+        <div><b>P</b> — autopilot to nearest target</div>
+      </div>
+      <div>
+        <div style="color:#88ff88;font-weight:600;margin-bottom:6px;">INTERFACE</div>
+        <div><b>H</b> — toggle this help</div>
+        <div><b>K</b> — ship skin panel</div>
+        <div><b>Tab</b> — map / atlas</div>
+        <div><b>Esc</b> — exit gunner mode</div>
+        <div><b>Enter</b> — chat / comms</div>
+        <div><b>F11</b> — fullscreen</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #2a4f7f;font-size:0.82rem;color:#8a9fb5;text-align:center;">Tip: hold <b style="color:#ffee66;">M</b> on a distant target for 1 second to acquire missile lock before launching.</div>
+  </div>
+</div>
+
     <!-- Mobile UI Toggle Button -->
     <div id="mobile-toggle-container" style="position:fixed;top:40px;right:10px;z-index:9998;background:rgba(0,0,0,0.8);border-radius:8px;padding:8px;display:none;">
       <button id="mobile-toggle-btn" onclick="toggleMobileControls()" style="background:var(--accent);border:none;color:var(--text);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;">📱 Mobile UI</button>
@@ -11190,6 +11239,7 @@ function enterGunnerMode() {
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'In Old Eden, death is not the end — it is a door to a new life.'); }, 40000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Your genome shapes your potential. Trade, fight, and explore to grow skills.'); }, 60000),
       setTimeout(() => { if (c.active) addComms('EDEN AI', 'Weapon keys: 1-9 lasers/blasters/gatling, 0=Plasma, -=Beam, ==Swarm, M=Missile.'); }, 12000),
+      setTimeout(() => { if (c.active) addComms('EDEN AI', 'Press H any time to open the full controls cheat sheet. Q cycles weapons.'); }, 18000),
     );
   }
 }
@@ -18218,10 +18268,21 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'h' || e.key === 'H') {
     const _co = document.getElementById('controls-overlay');
     if (_co) {
-      _co.classList.toggle('active');
-      if (_co.classList.contains('active')) {
-        const _dismissH = () => { _co.classList.add('fading'); setTimeout(() => _co.classList.remove('active', 'fading'), 1500); };
-        setTimeout(() => { document.addEventListener('mousedown', _dismissH, { once: true }); document.addEventListener('keydown', (ev) => { if (ev.key !== 'h' && ev.key !== 'H') _dismissH(); }, { once: true }); }, 300);
+      const _isOpen = _co.style.display === 'flex';
+      if (_isOpen) {
+        _co.style.opacity = '0';
+        setTimeout(() => { _co.style.display = 'none'; }, 350);
+      } else {
+        _co.style.display = 'flex';
+        requestAnimationFrame(() => { _co.style.opacity = '1'; });
+        const _dismissH = () => {
+          _co.style.opacity = '0';
+          setTimeout(() => { _co.style.display = 'none'; }, 350);
+        };
+        setTimeout(() => {
+          document.addEventListener('mousedown', _dismissH, { once: true });
+          document.addEventListener('keydown', (ev) => { if (ev.key !== 'h' && ev.key !== 'H') _dismissH(); }, { once: true });
+        }, 300);
       }
     }
   }
