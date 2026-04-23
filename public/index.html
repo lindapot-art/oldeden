@@ -9480,6 +9480,12 @@ try {
   window.__qa.fireGatlingGun = fireGatlingGun;
   window.__qa.firePistol = typeof firePistol !== 'undefined' ? firePistol : null;
 } catch (_e) { /* some fns may not be hoisted yet */ }
+// QA input simulation — bypasses pointer-lock gate so automated runs can move
+window.__qa.press = (k) => { try { keysDown.add(k.toLowerCase()); } catch(_e){} };
+window.__qa.release = (k) => { try { keysDown.delete(k.toLowerCase()); } catch(_e){} };
+window.__qa.forceLock = () => { c.locked = true; };
+window.__qa.ship = () => ship;
+window.__qa.turretMount = () => turretMount;
 let shieldShimmerTimer = 0;
 let starLayers = [];
 
@@ -11835,9 +11841,39 @@ function renderHUD(dtMs) {
   // Weapon (bottom-right) — shows active weapon
   const wrx = W-220, wry = H-140;
   const isRailgun = state.activeWeapon === 'railgun';
+  // Full weapon label map (was previously hardcoded to railgun/laser only,
+  // so gatling/blaster/missile all mislabelled as "LASER TURRET")
+  const _weaponLabels = {
+    laser: 'LASER TURRET',
+    railgun: 'RAILGUN MK-II',
+    pistol: 'PISTOL',
+    blaster_fut: 'FUTURISTIC BLASTER',
+    blaster_white: 'WHITE BLASTER',
+    blaster_turret: 'BLASTER TURRET',
+    gatling_left: 'GATLING — LEFT',
+    gatling_right: 'GATLING — RIGHT',
+    gatling_dual: 'DUAL GATLING ⚡',
+    missile: 'HOMING MISSILES'
+  };
+  const _weaponColors = {
+    laser: '#00ff88',
+    railgun: primary,
+    pistol: '#ffaa44',
+    blaster_fut: '#ff44ff',
+    blaster_white: '#ffffff',
+    blaster_turret: '#ff8844',
+    gatling_left: '#ffcc22',
+    gatling_right: '#ffcc22',
+    gatling_dual: '#ffaa00',
+    missile: '#ff4444'
+  };
+  const _weaponKey = state.activeWeapon || 'laser';
+  const _weaponLabel = _weaponLabels[_weaponKey] || _weaponKey.toUpperCase();
+  const _weaponColor = _weaponColors[_weaponKey] || '#00ff88';
+  const isGatling = _weaponKey.indexOf('gatling') === 0;
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = '#445566'; hudCtx.fillText('WEAPON [Q]', wrx, wry);
-  hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = isRailgun ? primary : '#00ff88';
-  hudCtx.fillText(isRailgun ? 'RAILGUN MK-II' : 'LASER TURRET', wrx, wry+20);
+  hudCtx.font = 'bold 16px "Segoe UI", system-ui, sans-serif'; hudCtx.fillStyle = _weaponColor;
+  hudCtx.fillText(_weaponLabel, wrx, wry+20);
   hudCtx.font = '11px "Segoe UI", system-ui, sans-serif';
   if (isRailgun) {
     hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
@@ -11845,6 +11881,14 @@ function renderHUD(dtMs) {
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
     hudCtx.fillStyle = c.ammo > 6 ? accent : c.ammo > 0 ? warning : danger;
     hudCtx.fillRect(wrx, wry+48, 180*(c.ammo/c.maxAmmo), 6);
+  } else if (isGatling) {
+    const heatPct = Math.min(1, (c.heat || 0));
+    const heatColor = heatPct < 0.5 ? '#44ff44' : heatPct < 0.8 ? warning : danger;
+    hudCtx.fillStyle = heatColor;
+    hudCtx.fillText('HEAT  ' + Math.round(heatPct * 100) + '%' + (c._overheated ? ' ⚠ OVERHEAT' : ''), wrx, wry+42);
+    hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
+    hudCtx.fillStyle = heatColor;
+    hudCtx.fillRect(wrx, wry+48, 180*heatPct, 6);
   } else {
     hudCtx.fillStyle = '#00ff88'; hudCtx.fillText('∞ ENERGY', wrx, wry+42);
     hudCtx.fillStyle = '#1a1a2a'; hudCtx.fillRect(wrx, wry+48, 180, 6);
