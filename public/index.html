@@ -14014,9 +14014,55 @@ document.addEventListener('mousemove', (e) => {
 
 // EVE Online flight: WASD + Space/Ctrl + Shift(boost)
 const _cachedChatInput = document.getElementById('chatbot-input');
+
+// ── Zoom-out chase cam (mouse wheel PC / V or Home keys / mobile btn) ──
+// Unlimited zoom-out with snap-to-origin; V cycles presets; Home snaps to origin.
+window.addEventListener('wheel', (e) => {
+  if (!c.active || c.dead) return;
+  if (document.activeElement === _cachedChatInput) return;
+  const delta = e.deltaY > 0 ? 1 : -1;
+  c.camZoom = Math.max(0, (c.camZoom || 0) + delta * Math.max(2, (c.camZoom || 0) * 0.25 + 2));
+  c.camSnapOrigin = false;
+  if (typeof showToast === 'function') {
+    showToast(c.camZoom < 0.5 ? 'VIEW: COCKPIT' : ('ZOOM: ' + Math.round(c.camZoom) + 'm'));
+  }
+  e.preventDefault();
+}, { passive: false });
+
 document.addEventListener('keydown', (e) => {
   // Don't process game keys while typing in chatbot
   if (document.activeElement === _cachedChatInput) { if (e.key === 'Escape') { _cachedChatInput.blur(); } return; }
+  // ── V key: cycle view presets (cockpit → close → far → wide → snap-origin) ──
+  if ((e.key === 'v' || e.key === 'V') && c.active && !c.dead) {
+    const _presets = [0, 30, 120, 600];
+    if (c.camSnapOrigin) { c.camSnapOrigin = false; c.camZoom = 0; }
+    else {
+      const _cur = c.camZoom || 0;
+      let _i = _presets.findIndex(p => Math.abs(p - _cur) < 1);
+      _i = (_i + 1) % (_presets.length + 1);
+      if (_i === _presets.length) { c.camSnapOrigin = true; c.camZoom = 0; }
+      else c.camZoom = _presets[_i];
+    }
+    if (typeof showToast === 'function') {
+      showToast(c.camSnapOrigin ? 'VIEW: ORIGIN CAM' : (c.camZoom < 0.5 ? 'VIEW: COCKPIT' : 'VIEW: ' + Math.round(c.camZoom) + 'm CHASE'));
+    }
+    e.preventDefault();
+    return;
+  }
+  // ── Home: snap camera to world origin looking at ship ──
+  if (e.key === 'Home' && c.active && !c.dead) {
+    c.camSnapOrigin = true; c.camZoom = 0;
+    if (typeof showToast === 'function') showToast('VIEW: ORIGIN CAM');
+    e.preventDefault();
+    return;
+  }
+  // ── End: reset to cockpit view ──
+  if (e.key === 'End' && c.active && !c.dead) {
+    c.camSnapOrigin = false; c.camZoom = 0;
+    if (typeof showToast === 'function') showToast('VIEW: COCKPIT');
+    e.preventDefault();
+    return;
+  }
   if (e.key === 'Escape' && c.active && !c.dead) {
     if (e.shiftKey) { exitGunnerMode(); return; }
     togglePause();
@@ -19360,9 +19406,25 @@ function gameLoop() {
     const shieldsMult = 0.5 + 1.5 * (alloc.shields || 0) / 100;
     const enginesMult = 0.5 + 1.5 * (alloc.engines || 0) / 100;
 
-  // Camera — always positioned at turret mount
+  // Camera — normally at turret mount; pulls back to a chase-cam when c.camZoom > 0
   turretMount.getWorldPosition(_tmpV3a);
   camera.position.copy(_tmpV3a);
+  // ── Chase-cam / external view (mouse wheel, V key, Home key) ──
+  // c.camZoom   = 0 → first-person cockpit; >0 → meters behind ship along its -forward axis.
+  // c.camSnapOrigin = true → camera fixed at world origin looking at ship (cinematic view).
+  if (c.camSnapOrigin) {
+    camera.position.set(0, 0, 0);
+  } else if ((c.camZoom || 0) > 0.01) {
+    // Pull camera back along ship's world -forward (ship nose is -Z), raise a bit
+    const _zDist = c.camZoom;
+    _tmpV3b.set(0, 0, 1).applyQuaternion(ship.quaternion); // behind the ship
+    camera.position.copy(ship.position).addScaledVector(_tmpV3b, _zDist);
+    camera.position.y += Math.min(_zDist * 0.25, _zDist);
+    // Hide cockpit + gun visuals when externally viewing (so player sees their own ship)
+    if (cockpit) cockpit.visible = false;
+  } else {
+    if (cockpit) cockpit.visible = true;
+  }
   // Death camera pullback
   if (state._deathPullback && state._deathPullback.active) {
     const pb = state._deathPullback.getValue();
@@ -19532,6 +19594,10 @@ function gameLoop() {
     const _rollZ = c._barrelRollAngle || 0;
     _tmpEuler.set(-c.pitch + c.shakeY * 0.08 - c.fireRecoilKick, -c.yaw + c.shakeX * 0.08, _rollZ, 'YXZ');
     camera.quaternion.setFromEuler(_tmpEuler);
+    // Snap-to-origin or chase-cam: override orientation to look at ship
+    if (c.camSnapOrigin || (c.camZoom || 0) > 0.01) {
+      camera.lookAt(ship.position);
+    }
 
     // Weapon charge (apply weapons power to charge time)
     if (c.charging) {
@@ -20855,15 +20921,21 @@ function gameLoop() {
                 _deathTimeouts.push(_t);
               }
             }
-            // Loot drop chance (hacking skill improves drop rate; pirate zone +20%)
+            // EVE-style loot: EVERY destroyed ship drops at least 1 pickup. Bosses
+            // and lucky rolls drop a bonus second pickup.
             const _pirateBonus = c._pirateZone ? 0.2 : 0;
-            const lootChance = Math.min(0.85, 0.4 * getSkillBonus('hacking') + _pirateBonus);
-            if (e.isBoss || Math.random() < lootChance) {
-              gainSkillXP('hacking', 0.1);
-              const r = Math.random(); const lootType = e.isBoss ? 'credits' : r < 0.30 ? 'credits' : r < 0.45 ? 'ammo' : r < 0.60 ? 'health' : r < 0.75 ? 'fuel' : r < 0.88 ? 'shield' : 'scoreboost';
-              const _lootCreditVal = e.isBoss ? Math.ceil(e.points * 0.6) : Math.ceil((e.points || 50) * 0.4);
-              spawnLootDrop(e.group.position, lootType, _lootCreditVal);
-            }
+            const _bonusChance = Math.min(0.85, 0.4 * getSkillBonus('hacking') + _pirateBonus);
+            gainSkillXP('hacking', 0.05);
+            const _rollLoot = () => {
+              const r = Math.random();
+              const lootType = r < 0.26 ? 'credits' : r < 0.42 ? 'ammo' : r < 0.56 ? 'health' : r < 0.70 ? 'fuel' : r < 0.82 ? 'shield' : r < 0.92 ? 'scoreboost' : 'salvage';
+              const _lootCreditVal = e.isBoss ? Math.ceil((e.points || 100) * 0.6) : Math.ceil((e.points || 50) * 0.4);
+              const _jitter = new THREE.Vector3((Math.random()-0.5)*3, (Math.random()-0.5)*2, (Math.random()-0.5)*3);
+              spawnLootDrop(e.group.position.clone().add(_jitter), lootType, _lootCreditVal);
+            };
+            _rollLoot(); // guaranteed wreck drop
+            if (e.isBoss || Math.random() < _bonusChance) _rollLoot(); // bonus drop
+            if (e.isBoss) { _rollLoot(); _rollLoot(); } // bosses drop 3 total
             // Scrap collector — 20% chance destroyed enemies auto-repair 5 hull
             if (Math.random() < 0.20) {
               state.ship.hull = Math.min(state.ship.maxHull, state.ship.hull + 5);
