@@ -6655,6 +6655,10 @@ function createCharacter() {
 //  COMMS & QUESTS
 // ================================================================
 function addComms(sender, msg) {
+  // Dedup: skip if identical sender+msg was pushed in the last 3s (prevents
+  // hazard spam like "Radiation: Shields draining!" stacking 3× in the overlay).
+  const prev = state.commsLog[0];
+  if (prev && prev.sender === sender && prev.msg === msg && (Date.now() - prev.time) < 3000) return;
   state.commsLog.unshift({ sender, msg, time: Date.now() });
   if (state.commsLog.length > 20) state.commsLog.pop();
 }
@@ -17401,6 +17405,12 @@ window._applySkinPreset = (idx) => {
 let cockpitGLBModel = null;
 
 async function loadCockpitGLB() {
+  // DISABLED — cockpit_new.glb is an exterior shuttle hull, not an interior.
+  // It rendered as a giant brown mesh obscuring the crosshair/HUD center.
+  // Falling back to procedural cockpit (seats, rails, panels) which is a proper
+  // first-person interior. Return immediately so _glbTick counter still fires.
+  return;
+  // eslint-disable-next-line no-unreachable
   if (cockpitGLBModel) { camera.remove(cockpitGLBModel); disposeObject(cockpitGLBModel); cockpitGLBModel = null; }
   try {
     const model = await loadGLBModel('cockpit_new');
