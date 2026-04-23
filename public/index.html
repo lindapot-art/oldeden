@@ -13781,22 +13781,28 @@ document.addEventListener('keydown', (e) => {
     addComms('System', c.godMode ? '\u26A1 GOD MODE ENABLED — Invincible' : 'God mode disabled');
     showToast(c.godMode ? '\u26A1 GOD MODE ON' : 'God mode OFF');
   }
-  // Weapon swap: Q key
+  // Weapon swap: Q key — cycles through all 12 weapons (Shift+Q for reverse)
   if ((e.key === 'q' || e.key === 'Q') && c.active && !c._weaponSwapping) {
     c._weaponSwapping = true;
     c._weaponSwapTimer = 300; // 300ms swap animation
     c.weaponReady = false;
+    const _wCycle = ['laser','railgun','pistol','blaster_fut','blaster_white','blaster_turret','gatling_left','gatling_right','gatling_dual','plasma','beam','swarm','missile'];
+    const _wLabelShort = { laser:'◈ Laser', railgun:'⚡ Railgun', pistol:'Pistol', blaster_fut:'Futuristic Blaster', blaster_white:'White Blaster', blaster_turret:'Blaster Turret', gatling_left:'Gatling L', gatling_right:'Gatling R', gatling_dual:'Dual Gatling', plasma:'◉ Plasma Cannon', beam:'≡ Beam Lance', swarm:'✶ Swarm Pod', missile:'Homing Missile' };
     setTimeout(() => {
       if (!c.active || c.dead) { c._weaponSwapping = false; c.weaponReady = true; return; }
-      state.activeWeapon = state.activeWeapon === 'railgun' ? 'laser' : 'railgun';
+      const _cur = _wCycle.indexOf(state.activeWeapon);
+      const _dir = e.shiftKey ? -1 : 1;
+      const _next = (_cur + _dir + _wCycle.length) % _wCycle.length;
+      state.activeWeapon = _wCycle[_next < 0 ? _wCycle.length - 1 : _next];
       c._weaponSwapping = false;
       c.weaponReady = true;
       // Tactical reload — switching weapons grants +5 ammo
       c.ammo = Math.min(c.maxAmmo, c.ammo + 5);
       // Weapon switch bonus — +20% damage for 3s when switching mid-combat
       if (c.streak > 0) { c._weaponSwitchBonus = state.gameTime + 3000; addCombatLog('WEAPON SWITCH — +20% damage for 3s', '#88ccff'); }
-      showToast('Weapon: ' + (state.activeWeapon === 'railgun' ? '\u26A1 Railgun' : '\u25C8 Laser'));
-      addComms('System', `Switched to ${state.activeWeapon === 'railgun' ? 'Railgun \u2014 High damage, uses ammo' : 'Laser Turret \u2014 Fast fire, uses heat'}`);
+      const _lbl = _wLabelShort[state.activeWeapon] || state.activeWeapon;
+      showToast('Weapon: ' + _lbl);
+      addComms('System', 'Switched to ' + _lbl);
       AudioSFX.play('click');
     }, 300);
   }
