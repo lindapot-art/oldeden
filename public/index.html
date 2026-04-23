@@ -10219,17 +10219,17 @@ const collisionPhysics = {
     const c = getCurrentCharacter();
     if (!c) return;
     
-    // Shield-first damage system
+    // Shield-first damage system — apply to actual state.ship (not wrapper object)
     let remainingDamage = damage;
-    if (c.shield > 0) {
-      const shieldAbsorption = Math.min(c.shield, remainingDamage * 0.65);
-      c.shield = Math.max(0, c.shield - shieldAbsorption);
+    if (state.ship.shield > 0) {
+      const shieldAbsorption = Math.min(state.ship.shield, remainingDamage * 0.65);
+      state.ship.shield = Math.max(0, state.ship.shield - shieldAbsorption);
       remainingDamage *= 0.35;
     }
     
     // Hull damage
-    const hullDamage = Math.min(c.hull, remainingDamage);
-    c.hull = Math.max(0, c.hull - hullDamage);
+    const hullDamage = Math.min(state.ship.hull, remainingDamage);
+    state.ship.hull = Math.max(0, state.ship.hull - hullDamage);
     
     // Collision audio effects
     if (damage > 25) {
@@ -10252,7 +10252,7 @@ const collisionPhysics = {
     addComms('Ship', `⚠️ Collision! -${totalDamage} damage (${objectType})`);
     
     // Critical damage warning
-    if (c.hull < c.maxHull * 0.25) {
+    if (state.ship.hull < state.ship.maxHull * 0.25) {
       addComms('Ship', '🚨 CRITICAL: Hull integrity compromised!');
     }
     
@@ -14132,7 +14132,7 @@ document.addEventListener('keydown', (e) => {
   // Stealth mode: F key — reduce enemy detection, drain fuel, break on firing
   if ((e.key === 'f' || e.key === 'F') && c.active && !c.dead) {
     if (c._stealthActive) { c._stealthActive = false; addComms('EDEN AI', '\u{1F50D} Stealth disengaged.'); }
-    else if (c.fuel > 5) { c._stealthActive = true; c._stealthStart = state.gameTime; addComms('EDEN AI', '\u{1F47B} STEALTH MODE — enemies cannot detect you (draining fuel)'); AudioSFX.play('shield_break'); }
+    else if (state.ship.fuel > 5) { c._stealthActive = true; c._stealthStart = state.gameTime; addComms('EDEN AI', '\u{1F47B} STEALTH MODE — enemies cannot detect you (draining fuel)'); AudioSFX.play('shield_break'); }
     else { addComms('EDEN AI', '\u26A0 Insufficient fuel for stealth mode'); }
   }
   // Weapon overload: L key — double fire rate for 5s, 3x heat, 30s cooldown
@@ -21897,8 +21897,8 @@ function gameLoop() {
     }
     // Stealth mode — drain fuel 3/s, break on firing
     if (c._stealthActive) {
-      c.fuel = Math.max(0, c.fuel - 3 * dt);
-      if (c.fuel <= 0) { c._stealthActive = false; addComms('EDEN AI', '\u26A0 Stealth disengaged — no fuel!'); }
+      state.ship.fuel = Math.max(0, state.ship.fuel - 3 * dt);
+      if (state.ship.fuel <= 0) { c._stealthActive = false; addComms('EDEN AI', '\u26A0 Stealth disengaged — no fuel!'); }
       if (mouseHeld || c.charging) { c._stealthActive = false; addComms('EDEN AI', '\u26A0 Stealth broken — weapons fired!'); }
     }
     // Weapon overload — 3x heat while active
