@@ -3561,13 +3561,23 @@ function isTouchPrimaryInput() {
 }
 
 function shouldUseMobileFlightUI() {
-  // More permissive mobile UI - show on any touch device or small screen
-  const isMobile = isTouchPrimaryInput();
-  const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) <= 768;
-  const hasManualToggle = document.body.classList.contains('mobile-forced');
-  
-  // Show mobile UI if: touch detected, small screen, or manually toggled
-  return isMobile || isSmallScreen || hasManualToggle;
+  // FIX 2026-04-22: Previous logic fired for ANY touch-capable device,
+  // which included modern Windows laptops/desktops (Chrome exposes
+  // 'ontouchstart' even without a touchscreen). That broke the
+  // left-mouse-click fire handler on desktop.
+  //
+  // New rule: only force mobile UI when ALL of:
+  //   - coarse pointer (actual touch input, not a mouse)
+  //   - no hover support (no mouse hover = phone/tablet)
+  //   OR the user explicitly forced it via the body class.
+  // Small screens alone (windowed desktop) no longer trigger mobile mode.
+  const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const noHover = window.matchMedia('(hover: none)').matches;
+  const manualMobile = document.body.classList.contains('mobile-forced');
+  const manualDesktop = document.body.classList.contains('desktop-forced');
+  if (manualDesktop) return false; // explicit override wins
+  if (manualMobile) return true;
+  return hasCoarsePointer && noHover;
 }
 
 // Note: toggleMobileControls() is defined later in the module (near line ~21873)
@@ -10362,10 +10372,15 @@ const glowMat = new THREE.MeshBasicMaterial({ color:0x44aaff, transparent:true, 
 { const gl1 = new THREE.Mesh(glowGeo, glowMat); gl1.position.set(-1,-0.2,6.51); ship.add(gl1); }
 { const gl2 = new THREE.Mesh(glowGeo, glowMat); gl2.position.set(1,-0.2,6.51); ship.add(gl2); }
 { const canopyM = new THREE.Mesh(new THREE.SphereGeometry(1,16,12,0,Math.PI*2,0,Math.PI/2), shipCanopyMat); canopyM.position.set(0,0.5,-3); ship.add(canopyM); }
-{ const gunMount = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.4,8), gunMat); gunMount.position.set(0,0.8,-1); ship.add(gunMount); }
-const bbGeo = new THREE.CylinderGeometry(0.08,0.08,3,6);
-const bL2 = new THREE.Mesh(bbGeo, gunMat); bL2.rotation.x=Math.PI/2; bL2.position.set(-0.25,0.95,-2.5); ship.add(bL2);
-const bR2 = new THREE.Mesh(bbGeo, gunMat); bR2.rotation.x=Math.PI/2; bR2.position.set(0.25,0.95,-2.5); ship.add(bR2);
+// OLD RAILGUN REMNANT REMOVED (bL2, bR2, gunMount were two black cylinders
+// + a gun mount cylinder on TOP of the ship hull at y=0.8/0.95, z=-2.5).
+// They were leftover from the railgun era and visible clipping through the
+// gatling cockpit in gunner view. Replaced with empty no-op so ship geometry
+// doesn't regress.
+// { const gunMount = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.4,8), gunMat); gunMount.position.set(0,0.8,-1); ship.add(gunMount); }
+// const bbGeo = new THREE.CylinderGeometry(0.08,0.08,3,6);
+// const bL2 = new THREE.Mesh(bbGeo, gunMat); bL2.rotation.x=Math.PI/2; bL2.position.set(-0.25,0.95,-2.5); ship.add(bL2);
+// const bR2 = new THREE.Mesh(bbGeo, gunMat); bR2.rotation.x=Math.PI/2; bR2.position.set(0.25,0.95,-2.5); ship.add(bR2);
 turretMount = new THREE.Object3D(); turretMount.position.set(0, 1.2, -0.5); ship.add(turretMount);
 scene.add(ship);
 
@@ -13209,7 +13224,10 @@ let touchLookId = null;
 let touchLookPoint = null;
 canvas3d.addEventListener('mousedown', (e) => {
   if (state.screen !== 'gunner' || c.dead) return;
-  if (shouldUseMobileFlightUI()) return;
+  // NOTE: Previously early-returned on shouldUseMobileFlightUI() which made
+  // the desktop mouse-click fire handler silent on any touch-capable laptop.
+  // Mouse events themselves are a strong signal this is a real pointer — if
+  // the user is clicking with a real mouse, always let them fire.
   if (!c.locked) { canvas3d.requestPointerLock()?.catch?.(() => {}); return; }
   if (e.button === 0) {
     mouseHeld = true;
@@ -22036,18 +22054,25 @@ window.enableDevCheats = () => {
     function toggleMobileControls() {
       mobileControlsEnabled = !mobileControlsEnabled;
       const body = document.body;
-      
+
       if (mobileControlsEnabled) {
         body.classList.add('mobile-enabled');
+        body.classList.add('mobile-forced');
+        body.classList.remove('desktop-forced');
       } else {
         body.classList.remove('mobile-enabled');
+        body.classList.remove('mobile-forced');
+        // Explicit desktop mode — overrides auto-detect so desktop users
+        // with a touchscreen can force-enable mouse/keyboard input.
+        body.classList.add('desktop-forced');
       }
-      
+
       const btn = document.getElementById('btn-mobile-toggle');
       if (btn) {
-        btn.textContent = mobileControlsEnabled ? 'Disable Touch Controls' : 'Enable Touch Controls';
+        btn.textContent = mobileControlsEnabled ? 'Switch to Desktop (Mouse/KB)' : 'Switch to Mobile (Touch)';
       }
-      
+
+      try { if (typeof syncInputModeUI === 'function') syncInputModeUI(); } catch(_) {}
       localStorage.setItem('mobileControlsEnabled', mobileControlsEnabled.toString());
     }
 
