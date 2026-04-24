@@ -1218,6 +1218,12 @@
       // Award wallet
       wallet.ec += Math.floor(Math.random() * 500);
       updateWallet();
+
+      // Hide rebirth/start panel and show main HUD
+      const rebirthPanel = document.getElementById('rebirth-btn');
+      if (rebirthPanel) rebirthPanel.style.display = 'none';
+      const hud = document.getElementById('hud');
+      if (hud) hud.style.display = '';
     };
 
     // ─── Event Spawning ───────────────────────────────────────────────
