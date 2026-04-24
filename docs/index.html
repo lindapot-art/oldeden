@@ -355,7 +355,48 @@
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+
+  <!-- Main Game Canvas -->
+  <canvas id="game-canvas"></canvas>
+  <canvas id="hud-canvas" style="display:none;"></canvas>
+
+  <!-- Main Menu Screen -->
+  <div id="screen-create" class="screen active">
+    <div class="panel" style="margin:120px auto 0 auto;max-width:420px;text-align:center;">
+      <h1>OLD EDEN</h1>
+      <div class="subtitle">STAGING DEMO &mdash; PROTOTYPE BUILD</div>
+      <button id="btn-new" style="margin:32px 0 0 0;padding:16px 48px;font-size:1.2rem;cursor:pointer;">New Game</button>
+      <button id="btn-settings" style="margin:16px 0 0 0;padding:10px 32px;font-size:1rem;cursor:pointer;">Settings</button>
+    </div>
+  </div>
+
+  <!-- Settings Screen -->
+  <div id="screen-settings" class="screen">
+    <div class="panel" style="margin:120px auto 0 auto;max-width:420px;text-align:center;">
+      <h2>Settings</h2>
+      <button id="btn-back-settings" style="margin:32px 0 0 0;padding:10px 32px;font-size:1rem;cursor:pointer;">Back</button>
+    </div>
+  </div>
+
+  <!-- Rebirth Screen -->
+  <div id="screen-rebirth" class="screen">
+    <div class="panel" style="margin:120px auto 0 auto;max-width:420px;text-align:center;">
+      <h2>Rebirth Lottery</h2>
+      <button id="btn-rebirth" style="margin:32px 0 0 0;padding:16px 48px;font-size:1.2rem;cursor:pointer;">Roll Lottery</button>
+      <div id="rebirth-result"></div>
+    </div>
+  </div>
+
+  <!-- Karma Wheel, Eulogy, Market Screens (placeholders for QA) -->
+  <div id="screen-karma" class="screen"></div>
+  <div id="screen-eulogy" class="screen"></div>
+  <div id="screen-market" class="screen"></div>
+
+  <!-- QA Banner -->
+  <div id="qa-unverified-banner" style="position:fixed;top:0;left:0;width:100%;background:#c00;color:#fff;text-align:center;z-index:9999;font-weight:bold;padding:4px 0;">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
+
+  <!-- Existing HUD overlay and Gunner HUD remain below -->
+  <div id="hud" style="display:none;">
 
   <!-- Loading screen -->
   <div id="loading">
