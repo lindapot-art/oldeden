@@ -1219,11 +1219,23 @@
       wallet.ec += Math.floor(Math.random() * 500);
       updateWallet();
 
-      // Hide rebirth/start panel and show main HUD
+      // Hide rebirth/start panel
       const rebirthPanel = document.getElementById('rebirth-btn');
       if (rebirthPanel) rebirthPanel.style.display = 'none';
+
+      // Show main HUD (already visible)
       const hud = document.getElementById('hud');
       if (hud) hud.style.display = '';
+
+      // Unhide main canvas for gameplay
+      const canvas = document.getElementById('canvas');
+      if (canvas) {
+        canvas.style.display = '';
+        canvas.style.pointerEvents = '';
+      }
+
+      // Optionally, set a flag to indicate gameplay is active
+      window.gameActive = true;
     };
 
     // ─── Event Spawning ───────────────────────────────────────────────
