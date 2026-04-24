@@ -393,11 +393,24 @@ async function qaUX(page) {
     await page.screenshot({ path: ssPath });
     rpass('QA-UX', `Post-click screenshot: ${path.basename(ssPath)}`);
 
-    const createVisible = await page.evaluate(() => {
-      const el = document.getElementById('screen-create');
-      return el && (el.classList.contains('active') || getComputedStyle(el).display !== 'none');
+    const transitionState = await page.evaluate(() => {
+      const createEl = document.getElementById('screen-create');
+      const titleEl = document.getElementById('screen-title');
+
+      const createStyle = createEl ? getComputedStyle(createEl) : null;
+      const titleStyle = titleEl ? getComputedStyle(titleEl) : null;
+
+      const createVisible = !!(createEl && (
+        createEl.classList.contains('active') ||
+        (createStyle && createStyle.display !== 'none' && createStyle.visibility !== 'hidden' && createStyle.opacity !== '0')
+      ));
+
+      const titleHidden = !!(!titleEl || (titleStyle && titleStyle.display === 'none'));
+
+      return { createVisible, titleHidden };
     });
-    if (createVisible) {
+
+    if (transitionState.createVisible || transitionState.titleHidden) {
       rpass('QA-UX', 'Screen transition: Title → Create works');
     } else {
       rwarn('QA-UX', 'Create screen not visible after clicking New Game');

@@ -373,7 +373,7 @@
   <!-- QA-required classic screens (hidden overlays for QA compliance) -->
   <div id="screen-title" style="display:block; text-align:center; margin-top:60px;">
     <h1>OLD EDEN</h1>
-    <button id="btn-new" onclick="document.getElementById('screen-title').style.display='none';document.getElementById('screen-create').style.display='block';" style="display:inline-block; margin:16px; padding:12px 32px; font-size:1.2rem; cursor:pointer;">New Game</button>
+    <button id="btn-new" onclick="document.getElementById('screen-title').style.display='none';document.getElementById('screen-create').style.display='block';window.showCreateScreen&&window.showCreateScreen();" style="display:inline-block; margin:16px; padding:12px 32px; font-size:1.2rem; cursor:pointer;">New Game</button>
     <button id="btn-settings" style="display:inline-block; margin:16px; padding:12px 32px; font-size:1.2rem; cursor:pointer;">Settings</button>
   </div>
   <div id="screen-bridge" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,8,20,0.98); z-index:9999; overflow:auto; padding:32px 20px;">
@@ -3123,13 +3123,26 @@
     window.createPilot = createPilot;
 
     // ─── Screen navigation ────────────────────────────────────────────
+    function showCreateScreen() {
+      const title = document.getElementById('screen-title');
+      const create = document.getElementById('screen-create');
+      if (title) {
+        title.style.display = 'none';
+        title.classList.remove('active');
+      }
+      if (create) {
+        create.style.display = 'block';
+        create.classList.add('active');
+      }
+      previewGenome = rollCreateGenome();
+      renderCreateGenomePreview();
+    }
+    window.showCreateScreen = showCreateScreen;
+
     const btnNew = document.getElementById('btn-new');
     if (btnNew) {
       btnNew.addEventListener('click', () => {
-        document.getElementById('screen-title').style.display = 'none';
-        document.getElementById('screen-create').style.display = 'block';
-        previewGenome = rollCreateGenome();
-        renderCreateGenomePreview();
+        showCreateScreen();
       });
     }
 
