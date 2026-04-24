@@ -2148,6 +2148,28 @@
     const STATION_POS  = new THREE.Vector3(-30, 8, -50);
     const RESEARCH_STATION_POS = new THREE.Vector3(52, -2, 38);
 
+    const STATION_THEMES = {
+      aethon: {
+        title: '⚓ AETHON STATION',
+        subtitle: 'Garrison trade nexus · docking authority online',
+      },
+      'research-delta': {
+        title: '🧬 RESEARCH DELTA',
+        subtitle: 'Genome laboratory sector · science deck access granted',
+      },
+    };
+
+    function applyStationTheme() {
+      const key = dockedStationType || 'aethon';
+      const theme = STATION_THEMES[key] || STATION_THEMES.aethon;
+      const titleEl = document.getElementById('station-title');
+      const subEl = document.getElementById('station-subtitle');
+      const rootEl = document.getElementById('station-ui');
+      if (titleEl) titleEl.textContent = theme.title;
+      if (subEl) subEl.textContent = theme.subtitle;
+      if (rootEl) rootEl.setAttribute('data-station', key);
+    }
+
     function buildStation() {
       const g = new THREE.Group();
       g.name = 'aethon-station';
@@ -2294,6 +2316,9 @@
       if (stationDocked) return;
       stationDocked = true;
       dockedStationType = 'aethon';
+      applyStationTheme();
+      stationNPCIdx = 0;
+      stationLineIdx = 0;
       showNotification('⚓ Docked at Aethon Station. Welcome aboard, pilot.');
       document.getElementById('station-ui').style.display = 'flex';
       updateCargoPanel();
@@ -2317,6 +2342,7 @@
       if (!stationDocked) return;
       stationDocked = false;
       dockedStationType = null;
+      applyStationTheme();
       document.getElementById('station-ui').style.display = 'none';
       showNotification('🚀 Undocked. Safe travels, pilot.');
     }
@@ -2325,6 +2351,9 @@
       if (stationDocked) return;
       stationDocked = true;
       dockedStationType = 'research-delta';
+      applyStationTheme();
+      stationNPCIdx = 0;
+      stationLineIdx = 0;
       showNotification('🧬 Docked at Research Delta Station. Science deck online.');
       document.getElementById('station-ui').style.display = 'flex';
       updateCargoPanel();
@@ -2372,13 +2401,37 @@
       ]},
     ];
 
+    const RESEARCH_NPCS = [
+      { name: 'Dr. Nyra Voss',  icon: '🧪', lines: [
+        'Courier pilot confirmed. Genome capsule integrity: stable.',
+        'Our splice arrays can recover traits lost in rebirth collapse.',
+        'Stay clear of the pirate lanes, they are hunting lab shipments.',
+      ]},
+      { name: 'Chief Bioengineer', icon: '🧬', lines: [
+        'Each strand in that capsule carries 200 years of lineage maps.',
+        'One contamination event and this entire batch is useless.',
+        'Keep your shields above 60% near ion storms.',
+      ]},
+      { name: 'Data Archivist', icon: '📚', lines: [
+        'We archive every rebirth signature to detect drift anomalies.',
+        'Terran dominion nodes are requesting your courier history.',
+        'Research Delta owes you one, pilot.',
+      ]},
+    ];
+
+    function getActiveStationNPCPool() {
+      return dockedStationType === 'research-delta' ? RESEARCH_NPCS : STATION_NPCS;
+    }
+
     let stationNPCIdx = 0;
     let stationLineIdx = 0;
 
     function updateStationNPCLog() {
       const log = document.getElementById('station-npc-log');
       if (!log) return;
-      const npc = STATION_NPCS[stationNPCIdx];
+      const pool = getActiveStationNPCPool();
+      if (stationNPCIdx >= pool.length) stationNPCIdx = 0;
+      const npc = pool[stationNPCIdx];
       log.innerHTML = `<div class="npc-portrait">${npc.icon}</div>
         <div class="npc-dialogue">
           <div class="npc-dname">${npc.name}</div>
@@ -2387,11 +2440,12 @@
     }
 
     window.nextNPCLine = function() {
-      const npc = STATION_NPCS[stationNPCIdx];
+      const pool = getActiveStationNPCPool();
+      const npc = pool[stationNPCIdx];
       stationLineIdx++;
       if (stationLineIdx >= npc.lines.length) {
         stationLineIdx = 0;
-        stationNPCIdx = (stationNPCIdx + 1) % STATION_NPCS.length;
+        stationNPCIdx = (stationNPCIdx + 1) % pool.length;
       }
       updateStationNPCLog();
     };
@@ -2517,6 +2571,8 @@
     let   playerShield = 100;
     let   playerHull   = 100;
     const PIRATE_GOAL  = 5;
+    let flagshipSpawned = false;
+    let flagshipDefeated = false;
 
     const ENEMY_TYPES = [
       { name: 'Raider Scout',  hp: 40,  damage: 3,  speed: 0.8, interval: 2.5, color: 0xe74c3c, scale: 0.6 },
@@ -2566,6 +2622,7 @@
           attackTimer:    type.interval,
           attackInterval: type.interval,
           name:           type.name,
+          isFlagship:     false,
           dead:           false,
         });
       }
@@ -2573,12 +2630,42 @@
       addNavLog(`Pirate wave: ${count} ${ENEMY_TYPES[Math.min(Math.floor(pirateKills / 2), 2)].name}s`);
     }
 
+    function spawnPirateFlagship() {
+      if (flagshipSpawned || flagshipDefeated) return;
+      const type = { name: 'Dread Raptor Flagship', hp: 420, damage: 18, speed: 0.2, interval: 2.1, color: 0x7a0000, scale: 2.3 };
+      const mesh = buildEnemyMesh(type);
+      mesh.position.set(0, 6, -34);
+      mesh.scale.multiplyScalar(1.25);
+      scene.add(mesh);
+      enemyShips.push({
+        mesh,
+        hp:             type.hp,
+        maxHp:          type.hp,
+        damage:         type.damage,
+        speed:          type.speed,
+        attackTimer:    type.interval,
+        attackInterval: type.interval,
+        name:           type.name,
+        isFlagship:     true,
+        dead:           false,
+      });
+      flagshipSpawned = true;
+      showNotification('☠ PIRATE FLAGSHIP ARRIVING: DREAD RAPTOR');
+      addNavLog('Flagship contact acquired: Dread Raptor');
+      const m3 = MISSION_CHAIN[2];
+      if (m3 && !m3.complete && activeMissionIdx === 2) {
+        m3.objective = 'Destroy pirate flagship: Dread Raptor';
+        refreshMissionOverlay();
+      }
+      updateCombatHUD();
+    }
+
     function killEnemy(enemy) {
       if (enemy.dead) return;
       enemy.dead = true;
       spawnShards(enemy.mesh.position);
       scene.remove(enemy.mesh);
-      pirateKills++;
+      if (!enemy.isFlagship) pirateKills++;
       wallet.ec += 800 + Math.floor(Math.random() * 400);
       updateWallet();
       showNotification(`💥 ${enemy.name} destroyed! +${800}–1200 EC`);
@@ -2588,18 +2675,25 @@
       // Mission-003 progress
       const m3 = MISSION_CHAIN[2];
       if (!m3.complete && activeMissionIdx === 2) {
-        m3.progress  = pirateKills;
-        m3.objective = `Destroy pirate ships (${Math.min(pirateKills, PIRATE_GOAL)}/${PIRATE_GOAL})`;
-        refreshMissionOverlay();
-        if (pirateKills >= PIRATE_GOAL) {
-          factionRep.garrisons = Math.min(100, factionRep.garrisons + 15);
+        if (enemy.isFlagship) {
+          flagshipDefeated = true;
+          m3.objective = 'Flagship eliminated';
+          refreshMissionOverlay();
+          factionRep.garrisons = Math.min(100, factionRep.garrisons + 20);
           updateFactionPanel();
           advanceMission();
+        } else {
+          m3.progress  = pirateKills;
+          m3.objective = `Destroy pirate ships (${Math.min(pirateKills, PIRATE_GOAL)}/${PIRATE_GOAL})`;
+          refreshMissionOverlay();
+          if (pirateKills >= PIRATE_GOAL && !flagshipSpawned) {
+            spawnPirateFlagship();
+          }
         }
       }
 
       // Spawn more if mission not done
-      if (pirateKills < PIRATE_GOAL && enemyShips.filter(e => !e.dead).length === 0) {
+      if (pirateKills < PIRATE_GOAL && !flagshipSpawned && enemyShips.filter(e => !e.dead).length === 0) {
         setTimeout(() => spawnEnemyWave(2), 3000);
       }
     }
@@ -2641,7 +2735,11 @@
 
     function updateCombatHUD() {
       const killEl = document.getElementById('kill-counter');
-      if (killEl) killEl.textContent = `KILLS ${pirateKills}/${PIRATE_GOAL}`;
+      if (killEl) {
+        killEl.textContent = flagshipSpawned && !flagshipDefeated
+          ? 'BOSS: DREAD RAPTOR'
+          : `KILLS ${pirateKills}/${PIRATE_GOAL}`;
+      }
     }
 
     // Laser raycasting — fire at whatever is under the crosshair
@@ -2700,6 +2798,7 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'e' || e.key === 'E') {
         if (!gunnerMode) { showNotification('Press F to enter Gunner Mode first.'); return; }
+        if (flagshipSpawned && !flagshipDefeated) { showNotification('☠ Flagship battle active — finish it!'); return; }
         if (enemyShips.filter(en => !en.dead).length === 0) {
           spawnEnemyWave(3);
         } else {
@@ -2722,6 +2821,10 @@
 
     // Auto-spawn pirate wave when mission-003 becomes active
     window.addEventListener('mission:003:start', () => {
+      pirateKills = 0;
+      flagshipSpawned = false;
+      flagshipDefeated = false;
+      updateCombatHUD();
       setTimeout(() => spawnEnemyWave(3), 1500);
     });
 
@@ -3167,8 +3270,11 @@
   <!-- ─── Station UI Overlay ───────────────────────────────────────── -->
   <div id="station-ui" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,12,28,0.97); z-index:500; flex-direction:column; align-items:center; justify-content:flex-start; overflow:auto; padding:24px;">
     <div style="width:100%; max-width:960px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="color:var(--blue); font-size:1.8rem; font-weight:300; letter-spacing:0.2em;">⚓ AETHON STATION</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:16px;">
+        <div>
+          <h2 id="station-title" style="color:var(--blue); font-size:1.8rem; font-weight:300; letter-spacing:0.2em; margin:0;">⚓ AETHON STATION</h2>
+          <div id="station-subtitle" style="color:#7ea2c3; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; margin-top:6px;">Garrison trade nexus · docking authority online</div>
+        </div>
         <button onclick="undockStation()" style="padding:10px 24px; background:rgba(231,76,60,0.2); border:1px solid #e74c3c; border-radius:6px; color:#e74c3c; cursor:pointer; font-size:0.9rem;">🚀 UNDOCK</button>
       </div>
 
@@ -3283,6 +3389,14 @@
 
     /* ─── Station UI buttons ─── */
     #station-ui button:hover { filter: brightness(1.2); }
+    #station-ui[data-station="research-delta"] {
+      background: radial-gradient(circle at 18% 20%, rgba(45,95,110,0.34), rgba(5,12,28,0.97) 62%);
+    }
+    #station-ui[data-station="research-delta"] #station-title { color: #7ce8d1 !important; }
+    #station-ui[data-station="research-delta"] #station-subtitle { color: #8ddfcf !important; }
+    #station-ui[data-station="research-delta"] > div > div:not(:first-child) {
+      border-color: rgba(124, 232, 209, 0.32) !important;
+    }
 
     /* ─── Warp overlay streak animation ─── */
     @keyframes warp-streak {
