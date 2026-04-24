@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdn.jsdelivr.net https://unpkg.com ws: wss:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline';" />
   <title>Old Eden — Staging Demo</title>
   <style>
     :root {
@@ -80,7 +81,7 @@
       width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
     }
     .planet-name { color: #e0e6ed; }
-    .planet-biome { color: #6a7; font-size: 0.7rem; }
+    .planet-biome { color: #9ec9a8; font-size: 0.7rem; }
 
     /* Right sidebar — genome viewer */
     #genome-panel {
@@ -663,7 +664,7 @@
       <div id="npc-stats"></div>
     </div>
 
-    <div id="rebirth-btn" class="panel" onclick="doRebirth()">
+    <div id="rebirth-btn" class="panel" role="button" tabindex="0" aria-label="Enter the rebirth cycle" onclick="doRebirth()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();doRebirth();}">
       <h2>&#8635; Rebirth Lottery</h2>
       <div class="big-text">ENTER THE CYCLE</div>
       <div class="hint">Click to roll the rebirth lottery</div>
@@ -3426,7 +3427,8 @@
     }
 
     // ─── Persistent wallet display update on interval ─────────────────
-    setInterval(updateFPS, 1000 / 60);  // called per-frame effectively by RAF
+    // FPS update is RAF-driven via updateFPS() inside the animate loop where needed.
+    // Removed the 60×/second setInterval that did nothing useful.
 
     // ─── Bridge Mission Summary ───────────────────────────────────────
     function updateBridgeMissionSummary() {
@@ -3534,15 +3536,16 @@
       ).join('');
     }
 
-    // ─── Socket.IO real-time sync (when backend available) ────────────
-    if (typeof io !== 'undefined') {
+    // ─── Socket.IO real-time sync (currently no client script loaded; branch kept for
+    //     forward-compat but guarded so it cannot throw reference errors in production). ───
+    if (typeof window !== 'undefined' && typeof window.io === 'function') {
       try {
-        const socket = io();
+        const socket = window.io();
         socket.on('player:update', (data) => {
           if (data && data.wallet) Object.assign(wallet, data.wallet);
           updateWallet();
         });
-        socket.on('leaderboard:update', (data) => {
+        socket.on('leaderboard:update', () => {
           addNavLog('Leaderboard updated from server');
         });
         socket.emit('player:hello', { version: '1.0' });
