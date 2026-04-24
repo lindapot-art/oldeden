@@ -3398,6 +3398,59 @@
 
     window.createPilot = createPilot;
 
+    // ─── Debug/QA hook: read-only snapshot of runtime combat state ────
+    // Used by scripts/demo_gameplay_flow.cjs to verify combat works.
+    window.__oldEdenDebug = {
+      getState() {
+        return {
+          gunnerMode:    typeof gunnerMode    !== 'undefined' ? gunnerMode    : null,
+          pirateKills:   typeof pirateKills   !== 'undefined' ? pirateKills   : null,
+          playerShield:  typeof playerShield  !== 'undefined' ? playerShield  : null,
+          playerHull:    typeof playerHull    !== 'undefined' ? playerHull    : null,
+          walletEC:      (typeof wallet === 'object' && wallet) ? wallet.ec   : null,
+          activeMission: (typeof MISSION_CHAIN !== 'undefined' && MISSION_CHAIN[activeMissionIdx])
+                         ? MISSION_CHAIN[activeMissionIdx].id : null,
+          enemyCount:    typeof enemyShips !== 'undefined' ? enemyShips.filter(e => !e.dead).length : null,
+        };
+      },
+      // Project each living enemy to screen-space so a headless driver can aim at one.
+      getEnemyScreenPositions() {
+        if (typeof enemyShips === 'undefined' || typeof camera === 'undefined' || !camera) return [];
+        const w = window.innerWidth, h = window.innerHeight;
+        return enemyShips.filter(e => !e.dead && e.mesh).map(e => {
+          const v = e.mesh.position.clone().project(camera);
+          return {
+            x: Math.round((v.x + 1) * w / 2),
+            y: Math.round((-v.y + 1) * h / 2),
+            inFront: v.z < 1,
+          };
+        });
+      },
+      spawnWave(n = 3) {
+        if (typeof spawnEnemyWave === 'function') spawnEnemyWave(n);
+      },
+      // Aim camera at the closest living enemy so the in-game LMB fire (which
+      // raycasts through screen center) will actually hit. Returns true if
+      // an enemy was targeted.
+      aimAtNearestEnemy() {
+        if (typeof enemyShips === 'undefined' || typeof camera === 'undefined' || !camera) return false;
+        const alive = enemyShips.filter(e => !e.dead && e.mesh);
+        if (alive.length === 0) return false;
+        const cp = camera.position;
+        let best = null, bestD = Infinity;
+        for (const e of alive) {
+          const d = e.mesh.position.distanceTo(cp);
+          if (d < bestD) { bestD = d; best = e; }
+        }
+        if (!best) return false;
+        camera.lookAt(best.mesh.position);
+        return true;
+      },
+      coolLaser() {
+        if (typeof laserHeat !== 'undefined') { try { laserHeat = 0; } catch (_) {} }
+      },
+    };
+
     // ─── Screen navigation ────────────────────────────────────────────
     function showCreateScreen() {
       const title = document.getElementById('screen-title');
