@@ -97,3 +97,21 @@
 [2026-04-06T08:40:18.342Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4bd9192ec0c050bd
 [2026-04-06T08:40:34.146Z] PASS | hash:4bd9192ec0c050bd | errors:0 | webgl:OK | dom:OK
 [2026-04-06T08:45:47.665Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4bd9192ec0c050bd
+[2026-04-24T03:17:33.345Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:FAIL | hash:aa459fe1f67acaf7
+[2026-04-24T04:47:39.377Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:FAIL | hash:aa459fe1f67acaf7
+[2026-04-24T04:49:12.335Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:FAIL | hash:bad43fe85ba0f8d7
+[2026-04-24T04:50:45.693Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:9828aaabea1510ca
+[2026-04-24T04:57:50.926Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:0a9a2278dae3d3e7
+[2026-04-24T04:58:48.684Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:46ff641c98e7de1a
+[2026-04-24T05:49:47.451Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:842ae83f624630a9
+[2026-04-24T06:03:00.740Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:192d90b12a0befbc
+[2026-04-24T06:03:46.782Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:995f7d5cc7f61b84
+[2026-04-24T06:04:23.832Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:5fc5a82e958fa790
+[2026-04-24T06:04:48.976Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:FAIL QA-Runtime:OK QA-UX:OK | hash:be034d5ad9923778
+[2026-04-24T15:46:48.334Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:db891fa976c3c3da
+[2026-04-24T15:50:32.936Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:6d9154fcc5e4f415
+[2026-04-24T15:56:12.355Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:853123d514860aaa
+[2026-04-24T16:08:28.776Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:2b1ddb66021b625a
+[2026-04-24T16:15:10.410Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1ecf6497d639ac8c
+[2026-04-24T16:16:12.650Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1ecf6497d639ac8c
+[2026-04-24T16:16:22.396Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1ecf6497d639ac8c
