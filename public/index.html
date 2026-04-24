@@ -630,9 +630,9 @@
       </div>
     </div>
   </div>
-  <canvas id="game-canvas" style="display:none;"></canvas>
-  <canvas id="hud-canvas" style="display:none;"></canvas>
-  <div id="qa-unverified-banner" style="display:block; background:#a00; color:#fff; font-weight:bold; text-align:center; padding:10px; font-size:1.1rem;">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
+  <!-- Placeholder canvases kept for QA-UX compatibility; the live render target is #canvas. -->
+  <canvas id="game-canvas" aria-hidden="true" style="display:none;"></canvas>
+  <canvas id="hud-canvas"  aria-hidden="true" style="display:none;"></canvas>  <div id="qa-unverified-banner" style="display:block; background:#a00; color:#fff; font-weight:bold; text-align:center; padding:10px; font-size:1.1rem;">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
 
   <!-- Loading screen -->
   <div id="loading">
@@ -690,7 +690,7 @@
   </div>
 
   <!-- Mission/Quest Overlay (always present for QA/UX) -->
-  <div id="mission-overlay" style="position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:1001;min-width:320px;max-width:90vw;background:rgba(10,20,40,0.92);border:2px solid #6ab0de;border-radius:12px;box-shadow:0 4px 32px #000;padding:18px 32px;text-align:left;display:none;">
+  <div id="mission-overlay" style="position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:1001;min-width:min(320px,90vw);max-width:90vw;background:rgba(10,20,40,0.92);border:2px solid #6ab0de;border-radius:12px;box-shadow:0 4px 32px #000;padding:18px 32px;text-align:left;display:none;pointer-events:none;">
     <div id="mission-title" style="font-size:1.2rem;color:#fff;font-weight:600;margin-bottom:8px;">Mission Objective</div>
     <div id="mission-desc" style="font-size:1rem;color:#6ab0de;">[No active mission. Explore to receive a quest!]</div>
   </div>
@@ -2541,7 +2541,12 @@
       // Warp streak effect — elongate stars
       scene.fog = new THREE.FogExp2(0x001133, 0.002);
       const warpOverlay = document.getElementById('warp-overlay');
-      if (warpOverlay) warpOverlay.style.opacity = '1';
+      if (warpOverlay) {
+        warpOverlay.style.opacity = '1';
+        warpOverlay.classList.add('active');
+      }
+      // Disable orbit controls during warp transition
+      if (typeof controls !== 'undefined' && controls) controls.enabled = false;
 
       setTimeout(() => {
         // Jump to new system
@@ -2573,7 +2578,11 @@
         }
 
         scene.fog = new THREE.FogExp2(0x000008, 0.0004);
-        if (warpOverlay) warpOverlay.style.opacity = '0';
+        if (warpOverlay) {
+          warpOverlay.style.opacity = '0';
+          warpOverlay.classList.remove('active');
+        }
+        if (typeof controls !== 'undefined' && controls) controls.enabled = true;
         warpActive = false;
       }, WARP_DURATION * 1000);
     }
@@ -3036,6 +3045,43 @@
       });
     }
 
+    // ─── Wire previously-dead settings controls ─────────────────────
+    // Master volume: store on a global gain-like value (stubbed — no audio engine yet)
+    window.oldEdenMasterVolume = 0.7;
+    const volInput = document.getElementById('setting-vol');
+    if (volInput) {
+      volInput.addEventListener('input', () => {
+        window.oldEdenMasterVolume = parseInt(volInput.value, 10) / 100;
+      });
+    }
+
+    // Motion blur: apply CSS filter to the canvas
+    const blurInput = document.getElementById('setting-blur');
+    if (blurInput) {
+      blurInput.addEventListener('change', () => {
+        if (canvas) canvas.style.filter = blurInput.checked ? 'blur(0.5px) brightness(1.05)' : '';
+      });
+    }
+
+    // Gyroscope toggle: delegate to existing toggleGyro (Y key)
+    const gyroInput = document.getElementById('setting-gyro');
+    if (gyroInput && typeof toggleGyro === 'function') {
+      gyroInput.addEventListener('change', () => {
+        toggleGyro();
+      });
+    }
+
+    // Graphics quality: set renderer pixel ratio
+    const gfxInput = document.getElementById('setting-gfx');
+    if (gfxInput) {
+      gfxInput.addEventListener('change', () => {
+        if (typeof renderer === 'undefined' || !renderer) return;
+        const v = gfxInput.value.toLowerCase();
+        const ratio = v.includes('low') ? 0.75 : v.includes('high') ? Math.min(2, window.devicePixelRatio || 1) : 1;
+        renderer.setPixelRatio(ratio);
+      });
+    }
+
     // Open settings screen
     const btnSettings = document.getElementById('btn-settings');
     if (btnSettings) {
@@ -3043,6 +3089,23 @@
         document.getElementById('screen-settings').style.display = 'block';
       });
     }
+
+    // ─── ESC closes any open overlay screen ─────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const overlayIds = [
+        'screen-settings', 'screen-market', 'screen-bridge',
+        'screen-rebirth', 'screen-karma', 'screen-eulogy',
+        'screen-create',
+      ];
+      for (const id of overlayIds) {
+        const el = document.getElementById(id);
+        if (el && el.style.display !== 'none' && el.style.display !== '') {
+          el.style.display = 'none';
+          return;
+        }
+      }
+    });
 
     // ─── Market / Cosmetics Functions ────────────────────────────────
     const ownedCosmetics = [];
@@ -3597,6 +3660,19 @@
       #screen-bridge > div > div[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
       #screen-bridge > div > div[style*="grid-template-columns:repeat"] { grid-template-columns: 1fr 1fr !important; }
       #screen-create > div { padding: 24px 20px !important; }
+    }
+
+    /* Hide side panels on narrow viewports to avoid overlap with canvas */
+    @media (max-width: 1024px) {
+      #system-panel, #genome-panel, #npc-panel, #rebirth-btn { display: none !important; }
+      #controls-hint { font-size: 0.6rem !important; max-width: 60vw; line-height: 1.4; }
+      #mission-overlay { padding: 12px 16px !important; font-size: 0.78rem; }
+    }
+    @media (max-width: 640px) {
+      #controls-hint { display: none !important; }
+      #title-bar { font-size: 1.4rem !important; top: 8px !important; left: 12px !important; }
+      #events-bar { max-width: 94vw !important; }
+      #mission-overlay { top: 12px !important; padding: 10px 14px !important; }
     }
 
     /* ─── Sector map mini (future-ready placeholder) ─── */
