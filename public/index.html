@@ -2014,6 +2014,30 @@
         type: 'boss',
         complete: false,
       },
+      {
+        id: 'mission-009',
+        title: 'Dominion Patrol',
+        desc: 'The Terran Dominion requests a sweep of their border lanes. Eliminate 3 hostile contacts.',
+        objective: 'Destroy 3 hostile ships on Dominion patrol (0/3)',
+        reward: { ec: 14000, sm: 25, factionRep: 'terran_dominion' },
+        type: 'combat',
+        progress: 0,
+        goal: 3,
+        repeatable: true,
+        complete: false,
+      },
+      {
+        id: 'mission-010',
+        title: 'Syndicate Salvage',
+        desc: 'The Void Syndicate pays in secrets. Mine 5 asteroids in silence — no questions asked.',
+        objective: 'Mine 5 asteroids for the Syndicate (0/5)',
+        reward: { ec: 16000, sm: 30, factionRep: 'void_syndicate' },
+        type: 'mining',
+        progress: 0,
+        goal: 5,
+        repeatable: true,
+        complete: false,
+      },
     ];
 
     let activeMissionIdx = 0;
@@ -2044,6 +2068,12 @@
       if (m.reward.ec) wallet.ec += m.reward.ec;
       if (m.reward.sm) wallet.sm += m.reward.sm;
       if (m.reward.eden) wallet.eden += m.reward.eden;
+      if (m.reward.factionRep && factionRep[m.reward.factionRep] !== undefined) {
+        factionRep[m.reward.factionRep] = Math.min(100, factionRep[m.reward.factionRep] + 15);
+        updateFactionPanel();
+        const fname = m.reward.factionRep.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        showNotification(`🏷 Faction rep +15 with ${fname}`);
+      }
       updateWallet();
       showNotification(`✔ Mission Complete: ${m.title} — +${m.reward.ec || 0} EC`);
       activeMissionIdx++;
@@ -2625,6 +2655,17 @@
           advanceMission();
         }
       }
+      // Mission-010: Syndicate Salvage
+      const m10 = MISSION_CHAIN[9];
+      if (m10 && !m10.complete && activeMissionIdx === 9) {
+        m10.progress = (m10.progress || 0) + 1;
+        m10.objective = `Mine 5 asteroids for the Syndicate (${Math.min(m10.progress, 5)}/5)`;
+        refreshMissionOverlay();
+        if (m10.progress >= 5) {
+          addCargo('Encrypted Relic', 1);
+          advanceMission();
+        }
+      }
     });
 
     // ─── Initialise added systems ─────────────────────────────────────
@@ -2802,6 +2843,15 @@
         addNavLog('Void Leviathan eliminated. Cluster secured.');
         refreshMissionOverlay();
         advanceMission();
+      }
+
+      // Mission-009: Dominion Patrol — any kill counts.
+      const m9 = MISSION_CHAIN[8];
+      if (m9 && !m9.complete && activeMissionIdx === 8 && !enemy.isLeviathan) {
+        m9.progress = (m9.progress || 0) + 1;
+        m9.objective = `Destroy 3 hostile ships on Dominion patrol (${Math.min(m9.progress, 3)}/3)`;
+        refreshMissionOverlay();
+        if (m9.progress >= 3) advanceMission();
       }
 
       // Spawn more if mission not done
