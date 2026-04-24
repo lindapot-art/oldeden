@@ -1898,7 +1898,9 @@
       }
 
       // ── Enemy ship AI tick ──────────────────────────────────────────
-      if (enemyShips.length > 0) {
+      // Guarded: the enemyShips array is declared later in the script; early animate()
+      // ticks may fire before that line has executed.
+      if (typeof enemyShips !== 'undefined' && enemyShips && enemyShips.length > 0) {
         for (const e of enemyShips) {
           if (e.dead) continue;
           // Drift toward player ship
@@ -2689,13 +2691,15 @@
     addNavLog('Research Delta Station detected on long range sensors');
 
     // ─── Enemy Ship Combat System ─────────────────────────────────────
-    const enemyShips   = [];
-    let   pirateKills  = 0;
-    let   playerShield = 100;
-    let   playerHull   = 100;
-    const PIRATE_GOAL  = 5;
-    let flagshipSpawned = false;
-    let flagshipDefeated = false;
+    // NOTE: `var` used intentionally so the declaration hoists above the animate()
+    // call at ~line 1928, which reads enemyShips on its very first synchronous tick.
+    var enemyShips   = enemyShips   || [];
+    var pirateKills  = pirateKills  || 0;
+    var playerShield = (typeof playerShield === 'number') ? playerShield : 100;
+    var playerHull   = (typeof playerHull   === 'number') ? playerHull   : 100;
+    var PIRATE_GOAL  = 5;
+    var flagshipSpawned   = flagshipSpawned   || false;
+    var flagshipDefeated  = flagshipDefeated  || false;
 
     const ENEMY_TYPES = [
       { name: 'Raider Scout',  hp: 40,  damage: 3,  speed: 0.8, interval: 2.5, color: 0xe74c3c, scale: 0.6 },
