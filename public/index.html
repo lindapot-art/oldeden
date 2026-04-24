@@ -1983,11 +1983,45 @@
         type: 'ritual',
         complete: false,
       },
+      {
+        id: 'mission-006',
+        title: 'Anomaly Probe',
+        desc: 'Long-range sensors picked up a gravitational anomaly. Warp to an uncharted system and investigate.',
+        objective: 'Perform 1 warp jump to scan the anomaly',
+        reward: { ec: 15000, sm: 25, eden: 2.0 },
+        type: 'explore',
+        progress: 0,
+        goal: 1,
+        complete: false,
+      },
+      {
+        id: 'mission-007',
+        title: 'Trade Federation',
+        desc: 'Re-establish trade lanes by delivering cargo to stations three separate times.',
+        objective: 'Sell cargo at a station (0/3)',
+        reward: { ec: 18000, sm: 40, eden: 2.5, factionRep: 'free_traders' },
+        type: 'trade',
+        progress: 0,
+        goal: 3,
+        complete: false,
+      },
+      {
+        id: 'mission-008',
+        title: 'Void Reckoning',
+        desc: 'A Void Leviathan has emerged from the anomaly. Destroy it before it consumes the Eden cluster.',
+        objective: 'Defeat the Void Leviathan',
+        reward: { ec: 50000, sm: 120, eden: 10.0, factionRep: 'garrisons' },
+        type: 'boss',
+        complete: false,
+      },
     ];
 
     let activeMissionIdx = 0;
     let mineCount = 0;
     let courierWarpDone = false;
+    let warpCount = 0;
+    let sellCount = 0;
+    let voidLeviathanSpawned = false;
 
     function getActiveMission() {
       return MISSION_CHAIN[activeMissionIdx] || null;
@@ -2031,6 +2065,20 @@
       }
       if (nextMission && nextMission.id === 'mission-005') {
         showNotification('☯ Return to rebirth protocol to complete the cycle.');
+      }
+      if (nextMission && nextMission.id === 'mission-006') {
+        showNotification('📡 Anomaly detected — warp to a new system to investigate.');
+        addNavLog('Anomaly signature logged. Awaiting warp jump.');
+      }
+      if (nextMission && nextMission.id === 'mission-007') {
+        showNotification('💱 Trade Federation contract opened — sell cargo at a station 3x.');
+        addNavLog('Trade Federation contract accepted.');
+      }
+      if (nextMission && nextMission.id === 'mission-008') {
+        setTimeout(() => {
+          showNotification('☠ VOID LEVIATHAN EMERGING — enter gunner mode and destroy it!');
+          spawnVoidLeviathan();
+        }, 1000);
       }
       setTimeout(() => refreshMissionOverlay(), 1200);
     }
@@ -2121,6 +2169,19 @@
         updateWallet();
         showNotification(`💰 Sold cargo for ${total.toLocaleString()} EC`);
         updateCargoPanel();
+        // Mission-007: Trade Federation — count successful sales.
+        sellCount++;
+        const m7 = MISSION_CHAIN[6];
+        if (m7 && !m7.complete && activeMissionIdx === 6) {
+          m7.progress = sellCount;
+          m7.objective = `Sell cargo at a station (${Math.min(sellCount, 3)}/3)`;
+          refreshMissionOverlay();
+          if (factionRep.free_traders !== undefined) {
+            factionRep.free_traders = Math.min(100, factionRep.free_traders + 5);
+            updateFactionPanel();
+          }
+          if (sellCount >= 3) advanceMission();
+        }
       } else {
         showNotification('No cargo to sell.');
       }
@@ -2484,6 +2545,17 @@
           addNavLog('Research Delta Station reached — deliver Genome Data');
         }
 
+        // Mission-006: Anomaly Probe — any warp after mission-005 counts as scan.
+        warpCount++;
+        const m6 = MISSION_CHAIN[5];
+        if (m6 && !m6.complete && activeMissionIdx === 5) {
+          m6.progress = warpCount;
+          m6.objective = `Anomaly scanned (${Math.min(warpCount, 1)}/1)`;
+          refreshMissionOverlay();
+          addNavLog(`Anomaly sensor sweep complete at ${sys.name}`);
+          advanceMission();
+        }
+
         scene.fog = new THREE.FogExp2(0x000008, 0.0004);
         if (warpOverlay) warpOverlay.style.opacity = '0';
         warpActive = false;
@@ -2660,6 +2732,34 @@
       updateCombatHUD();
     }
 
+    function spawnVoidLeviathan() {
+      if (voidLeviathanSpawned) return;
+      const type = { name: 'Void Leviathan', hp: 900, damage: 24, speed: 0.18, interval: 2.0, color: 0x6a0dad, scale: 3.4 };
+      const mesh = buildEnemyMesh(type);
+      mesh.position.set(0, 10, -50);
+      mesh.scale.multiplyScalar(1.8);
+      scene.add(mesh);
+      enemyShips.push({
+        mesh,
+        hp:             type.hp,
+        maxHp:          type.hp,
+        damage:         type.damage,
+        speed:          type.speed,
+        attackTimer:    type.interval,
+        attackInterval: type.interval,
+        name:           type.name,
+        isFlagship:     true,
+        isLeviathan:    true,
+        dead:           false,
+      });
+      voidLeviathanSpawned = true;
+      showNotification('☠ VOID LEVIATHAN HAS ARRIVED');
+      addNavLog('Void Leviathan contact — all hands to battle stations');
+      updateCombatHUD();
+    }
+
+    window.spawnVoidLeviathan = spawnVoidLeviathan;
+
     function killEnemy(enemy) {
       if (enemy.dead) return;
       enemy.dead = true;
@@ -2690,6 +2790,18 @@
             spawnPirateFlagship();
           }
         }
+      }
+
+      // Mission-008: Void Leviathan defeated
+      const m8 = MISSION_CHAIN[7];
+      if (enemy.isLeviathan && m8 && !m8.complete && activeMissionIdx === 7) {
+        m8.objective = 'Void Leviathan destroyed';
+        wallet.ec += 25000;
+        updateWallet();
+        showNotification('🏆 VOID LEVIATHAN DESTROYED — Eden is saved!');
+        addNavLog('Void Leviathan eliminated. Cluster secured.');
+        refreshMissionOverlay();
+        advanceMission();
       }
 
       // Spawn more if mission not done
@@ -2736,9 +2848,11 @@
     function updateCombatHUD() {
       const killEl = document.getElementById('kill-counter');
       if (killEl) {
-        killEl.textContent = flagshipSpawned && !flagshipDefeated
-          ? 'BOSS: DREAD RAPTOR'
-          : `KILLS ${pirateKills}/${PIRATE_GOAL}`;
+        killEl.textContent = voidLeviathanSpawned && activeMissionIdx === 7
+          ? 'BOSS: VOID LEVIATHAN'
+          : flagshipSpawned && !flagshipDefeated
+            ? 'BOSS: DREAD RAPTOR'
+            : `KILLS ${pirateKills}/${PIRATE_GOAL}`;
       }
     }
 
