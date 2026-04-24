@@ -690,6 +690,40 @@
     </div>
   </div>
 
+  <!-- Mobile touch action bar (lives OUTSIDE #hud so it stays visible in
+       gunner mode where #hud is set to display:none). Visibility is controlled
+       by media queries / body.force-mobile only. -->
+  <div id="mobile-action-bar" aria-label="Mobile controls">
+    <button type="button" id="mob-btn-gunner" class="mob-btn" aria-label="Toggle gunner mode" onclick="window.__mobileToggleGunner&&window.__mobileToggleGunner()">
+      <span class="mob-btn-icon">🎯</span><span class="mob-btn-label">GUNNER</span>
+    </button>
+    <button type="button" id="mob-btn-fire" class="mob-btn mob-btn-fire" aria-label="Fire weapon" ontouchstart="window.__mobileFire&&window.__mobileFire(true)" ontouchend="window.__mobileFire&&window.__mobileFire(false)" onmousedown="window.__mobileFire&&window.__mobileFire(true)" onmouseup="window.__mobileFire&&window.__mobileFire(false)">
+      <span class="mob-btn-icon">🔥</span><span class="mob-btn-label">FIRE</span>
+    </button>
+    <button type="button" id="mob-btn-dock" class="mob-btn" aria-label="Dock at nearest station" onclick="window.__mobileDock&&window.__mobileDock()">
+      <span class="mob-btn-icon">🏛</span><span class="mob-btn-label">DOCK</span>
+    </button>
+    <button type="button" id="mob-btn-warp" class="mob-btn" aria-label="Warp to next system" onclick="window.__mobileWarp&&window.__mobileWarp()">
+      <span class="mob-btn-icon">🚀</span><span class="mob-btn-label">WARP</span>
+    </button>
+    <button type="button" id="mob-btn-menu" class="mob-btn" aria-label="Open menu" onclick="window.__mobileOpenMenu&&window.__mobileOpenMenu()">
+      <span class="mob-btn-icon">☰</span><span class="mob-btn-label">MENU</span>
+    </button>
+  </div>
+
+  <!-- Mobile menu overlay (opens from action bar) -->
+  <div id="mobile-menu" role="dialog" aria-label="Game menu" aria-modal="true" style="display:none;">
+    <div class="mob-menu-card">
+      <div class="mob-menu-title">OLD EDEN — MENU</div>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-market').style.display='block';">📊 Galactic Market</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-karma').style.display='flex';">⚖ Karma Wheel</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-rebirth').style.display='flex';">☯ Rebirth Lottery</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-settings').style.display='block';">⚙ Settings</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; window.__mobileMine&&window.__mobileMine();">⛏ Mine Asteroid</button>
+      <button type="button" class="mob-menu-row mob-menu-close" onclick="document.getElementById('mobile-menu').style.display='none';">✕ Close</button>
+    </div>
+  </div>
+
   <!-- Mission/Quest Overlay (always present for QA/UX) -->
   <div id="mission-overlay" style="position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:1001;min-width:min(320px,90vw);max-width:90vw;background:rgba(10,20,40,0.92);border:2px solid #6ab0de;border-radius:12px;box-shadow:0 4px 32px #000;padding:18px 32px;text-align:left;display:none;pointer-events:none;">
     <div id="mission-title" style="font-size:1.2rem;color:#fff;font-weight:600;margin-bottom:8px;">Mission Objective</div>
@@ -2471,6 +2505,71 @@
     window.sellAllCargo   = sellAllCargo;
     window.advanceMission = advanceMission;
 
+    // ─── Mobile touch handlers (wired to existing functions) ─────────
+    // Used by the on-screen action bar at the bottom of the screen on phones.
+    window.__mobileToggleGunner = function() {
+      try {
+        if (typeof toggleGunnerMode === 'function') toggleGunnerMode();
+        const btn = document.getElementById('mob-btn-gunner');
+        if (btn) btn.classList.toggle('is-active', !!gunnerMode);
+        const fireBtn = document.getElementById('mob-btn-fire');
+        if (fireBtn) fireBtn.style.opacity = gunnerMode ? '1' : '0.45';
+      } catch (e) { console.warn('[mobile] toggle gunner failed', e); }
+    };
+    let __mobileFireInterval = null;
+    window.__mobileFire = function(pressed) {
+      // Synthesise the same mousedown the desktop combat path expects.
+      const c = document.getElementById('canvas') || document.querySelector('canvas');
+      if (!c) return;
+      if (pressed) {
+        if (!gunnerMode) { showNotification && showNotification('Tap GUNNER first'); return; }
+        const fire = () => {
+          const r = c.getBoundingClientRect();
+          const ev = new MouseEvent('mousedown', {
+            bubbles: true, cancelable: true, button: 0,
+            clientX: r.left + r.width/2,
+            clientY: r.top  + r.height/2,
+          });
+          c.dispatchEvent(ev);
+        };
+        fire();
+        if (__mobileFireInterval) clearInterval(__mobileFireInterval);
+        __mobileFireInterval = setInterval(fire, 350);
+      } else {
+        if (__mobileFireInterval) { clearInterval(__mobileFireInterval); __mobileFireInterval = null; }
+      }
+    };
+    window.__mobileDock = function() {
+      // Try Aethon first, then Research Delta. dockAtStation gates on proximity.
+      try {
+        const before = document.getElementById('station-ui')?.style.display;
+        dockAtStation && dockAtStation();
+        const after = document.getElementById('station-ui')?.style.display;
+        if (after === 'none' || after === before) {
+          dockAtResearchStation && dockAtResearchStation();
+        }
+      } catch (e) { console.warn('[mobile] dock failed', e); }
+    };
+    window.__mobileWarp = function() {
+      try {
+        if (typeof initiateWarp === 'function') initiateWarp();
+        else showNotification && showNotification('Warp drive not available yet');
+      } catch (e) { console.warn('[mobile] warp failed', e); }
+    };
+    window.__mobileMine = function() {
+      try {
+        if (typeof toggleManualMine === 'function') toggleManualMine();
+      } catch (e) { console.warn('[mobile] mine failed', e); }
+    };
+    window.__mobileOpenMenu = function() {
+      const m = document.getElementById('mobile-menu');
+      if (m) m.style.display = 'flex';
+    };
+    // Force-mobile testing flag: visit ?mobile=1 to preview the touch UI on desktop.
+    if (typeof location !== 'undefined' && /[?&]mobile=1\b/.test(location.search)) {
+      document.body.classList.add('force-mobile');
+    }
+
     // ─── Station NPC Dialogue Log ────────────────────────────────────
     const STATION_NPCS = [
       { name: 'Ambassador Vael',  icon: '🧑', lines: [
@@ -3793,10 +3892,109 @@
     }
     @media (max-width: 640px) {
       #controls-hint { display: none !important; }
-      #title-bar { font-size: 1.4rem !important; top: 8px !important; left: 12px !important; }
-      #events-bar { max-width: 94vw !important; }
-      #mission-overlay { top: 12px !important; padding: 10px 14px !important; }
+      #title-bar { display: none !important; }
+      #events-bar { display: none !important; }
+      #mission-overlay {
+        top: 8px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        padding: 8px 12px !important;
+        font-size: 0.72rem !important;
+        min-width: auto !important;
+        max-width: 92vw !important;
+      }
+      #mission-overlay #mission-title { font-size: 0.85rem !important; margin-bottom: 4px !important; }
+      #mission-overlay #mission-body  { font-size: 0.7rem  !important; }
+      /* Compact wallet pill — top-right */
+      #economy-panel {
+        top: 8px !important; right: 8px !important;
+        bottom: auto !important; left: auto !important;
+        padding: 6px 10px !important;
+        background: rgba(5,10,25,0.86) !important;
+        border-radius: 999px !important;
+        display: flex !important; flex-direction: row !important; gap: 10px !important;
+        font-size: 0.66rem !important;
+      }
+      #economy-panel h2 { display: none !important; }
+      #economy-panel .currency-row { margin: 0 !important; padding: 0 !important; gap: 4px !important; }
+      #economy-panel .currency-name { width: auto !important; }
     }
+
+    /* ─── Mobile action bar (always-on touch UI for phones) ─── */
+    #mobile-action-bar {
+      display: none;
+      position: fixed; left: 0; right: 0; bottom: 0;
+      z-index: 998;
+      padding: 8px 6px calc(env(safe-area-inset-bottom, 0px) + 8px);
+      background: linear-gradient(to top, rgba(5,10,25,0.96) 60%, rgba(5,10,25,0.0));
+      gap: 6px;
+      justify-content: space-around;
+      align-items: stretch;
+      pointer-events: auto;
+    }
+    .mob-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 56px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px;
+      padding: 6px 4px;
+      background: rgba(15,30,55,0.92);
+      border: 1px solid rgba(100,180,255,0.25);
+      border-radius: 10px;
+      color: #c8d6e5;
+      font-family: inherit; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      -webkit-tap-highlight-color: rgba(100,180,255,0.25);
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .mob-btn:active { background: rgba(100,180,255,0.22); transform: scale(0.96); }
+    .mob-btn-icon { font-size: 1.2rem; line-height: 1; }
+    .mob-btn-label { font-size: 0.6rem; color: #88a; }
+    .mob-btn-fire { background: rgba(231,76,60,0.18); border-color: rgba(231,76,60,0.5); color: #ff8a7a; }
+    .mob-btn-fire:active { background: rgba(231,76,60,0.45); }
+    .mob-btn.is-active { background: rgba(255,184,72,0.22); border-color: var(--gold); color: var(--gold); }
+
+    @media (max-width: 1024px) {
+      #mobile-action-bar { display: flex; }
+      /* leave clear space at bottom so canvas/HUD don't sit under the bar */
+      #cargo-panel, #navlog-panel, #warp-charge-bar { bottom: 80px !important; }
+    }
+    /* On desktop the bar stays hidden but we still expose it for ?mobile=1 testing */
+    body.force-mobile #mobile-action-bar { display: flex; }
+
+    /* Mobile menu modal */
+    #mobile-menu {
+      position: fixed; inset: 0; z-index: 9998;
+      background: rgba(2,5,15,0.85);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #mobile-menu[style*="display: flex"], #mobile-menu[style*="display:flex"] { display: flex !important; }
+    .mob-menu-card {
+      width: 100%; max-width: 340px;
+      background: rgba(10,20,40,0.98);
+      border: 1px solid rgba(100,180,255,0.3);
+      border-radius: 14px;
+      padding: 18px 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .mob-menu-title { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.2em; text-align: center; padding: 6px 0 12px; border-bottom: 1px solid rgba(100,180,255,0.12); margin-bottom: 6px; }
+    .mob-menu-row {
+      width: 100%; padding: 14px 16px;
+      background: rgba(5,15,35,0.85);
+      border: 1px solid rgba(100,180,255,0.18);
+      border-radius: 8px;
+      color: #c8d6e5; font-size: 0.92rem; text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .mob-menu-row:active { background: rgba(100,180,255,0.16); }
+    .mob-menu-close { color: #e74c3c; border-color: rgba(231,76,60,0.4); text-align: center; margin-top: 8px; }
 
     /* ─── Sector map mini (future-ready placeholder) ─── */
     #sector-map {
