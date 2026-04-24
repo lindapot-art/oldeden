@@ -1,0 +1,10 @@
+{
+  "stamp": "2026-04-23T03-58-20-909Z",
+  "default_weapon": "gatling_dual",
+  "gatling_left_cluster_present": true,
+  "gatling_right_cluster_present": true,
+  "shots_fired": 17,
+  "projectiles_live": 34,
+  "kills": 0,
+  "errors": []
+}

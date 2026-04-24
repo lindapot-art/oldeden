@@ -1,0 +1,5202 @@
+[
+  {
+    "index": 0,
+    "elapsed": 6365,
+    "action": "laser",
+    "shot": "frame_000.jpg",
+    "t": 1776906354967,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 211,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 1,
+    "elapsed": 12025,
+    "action": "railgun",
+    "shot": "frame_001.jpg",
+    "t": 1776906359046,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 118.86314999997614,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 215,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 2,
+    "elapsed": 18836,
+    "action": "gatling_dual",
+    "shot": "frame_002.jpg",
+    "t": 1776906365146,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 117.48239999994634,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 3,
+    "elapsed": 25368,
+    "action": "gatling_L",
+    "shot": "frame_003.jpg",
+    "t": 1776906371468,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 100,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 4,
+    "elapsed": 32288,
+    "action": "gatling_R",
+    "shot": "frame_004.jpg",
+    "t": 1776906378031,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 5,
+    "elapsed": 39248,
+    "action": "forward",
+    "shot": "frame_005.jpg",
+    "t": 1776906385146,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 6,
+    "elapsed": 45763,
+    "action": "back",
+    "shot": "frame_006.jpg",
+    "t": 1776906391904,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 100,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 222,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 7,
+    "elapsed": 52116,
+    "action": "left",
+    "shot": "frame_007.jpg",
+    "t": 1776906398396,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 8,
+    "elapsed": 58578,
+    "action": "right",
+    "shot": "frame_008.jpg",
+    "t": 1776906404785,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 219,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 9,
+    "elapsed": 65361,
+    "action": "boost",
+    "shot": "frame_009.jpg",
+    "t": 1776906411234,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 219,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 10,
+    "elapsed": 72120,
+    "action": "reload",
+    "shot": "frame_010.jpg",
+    "t": 1776906418024,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 11,
+    "elapsed": 78873,
+    "action": "target",
+    "shot": "frame_011.jpg",
+    "t": 1776906424753,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 12,
+    "elapsed": 85648,
+    "action": "laser",
+    "shot": "frame_012.jpg",
+    "t": 1776906431548,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 222,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 13,
+    "elapsed": 92657,
+    "action": "railgun",
+    "shot": "frame_013.jpg",
+    "t": 1776906438663,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 220,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 14,
+    "elapsed": 99842,
+    "action": "gatling_dual",
+    "shot": "frame_014.jpg",
+    "t": 1776906445573,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 15,
+    "elapsed": 106739,
+    "action": "gatling_L",
+    "shot": "frame_015.jpg",
+    "t": 1776906452486,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 16,
+    "elapsed": 113201,
+    "action": "gatling_R",
+    "shot": "frame_016.jpg",
+    "t": 1776906459381,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 17,
+    "elapsed": 119742,
+    "action": "forward",
+    "shot": "frame_017.jpg",
+    "t": 1776906465834,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 18,
+    "elapsed": 126248,
+    "action": "back",
+    "shot": "frame_018.jpg",
+    "t": 1776906472422,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 100,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 219,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 19,
+    "elapsed": 132891,
+    "action": "left",
+    "shot": "frame_019.jpg",
+    "t": 1776906478903,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 218,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 20,
+    "elapsed": 139339,
+    "action": "right",
+    "shot": "frame_020.jpg",
+    "t": 1776906485532,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 220,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 21,
+    "elapsed": 145918,
+    "action": "boost",
+    "shot": "frame_021.jpg",
+    "t": 1776906491971,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 220,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 22,
+    "elapsed": 153445,
+    "action": "reload",
+    "shot": "frame_022.jpg",
+    "t": 1776906498670,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 23,
+    "elapsed": 159525,
+    "action": "target",
+    "shot": "frame_023.jpg",
+    "t": 1776906506076,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 219,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 24,
+    "elapsed": 166319,
+    "action": "laser",
+    "shot": "frame_024.jpg",
+    "t": 1776906512176,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 220,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 25,
+    "elapsed": 172738,
+    "action": "railgun",
+    "shot": "frame_025.jpg",
+    "t": 1776906518958,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 222,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 26,
+    "elapsed": 179148,
+    "action": "gatling_dual",
+    "shot": "frame_026.jpg",
+    "t": 1776906525360,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 27,
+    "elapsed": 185543,
+    "action": "gatling_L",
+    "shot": "frame_027.jpg",
+    "t": 1776906531803,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 28,
+    "elapsed": 192064,
+    "action": "gatling_R",
+    "shot": "frame_028.jpg",
+    "t": 1776906538174,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 29,
+    "elapsed": 198504,
+    "action": "forward",
+    "shot": "frame_029.jpg",
+    "t": 1776906544694,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 222,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 30,
+    "elapsed": 205237,
+    "action": "back",
+    "shot": "frame_030.jpg",
+    "t": 1776906551169,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 222,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 31,
+    "elapsed": 211998,
+    "action": "left",
+    "shot": "frame_031.jpg",
+    "t": 1776906557937,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 32,
+    "elapsed": 219156,
+    "action": "right",
+    "shot": "frame_032.jpg",
+    "t": 1776906564640,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 33,
+    "elapsed": 225901,
+    "action": "boost",
+    "shot": "frame_033.jpg",
+    "t": 1776906571792,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 219,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 34,
+    "elapsed": 232320,
+    "action": "reload",
+    "shot": "frame_034.jpg",
+    "t": 1776906578716,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 219,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 35,
+    "elapsed": 238708,
+    "action": "target",
+    "shot": "frame_035.jpg",
+    "t": 1776906584983,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 36,
+    "elapsed": 245202,
+    "action": "laser",
+    "shot": "frame_036.jpg",
+    "t": 1776906591342,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 37,
+    "elapsed": 251704,
+    "action": "railgun",
+    "shot": "frame_037.jpg",
+    "t": 1776906597846,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 38,
+    "elapsed": 256521,
+    "action": "gatling_dual",
+    "shot": "frame_038.jpg",
+    "t": 1776906604338,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 39,
+    "elapsed": 262518,
+    "action": "gatling_L",
+    "shot": "frame_039.jpg",
+    "t": 1776906609156,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.97434999999403,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 40,
+    "elapsed": 268520,
+    "action": "gatling_R",
+    "shot": "frame_040.jpg",
+    "t": 1776906615172,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 41,
+    "elapsed": 274581,
+    "action": "forward",
+    "shot": "frame_041.jpg",
+    "t": 1776906621181,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 42,
+    "elapsed": 280861,
+    "action": "back",
+    "shot": "frame_042.jpg",
+    "t": 1776906627841,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 43,
+    "elapsed": 286696,
+    "action": "left",
+    "shot": "frame_043.jpg",
+    "t": 1776906633531,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 44,
+    "elapsed": 292854,
+    "action": "right",
+    "shot": "frame_044.jpg",
+    "t": 1776906639350,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 220,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 45,
+    "elapsed": 298691,
+    "action": "boost",
+    "shot": "frame_045.jpg",
+    "t": 1776906645515,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 46,
+    "elapsed": 304400,
+    "action": "reload",
+    "shot": "frame_046.jpg",
+    "t": 1776906651312,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 47,
+    "elapsed": 310139,
+    "action": "target",
+    "shot": "frame_047.jpg",
+    "t": 1776906657036,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 48,
+    "elapsed": 315962,
+    "action": "laser",
+    "shot": "frame_048.jpg",
+    "t": 1776906662792,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 49,
+    "elapsed": 321899,
+    "action": "railgun",
+    "shot": "frame_049.jpg",
+    "t": 1776906668603,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 222,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 50,
+    "elapsed": 327932,
+    "action": "gatling_dual",
+    "shot": "frame_050.jpg",
+    "t": 1776906674529,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 51,
+    "elapsed": 334078,
+    "action": "gatling_L",
+    "shot": "frame_051.jpg",
+    "t": 1776906680679,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 52,
+    "elapsed": 340465,
+    "action": "gatling_R",
+    "shot": "frame_052.jpg",
+    "t": 1776906687264,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 53,
+    "elapsed": 346121,
+    "action": "forward",
+    "shot": "frame_053.jpg",
+    "t": 1776906693103,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 54,
+    "elapsed": 351643,
+    "action": "back",
+    "shot": "frame_054.jpg",
+    "t": 1776906698748,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 55,
+    "elapsed": 357413,
+    "action": "left",
+    "shot": "frame_055.jpg",
+    "t": 1776906704276,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 56,
+    "elapsed": 362915,
+    "action": "right",
+    "shot": "frame_056.jpg",
+    "t": 1776906710041,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 57,
+    "elapsed": 368514,
+    "action": "boost",
+    "shot": "frame_057.jpg",
+    "t": 1776906715536,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 58,
+    "elapsed": 373951,
+    "action": "reload",
+    "shot": "frame_058.jpg",
+    "t": 1776906721179,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 59,
+    "elapsed": 379434,
+    "action": "target",
+    "shot": "frame_059.jpg",
+    "t": 1776906726578,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 60,
+    "elapsed": 385351,
+    "action": "laser",
+    "shot": "frame_060.jpg",
+    "t": 1776906732213,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.04,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 61,
+    "elapsed": 391135,
+    "action": "railgun",
+    "shot": "frame_061.jpg",
+    "t": 1776906738001,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 62,
+    "elapsed": 397238,
+    "action": "gatling_dual",
+    "shot": "frame_062.jpg",
+    "t": 1776906743798,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 227,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 63,
+    "elapsed": 402845,
+    "action": "gatling_L",
+    "shot": "frame_063.jpg",
+    "t": 1776906749881,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 64,
+    "elapsed": 408472,
+    "action": "gatling_R",
+    "shot": "frame_064.jpg",
+    "t": 1776906755469,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 65,
+    "elapsed": 414164,
+    "action": "forward",
+    "shot": "frame_065.jpg",
+    "t": 1776906761136,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 66,
+    "elapsed": 419770,
+    "action": "back",
+    "shot": "frame_066.jpg",
+    "t": 1776906766797,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 67,
+    "elapsed": 425252,
+    "action": "left",
+    "shot": "frame_067.jpg",
+    "t": 1776906772399,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 68,
+    "elapsed": 431071,
+    "action": "right",
+    "shot": "frame_068.jpg",
+    "t": 1776906777920,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 69,
+    "elapsed": 436654,
+    "action": "boost",
+    "shot": "frame_069.jpg",
+    "t": 1776906783736,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 221,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 70,
+    "elapsed": 442189,
+    "action": "reload",
+    "shot": "frame_070.jpg",
+    "t": 1776906789294,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 71,
+    "elapsed": 448058,
+    "action": "target",
+    "shot": "frame_071.jpg",
+    "t": 1776906794844,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 72,
+    "elapsed": 454014,
+    "action": "laser",
+    "shot": "frame_072.jpg",
+    "t": 1776906800746,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 73,
+    "elapsed": 459920,
+    "action": "railgun",
+    "shot": "frame_073.jpg",
+    "t": 1776906807022,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 74,
+    "elapsed": 465556,
+    "action": "gatling_dual",
+    "shot": "frame_074.jpg",
+    "t": 1776906812610,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 75,
+    "elapsed": 471073,
+    "action": "gatling_L",
+    "shot": "frame_075.jpg",
+    "t": 1776906818198,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 100,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 227,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 76,
+    "elapsed": 476918,
+    "action": "gatling_R",
+    "shot": "frame_076.jpg",
+    "t": 1776906823703,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 227,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 77,
+    "elapsed": 482628,
+    "action": "forward",
+    "shot": "frame_077.jpg",
+    "t": 1776906829569,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 227,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 78,
+    "elapsed": 488384,
+    "action": "back",
+    "shot": "frame_078.jpg",
+    "t": 1776906835321,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 79,
+    "elapsed": 494140,
+    "action": "left",
+    "shot": "frame_079.jpg",
+    "t": 1776906841017,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 80,
+    "elapsed": 499917,
+    "action": "right",
+    "shot": "frame_080.jpg",
+    "t": 1776906846775,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 81,
+    "elapsed": 505837,
+    "action": "boost",
+    "shot": "frame_081.jpg",
+    "t": 1776906852562,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 82,
+    "elapsed": 511851,
+    "action": "reload",
+    "shot": "frame_082.jpg",
+    "t": 1776906858553,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 83,
+    "elapsed": 518425,
+    "action": "target",
+    "shot": "frame_083.jpg",
+    "t": 1776906865060,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 84,
+    "elapsed": 524354,
+    "action": "laser",
+    "shot": "frame_084.jpg",
+    "t": 1776906871149,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 85,
+    "elapsed": 530284,
+    "action": "railgun",
+    "shot": "frame_085.jpg",
+    "t": 1776906876981,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 86,
+    "elapsed": 536462,
+    "action": "gatling_dual",
+    "shot": "frame_086.jpg",
+    "t": 1776906882918,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 87,
+    "elapsed": 542000,
+    "action": "gatling_L",
+    "shot": "frame_087.jpg",
+    "t": 1776906889282,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 230,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 88,
+    "elapsed": 548527,
+    "action": "gatling_R",
+    "shot": "frame_088.jpg",
+    "t": 1776906894636,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 230,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 89,
+    "elapsed": 554366,
+    "action": "forward",
+    "shot": "frame_089.jpg",
+    "t": 1776906901159,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 90,
+    "elapsed": 560086,
+    "action": "back",
+    "shot": "frame_090.jpg",
+    "t": 1776906907003,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 91,
+    "elapsed": 566179,
+    "action": "left",
+    "shot": "frame_091.jpg",
+    "t": 1776906912718,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 92,
+    "elapsed": 572262,
+    "action": "right",
+    "shot": "frame_092.jpg",
+    "t": 1776906918865,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 93,
+    "elapsed": 578608,
+    "action": "boost",
+    "shot": "frame_093.jpg",
+    "t": 1776906924886,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 94,
+    "elapsed": 584513,
+    "action": "reload",
+    "shot": "frame_094.jpg",
+    "t": 1776906931240,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 95,
+    "elapsed": 590303,
+    "action": "target",
+    "shot": "frame_095.jpg",
+    "t": 1776906937149,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 96,
+    "elapsed": 596102,
+    "action": "laser",
+    "shot": "frame_096.jpg",
+    "t": 1776906943145,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 97,
+    "elapsed": 601855,
+    "action": "railgun",
+    "shot": "frame_097.jpg",
+    "t": 1776906948730,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 98,
+    "elapsed": 607581,
+    "action": "gatling_dual",
+    "shot": "frame_098.jpg",
+    "t": 1776906954491,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 99,
+    "elapsed": 613506,
+    "action": "gatling_L",
+    "shot": "frame_099.jpg",
+    "t": 1776906960214,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 100,
+    "elapsed": 619462,
+    "action": "gatling_R",
+    "shot": "frame_100.jpg",
+    "t": 1776906966165,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 101,
+    "elapsed": 625325,
+    "action": "forward",
+    "shot": "frame_101.jpg",
+    "t": 1776906972134,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 102,
+    "elapsed": 631167,
+    "action": "back",
+    "shot": "frame_102.jpg",
+    "t": 1776906978142,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 103,
+    "elapsed": 637282,
+    "action": "left",
+    "shot": "frame_103.jpg",
+    "t": 1776906984209,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 224,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 104,
+    "elapsed": 642845,
+    "action": "right",
+    "shot": "frame_104.jpg",
+    "t": 1776906989917,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 223,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 105,
+    "elapsed": 648590,
+    "action": "boost",
+    "shot": "frame_105.jpg",
+    "t": 1776906995484,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 106,
+    "elapsed": 654196,
+    "action": "reload",
+    "shot": "frame_106.jpg",
+    "t": 1776907001214,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 107,
+    "elapsed": 659644,
+    "action": "target",
+    "shot": "frame_107.jpg",
+    "t": 1776907006841,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 108,
+    "elapsed": 665333,
+    "action": "laser",
+    "shot": "frame_108.jpg",
+    "t": 1776907012287,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 227,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 109,
+    "elapsed": 670935,
+    "action": "railgun",
+    "shot": "frame_109.jpg",
+    "t": 1776907017992,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 110,
+    "elapsed": 676614,
+    "action": "gatling_dual",
+    "shot": "frame_110.jpg",
+    "t": 1776907023589,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 111,
+    "elapsed": 682327,
+    "action": "gatling_L",
+    "shot": "frame_111.jpg",
+    "t": 1776907029247,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 112,
+    "elapsed": 688010,
+    "action": "gatling_R",
+    "shot": "frame_112.jpg",
+    "t": 1776907034968,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 113,
+    "elapsed": 693983,
+    "action": "forward",
+    "shot": "frame_113.jpg",
+    "t": 1776907040652,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 114,
+    "elapsed": 699861,
+    "action": "back",
+    "shot": "frame_114.jpg",
+    "t": 1776907046674,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 115,
+    "elapsed": 705486,
+    "action": "left",
+    "shot": "frame_115.jpg",
+    "t": 1776907052490,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 116,
+    "elapsed": 711349,
+    "action": "right",
+    "shot": "frame_116.jpg",
+    "t": 1776907058108,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 117,
+    "elapsed": 717223,
+    "action": "boost",
+    "shot": "frame_117.jpg",
+    "t": 1776907063993,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 225,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 118,
+    "elapsed": 723447,
+    "action": "reload",
+    "shot": "frame_118.jpg",
+    "t": 1776907069868,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 228,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 119,
+    "elapsed": 729703,
+    "action": "target",
+    "shot": "frame_119.jpg",
+    "t": 1776907076097,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 226,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 120,
+    "elapsed": 736262,
+    "action": "laser",
+    "shot": "frame_120.jpg",
+    "t": 1776907082363,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.04,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 121,
+    "elapsed": 743298,
+    "action": "railgun",
+    "shot": "frame_121.jpg",
+    "t": 1776907088907,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 122,
+    "elapsed": 750105,
+    "action": "gatling_dual",
+    "shot": "frame_122.jpg",
+    "t": 1776907095975,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 123,
+    "elapsed": 757964,
+    "action": "gatling_L",
+    "shot": "frame_123.jpg",
+    "t": 1776907102768,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 124,
+    "elapsed": 764831,
+    "action": "gatling_R",
+    "shot": "frame_124.jpg",
+    "t": 1776907111409,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 125,
+    "elapsed": 771565,
+    "action": "forward",
+    "shot": "frame_125.jpg",
+    "t": 1776907117468,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 126,
+    "elapsed": 778313,
+    "action": "back",
+    "shot": "frame_126.jpg",
+    "t": 1776907124206,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 127,
+    "elapsed": 785030,
+    "action": "left",
+    "shot": "frame_127.jpg",
+    "t": 1776907130936,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 4,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 237,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 128,
+    "elapsed": 791547,
+    "action": "right",
+    "shot": "frame_128.jpg",
+    "t": 1776907137687,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 236,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 129,
+    "elapsed": 798056,
+    "action": "boost",
+    "shot": "frame_129.jpg",
+    "t": 1776907144203,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 130,
+    "elapsed": 804773,
+    "action": "reload",
+    "shot": "frame_130.jpg",
+    "t": 1776907150749,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 131,
+    "elapsed": 811697,
+    "action": "target",
+    "shot": "frame_131.jpg",
+    "t": 1776907157395,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 132,
+    "elapsed": 818969,
+    "action": "laser",
+    "shot": "frame_132.jpg",
+    "t": 1776907164808,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 133,
+    "elapsed": 825938,
+    "action": "railgun",
+    "shot": "frame_133.jpg",
+    "t": 1776907171687,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 4,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 237,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 134,
+    "elapsed": 832119,
+    "action": "gatling_dual",
+    "shot": "frame_134.jpg",
+    "t": 1776907178569,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.75,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 238,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 135,
+    "elapsed": 838194,
+    "action": "gatling_L",
+    "shot": "frame_135.jpg",
+    "t": 1776907184952,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 238,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 136,
+    "elapsed": 844362,
+    "action": "gatling_R",
+    "shot": "frame_136.jpg",
+    "t": 1776907190844,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 237,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 137,
+    "elapsed": 850632,
+    "action": "forward",
+    "shot": "frame_137.jpg",
+    "t": 1776907197012,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 237,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 138,
+    "elapsed": 857208,
+    "action": "back",
+    "shot": "frame_138.jpg",
+    "t": 1776907203271,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 139,
+    "elapsed": 863850,
+    "action": "left",
+    "shot": "frame_139.jpg",
+    "t": 1776907209858,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 140,
+    "elapsed": 870463,
+    "action": "right",
+    "shot": "frame_140.jpg",
+    "t": 1776907217007,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 141,
+    "elapsed": 876897,
+    "action": "boost",
+    "shot": "frame_141.jpg",
+    "t": 1776907223091,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 142,
+    "elapsed": 882973,
+    "action": "reload",
+    "shot": "frame_142.jpg",
+    "t": 1776907229554,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 143,
+    "elapsed": 889065,
+    "action": "target",
+    "shot": "frame_143.jpg",
+    "t": 1776907235605,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 144,
+    "elapsed": 895336,
+    "action": "laser",
+    "shot": "frame_144.jpg",
+    "t": 1776907241700,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 1,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 145,
+    "elapsed": 902438,
+    "action": "railgun",
+    "shot": "frame_145.jpg",
+    "t": 1776907247998,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 146,
+    "elapsed": 908748,
+    "action": "gatling_dual",
+    "shot": "frame_146.jpg",
+    "t": 1776907255092,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.98659999999404,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 239,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 147,
+    "elapsed": 915070,
+    "action": "gatling_L",
+    "shot": "frame_147.jpg",
+    "t": 1776907261376,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 240,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 148,
+    "elapsed": 921345,
+    "action": "gatling_R",
+    "shot": "frame_148.jpg",
+    "t": 1776907267732,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 238,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 149,
+    "elapsed": 927752,
+    "action": "forward",
+    "shot": "frame_149.jpg",
+    "t": 1776907273976,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 238,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 150,
+    "elapsed": 934468,
+    "action": "back",
+    "shot": "frame_150.jpg",
+    "t": 1776907280390,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 237,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 151,
+    "elapsed": 941873,
+    "action": "left",
+    "shot": "frame_151.jpg",
+    "t": 1776907287126,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 236,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 152,
+    "elapsed": 948615,
+    "action": "right",
+    "shot": "frame_152.jpg",
+    "t": 1776907294508,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 153,
+    "elapsed": 954883,
+    "action": "boost",
+    "shot": "frame_153.jpg",
+    "t": 1776907301262,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 154,
+    "elapsed": 961208,
+    "action": "reload",
+    "shot": "frame_154.jpg",
+    "t": 1776907307543,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 155,
+    "elapsed": 967464,
+    "action": "target",
+    "shot": "frame_155.jpg",
+    "t": 1776907313849,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 156,
+    "elapsed": 973660,
+    "action": "laser",
+    "shot": "frame_156.jpg",
+    "t": 1776907320099,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 157,
+    "elapsed": 979936,
+    "action": "railgun",
+    "shot": "frame_157.jpg",
+    "t": 1776907326295,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 3,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 158,
+    "elapsed": 986240,
+    "action": "gatling_dual",
+    "shot": "frame_158.jpg",
+    "t": 1776907332564,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 2,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 237,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 159,
+    "elapsed": 992041,
+    "action": "gatling_L",
+    "shot": "frame_159.jpg",
+    "t": 1776907338956,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 100,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 1,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 160,
+    "elapsed": 998047,
+    "action": "gatling_R",
+    "shot": "frame_160.jpg",
+    "t": 1776907344678,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 1,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 161,
+    "elapsed": 1004380,
+    "action": "forward",
+    "shot": "frame_161.jpg",
+    "t": 1776907351092,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 1,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 162,
+    "elapsed": 1010225,
+    "action": "back",
+    "shot": "frame_162.jpg",
+    "t": 1776907357065,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 1,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 163,
+    "elapsed": 1015818,
+    "action": "left",
+    "shot": "frame_163.jpg",
+    "t": 1776907362851,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 1,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 164,
+    "elapsed": 1021485,
+    "action": "right",
+    "shot": "frame_164.jpg",
+    "t": 1776907368484,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 1,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 230,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 165,
+    "elapsed": 1026960,
+    "action": "boost",
+    "shot": "frame_165.jpg",
+    "t": 1776907374143,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 166,
+    "elapsed": 1032645,
+    "action": "reload",
+    "shot": "frame_166.jpg",
+    "t": 1776907379600,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 167,
+    "elapsed": 1038215,
+    "action": "target",
+    "shot": "frame_167.jpg",
+    "t": 1776907385279,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 168,
+    "elapsed": 1043661,
+    "action": "laser",
+    "shot": "frame_168.jpg",
+    "t": 1776907391007,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 169,
+    "elapsed": 1049387,
+    "action": "railgun",
+    "shot": "frame_169.jpg",
+    "t": 1776907396285,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 230,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 170,
+    "elapsed": 1055388,
+    "action": "gatling_dual",
+    "shot": "frame_170.jpg",
+    "t": 1776907402010,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 171,
+    "elapsed": 1061313,
+    "action": "gatling_L",
+    "shot": "frame_171.jpg",
+    "t": 1776907408197,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 172,
+    "elapsed": 1067047,
+    "action": "gatling_R",
+    "shot": "frame_172.jpg",
+    "t": 1776907414201,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 173,
+    "elapsed": 1072780,
+    "action": "forward",
+    "shot": "frame_173.jpg",
+    "t": 1776907419710,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 174,
+    "elapsed": 1078885,
+    "action": "back",
+    "shot": "frame_174.jpg",
+    "t": 1776907425407,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 175,
+    "elapsed": 1084804,
+    "action": "left",
+    "shot": "frame_175.jpg",
+    "t": 1776907431539,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 176,
+    "elapsed": 1090689,
+    "action": "right",
+    "shot": "frame_176.jpg",
+    "t": 1776907437439,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 177,
+    "elapsed": 1096442,
+    "action": "boost",
+    "shot": "frame_177.jpg",
+    "t": 1776907443369,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 178,
+    "elapsed": 1102184,
+    "action": "reload",
+    "shot": "frame_178.jpg",
+    "t": 1776907449102,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 179,
+    "elapsed": 1108162,
+    "action": "target",
+    "shot": "frame_179.jpg",
+    "t": 1776907454827,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 180,
+    "elapsed": 1114451,
+    "action": "laser",
+    "shot": "frame_180.jpg",
+    "t": 1776907460884,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.04,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 181,
+    "elapsed": 1120433,
+    "action": "railgun",
+    "shot": "frame_181.jpg",
+    "t": 1776907467080,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 182,
+    "elapsed": 1126185,
+    "action": "gatling_dual",
+    "shot": "frame_182.jpg",
+    "t": 1776907473108,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 6,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 235,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 183,
+    "elapsed": 1131812,
+    "action": "gatling_L",
+    "shot": "frame_183.jpg",
+    "t": 1776907478821,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 236,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 184,
+    "elapsed": 1137434,
+    "action": "gatling_R",
+    "shot": "frame_184.jpg",
+    "t": 1776907484453,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 185,
+    "elapsed": 1143180,
+    "action": "forward",
+    "shot": "frame_185.jpg",
+    "t": 1776907490078,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 7,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 236,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 186,
+    "elapsed": 1148949,
+    "action": "back",
+    "shot": "frame_186.jpg",
+    "t": 1776907495812,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 234,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 187,
+    "elapsed": 1154740,
+    "action": "left",
+    "shot": "frame_187.jpg",
+    "t": 1776907501576,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 188,
+    "elapsed": 1160491,
+    "action": "right",
+    "shot": "frame_188.jpg",
+    "t": 1776907507372,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 189,
+    "elapsed": 1166419,
+    "action": "boost",
+    "shot": "frame_189.jpg",
+    "t": 1776907513122,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 0,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 190,
+    "elapsed": 1172647,
+    "action": "reload",
+    "shot": "frame_190.jpg",
+    "t": 1776907519085,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 191,
+    "elapsed": 1178677,
+    "action": "target",
+    "shot": "frame_191.jpg",
+    "t": 1776907525491,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 1000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 2,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 192,
+    "elapsed": 1184681,
+    "action": "laser",
+    "shot": "frame_192.jpg",
+    "t": 1776907531365,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.03,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 193,
+    "elapsed": 1190478,
+    "action": "railgun",
+    "shot": "frame_193.jpg",
+    "t": 1776907537302,
+    "screen": "screen-gunner",
+    "activeWeapon": "railgun",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 232,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 194,
+    "elapsed": 1196164,
+    "action": "gatling_dual",
+    "shot": "frame_194.jpg",
+    "t": 1776907543114,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_dual",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 4,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 195,
+    "elapsed": 1201919,
+    "action": "gatling_L",
+    "shot": "frame_195.jpg",
+    "t": 1776907548802,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_left",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 196,
+    "elapsed": 1207546,
+    "action": "gatling_R",
+    "shot": "frame_196.jpg",
+    "t": 1776907554567,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 197,
+    "elapsed": 1213048,
+    "action": "forward",
+    "shot": "frame_197.jpg",
+    "t": 1776907560180,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 5,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 233,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 198,
+    "elapsed": 1218802,
+    "action": "back",
+    "shot": "frame_198.jpg",
+    "t": 1776907565730,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 231,
+      "threeReady": true
+    }
+  },
+  {
+    "index": 199,
+    "elapsed": 1224381,
+    "action": "left",
+    "shot": "frame_199.jpg",
+    "t": 1776907571438,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  }
+]

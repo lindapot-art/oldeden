@@ -1,0 +1,41 @@
+
+═══ Visual QA Gameplay Series 2026-04-23T00-09-50-457Z ═══
+
+[1] Loading http://localhost:3847 ...
+  Screen: screen-title
+  New Game btn: exists=true visible=true
+  window.state: false, window.c: false
+
+[2] Clicking New Game ...
+  Click: true
+  Screen: screen-create
+  Pilot input: true, Launch btn visible: false
+
+[3] Filling pilot name = "TestPilot" ...
+  Clicking Launch ...
+  Click: true
+  Screen: screen-create
+  Bridge active: false, Gunner active: false
+  Game canvas visible: true
+
+[5] Testing weapons (keys 1-9) ...
+  Current screen: screen-create
+  window.state: null
+  window.c: null
+  gatlingSpinning: undefined
+  scene children: undefined
+
+[6] Looking for FIRE button and clicking it 5x ...
+  FIRE button: {"found":true,"visible":false,"position":{"x":0,"y":0}}
+
+══ ERRORS ══
+JS errors: 2
+  - Cannot read properties of undefined (reading 'position')
+  - Error creating WebGL context.
+Console errors: 12
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+  - THREE.WebGLRenderer: Error creating WebGL context.
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+Resource 404s: 0

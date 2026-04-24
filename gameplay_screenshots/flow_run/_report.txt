@@ -1,0 +1,31 @@
+Screenshot Flow Run - 2026-04-22T07:00:37.271Z
+Screenshots: 26
+JS errors: 0
+
+Flow:
+001 [screen-title] 01_title_screen_loaded
+002 [screen-title] 02_title_after_5s
+003 [screen-create] 03_create_screen
+004 [screen-create] 04_create_after_5s
+005 [screen-create] 05_faction_selected
+006 [screen-create] 06_name_entered
+007 [screen-bridge] 07_bridge_initial
+008 [screen-bridge] 08_bridge_after_5s
+009 [screen-starmap] 09_nav_Map
+010 [screen-starmap] 10_nav_Map_after_5s
+011 [screen-station] 09_nav_Station
+012 [screen-station] 10_nav_Station_after_5s
+013 [screen-character] 09_nav_Pilot
+014 [screen-create-holo] 10_nav_Pilot_after_5s
+015 [screen-create-holo] 09_nav_Market
+016 [screen-create-holo] 10_nav_Market_after_5s
+017 [screen-create-holo] 09_nav_Ship
+018 [screen-create-holo] 10_nav_Ship_after_5s
+019 [screen-create-holo] 09_nav_Settings
+020 [screen-create-holo] 10_nav_Settings_after_5s
+021 [screen-create-holo] 09_nav_Bridge
+022 [screen-create-holo] 10_nav_Bridge_after_5s
+023 [screen-gunner] 11_space_launch
+024 [screen-gunner] 12_space_after_5s
+025 [screen-gunner] 13_space_after_10s
+026 [screen-gunner] 14_no_gunner

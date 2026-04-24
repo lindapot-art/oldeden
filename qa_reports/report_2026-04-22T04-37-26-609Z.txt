@@ -1,0 +1,310 @@
+QA BOARD REPORT
+Timestamp: 2026-04-22T04:37:26.611Z
+URL: http://localhost:3847
+Source: D:\antiruscist\oldeden\public\index.html
+
+──────────────────────────────────────────────────
+  QA-Code (Source Integrity)
+──────────────────────────────────────────────────
+[QA-Code] ✔ PASS: public/index.html exists
+[QA-Code] ✔ PASS: Braces balanced: 4865/4865
+[QA-Code] ✔ PASS: Parens balanced: 14419/14419
+[QA-Code] ✔ PASS: Brackets balanced: 1040/1040
+[QA-Code] ✔ PASS: Marker found: DOCTYPE
+[QA-Code] ✔ PASS: Marker found: Three.js import
+[QA-Code] ✔ PASS: Marker found: GLTFLoader import
+[QA-Code] ✔ PASS: Marker found: Socket.IO
+[QA-Code] ✔ PASS: Marker found: Karma Wheel
+[QA-Code] ✔ PASS: Marker found: Rebirth system
+[QA-Code] ✔ PASS: Marker found: Game canvas
+[QA-Code] ✔ PASS: Marker found: HUD canvas
+[QA-Code] ✔ PASS: Line count: 21256 (healthy)
+[QA-Code] ✔ PASS: SHA-256 hash: f4e7832265311968
+
+──────────────────────────────────────────────────
+  QA-API (Server Health & Endpoints)
+──────────────────────────────────────────────────
+[QA-API] ✔ PASS: GET / — HTTP 200
+[QA-API] ✔ PASS: Content-Type: text/html; charset=UTF-8
+[QA-API] ✔ PASS: Response body contains DOCTYPE and title
+[QA-API] ⚠ WARN: Socket.IO polling — HTTP 400 (may need session)
+[QA-API] ✔ PASS: Static /3d/glb/ responds — HTTP 200
+
+──────────────────────────────────────────────────
+  QA-Visual (Screenshots & Visual Structure)
+──────────────────────────────────────────────────
+[QA-Visual] ✔ PASS: Title screen screenshot: title_2026-04-22T04-37-26-609Z.png
+[QA-Visual] ✔ PASS: Viewport OK: 1280x900
+[QA-Visual] ✔ PASS: CSS vars loaded — bg:#0a0a0f gold:#e0b15f
+[QA-Visual] ✔ PASS: QA UNVERIFIED banner is visible (as expected for fresh build)
+[QA-Visual] ✔ PASS: Title "OLD EDEN" heading visible
+
+──────────────────────────────────────────────────
+  QA-Runtime (WebGL & JS Errors)
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: WebGL context healthy
+[QA-Runtime] ✔ PASS: No 3D engine error banner in DOM
+[QA-Runtime] ✔ PASS: Runtime screenshot: runtime_2026-04-22T04-37-26-609Z.png
+
+──────────────────────────────────────────────────
+  QA-UX (DOM & Interactivity)
+──────────────────────────────────────────────────
+[QA-UX] ✔ PASS: Title Screen (#screen-title) — found, visible
+[QA-UX] ✔ PASS: Bridge Screen (#screen-bridge) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Character Creation (#screen-create) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Settings Screen (#screen-settings) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Rebirth Screen (#screen-rebirth) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Karma Wheel (#screen-karma) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Eulogy Screen (#screen-eulogy) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Market Screen (#screen-market) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: New Game Button (#btn-new) — found, visible
+[QA-UX] ✔ PASS: Settings Button (#btn-settings) — found, visible
+[QA-UX] ✔ PASS: Game Canvas (#game-canvas) — found, visible
+[QA-UX] ✔ PASS: HUD Canvas (#hud-canvas) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: QA Banner (#qa-unverified-banner) — found, visible
+[QA-UX] ✔ PASS: New Game button is clickable
+[QA-UX] ✔ PASS: Post-click screenshot: create_screen_2026-04-22T04-37-26-609Z.png
+[QA-UX] ✔ PASS: Gameplay/overlay screenshot: gameplay_screen_2026-04-22T04-37-26-609Z.png
+[QA-UX] ✔ PASS: Mission/quest overlay is visible in gameplay
+
+──────────────────────────────────────────────────
+  JS Errors Summary
+──────────────────────────────────────────────────
+[QA-Runtime] ✘ FAIL: 222 FATAL JS errors:
+  1. AIChatbot is not defined
+  2. AIChatbot is not defined
+  3. AIChatbot is not defined
+  4. AIChatbot is not defined
+  5. AIChatbot is not defined
+  6. AIChatbot is not defined
+  7. AIChatbot is not defined
+  8. AIChatbot is not defined
+  9. AIChatbot is not defined
+  10. AIChatbot is not defined
+  11. AIChatbot is not defined
+  12. AIChatbot is not defined
+  13. AIChatbot is not defined
+  14. AIChatbot is not defined
+  15. AIChatbot is not defined
+  16. AIChatbot is not defined
+  17. AIChatbot is not defined
+  18. AIChatbot is not defined
+  19. AIChatbot is not defined
+  20. AIChatbot is not defined
+  21. AIChatbot is not defined
+  22. AIChatbot is not defined
+  23. AIChatbot is not defined
+  24. AIChatbot is not defined
+  25. AIChatbot is not defined
+  26. AIChatbot is not defined
+  27. AIChatbot is not defined
+  28. AIChatbot is not defined
+  29. AIChatbot is not defined
+  30. AIChatbot is not defined
+  31. AIChatbot is not defined
+  32. AIChatbot is not defined
+  33. AIChatbot is not defined
+  34. AIChatbot is not defined
+  35. AIChatbot is not defined
+  36. AIChatbot is not defined
+  37. AIChatbot is not defined
+  38. AIChatbot is not defined
+  39. AIChatbot is not defined
+  40. AIChatbot is not defined
+  41. AIChatbot is not defined
+  42. AIChatbot is not defined
+  43. AIChatbot is not defined
+  44. AIChatbot is not defined
+  45. AIChatbot is not defined
+  46. AIChatbot is not defined
+  47. AIChatbot is not defined
+  48. AIChatbot is not defined
+  49. AIChatbot is not defined
+  50. AIChatbot is not defined
+  51. AIChatbot is not defined
+  52. AIChatbot is not defined
+  53. AIChatbot is not defined
+  54. AIChatbot is not defined
+  55. AIChatbot is not defined
+  56. AIChatbot is not defined
+  57. AIChatbot is not defined
+  58. AIChatbot is not defined
+  59. AIChatbot is not defined
+  60. AIChatbot is not defined
+  61. AIChatbot is not defined
+  62. AIChatbot is not defined
+  63. AIChatbot is not defined
+  64. AIChatbot is not defined
+  65. AIChatbot is not defined
+  66. AIChatbot is not defined
+  67. AIChatbot is not defined
+  68. AIChatbot is not defined
+  69. AIChatbot is not defined
+  70. AIChatbot is not defined
+  71. AIChatbot is not defined
+  72. AIChatbot is not defined
+  73. AIChatbot is not defined
+  74. AIChatbot is not defined
+  75. AIChatbot is not defined
+  76. AIChatbot is not defined
+  77. AIChatbot is not defined
+  78. AIChatbot is not defined
+  79. AIChatbot is not defined
+  80. AIChatbot is not defined
+  81. AIChatbot is not defined
+  82. AIChatbot is not defined
+  83. AIChatbot is not defined
+  84. AIChatbot is not defined
+  85. AIChatbot is not defined
+  86. AIChatbot is not defined
+  87. AIChatbot is not defined
+  88. AIChatbot is not defined
+  89. AIChatbot is not defined
+  90. AIChatbot is not defined
+  91. AIChatbot is not defined
+  92. AIChatbot is not defined
+  93. AIChatbot is not defined
+  94. AIChatbot is not defined
+  95. AIChatbot is not defined
+  96. AIChatbot is not defined
+  97. AIChatbot is not defined
+  98. AIChatbot is not defined
+  99. AIChatbot is not defined
+  100. AIChatbot is not defined
+  101. AIChatbot is not defined
+  102. AIChatbot is not defined
+  103. AIChatbot is not defined
+  104. AIChatbot is not defined
+  105. AIChatbot is not defined
+  106. AIChatbot is not defined
+  107. AIChatbot is not defined
+  108. AIChatbot is not defined
+  109. AIChatbot is not defined
+  110. AIChatbot is not defined
+  111. AIChatbot is not defined
+  112. AIChatbot is not defined
+  113. AIChatbot is not defined
+  114. AIChatbot is not defined
+  115. AIChatbot is not defined
+  116. AIChatbot is not defined
+  117. AIChatbot is not defined
+  118. AIChatbot is not defined
+  119. AIChatbot is not defined
+  120. AIChatbot is not defined
+  121. AIChatbot is not defined
+  122. AIChatbot is not defined
+  123. AIChatbot is not defined
+  124. AIChatbot is not defined
+  125. AIChatbot is not defined
+  126. AIChatbot is not defined
+  127. AIChatbot is not defined
+  128. AIChatbot is not defined
+  129. AIChatbot is not defined
+  130. AIChatbot is not defined
+  131. AIChatbot is not defined
+  132. AIChatbot is not defined
+  133. AIChatbot is not defined
+  134. AIChatbot is not defined
+  135. AIChatbot is not defined
+  136. AIChatbot is not defined
+  137. AIChatbot is not defined
+  138. AIChatbot is not defined
+  139. AIChatbot is not defined
+  140. AIChatbot is not defined
+  141. AIChatbot is not defined
+  142. AIChatbot is not defined
+  143. AIChatbot is not defined
+  144. AIChatbot is not defined
+  145. AIChatbot is not defined
+  146. AIChatbot is not defined
+  147. AIChatbot is not defined
+  148. AIChatbot is not defined
+  149. AIChatbot is not defined
+  150. AIChatbot is not defined
+  151. AIChatbot is not defined
+  152. AIChatbot is not defined
+  153. AIChatbot is not defined
+  154. AIChatbot is not defined
+  155. AIChatbot is not defined
+  156. AIChatbot is not defined
+  157. AIChatbot is not defined
+  158. AIChatbot is not defined
+  159. AIChatbot is not defined
+  160. AIChatbot is not defined
+  161. AIChatbot is not defined
+  162. AIChatbot is not defined
+  163. AIChatbot is not defined
+  164. AIChatbot is not defined
+  165. AIChatbot is not defined
+  166. AIChatbot is not defined
+  167. AIChatbot is not defined
+  168. AIChatbot is not defined
+  169. AIChatbot is not defined
+  170. AIChatbot is not defined
+  171. AIChatbot is not defined
+  172. AIChatbot is not defined
+  173. AIChatbot is not defined
+  174. AIChatbot is not defined
+  175. AIChatbot is not defined
+  176. AIChatbot is not defined
+  177. AIChatbot is not defined
+  178. AIChatbot is not defined
+  179. AIChatbot is not defined
+  180. AIChatbot is not defined
+  181. AIChatbot is not defined
+  182. AIChatbot is not defined
+  183. AIChatbot is not defined
+  184. AIChatbot is not defined
+  185. AIChatbot is not defined
+  186. AIChatbot is not defined
+  187. AIChatbot is not defined
+  188. AIChatbot is not defined
+  189. AIChatbot is not defined
+  190. AIChatbot is not defined
+  191. AIChatbot is not defined
+  192. AIChatbot is not defined
+  193. AIChatbot is not defined
+  194. AIChatbot is not defined
+  195. AIChatbot is not defined
+  196. AIChatbot is not defined
+  197. AIChatbot is not defined
+  198. AIChatbot is not defined
+  199. AIChatbot is not defined
+  200. AIChatbot is not defined
+  201. AIChatbot is not defined
+  202. AIChatbot is not defined
+  203. AIChatbot is not defined
+  204. AIChatbot is not defined
+  205. AIChatbot is not defined
+  206. AIChatbot is not defined
+  207. AIChatbot is not defined
+  208. AIChatbot is not defined
+  209. AIChatbot is not defined
+  210. AIChatbot is not defined
+  211. AIChatbot is not defined
+  212. AIChatbot is not defined
+  213. AIChatbot is not defined
+  214. AIChatbot is not defined
+  215. AIChatbot is not defined
+  216. AIChatbot is not defined
+  217. AIChatbot is not defined
+  218. AIChatbot is not defined
+  219. AIChatbot is not defined
+  220. AIChatbot is not defined
+  221. AIChatbot is not defined
+  222. AIChatbot is not defined
+
+──────────────────────────────────────────────────
+  FINAL VERDICTS
+──────────────────────────────────────────────────
+✔ APPROVED  QA-Code
+✔ APPROVED  QA-API
+✔ APPROVED  QA-Visual
+✘ REJECTED  QA-Runtime
+✔ APPROVED  QA-UX
+
+══════════════════════════════════════════════════
+OVERALL: REJECTED — FIX AND RE-RUN
+Hash: f4e7832265311968
+Screenshots: D:\antiruscist\oldeden\qa_reports\screenshots
+Timestamp: 2026-04-22T04:37:39.007Z

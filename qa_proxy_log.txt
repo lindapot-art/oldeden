@@ -1,0 +1,99 @@
+[2026-04-05T06:07:31.120Z] FAIL | hash:42040053aae20286 | errors:9 | webgl:CRASH | dom:MISSING
+[2026-04-05T06:08:23.112Z] FAIL | hash:42040053aae20286 | errors:9 | webgl:CRASH | dom:MISSING
+[2026-04-05T06:08:52.511Z] FAIL | hash:42040053aae20286 | errors:9 | webgl:CRASH | dom:MISSING
+[2026-04-05T06:09:33.837Z] FAIL | hash:42040053aae20286 | errors:0 | webgl:OK | dom:MISSING
+[2026-04-05T06:10:38.199Z] PASS | hash:42040053aae20286 | errors:0 | webgl:OK | dom:OK
+[2026-04-05T06:17:59.967Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:42040053aae20286
+[2026-04-05T06:32:14.790Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:42040053aae20286
+[2026-04-05T06:46:49.082Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:a5115be2ed8d31ae
+[2026-04-05T06:53:35.338Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1118647b8f639bc7
+[2026-04-05T06:58:43.685Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1118647b8f639bc7
+[2026-04-05T07:09:49.583Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:ad34f24b325676a6
+[2026-04-05T07:29:24.461Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1e463a2ffa029216
+[2026-04-05T07:30:46.037Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:a6ebdb0e89d923a1
+[2026-04-05T07:39:54.948Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:886d11214cc0a58f
+[2026-04-05T07:55:49.144Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:6e4d074effdb6e06
+[2026-04-05T08:03:54.117Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:b316954181dfb55d
+[2026-04-05T08:42:08.808Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:bf11c0901f13f010
+[2026-04-05T08:58:56.317Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:e99d095127b771f7
+[2026-04-05T09:07:24.645Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:0c43c3e1409e7191
+[2026-04-05T09:12:53.551Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:109f33dc82ee3201
+[2026-04-05T09:33:46.032Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:FAIL QA-UX:OK | hash:6be817915894ddd4
+[2026-04-05T09:36:53.024Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:FAIL QA-UX:OK | hash:edae910df5a2e8c4
+[2026-04-05T09:39:55.982Z] FAIL | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:FAIL QA-UX:OK | hash:9473c68ed5ffe59c
+[2026-04-05T09:41:26.633Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:73fe0aaa5d039718
+[2026-04-05T09:49:37.092Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:258eb0c6462df8cf
+[2026-04-05T10:07:02.389Z] FAIL | board:5/5 | QA-Code:FAIL QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:9cb7733b2e93f78b
+[2026-04-05T10:09:10.808Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:00d93eb686f03a00
+[2026-04-05T10:30:07.184Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:50b42a85e34327fd
+[2026-04-05T10:39:12.688Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:105893031ffe661f
+[2026-04-05T10:46:48.975Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:5dc2173a3348d930
+[2026-04-05T10:50:14.235Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:874fce1219bc722e
+[2026-04-05T10:58:42.586Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:e592a6e278376bcc
+[2026-04-05T11:05:06.832Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4c8c97c78390c2e7
+[2026-04-05T11:11:38.448Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:bf5b3fe126679323
+[2026-04-05T11:25:36.934Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:5e1e2132ebb5d311
+[2026-04-05T11:52:26.014Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:122639947511b37d
+[2026-04-05T12:03:33.505Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:ac692f12e5e06b16
+[2026-04-05T12:13:03.176Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:cdf6f64ba56700e6
+[2026-04-05T12:27:32.268Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:2badbfec434611cd
+[2026-04-05T12:35:08.835Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:d360af879891a13d
+[2026-04-05T12:42:22.901Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:13baaa5cd0d96c29
+[2026-04-05T12:50:14.740Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1df74ff4982432c5
+[2026-04-05T12:58:42.752Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:695fcd5a50cb6b02
+[2026-04-05T13:10:01.613Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:7d0a5e86ff41da43
+[2026-04-05T13:22:58.272Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:938ae47710aa5376
+[2026-04-05T13:37:30.764Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:853fbad9269fd7ce
+[2026-04-05T13:51:16.421Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:e67d9b349b2e5db3
+[2026-04-05T14:03:13.712Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:f95595ce1f75d588
+[2026-04-05T14:18:12.835Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:6b87ddd7a3ac5bbb
+[2026-04-05T14:35:56.070Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:d472de5893cfd72f
+[2026-04-05T14:49:43.494Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:95149c210b19cad3
+[2026-04-05T15:06:50.181Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:df39965100881733
+[2026-04-05T15:28:08.470Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:157258890a3d7b57
+[2026-04-05T16:10:29.912Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:6ef0cceaaf2870e9
+[2026-04-05T16:38:56.642Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:bd5a668f02079daf
+[2026-04-05T16:55:08.337Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:e4718ebd07571923
+[2026-04-05T17:12:21.491Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:16329b9bd5eb35f8
+[2026-04-05T17:39:37.649Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:e769c3642549a3f9
+[2026-04-05T17:59:17.780Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:085f44c98d7faaaa
+[2026-04-05T18:12:52.984Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:b477d9e326117d16
+[2026-04-05T19:01:50.340Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:65a036257f5cbf6b
+[2026-04-05T19:08:37.336Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:96413a10ebb9bf6a
+[2026-04-05T19:20:49.619Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:29875aa31b713225
+[2026-04-05T19:28:49.191Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:5197079d850524f7
+[2026-04-05T19:38:47.073Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:52ecf770c442aba8
+[2026-04-05T19:54:57.960Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:49747e05a2af6ed8
+[2026-04-05T20:00:11.921Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:536cee144ce6494b
+[2026-04-05T20:04:15.685Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:536cee144ce6494b
+[2026-04-05T20:10:43.603Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:536cee144ce6494b
+[2026-04-05T20:21:15.775Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:536cee144ce6494b
+[2026-04-05T21:17:38.854Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:1b96a966b566e611
+[2026-04-05T21:48:51.891Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:6ae45b23c1f3c9c6
+[2026-04-05T22:06:44.170Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:de05223547a656e4
+[2026-04-05T22:21:49.627Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:de05223547a656e4
+[2026-04-05T22:37:34.563Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:225910f92501c5a8
+[2026-04-05T22:45:25.420Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:5f54e0378631e8c3
+[2026-04-05T22:45:57.741Z] PASS | hash:5f54e0378631e8c3 | errors:0 | webgl:OK | dom:OK
+[2026-04-05T23:01:45.467Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:b6787f523956ae7f
+[2026-04-05T23:09:54.596Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:2b0e8c0864f693b4
+[2026-04-05T23:10:24.638Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:2b0e8c0864f693b4
+[2026-04-05T23:10:44.257Z] PASS | hash:2b0e8c0864f693b4 | errors:0 | webgl:OK | dom:OK
+[2026-04-05T23:25:29.563Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:193d710393d80f0b
+[2026-04-05T23:26:26.813Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:193d710393d80f0b
+[2026-04-05T23:26:53.631Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:193d710393d80f0b
+[2026-04-05T23:27:12.904Z] PASS | hash:193d710393d80f0b | errors:0 | webgl:OK | dom:OK
+[2026-04-06T07:23:47.104Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:c33cf958fd274fca
+[2026-04-06T07:24:22.289Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:c33cf958fd274fca
+[2026-04-06T07:24:54.549Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:c33cf958fd274fca
+[2026-04-06T07:25:14.243Z] PASS | hash:c33cf958fd274fca | errors:0 | webgl:OK | dom:OK
+[2026-04-06T07:54:57.060Z] PASS | hash:c33cf958fd274fca | errors:0 | webgl:OK | dom:OK
+[2026-04-06T08:09:06.264Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:f085138860316083
+[2026-04-06T08:11:17.806Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:f085138860316083
+[2026-04-06T08:11:58.234Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:f085138860316083
+[2026-04-06T08:12:20.987Z] PASS | hash:f085138860316083 | errors:0 | webgl:OK | dom:OK
+[2026-04-06T08:39:27.412Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4bd9192ec0c050bd
+[2026-04-06T08:39:53.491Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4bd9192ec0c050bd
+[2026-04-06T08:40:18.342Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4bd9192ec0c050bd
+[2026-04-06T08:40:34.146Z] PASS | hash:4bd9192ec0c050bd | errors:0 | webgl:OK | dom:OK
+[2026-04-06T08:45:47.665Z] PASS | board:5/5 | QA-Code:OK QA-API:OK QA-Visual:OK QA-Runtime:OK QA-UX:OK | hash:4bd9192ec0c050bd

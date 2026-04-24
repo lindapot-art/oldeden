@@ -1,0 +1,88 @@
+QA BOARD REPORT
+Timestamp: 2026-04-14T09:37:29.100Z
+URL: http://localhost:3847
+Source: D:\antiruscist\oldeden\public\index.html
+
+──────────────────────────────────────────────────
+  QA-Code (Source Integrity)
+──────────────────────────────────────────────────
+[QA-Code] ✔ PASS: public/index.html exists
+[QA-Code] ✘ FAIL: Braces MISMATCH: 2760 open vs 2762 close
+[QA-Code] ✘ FAIL: Parens MISMATCH: 8110 open vs 8111 close
+[QA-Code] ✔ PASS: Brackets balanced: 554/554
+[QA-Code] ✔ PASS: Marker found: DOCTYPE
+[QA-Code] ✔ PASS: Marker found: Three.js import
+[QA-Code] ✔ PASS: Marker found: GLTFLoader import
+[QA-Code] ✔ PASS: Marker found: Socket.IO
+[QA-Code] ✔ PASS: Marker found: Karma Wheel
+[QA-Code] ✔ PASS: Marker found: Rebirth system
+[QA-Code] ✔ PASS: Marker found: Game canvas
+[QA-Code] ✔ PASS: Marker found: HUD canvas
+[QA-Code] ✔ PASS: Line count: 10493 (healthy)
+[QA-Code] ✔ PASS: SHA-256 hash: a026120425028bfe
+
+──────────────────────────────────────────────────
+  QA-API (Server Health & Endpoints)
+──────────────────────────────────────────────────
+[QA-API] ✔ PASS: GET / — HTTP 200
+[QA-API] ✔ PASS: Content-Type: text/html; charset=UTF-8
+[QA-API] ✘ FAIL: Response body missing expected HTML structure
+[QA-API] ⚠ WARN: Socket.IO polling — HTTP 400 (may need session)
+[QA-API] ✔ PASS: Static /3d/glb/ responds — HTTP 200
+
+──────────────────────────────────────────────────
+  QA-Visual (Screenshots & Visual Structure)
+──────────────────────────────────────────────────
+[QA-Visual] ✔ PASS: Title screen screenshot: title_2026-04-14T09-37-29-097Z.png
+[QA-Visual] ✔ PASS: Viewport OK: 1280x900
+[QA-Visual] ✔ PASS: CSS vars loaded — bg:#0a0a0f gold:#d4a856
+[QA-Visual] ✔ PASS: QA UNVERIFIED banner is visible (as expected for fresh build)
+[QA-Visual] ✘ FAIL: Title heading not visible or missing
+
+──────────────────────────────────────────────────
+  QA-Runtime (WebGL & JS Errors)
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: WebGL context healthy
+[QA-Runtime] ✘ FAIL: Error banner found: "CAPTAIN'S QUARTERS
+  Your personal space — achievements, stats, and ship overvie"
+[QA-Runtime] ✔ PASS: Runtime screenshot: runtime_2026-04-14T09-37-29-097Z.png
+
+──────────────────────────────────────────────────
+  QA-UX (DOM & Interactivity)
+──────────────────────────────────────────────────
+[QA-UX] ✘ FAIL: Title Screen (#screen-title) — MISSING
+[QA-UX] ✔ PASS: Bridge Screen (#screen-bridge) — found, hidden (ok for non-active screens)
+[QA-UX] ✘ FAIL: Character Creation (#screen-create) — MISSING
+[QA-UX] ✔ PASS: Settings Screen (#screen-settings) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Rebirth Screen (#screen-rebirth) — found, hidden (ok for non-active screens)
+[QA-UX] ✘ FAIL: Karma Wheel (#screen-karma) — MISSING
+[QA-UX] ✔ PASS: Eulogy Screen (#screen-eulogy) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Market Screen (#screen-market) — found, hidden (ok for non-active screens)
+[QA-UX] ✘ FAIL: New Game Button (#btn-new) — MISSING
+[QA-UX] ✘ FAIL: Settings Button (#btn-settings) — MISSING
+[QA-UX] ✘ FAIL: Game Canvas (#game-canvas) — MISSING
+[QA-UX] ✘ FAIL: HUD Canvas (#hud-canvas) — MISSING
+[QA-UX] ✔ PASS: QA Banner (#qa-unverified-banner) — found, visible
+[QA-UX] ✘ FAIL: New Game button not clickable or missing
+[QA-UX] ⚠ WARN: Click/transition test failed: No element found for selector: #btn-new
+
+──────────────────────────────────────────────────
+  JS Errors Summary
+──────────────────────────────────────────────────
+[QA-Runtime] ✘ FAIL: 1 FATAL JS errors:
+  1. Cannot read properties of null (reading 'appendChild')
+
+──────────────────────────────────────────────────
+  FINAL VERDICTS
+──────────────────────────────────────────────────
+✘ REJECTED  QA-Code
+✘ REJECTED  QA-API
+✘ REJECTED  QA-Visual
+✘ REJECTED  QA-Runtime
+✘ REJECTED  QA-UX
+
+══════════════════════════════════════════════════
+OVERALL: REJECTED — FIX AND RE-RUN
+Hash: a026120425028bfe
+Screenshots: D:\antiruscist\oldeden\qa_reports\screenshots
+Timestamp: 2026-04-14T09:37:44.696Z

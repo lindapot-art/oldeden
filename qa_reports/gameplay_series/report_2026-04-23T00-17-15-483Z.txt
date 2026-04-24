@@ -1,0 +1,46 @@
+
+═══ Visual QA Gameplay Series 2026-04-23T00-17-15-483Z ═══
+
+[1] Loading http://localhost:3847 ...
+  Screen: screen-title
+  New Game btn: exists=true visible=true
+  window.state: false, window.c: false
+
+[2] Clicking New Game ...
+  Click: true
+  Screen: screen-create
+  Pilot input: true, Launch btn visible: false
+
+[3a] Filling pilot name = "TestPilot" ...
+  [3b] Selecting first faction card ...
+  Faction cards: 8, selected: true
+  [3c] Clicking Create Pilot (btn-create-char) ...
+  Click: true
+  Screen: screen-bridge
+  Bridge active: true, Gunner active: false
+  Game canvas visible: true
+  window.state: false, window.c: false
+
+[4] On bridge — clicking btn-launch (ENTER SPACE) ...
+  Clicked: ⚔ ENTER SPACE
+  Screen after: screen-gunner
+  Gunner active: true, c.active: undefined, scene: 209
+
+[5] Testing weapons (keys 1-9) ...
+  Current screen: screen-gunner
+  __qa exposed: true
+  state: {"screen":"gunner","activeWeapon":"gatling_dual","playerFaction":"hegemony_vanguard","playerName":"TestPilot"}
+  cockpit: {"active":true,"dead":false,"heat":0.12524875000007452,"projectiles":9,"playerHasAttacked":true}
+  threeReady: true, scene children: 224
+  fireGatlingGun fn exposed: true
+
+[5b] Calling window.__qa.fireGatlingGun("dual") 5x ...
+  Direct fire result: {"callable":true,"projectilesBefore":9,"projectilesAfter":13,"heat":0.024114999999851006}
+
+[6] Looking for FIRE button and clicking it 5x ...
+  FIRE button: {"found":true,"visible":false,"position":{"x":0,"y":0}}
+
+══ ERRORS ══
+JS errors: 0
+Console errors: 0
+Resource 404s: 0

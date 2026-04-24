@@ -1,0 +1,539 @@
+QA BOARD REPORT
+Timestamp: 2026-04-05T09:36:43.874Z
+URL: http://localhost:3000
+Source: D:\antiruscist\oldeden\public\index.html
+
+──────────────────────────────────────────────────
+  QA-Code (Source Integrity)
+──────────────────────────────────────────────────
+[QA-Code] ✔ PASS: public/index.html exists
+[QA-Code] ✔ PASS: Braces balanced: 1725/1725
+[QA-Code] ✔ PASS: Parens balanced: 4634/4634
+[QA-Code] ✔ PASS: Brackets balanced: 333/333
+[QA-Code] ✔ PASS: Marker found: DOCTYPE
+[QA-Code] ✔ PASS: Marker found: Three.js import
+[QA-Code] ✔ PASS: Marker found: GLTFLoader import
+[QA-Code] ✔ PASS: Marker found: Socket.IO
+[QA-Code] ✔ PASS: Marker found: Karma Wheel
+[QA-Code] ✔ PASS: Marker found: Rebirth system
+[QA-Code] ✔ PASS: Marker found: Game canvas
+[QA-Code] ✔ PASS: Marker found: HUD canvas
+[QA-Code] ✔ PASS: Line count: 6321 (healthy)
+[QA-Code] ✔ PASS: SHA-256 hash: edae910df5a2e8c4
+
+──────────────────────────────────────────────────
+  QA-API (Server Health & Endpoints)
+──────────────────────────────────────────────────
+[QA-API] ✔ PASS: GET / — HTTP 200
+[QA-API] ✔ PASS: Content-Type: text/html; charset=UTF-8
+[QA-API] ✔ PASS: Response body contains DOCTYPE and title
+[QA-API] ⚠ WARN: Socket.IO polling — HTTP 400 (may need session)
+[QA-API] ✔ PASS: Static /3d/glb/ responds — HTTP 200
+
+──────────────────────────────────────────────────
+  QA-Visual (Screenshots & Visual Structure)
+──────────────────────────────────────────────────
+[QA-Visual] ✔ PASS: Title screen screenshot: title_2026-04-05T09-36-43-871Z.png
+[QA-Visual] ✔ PASS: Viewport OK: 1280x900
+[QA-Visual] ✔ PASS: CSS vars loaded — bg:#0a0a0f gold:#d4a856
+[QA-Visual] ✔ PASS: QA UNVERIFIED banner is visible (as expected for fresh build)
+[QA-Visual] ✔ PASS: Title "OLD EDEN" heading visible
+
+──────────────────────────────────────────────────
+  QA-Runtime (WebGL & JS Errors)
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: WebGL context healthy
+[QA-Runtime] ✔ PASS: No 3D engine error banner in DOM
+[QA-Runtime] ✔ PASS: Runtime screenshot: runtime_2026-04-05T09-36-43-871Z.png
+
+──────────────────────────────────────────────────
+  QA-UX (DOM & Interactivity)
+──────────────────────────────────────────────────
+[QA-UX] ✔ PASS: Title Screen (#screen-title) — found, visible
+[QA-UX] ✔ PASS: Bridge Screen (#screen-bridge) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Character Creation (#screen-create) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Settings Screen (#screen-settings) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Rebirth Screen (#screen-rebirth) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Karma Wheel (#screen-karma) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Eulogy Screen (#screen-eulogy) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Market Screen (#screen-market) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: New Game Button (#btn-new) — found, visible
+[QA-UX] ✔ PASS: Settings Button (#btn-settings) — found, visible
+[QA-UX] ✔ PASS: Game Canvas (#game-canvas) — found, visible
+[QA-UX] ✔ PASS: HUD Canvas (#hud-canvas) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: QA Banner (#qa-unverified-banner) — found, visible
+[QA-UX] ✔ PASS: New Game button is clickable
+[QA-UX] ✔ PASS: Post-click screenshot: create_screen_2026-04-05T09-36-43-871Z.png
+[QA-UX] ✔ PASS: Screen transition: Title → Create works
+
+──────────────────────────────────────────────────
+  JS Errors Summary
+──────────────────────────────────────────────────
+[QA-Runtime] ✘ FAIL: 452 FATAL JS errors:
+  1. composer is not defined
+  2. composer is not defined
+  3. composer is not defined
+  4. composer is not defined
+  5. composer is not defined
+  6. composer is not defined
+  7. composer is not defined
+  8. composer is not defined
+  9. composer is not defined
+  10. composer is not defined
+  11. composer is not defined
+  12. composer is not defined
+  13. composer is not defined
+  14. composer is not defined
+  15. composer is not defined
+  16. composer is not defined
+  17. composer is not defined
+  18. composer is not defined
+  19. composer is not defined
+  20. composer is not defined
+  21. composer is not defined
+  22. composer is not defined
+  23. composer is not defined
+  24. composer is not defined
+  25. composer is not defined
+  26. composer is not defined
+  27. composer is not defined
+  28. composer is not defined
+  29. composer is not defined
+  30. composer is not defined
+  31. composer is not defined
+  32. composer is not defined
+  33. composer is not defined
+  34. composer is not defined
+  35. composer is not defined
+  36. composer is not defined
+  37. composer is not defined
+  38. composer is not defined
+  39. composer is not defined
+  40. composer is not defined
+  41. composer is not defined
+  42. composer is not defined
+  43. composer is not defined
+  44. composer is not defined
+  45. composer is not defined
+  46. composer is not defined
+  47. composer is not defined
+  48. composer is not defined
+  49. composer is not defined
+  50. composer is not defined
+  51. composer is not defined
+  52. composer is not defined
+  53. composer is not defined
+  54. composer is not defined
+  55. composer is not defined
+  56. composer is not defined
+  57. composer is not defined
+  58. composer is not defined
+  59. composer is not defined
+  60. composer is not defined
+  61. composer is not defined
+  62. composer is not defined
+  63. composer is not defined
+  64. composer is not defined
+  65. composer is not defined
+  66. composer is not defined
+  67. composer is not defined
+  68. composer is not defined
+  69. composer is not defined
+  70. composer is not defined
+  71. composer is not defined
+  72. composer is not defined
+  73. composer is not defined
+  74. composer is not defined
+  75. composer is not defined
+  76. composer is not defined
+  77. composer is not defined
+  78. composer is not defined
+  79. composer is not defined
+  80. composer is not defined
+  81. composer is not defined
+  82. composer is not defined
+  83. composer is not defined
+  84. composer is not defined
+  85. composer is not defined
+  86. composer is not defined
+  87. composer is not defined
+  88. composer is not defined
+  89. composer is not defined
+  90. composer is not defined
+  91. composer is not defined
+  92. composer is not defined
+  93. composer is not defined
+  94. composer is not defined
+  95. composer is not defined
+  96. composer is not defined
+  97. composer is not defined
+  98. composer is not defined
+  99. composer is not defined
+  100. composer is not defined
+  101. composer is not defined
+  102. composer is not defined
+  103. composer is not defined
+  104. composer is not defined
+  105. composer is not defined
+  106. composer is not defined
+  107. composer is not defined
+  108. composer is not defined
+  109. composer is not defined
+  110. composer is not defined
+  111. composer is not defined
+  112. composer is not defined
+  113. composer is not defined
+  114. composer is not defined
+  115. composer is not defined
+  116. composer is not defined
+  117. composer is not defined
+  118. composer is not defined
+  119. composer is not defined
+  120. composer is not defined
+  121. composer is not defined
+  122. composer is not defined
+  123. composer is not defined
+  124. composer is not defined
+  125. composer is not defined
+  126. composer is not defined
+  127. composer is not defined
+  128. composer is not defined
+  129. composer is not defined
+  130. composer is not defined
+  131. composer is not defined
+  132. composer is not defined
+  133. composer is not defined
+  134. composer is not defined
+  135. composer is not defined
+  136. composer is not defined
+  137. composer is not defined
+  138. composer is not defined
+  139. composer is not defined
+  140. composer is not defined
+  141. composer is not defined
+  142. composer is not defined
+  143. composer is not defined
+  144. composer is not defined
+  145. composer is not defined
+  146. composer is not defined
+  147. composer is not defined
+  148. composer is not defined
+  149. composer is not defined
+  150. composer is not defined
+  151. composer is not defined
+  152. composer is not defined
+  153. composer is not defined
+  154. composer is not defined
+  155. composer is not defined
+  156. composer is not defined
+  157. composer is not defined
+  158. composer is not defined
+  159. composer is not defined
+  160. composer is not defined
+  161. composer is not defined
+  162. composer is not defined
+  163. composer is not defined
+  164. composer is not defined
+  165. composer is not defined
+  166. composer is not defined
+  167. composer is not defined
+  168. composer is not defined
+  169. composer is not defined
+  170. composer is not defined
+  171. composer is not defined
+  172. composer is not defined
+  173. composer is not defined
+  174. composer is not defined
+  175. composer is not defined
+  176. composer is not defined
+  177. composer is not defined
+  178. composer is not defined
+  179. composer is not defined
+  180. composer is not defined
+  181. composer is not defined
+  182. composer is not defined
+  183. composer is not defined
+  184. composer is not defined
+  185. composer is not defined
+  186. composer is not defined
+  187. composer is not defined
+  188. composer is not defined
+  189. composer is not defined
+  190. composer is not defined
+  191. composer is not defined
+  192. composer is not defined
+  193. composer is not defined
+  194. composer is not defined
+  195. composer is not defined
+  196. composer is not defined
+  197. composer is not defined
+  198. composer is not defined
+  199. composer is not defined
+  200. composer is not defined
+  201. composer is not defined
+  202. composer is not defined
+  203. composer is not defined
+  204. composer is not defined
+  205. composer is not defined
+  206. composer is not defined
+  207. composer is not defined
+  208. composer is not defined
+  209. composer is not defined
+  210. composer is not defined
+  211. composer is not defined
+  212. composer is not defined
+  213. composer is not defined
+  214. composer is not defined
+  215. composer is not defined
+  216. composer is not defined
+  217. composer is not defined
+  218. composer is not defined
+  219. composer is not defined
+  220. composer is not defined
+  221. composer is not defined
+  222. composer is not defined
+  223. composer is not defined
+  224. composer is not defined
+  225. composer is not defined
+  226. composer is not defined
+  227. composer is not defined
+  228. composer is not defined
+  229. composer is not defined
+  230. composer is not defined
+  231. composer is not defined
+  232. composer is not defined
+  233. composer is not defined
+  234. composer is not defined
+  235. composer is not defined
+  236. composer is not defined
+  237. composer is not defined
+  238. composer is not defined
+  239. composer is not defined
+  240. composer is not defined
+  241. composer is not defined
+  242. composer is not defined
+  243. composer is not defined
+  244. composer is not defined
+  245. composer is not defined
+  246. composer is not defined
+  247. composer is not defined
+  248. composer is not defined
+  249. composer is not defined
+  250. composer is not defined
+  251. composer is not defined
+  252. composer is not defined
+  253. composer is not defined
+  254. composer is not defined
+  255. composer is not defined
+  256. composer is not defined
+  257. composer is not defined
+  258. composer is not defined
+  259. composer is not defined
+  260. composer is not defined
+  261. composer is not defined
+  262. composer is not defined
+  263. composer is not defined
+  264. composer is not defined
+  265. composer is not defined
+  266. composer is not defined
+  267. composer is not defined
+  268. composer is not defined
+  269. composer is not defined
+  270. composer is not defined
+  271. composer is not defined
+  272. composer is not defined
+  273. composer is not defined
+  274. composer is not defined
+  275. composer is not defined
+  276. composer is not defined
+  277. composer is not defined
+  278. composer is not defined
+  279. composer is not defined
+  280. composer is not defined
+  281. composer is not defined
+  282. composer is not defined
+  283. composer is not defined
+  284. composer is not defined
+  285. composer is not defined
+  286. composer is not defined
+  287. composer is not defined
+  288. composer is not defined
+  289. composer is not defined
+  290. composer is not defined
+  291. composer is not defined
+  292. composer is not defined
+  293. composer is not defined
+  294. composer is not defined
+  295. composer is not defined
+  296. composer is not defined
+  297. composer is not defined
+  298. composer is not defined
+  299. composer is not defined
+  300. composer is not defined
+  301. composer is not defined
+  302. composer is not defined
+  303. composer is not defined
+  304. composer is not defined
+  305. composer is not defined
+  306. composer is not defined
+  307. composer is not defined
+  308. composer is not defined
+  309. composer is not defined
+  310. composer is not defined
+  311. composer is not defined
+  312. composer is not defined
+  313. composer is not defined
+  314. composer is not defined
+  315. composer is not defined
+  316. composer is not defined
+  317. composer is not defined
+  318. composer is not defined
+  319. composer is not defined
+  320. composer is not defined
+  321. composer is not defined
+  322. composer is not defined
+  323. composer is not defined
+  324. composer is not defined
+  325. composer is not defined
+  326. composer is not defined
+  327. composer is not defined
+  328. composer is not defined
+  329. composer is not defined
+  330. composer is not defined
+  331. composer is not defined
+  332. composer is not defined
+  333. composer is not defined
+  334. composer is not defined
+  335. composer is not defined
+  336. composer is not defined
+  337. composer is not defined
+  338. composer is not defined
+  339. composer is not defined
+  340. composer is not defined
+  341. composer is not defined
+  342. composer is not defined
+  343. composer is not defined
+  344. composer is not defined
+  345. composer is not defined
+  346. composer is not defined
+  347. composer is not defined
+  348. composer is not defined
+  349. composer is not defined
+  350. composer is not defined
+  351. composer is not defined
+  352. composer is not defined
+  353. composer is not defined
+  354. composer is not defined
+  355. composer is not defined
+  356. composer is not defined
+  357. composer is not defined
+  358. composer is not defined
+  359. composer is not defined
+  360. composer is not defined
+  361. composer is not defined
+  362. composer is not defined
+  363. composer is not defined
+  364. composer is not defined
+  365. composer is not defined
+  366. composer is not defined
+  367. composer is not defined
+  368. composer is not defined
+  369. composer is not defined
+  370. composer is not defined
+  371. composer is not defined
+  372. composer is not defined
+  373. composer is not defined
+  374. composer is not defined
+  375. composer is not defined
+  376. composer is not defined
+  377. composer is not defined
+  378. composer is not defined
+  379. composer is not defined
+  380. composer is not defined
+  381. composer is not defined
+  382. composer is not defined
+  383. composer is not defined
+  384. e.target.matches is not a function
+  385. composer is not defined
+  386. composer is not defined
+  387. composer is not defined
+  388. composer is not defined
+  389. composer is not defined
+  390. composer is not defined
+  391. composer is not defined
+  392. composer is not defined
+  393. composer is not defined
+  394. composer is not defined
+  395. composer is not defined
+  396. composer is not defined
+  397. composer is not defined
+  398. composer is not defined
+  399. composer is not defined
+  400. composer is not defined
+  401. composer is not defined
+  402. composer is not defined
+  403. composer is not defined
+  404. composer is not defined
+  405. composer is not defined
+  406. composer is not defined
+  407. composer is not defined
+  408. composer is not defined
+  409. composer is not defined
+  410. composer is not defined
+  411. composer is not defined
+  412. composer is not defined
+  413. composer is not defined
+  414. composer is not defined
+  415. composer is not defined
+  416. composer is not defined
+  417. composer is not defined
+  418. composer is not defined
+  419. composer is not defined
+  420. composer is not defined
+  421. composer is not defined
+  422. composer is not defined
+  423. composer is not defined
+  424. composer is not defined
+  425. composer is not defined
+  426. composer is not defined
+  427. composer is not defined
+  428. composer is not defined
+  429. composer is not defined
+  430. composer is not defined
+  431. composer is not defined
+  432. composer is not defined
+  433. composer is not defined
+  434. composer is not defined
+  435. composer is not defined
+  436. composer is not defined
+  437. composer is not defined
+  438. composer is not defined
+  439. composer is not defined
+  440. composer is not defined
+  441. composer is not defined
+  442. composer is not defined
+  443. composer is not defined
+  444. composer is not defined
+  445. composer is not defined
+  446. composer is not defined
+  447. composer is not defined
+  448. composer is not defined
+  449. composer is not defined
+  450. composer is not defined
+  451. composer is not defined
+  452. composer is not defined
+
+──────────────────────────────────────────────────
+  FINAL VERDICTS
+──────────────────────────────────────────────────
+✔ APPROVED  QA-Code
+✔ APPROVED  QA-API
+✔ APPROVED  QA-Visual
+✘ REJECTED  QA-Runtime
+✔ APPROVED  QA-UX
+
+══════════════════════════════════════════════════
+OVERALL: REJECTED — FIX AND RE-RUN
+Hash: edae910df5a2e8c4
+Screenshots: D:\antiruscist\oldeden\qa_reports\screenshots
+Timestamp: 2026-04-05T09:36:53.024Z

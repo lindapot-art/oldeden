@@ -1,0 +1,99 @@
+{
+  "js": [
+    {
+      "t": 1776906424652,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906505976,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906584854,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906656939,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906726483,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906794741,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906864382,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776906937045,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907006728,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907075977,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907157304,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907235519,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907313738,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907385175,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907454726,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    },
+    {
+      "t": 1776907525178,
+      "msg": "Cannot read properties of null (reading 'classList')",
+      "stack": "TypeError: Cannot read properties of null (reading 'classList') |     at <anonymous> (http://localhost:3847/:17634:11)"
+    }
+  ],
+  "console": [
+    {
+      "t": 1776907083280,
+      "msg": "[GameLoop] Frame error: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1961) is negative. IndexSizeError: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1961) is negative. <-     at renderHUD (http://localhost:3847/:12831:36) <-     at game"
+    },
+    {
+      "t": 1776907157301,
+      "msg": "[GameLoop] Frame error: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1957) is negative. IndexSizeError: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1957) is negative. <-     at renderHUD (http://localhost:3847/:12831:36) <-     at game"
+    },
+    {
+      "t": 1776907158468,
+      "msg": "[GameLoop] Frame error: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1961) is negative. IndexSizeError: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1961) is negative. <-     at renderHUD (http://localhost:3847/:12831:36) <-     at game"
+    }
+  ],
+  "resource": []
+}

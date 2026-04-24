@@ -1,0 +1,99 @@
+{
+  "run": "2026-04-23T01-05-31-006Z",
+  "frames": 200,
+  "intervalMs": 4000,
+  "totalDurationMs": 1224381,
+  "boot": {
+    "screen": "screen-gunner",
+    "qa": true,
+    "threeReady": true,
+    "sceneChildren": 207,
+    "fireGatlingExists": true
+  },
+  "errors": {
+    "jsTotal": 16,
+    "consoleTotal": 3,
+    "resourceTotal": 0,
+    "jsUnique": [
+      "Cannot read properties of null (reading 'classList')"
+    ],
+    "consoleUnique": [
+      "[GameLoop] Frame error: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1961) is negative. IndexSizeError: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1961) is negative. <-     at renderHUD (http://localhost:3847/:12831:36) <-     at game",
+      "[GameLoop] Frame error: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1957) is negative. IndexSizeError: Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (-1957) is negative. <-     at renderHUD (http://localhost:3847/:12831:36) <-     at game"
+    ],
+    "resourceSample": []
+  },
+  "firstFrame": {
+    "index": 0,
+    "elapsed": 6365,
+    "action": "laser",
+    "shot": "frame_000.jpg",
+    "t": 1776906354967,
+    "screen": "screen-gunner",
+    "activeWeapon": "laser",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 500,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0.01,
+      "projectiles": 3,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 211,
+      "threeReady": true
+    }
+  },
+  "lastFrame": {
+    "index": 199,
+    "elapsed": 1224381,
+    "action": "left",
+    "shot": "frame_199.jpg",
+    "t": 1776907571438,
+    "screen": "screen-gunner",
+    "activeWeapon": "gatling_right",
+    "playerHull": 100,
+    "playerShield": 99.95,
+    "playerFuel": 100,
+    "credits": 2000,
+    "cockpit": {
+      "active": true,
+      "dead": false,
+      "heat": 0,
+      "projectiles": 1,
+      "enemies": 0,
+      "enemyBolts": 0,
+      "playerHasAttacked": true
+    },
+    "scene": {
+      "children": 229,
+      "threeReady": true
+    }
+  },
+  "weaponUseCounts": {
+    "laser": 17,
+    "railgun": 17,
+    "gatling_dual": 17,
+    "gatling_L": 17,
+    "gatling_R": 17,
+    "forward": 17,
+    "back": 17,
+    "left": 17,
+    "right": 16,
+    "boost": 16,
+    "reload": 16,
+    "target": 16
+  },
+  "screensSeen": [
+    "screen-gunner"
+  ],
+  "maxProjectiles": 7,
+  "maxEnemies": 3,
+  "maxHeat": 0.04,
+  "playerDiedAt": null
+}

@@ -1,0 +1,88 @@
+QA BOARD REPORT
+Timestamp: 2026-04-22T01:59:20.911Z
+URL: http://localhost:3847
+Source: D:\antiruscist\oldeden\public\index.html
+
+──────────────────────────────────────────────────
+  QA-Code (Source Integrity)
+──────────────────────────────────────────────────
+[QA-Code] ✔ PASS: public/index.html exists
+[QA-Code] ✔ PASS: Braces balanced: 4529/4529
+[QA-Code] ✔ PASS: Parens balanced: 13587/13587
+[QA-Code] ✔ PASS: Brackets balanced: 992/992
+[QA-Code] ✔ PASS: Marker found: DOCTYPE
+[QA-Code] ✔ PASS: Marker found: Three.js import
+[QA-Code] ✔ PASS: Marker found: GLTFLoader import
+[QA-Code] ✔ PASS: Marker found: Socket.IO
+[QA-Code] ✔ PASS: Marker found: Karma Wheel
+[QA-Code] ✔ PASS: Marker found: Rebirth system
+[QA-Code] ✔ PASS: Marker found: Game canvas
+[QA-Code] ✔ PASS: Marker found: HUD canvas
+[QA-Code] ✔ PASS: Line count: 19511 (healthy)
+[QA-Code] ✔ PASS: SHA-256 hash: 4300d4a28a1db259
+
+──────────────────────────────────────────────────
+  QA-API (Server Health & Endpoints)
+──────────────────────────────────────────────────
+[QA-API] ✔ PASS: GET / — HTTP 200
+[QA-API] ✔ PASS: Content-Type: text/html; charset=UTF-8
+[QA-API] ✔ PASS: Response body contains DOCTYPE and title
+[QA-API] ⚠ WARN: Socket.IO polling — HTTP 400 (may need session)
+[QA-API] ✔ PASS: Static /3d/glb/ responds — HTTP 200
+
+──────────────────────────────────────────────────
+  QA-Visual (Screenshots & Visual Structure)
+──────────────────────────────────────────────────
+[QA-Visual] ✔ PASS: Title screen screenshot: title_2026-04-22T01-59-20-908Z.png
+[QA-Visual] ✔ PASS: Viewport OK: 1280x900
+[QA-Visual] ✔ PASS: CSS vars loaded — bg:#0a0a0f gold:#e0b15f
+[QA-Visual] ✔ PASS: QA UNVERIFIED banner is visible (as expected for fresh build)
+[QA-Visual] ✔ PASS: Title "OLD EDEN" heading visible
+
+──────────────────────────────────────────────────
+  QA-Runtime (WebGL & JS Errors)
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: WebGL context healthy
+[QA-Runtime] ✔ PASS: No 3D engine error banner in DOM
+[QA-Runtime] ✔ PASS: Runtime screenshot: runtime_2026-04-22T01-59-20-908Z.png
+
+──────────────────────────────────────────────────
+  QA-UX (DOM & Interactivity)
+──────────────────────────────────────────────────
+[QA-UX] ✔ PASS: Title Screen (#screen-title) — found, visible
+[QA-UX] ✔ PASS: Bridge Screen (#screen-bridge) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Character Creation (#screen-create) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Settings Screen (#screen-settings) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Rebirth Screen (#screen-rebirth) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Karma Wheel (#screen-karma) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Eulogy Screen (#screen-eulogy) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: Market Screen (#screen-market) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: New Game Button (#btn-new) — found, visible
+[QA-UX] ✔ PASS: Settings Button (#btn-settings) — found, visible
+[QA-UX] ✔ PASS: Game Canvas (#game-canvas) — found, visible
+[QA-UX] ✔ PASS: HUD Canvas (#hud-canvas) — found, hidden (ok for non-active screens)
+[QA-UX] ✔ PASS: QA Banner (#qa-unverified-banner) — found, visible
+[QA-UX] ✔ PASS: New Game button is clickable
+[QA-UX] ✔ PASS: Post-click screenshot: create_screen_2026-04-22T01-59-20-908Z.png
+[QA-UX] ✔ PASS: Gameplay/overlay screenshot: gameplay_screen_2026-04-22T01-59-20-908Z.png
+[QA-UX] ✔ PASS: Mission/quest overlay is visible in gameplay
+
+──────────────────────────────────────────────────
+  JS Errors Summary
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: Zero JS errors
+
+──────────────────────────────────────────────────
+  FINAL VERDICTS
+──────────────────────────────────────────────────
+✔ APPROVED  QA-Code
+✔ APPROVED  QA-API
+✔ APPROVED  QA-Visual
+✔ APPROVED  QA-Runtime
+✔ APPROVED  QA-UX
+
+══════════════════════════════════════════════════
+OVERALL: ALL 5 SPECIALISTS APPROVED
+Hash: 4300d4a28a1db259
+Screenshots: D:\antiruscist\oldeden\qa_reports\screenshots
+Timestamp: 2026-04-22T01:59:43.017Z

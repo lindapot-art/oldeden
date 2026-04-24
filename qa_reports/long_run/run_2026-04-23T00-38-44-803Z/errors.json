@@ -1,0 +1,2587 @@
+{
+  "js": [
+    {
+      "t": 1776904822299,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776904906227,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776904986425,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905068023,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905150558,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905231310,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905314404,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905396384,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905469940,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905537491,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905607543,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905673338,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905745389,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905816674,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905899806,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    },
+    {
+      "t": 1776905986630,
+      "msg": "Cannot read properties of null (reading 'classList')"
+    }
+  ],
+  "console": [
+    {
+      "t": 1776905435671,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905436946,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905438118,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905439038,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905439939,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905440857,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905441749,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905442621,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905443519,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905444361,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905445224,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905446114,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905447023,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905447883,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905448772,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905449628,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905450472,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905451332,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905452220,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905453104,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905454008,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905454869,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905455726,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905456604,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905457462,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905458351,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905459456,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905460327,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905461174,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905462033,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905462889,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905463742,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905464678,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905465553,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905466412,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905467280,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905468139,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905469015,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905469920,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905470792,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905471731,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905472652,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905473554,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905474473,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905475423,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905476294,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905477311,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905478211,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905479159,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905480056,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905481012,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905481909,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905483072,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905483918,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905485054,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905486097,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905487072,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905488270,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905489298,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905490402,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905491325,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905492224,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905493165,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905494095,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905495029,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905495949,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905496961,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905498004,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905498940,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905499849,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905500752,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905501629,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905502578,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905503467,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905504372,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905505290,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905506190,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905507104,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905508020,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905508940,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905509865,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905510789,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905511694,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905512610,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905513524,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905514447,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905515404,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905516313,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905517216,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905518110,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905518988,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905519854,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905520801,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905521846,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905522707,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905523568,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905524426,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905525277,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905526170,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905527028,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905527896,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905528805,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905529816,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905530807,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905531795,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905532722,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905533633,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905534571,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905535512,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905536537,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905537489,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905538406,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905539301,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905540233,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905541149,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905542328,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905543171,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905544253,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905545168,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905546186,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905547169,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905548094,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905549154,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905550072,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905551013,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905551951,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905553046,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905554028,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905555000,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905555967,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905557024,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905557957,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905558850,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905559767,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905560735,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905561656,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905562601,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905563519,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905564415,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905565344,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905566436,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905567350,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905568243,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905569146,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905570051,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905570943,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905571903,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905572828,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905573726,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905574679,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905575663,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905576694,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905577750,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905578674,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905579652,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905580616,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905581551,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905582515,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905583498,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905584601,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905585557,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905586550,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905587496,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905588439,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905589420,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905590354,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905591315,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905592343,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905593282,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905594215,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905595183,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905596242,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905597208,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905598194,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905599197,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905600142,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905601134,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905602177,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905603184,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905604278,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905605247,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905606346,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905607399,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905608512,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905609442,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905610285,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905611148,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905612016,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905612936,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905613832,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905614707,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905615588,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905616460,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905617474,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905618359,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905619333,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905620186,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905621071,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905621991,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905622947,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905623939,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905624855,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905625784,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905626684,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905627615,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905628509,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905629409,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905630262,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905631153,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905632011,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905632879,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905633817,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905634711,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905635589,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905636548,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905637490,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905638374,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905639264,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905640199,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905641063,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905641918,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905642797,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905643688,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905644569,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905645492,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905646343,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905647372,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905648238,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905649109,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905649991,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905650961,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905651813,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905652718,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905653618,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905654541,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905655395,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905656285,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905657247,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905658096,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905658997,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905659853,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905660735,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905661714,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905662660,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905663688,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905664578,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905665611,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905666438,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905667381,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905668348,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905669440,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905670467,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905671459,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905672377,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905673330,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905674235,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905675117,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905675999,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905676896,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905677957,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905678852,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905679731,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905680618,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905681490,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905682358,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905683255,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905684168,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905685038,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905685899,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905686773,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905687683,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905688568,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905689498,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905690377,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905691248,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905692101,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905696907,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905697042,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905697208,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905698287,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905699393,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905700411,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905701408,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905702357,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905703393,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905704330,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905705317,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905706249,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905707180,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905708141,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905709176,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905710132,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905711098,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905712121,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905713147,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905714209,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905715220,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905716333,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905717479,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905718452,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905719359,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905720308,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905721360,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905722288,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905723374,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905724376,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905725325,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905726421,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905727487,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905728571,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905729709,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905730727,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905731689,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905732618,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905733746,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905734719,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905735645,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905736621,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905737568,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905738495,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905739566,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905740480,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905741396,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905742350,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905743348,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905744333,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905745378,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905746317,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905747286,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905748262,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905749199,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905750171,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905751247,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905752180,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905753107,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905754049,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905754988,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905755974,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905757073,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905757968,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905759001,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905759931,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905760942,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905761949,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905763074,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905764062,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905765051,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905766035,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905767012,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905768012,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905769113,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905770167,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905771146,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905772145,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905773141,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905774104,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905775231,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905776181,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905777300,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905778292,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905779270,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905780248,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905781292,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905782269,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905783406,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905784349,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905785467,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905786451,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905787631,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905788718,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905789827,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905790811,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905791800,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905792785,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905793913,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905794877,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905795859,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905796888,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905797880,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905798856,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905799949,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905800893,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905801858,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905802850,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905803869,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905804848,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905805932,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905806901,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905807867,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905808941,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905810069,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905811158,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905812290,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905813279,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905814286,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905816422,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905816504,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905816655,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905817688,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905818689,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905819717,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905820719,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905821756,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905822753,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905823845,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905824834,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905825790,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905826789,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905827788,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905828807,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905829789,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905830853,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905831791,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905832717,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905833686,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905834699,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905835733,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905836724,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905837848,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905838830,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905839795,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905840699,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905841697,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905842613,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905843660,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905844811,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905845786,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905846823,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905847871,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905848940,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905849914,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905850862,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905851872,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905852797,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905853804,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905854837,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905855893,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905856942,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905857887,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905858998,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905859889,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905860851,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905861823,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905862820,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905863723,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905864648,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905865712,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905866608,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905867574,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905868512,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905869514,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905870446,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905871399,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905872490,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905873372,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905874301,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905875282,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905876271,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905877240,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905878172,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905879196,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905880107,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905881076,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905882059,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905883010,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905883961,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905884903,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905885933,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905886883,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905887924,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905888891,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905889871,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905890835,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905891773,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905892824,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905893741,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905894706,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905895678,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905896605,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905897718,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905898735,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905899802,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905900846,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905901868,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905903057,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905904112,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905905180,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905906292,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905907459,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905908750,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905909693,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905910695,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905911709,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905912695,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905913708,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905914779,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905915762,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905916865,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905917815,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905918809,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905919851,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905920853,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905921954,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905922934,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905923909,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905924920,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905925921,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905926917,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905927917,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905928983,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905929992,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905931023,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905932049,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905933029,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905934013,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905935016,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905936096,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905937104,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905938145,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905939122,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905940130,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905941142,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905942123,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905943180,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905944209,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905945222,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905946229,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905947194,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905948265,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905949345,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905950441,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905951420,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905952468,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905953454,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905954442,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905955432,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905956422,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905957618,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905958593,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905959612,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905960663,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905961814,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905962851,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905964009,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905965120,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905966132,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905967323,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905968320,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905969367,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905970538,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905971519,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905972586,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905973593,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905974604,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905975611,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905976650,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905977649,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905978633,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905979705,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905980726,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905981668,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905982691,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905983611,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905984561,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905985560,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905986618,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905987542,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905988518,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905989458,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905990450,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905991389,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905992338,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905993404,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905994435,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905995480,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905996565,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905997549,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905998550,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776905999551,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906000668,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906001631,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906002648,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906003641,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906004641,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906005701,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906006721,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906007822,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906008868,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906009878,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906010953,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906011957,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906012954,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906014054,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906015158,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906016176,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906017340,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906018364,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906019348,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906020337,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906021344,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906022505,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906023466,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906024440,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906025601,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906026656,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906027674,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906028793,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906030005,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906031184,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906032189,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906033186,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906034152,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906035133,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906036167,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906037230,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906038225,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906039288,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906040257,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906041357,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906042454,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906043400,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906044489,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906045478,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906046527,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906047545,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906048556,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906049596,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906050624,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    },
+    {
+      "t": 1776906051716,
+      "msg": "[GameLoop] Frame error: Cannot read properties of undefined (reading 'position') TypeError: Cannot read properties of undefined (reading 'position') <-     at gameLoop (http://localhost:3847/:19386:15)"
+    }
+  ],
+  "resource": []
+}

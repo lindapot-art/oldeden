@@ -1,0 +1,53 @@
+
+═══ Visual QA Gameplay Series 2026-04-23T00-15-05-080Z ═══
+
+[1] Loading http://localhost:3847 ...
+  Screen: screen-title
+  New Game btn: exists=true visible=true
+  window.state: false, window.c: false
+
+[2] Clicking New Game ...
+  Click: true
+  Screen: screen-create
+  Pilot input: true, Launch btn visible: false
+
+[3a] Filling pilot name = "TestPilot" ...
+  [3b] Selecting first faction card ...
+  Faction cards: 8, selected: true
+  [3c] Clicking Create Pilot (btn-create-char) ...
+  Click: true
+  Screen: screen-bridge
+  Bridge active: true, Gunner active: false
+  Game canvas visible: true
+  window.state: false, window.c: false
+
+[4] On bridge — clicking btn-launch (ENTER SPACE) ...
+  Clicked: ⚔ ENTER SPACE
+  Screen after: screen-bridge
+  Gunner active: false, c.active: undefined, scene: n/a
+
+[5] Testing weapons (keys 1-9) ...
+  Current screen: screen-bridge
+  __qa exposed: true
+  state: {"screen":"bridge","activeWeapon":"railgun","playerFaction":"hegemony_vanguard","playerName":"TestPilot"}
+  cockpit: {"active":false,"dead":false,"heat":0,"projectiles":0,"playerHasAttacked":false}
+  threeReady: false, scene children: n/a
+  fireGatlingGun fn exposed: true
+
+[5b] Calling window.__qa.fireGatlingGun("dual") 5x ...
+  Direct fire result: {"callable":true,"error":"Cannot read properties of undefined (reading 'quaternion')"}
+
+[6] Looking for FIRE button and clicking it 5x ...
+  FIRE button: {"found":true,"visible":false,"position":{"x":0,"y":0}}
+
+══ ERRORS ══
+JS errors: 2
+  - Cannot read properties of undefined (reading 'position')
+  - Error creating WebGL context.
+Console errors: 12
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+  - THREE.WebGLRenderer: Error creating WebGL context.
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+  - THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: .
+Resource 404s: 0

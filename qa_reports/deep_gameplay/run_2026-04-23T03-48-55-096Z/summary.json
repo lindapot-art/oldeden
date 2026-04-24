@@ -1,0 +1,40 @@
+{
+  "run": "2026-04-23T03-48-55-096Z",
+  "frames": 80,
+  "intervalMs": 2500,
+  "totalDurationMs": 271273,
+  "boot": {
+    "screen": "screen-gunner",
+    "threeReady": true,
+    "locked": true,
+    "weapon": "gatling_dual"
+  },
+  "errors": {
+    "jsTotal": 0,
+    "consoleTotal": 0,
+    "r404": 0,
+    "jsUnique": [],
+    "consoleUnique": []
+  },
+  "stats": {
+    "totalKills": 1,
+    "finalScore": 52,
+    "maxProjectiles": 10,
+    "maxEnemies": 3,
+    "maxEnemyBolts": 2,
+    "maxHeat": 0.03,
+    "minHull": 98.22808432195772,
+    "minShield": 0,
+    "maxSpeed": 19,
+    "distanceTraveled": "848.2",
+    "weaponsUsed": [
+      "gatling_dual",
+      "laser",
+      "railgun"
+    ],
+    "diedAt": null,
+    "screensVisited": [
+      "screen-gunner"
+    ]
+  }
+}

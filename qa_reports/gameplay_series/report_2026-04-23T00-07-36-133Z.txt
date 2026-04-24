@@ -1,0 +1,35 @@
+
+═══ Visual QA Gameplay Series 2026-04-23T00-07-36-133Z ═══
+
+[1] Loading http://localhost:3847 ...
+  Screen: screen-title
+  New Game btn: exists=true visible=true
+  window.state: false, window.c: false
+
+[2] Clicking New Game ...
+  Click: true
+  Screen: screen-title
+  Pilot input: true, Launch btn visible: false
+
+[3] Filling pilot name = "TestPilot" ...
+  Clicking Launch ...
+  Click: true
+  Screen: screen-title
+  Bridge active: false, Gunner active: false
+  Game canvas visible: true
+
+[5] Testing weapons (keys 1-9) ...
+  Current screen: screen-title
+  window.state: null
+  window.c: null
+  gatlingSpinning: undefined
+  scene children: undefined
+
+[6] Looking for FIRE button and clicking it 5x ...
+  FIRE button: {"found":true,"visible":false,"position":{"x":0,"y":0}}
+
+══ ERRORS ══
+JS errors: 1
+  - Identifier 'toggleMobileControls' has already been declared
+Console errors: 0
+Resource 404s: 0
