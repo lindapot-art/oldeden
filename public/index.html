@@ -942,7 +942,7 @@
     controls.dampingFactor = 0.05;
     controls.minDistance = 5;
     controls.maxDistance = 200;
-    controls.autoRotate = true;
+    controls.autoRotate = false;
     controls.autoRotateSpeed = 0.3;
 
     // Lights
@@ -1312,7 +1312,7 @@
 
       // Re-enable orbit controls
       controls.enabled = true;
-      controls.autoRotate = true;
+      controls.autoRotate = false;
 
       // Show nav HUD, hide gunner HUD
       document.getElementById('gunner-hud').classList.remove('active');
@@ -1881,10 +1881,8 @@
         tickEvents();
         updateEvents();
 
-        // Passive wallet growth
-        wallet.ec += Math.floor(Math.random() * 100 + 20);
-        if (Math.random() < 0.1) wallet.sm += 1;
-        updateWallet();
+        // Track life ticks for eulogy (was: passive wallet growth — removed to prevent AFK farming)
+        window.oldEdenLifeTicks = (window.oldEdenLifeTicks || 0) + 1;
       }
 
       if (!gunnerMode) controls.update();
@@ -2068,6 +2066,11 @@
         const fname = m.reward.factionRep.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         showNotification(`🏷 Faction rep +15 with ${fname}`);
       }
+      // +karma for each completed mission
+      if (typeof window.oldEdenKarma !== 'number') window.oldEdenKarma = 0;
+      window.oldEdenKarma += 10;
+      const karmaValEl = document.querySelector('#screen-karma [style*="font-size:1.6rem"]');
+      if (karmaValEl) karmaValEl.textContent = (window.oldEdenKarma >= 0 ? '+' : '') + window.oldEdenKarma;
       updateWallet();
       showNotification(`✔ Mission Complete: ${m.title} — +${m.reward.ec || 0} EC`);
       activeMissionIdx++;
@@ -2399,6 +2402,12 @@
 
     function dockAtStation() {
       if (stationDocked) return;
+      // Proximity gate: must be within 80 units of Aethon
+      const distA = camera.position.distanceTo(STATION_POS);
+      if (distA > 80) {
+        showNotification(`⚠ Too far from Aethon (${Math.round(distA)} units). Fly closer to dock.`);
+        return;
+      }
       stationDocked = true;
       dockedStationType = 'aethon';
       applyStationTheme();
@@ -2426,6 +2435,11 @@
 
     function dockAtResearchStation() {
       if (stationDocked) return;
+      const distR = camera.position.distanceTo(RESEARCH_STATION_POS);
+      if (distR > 80) {
+        showNotification(`⚠ Too far from Research Delta (${Math.round(distR)} units).`);
+        return;
+      }
       stationDocked = true;
       dockedStationType = 'research-delta';
       applyStationTheme();
@@ -3135,17 +3149,68 @@
 
     // ─── Rebirth function ─────────────────────────────────────────────
     function doRebirth() {
+      // Proximity: must be near no station to rebirth (roleplay: floating in the void)
       const seed = 'rebirth-' + Date.now();
       const rng = mulberry32(hashSeed(seed));
       currentGenome = generateGenome(rng);
       updateGenomePanel(currentGenome);
-      wallet.ec = 500; // start over with seed credits
+
+      // Record eulogy stats before reset
+      try {
+        const eulAge = document.getElementById('eulogy-age');
+        const eulSys = document.getElementById('eulogy-systems');
+        if (eulAge) eulAge.textContent = (window.oldEdenLifeTicks ? Math.floor(window.oldEdenLifeTicks / 600) : 0) + ' cycles';
+        if (eulSys) eulSys.textContent = String(window.oldEdenSystemsVisited || 1);
+      } catch(_) {}
+
+      // Carry 10% of EC into the next life (roguelite meta-progression)
+      const carryEc = Math.floor((wallet.ec || 0) * 0.10);
+      wallet.ec = 500 + carryEc;
+      // Do NOT reset sm/eden/faction rep — those are meta across lives.
+
+      // Reset gameplay counters and combat state
+      try {
+        cargo.items.forEach(i => { i.qty = 0; });
+        updateCargoPanel();
+      } catch(_) {}
+      if (typeof pirateKills !== 'undefined')      pirateKills = 0;
+      if (typeof flagshipSpawned !== 'undefined')  flagshipSpawned = false;
+      if (typeof flagshipDefeated !== 'undefined') flagshipDefeated = false;
+      if (typeof voidLeviathanSpawned !== 'undefined') voidLeviathanSpawned = false;
+      if (typeof mineCount !== 'undefined')        mineCount = 0;
+      if (typeof warpCount !== 'undefined')        warpCount = 0;
+      if (typeof sellCount !== 'undefined')        sellCount = 0;
+      if (typeof courierWarpDone !== 'undefined')  courierWarpDone = false;
+      window.oldEdenLifeTicks = 0;
+
+      // Restart mission chain
+      try {
+        MISSION_CHAIN.forEach(m => { m.complete = false; m.progress = 0; });
+      } catch(_) {}
+      activeMissionIdx = 0;
+      if (typeof updateCombatHUD === 'function') updateCombatHUD();
+      if (typeof refreshMissionOverlay === 'function') refreshMissionOverlay();
+
       updateWallet();
-      showNotification('☯ Reborn! A new life begins in the stars.');
-      addNavLog('Rebirth complete — new genome assigned');
-      // Complete mission-005 if active
-      if (activeMissionIdx === 4) advanceMission();
+      showNotification(`☯ Reborn! +${carryEc} EC carried from your last life.`);
+      addNavLog('Rebirth complete — new genome assigned, mission chain reset');
+      // Complete mission-005 if it was the active mission at the time of death
+      // (handled by the pre-reset check below)
     }
+
+    // Wrap doRebirth so mission-005 still gets credit before the reset wipes it.
+    const _baseDoRebirth = doRebirth;
+    doRebirth = function () {
+      const wasMission5 = (activeMissionIdx === 4);
+      if (wasMission5 && typeof advanceMission === 'function') advanceMission();
+      // +karma on voluntary rebirth
+      if (typeof window.oldEdenKarma !== 'number') window.oldEdenKarma = 0;
+      window.oldEdenKarma += 5;
+      _baseDoRebirth();
+      // Refresh karma display if the Karma screen is open
+      const karmaValEl = document.querySelector('#screen-karma [style*="font-size:1.6rem"]');
+      if (karmaValEl) karmaValEl.textContent = (window.oldEdenKarma >= 0 ? '+' : '') + window.oldEdenKarma;
+    };
 
     window.doRebirth = doRebirth;
 
@@ -3239,10 +3304,8 @@
     // ─── Auto-mine helper (press M) ──────────────────────────────────
     document.addEventListener('keydown', (e) => {
       if ((e.key === 'm' || e.key === 'M') && !gunnerMode) {
-        // Simulate mining an asteroid for the mission
-        window.dispatchEvent(new CustomEvent('asteroid:mined'));
-        addCargo('Refined Iron', 1);
-        showNotification('⛏ Mined 1 Refined Iron');
+        // Free-mine shortcut removed — use the AsteroidSystem / mining beam instead.
+        showNotification('⛏ Enter Gunner Mode (F) and aim at an asteroid to mine.');
       }
       if (e.key === 'u' || e.key === 'U') {
         // Toggle nav log panel visibility
