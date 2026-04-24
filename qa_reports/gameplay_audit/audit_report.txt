@@ -1,0 +1,16 @@
+[desktop] screen-create not visible after btn-new click
+[desktop] game-canvas not visible during gameplay
+[desktop] hud-canvas not visible during gameplay
+[desktop] 661 fatal console errors (sample: ReferenceError: Cannot access 'stationGroup' before initialization)
+[laptop] screen-create not visible after btn-new click
+[laptop] game-canvas not visible during gameplay
+[laptop] hud-canvas not visible during gameplay
+[laptop] 651 fatal console errors (sample: ReferenceError: Cannot access 'stationGroup' before initialization)
+[tablet] screen-create not visible after btn-new click
+[tablet] game-canvas not visible during gameplay
+[tablet] hud-canvas not visible during gameplay
+[tablet] 627 fatal console errors (sample: ReferenceError: Cannot access 'stationGroup' before initialization)
+[mobile] screen-create not visible after btn-new click
+[mobile] game-canvas not visible during gameplay
+[mobile] hud-canvas not visible during gameplay
+[mobile] 627 fatal console errors (sample: ReferenceError: Cannot access 'stationGroup' before initialization)

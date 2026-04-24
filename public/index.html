@@ -530,7 +530,7 @@
       </div>
     </div>
   </div>
-  <div id="screen-rebirth" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(8,3,20,0.98); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+  <div id="screen-rebirth" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(8,3,20,0.98); z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
     <div style="max-width:600px; padding:40px;">
       <div style="font-size:4rem; margin-bottom:16px;">☯</div>
       <h2 style="color:#c88eff; font-size:2rem; font-weight:200; letter-spacing:0.4em; margin-bottom:12px;">REBIRTH PROTOCOL</h2>
@@ -547,7 +547,7 @@
       <br/><button onclick="document.getElementById('screen-rebirth').style.display='none';" style="margin-top:12px; padding:10px 24px; background:none; border:none; color:#556; cursor:pointer; font-size:0.8rem;">Not yet</button>
     </div>
   </div>
-  <div id="screen-karma" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,0,15,0.98); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+  <div id="screen-karma" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,0,15,0.98); z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
     <div style="max-width:520px; padding:40px;">
       <div style="font-size:3rem; margin-bottom:16px;">⚖</div>
       <h2 style="color:var(--gold); font-size:1.8rem; font-weight:200; letter-spacing:0.3em; margin-bottom:12px;">KARMA WHEEL</h2>
@@ -564,7 +564,7 @@
       <button onclick="document.getElementById('screen-karma').style.display='none';" style="padding:12px 32px; background:rgba(255,184,72,0.15); border:1px solid var(--gold); border-radius:6px; color:var(--gold); cursor:pointer; font-size:0.9rem;">Close</button>
     </div>
   </div>
-  <div id="screen-eulogy" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(2,0,8,0.99); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+  <div id="screen-eulogy" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(2,0,8,0.99); z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
     <div style="max-width:560px; padding:40px;">
       <div style="font-size:3rem; margin-bottom:16px; opacity:0.5;">✦</div>
       <h2 style="color:#556; font-size:1.6rem; font-weight:200; letter-spacing:0.4em; margin-bottom:8px;">EULOGY</h2>
@@ -1341,15 +1341,7 @@
       gunnerPitch = Math.max(-GUNNER_MAX_PITCH, Math.min(GUNNER_MAX_PITCH, gunnerPitch));
     });
 
-    // Gunner fire simulation
-    canvas.addEventListener('mousedown', (e) => {
-      if (!gunnerMode) return;
-      if (e.button === 0) {
-        // Simulate laser fire — increase heat
-        laserHeat = Math.min(100, laserHeat + 15);
-        updateGunnerHUD();
-      }
-    });
+    // Gunner fire simulation — heat + raycast is handled by the single mousedown listener below.
 
     // Update gunner weapon HUD
     function updateGunnerHUD() {
@@ -1911,8 +1903,10 @@
         for (const e of enemyShips) {
           if (e.dead) continue;
           // Drift toward player ship
-          if (playerShipGroup) {
-            const dir = new THREE.Vector3().subVectors(playerShipGroup.position, e.mesh.position).normalize();
+          // Chase the active combat position: camera in gunner mode, ship otherwise.
+          const chaseTarget = gunnerMode ? camera.position : (playerShipGroup ? playerShipGroup.position : null);
+          if (chaseTarget) {
+            const dir = new THREE.Vector3().subVectors(chaseTarget, e.mesh.position).normalize();
             e.mesh.position.addScaledVector(dir, delta * e.speed);
             e.mesh.rotation.y += delta * 0.8;
           }
@@ -2418,15 +2412,7 @@
       refreshStationMissionBoard();
       // Advance mission-001 if active
       if (activeMissionIdx === 0) advanceMission();
-
-      // Mission-004 completion: courier must warp first, then dock.
-      const m4 = MISSION_CHAIN[3];
-      if (m4 && !m4.complete && activeMissionIdx === 3 && courierWarpDone) {
-        const genomeCargo = cargo.items.find(i => i.name === 'Genome Data');
-        if (genomeCargo && genomeCargo.qty > 0) genomeCargo.qty -= 1;
-        updateCargoPanel();
-        advanceMission();
-      }
+      // Note: Mission-004 (courier) completes at Research Delta only, not Aethon.
     }
 
     function undockStation() {
@@ -2861,6 +2847,7 @@
     }
 
     function takeDamage(amount) {
+      if (!gunnerMode) return; // no combat damage outside gunner
       if (playerShield > 0) {
         const shieldDmg = Math.min(playerShield, amount);
         playerShield   -= shieldDmg;
@@ -2906,11 +2893,14 @@
       }
     }
 
-    // Laser raycasting — fire at whatever is under the crosshair
+    // Laser raycasting — fire at whatever is under the crosshair (also applies heat)
     canvas.addEventListener('mousedown', (e) => {
       if (!gunnerMode) return;
       if (e.button !== 0) return;
       if (laserHeat >= 100) { showNotification('🔥 Laser overheated!'); return; }
+      laserHeat = Math.min(100, laserHeat + 15);
+      if (typeof updateGunnerHUD === 'function') updateGunnerHUD();
+      if (typeof ballisticAmmo === 'number' && ballisticAmmo > 0) ballisticAmmo--;
 
       // Cast ray from camera through crosshair centre
       const ray = new THREE.Raycaster();
@@ -2983,24 +2973,15 @@
       }
     });
 
-    // Auto-spawn pirate wave when mission-003 becomes active
+    // Mission-003 preparation listener — resets combat state if externally triggered.
     window.addEventListener('mission:003:start', () => {
       pirateKills = 0;
       flagshipSpawned = false;
       flagshipDefeated = false;
       updateCombatHUD();
-      setTimeout(() => spawnEnemyWave(3), 1500);
     });
-
-    // Patch advanceMission to fire mission start events
-    const _baseAdvance = advanceMission;
-    window.advanceMission = function() {
-      _baseAdvance();
-      const nextIdx = activeMissionIdx; // already incremented by baseAdvance
-      if (nextIdx === 2) {
-        window.dispatchEvent(new Event('mission:003:start'));
-      }
-    };
+    // Note: pirate wave is spawned by advanceMission's nextMission hook for mission-003,
+    // so we no longer wrap advanceMission here (would cause a double-spawn).
 
     // Initialise HUD status bars
     updatePlayerStatus();
