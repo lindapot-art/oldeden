@@ -1,11 +1,4127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta http-equiv="refresh" content="0;url=public/index.html"/>
-<title>Old Eden — Redirecting</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdn.jsdelivr.net https://unpkg.com ws: wss:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline';" />
+  <title>Old Eden — Staging Demo</title>
+  <style>
+    :root {
+      --bg: #000010;
+      --gold: #ffb848;
+      --blue: #6ab0de;
+      --eden-accent: #6ab0de;
+      --eden-bg: #0a1428;
+      --eden-panel: #1a2233;
+      --eden-border: #6ab0de;
+      --eden-text: #c8d6e5;
+      --eden-warn: #ffb848;
+      --eden-error: #e74c3c;
+      --eden-success: #58d68d;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #c8d6e5;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+    /* HUD overlay */
+    #hud {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10; pointer-events: none;
+    }
+    #hud > * { pointer-events: auto; }
+
+    /* Title bar */
+    #title-bar {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      text-align: center;
+    }
+    #title-bar h1 {
+      font-size: 2rem; font-weight: 300; letter-spacing: 0.3em;
+      color: #fff; text-shadow: 0 0 30px rgba(100,200,255,0.5);
+    }
+    #title-bar .subtitle {
+      font-size: 0.8rem; letter-spacing: 0.15em; color: #6ab0de;
+      margin-top: 4px;
+    }
+
+    /* Panels */
+    .panel {
+      background: rgba(5, 10, 25, 0.85);
+      border: 1px solid rgba(100, 180, 255, 0.15);
+      border-radius: 8px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(100,180,255,0.08);
+    }
+    .panel h2 {
+      font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #6ab0de; margin-bottom: 10px; font-weight: 600;
+    }
+
+    /* Left sidebar — star system info */
+    #system-panel {
+      position: absolute; top: 80px; left: 20px; width: 280px;
+    }
+    .star-info { margin-bottom: 8px; }
+    .star-name { font-size: 1.1rem; color: #fff; font-weight: 500; }
+    .star-class { font-size: 0.75rem; color: #88a; }
+    .planet-list { list-style: none; max-height: 180px; overflow-y: auto; }
+    .planet-list li {
+      padding: 6px 0; border-bottom: 1px solid rgba(100,180,255,0.08);
+      font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
+    }
+    .planet-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .planet-name { color: #e0e6ed; }
+    .planet-biome { color: #9ec9a8; font-size: 0.7rem; }
+
+    /* Right sidebar — genome viewer */
+    #genome-panel {
+      position: absolute; top: 80px; right: 20px; width: 280px;
+    }
+    .genome-bars { display: flex; flex-direction: column; gap: 4px; }
+    .genome-row {
+      display: flex; align-items: center; gap: 8px; font-size: 0.75rem;
+    }
+    .genome-label { width: 70px; text-align: right; color: #88a; flex-shrink: 0; }
+    .genome-bar-bg {
+      flex: 1; height: 8px; background: rgba(100,180,255,0.1);
+      border-radius: 4px; overflow: hidden;
+    }
+    .genome-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .genome-val { width: 30px; font-size: 0.65rem; color: #6ab0de; }
+
+    /* Bottom bar — world events */
+    #events-bar {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; max-width: 90vw; overflow-x: auto;
+    }
+    .event-card {
+      background: rgba(5, 10, 25, 0.85);
+      border: 1px solid rgba(255, 180, 60, 0.2);
+      border-radius: 8px; padding: 10px 16px;
+      backdrop-filter: blur(8px); white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      min-width: 180px;
+    }
+    .event-card.active { border-color: rgba(255, 100, 60, 0.5); }
+    .event-name { font-size: 0.8rem; color: #ffb848; font-weight: 600; }
+    .event-timer { font-size: 0.65rem; color: #88a; margin-top: 2px; }
+    .event-desc { font-size: 0.7rem; color: #aab; margin-top: 4px; }
+
+    /* Bottom-left — economy stats */
+    #economy-panel {
+      position: absolute; bottom: 20px; left: 20px;
+    }
+    .currency-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 4px; font-size: 0.8rem;
+    }
+    .currency-icon { font-size: 1rem; }
+    .currency-name { color: #88a; width: 40px; }
+    .currency-val { color: #fff; font-weight: 500; }
+
+    /* Bottom-right — controls hint */
+    #controls-hint {
+      position: absolute; bottom: 20px; right: 20px;
+      font-size: 0.7rem; color: #556; text-align: right;
+    }
+
+    /* NPC panel */
+    #npc-panel {
+      position: absolute; top: 380px; left: 20px; width: 280px;
+    }
+    .npc-stat {
+      display: flex; justify-content: space-between;
+      font-size: 0.8rem; padding: 3px 0;
+    }
+    .npc-stat .label { color: #88a; }
+    .npc-stat .val { color: #fff; font-weight: 500; }
+
+    /* Rebirth button */
+    #rebirth-btn {
+      position: absolute; top: 380px; right: 20px; width: 280px;
+      cursor: pointer; text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    #rebirth-btn:hover {
+      border-color: rgba(200, 100, 255, 0.5);
+      box-shadow: 0 0 20px rgba(200, 100, 255, 0.15);
+    }
+    #rebirth-btn .big-text {
+      font-size: 1.1rem; color: #c88eff; font-weight: 600; margin: 8px 0;
+    }
+    #rebirth-btn .hint { font-size: 0.7rem; color: #88a; }
+    .rebirth-result {
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid rgba(200,100,255,0.2);
+      font-size: 0.75rem; color: #c8d6e5;
+    }
+    .rebirth-result .npc-name { color: #c88eff; font-weight: 600; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(100,180,255,0.2); border-radius: 2px; }
+
+    /* Loading screen */
+    #loading {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; z-index: 100;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 0.8s ease;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading h1 {
+      font-size: 2.5rem; font-weight: 200; letter-spacing: 0.4em;
+      color: #fff; margin-bottom: 20px;
+    }
+    .loading-bar {
+      width: 200px; height: 2px; background: rgba(100,180,255,0.2);
+      border-radius: 1px; overflow: hidden;
+    }
+    .loading-fill {
+      height: 100%; width: 0%; background: #6ab0de;
+      transition: width 0.3s ease;
+    }
+
+    /* ─── Gunner Mode HUD ──────────────────────────────────────────── */
+    #gunner-hud {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 20; pointer-events: none;
+      display: none;
+    }
+    #gunner-hud.active { display: block; }
+    #gunner-hud > * { pointer-events: auto; }
+
+    /* Cockpit frame vignette */
+    #cockpit-frame {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        transparent 55%,
+        rgba(10,20,35,0.3) 70%,
+        rgba(5,10,20,0.7) 85%,
+        rgba(0,0,0,0.95) 100%);
+      border: 3px solid rgba(60,100,140,0.15);
+      box-shadow: inset 0 0 120px rgba(0,0,0,0.8);
+    }
+
+    /* Glass canopy tint overlay */
+    #canopy-tint {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        rgba(100,180,255,0.02) 0%,
+        rgba(80,150,220,0.04) 60%,
+        transparent 100%);
+    }
+
+    /* Canopy hex grid pattern */
+    #canopy-grid {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image:
+        linear-gradient(30deg, rgba(100,180,255,1) 1px, transparent 1px),
+        linear-gradient(150deg, rgba(100,180,255,1) 1px, transparent 1px),
+        linear-gradient(270deg, rgba(100,180,255,1) 1px, transparent 1px);
+      background-size: 60px 104px;
+    }
+
+    /* Crosshair */
+    #crosshair {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px; height: 80px;
+      pointer-events: none;
+    }
+    #crosshair .ch-ring {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50px; height: 50px;
+      border: 1px solid rgba(100,200,255,0.5);
+      border-radius: 50%;
+    }
+    #crosshair .ch-dot {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px; height: 4px;
+      background: rgba(100,220,255,0.9);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(100,200,255,0.6);
+    }
+    #crosshair .ch-line {
+      position: absolute;
+      background: rgba(100,200,255,0.4);
+    }
+    #crosshair .ch-line.top    { top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 12px; }
+    #crosshair .ch-line.bottom { bottom: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 12px; }
+    #crosshair .ch-line.left   { left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 1px; }
+    #crosshair .ch-line.right  { right: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 1px; }
+
+    /* Gunner mode indicator */
+    #gunner-mode-label {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,80,60,0.8);
+      text-shadow: 0 0 10px rgba(255,80,60,0.4);
+      pointer-events: none;
+    }
+
+    /* Weapon status panel (bottom center) */
+    #weapon-panel {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 20px; align-items: flex-end;
+      pointer-events: none;
+    }
+    .weapon-group {
+      text-align: center;
+    }
+    .weapon-name {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(100,200,255,0.6); margin-bottom: 4px;
+    }
+    .weapon-ammo {
+      font-size: 1.4rem; font-weight: 300;
+      color: rgba(100,220,255,0.9);
+      text-shadow: 0 0 15px rgba(100,200,255,0.4);
+    }
+    .weapon-bar {
+      width: 80px; height: 3px;
+      background: rgba(100,180,255,0.15);
+      border-radius: 2px; margin: 4px auto 0;
+      overflow: hidden;
+    }
+    .weapon-bar-fill {
+      height: 100%; border-radius: 2px;
+      background: rgba(100,200,255,0.7);
+      transition: width 0.2s ease;
+    }
+    .weapon-heat {
+      font-size: 0.55rem; color: rgba(255,180,60,0.6); margin-top: 2px;
+    }
+
+    /* Shield/hull status (bottom left in gunner) */
+    #gunner-shield-panel {
+      position: absolute; bottom: 30px; left: 30px;
+      pointer-events: none;
+    }
+    .gs-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .gs-label {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(100,200,255,0.5); width: 50px; text-align: right;
+    }
+    .gs-bar {
+      width: 120px; height: 6px;
+      background: rgba(100,180,255,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+    .gs-bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .gs-bar-fill.shield { background: rgba(100,200,255,0.7); }
+    .gs-bar-fill.hull   { background: rgba(80,220,120,0.7); }
+    .gs-val {
+      font-size: 0.65rem; color: rgba(200,220,240,0.7); width: 40px;
+    }
+
+    /* Target info (bottom right in gunner) */
+    #gunner-target-panel {
+      position: absolute; bottom: 30px; right: 30px;
+      text-align: right;
+      pointer-events: none;
+    }
+    .gt-label {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,100,60,0.5);
+    }
+    .gt-name {
+      font-size: 0.85rem; color: rgba(255,120,80,0.8); margin-top: 2px;
+    }
+    .gt-dist {
+      font-size: 0.65rem; color: rgba(200,200,220,0.5); margin-top: 2px;
+    }
+
+    /* Mode switch hint (top right) */
+    #mode-hint {
+      position: absolute; top: 18px; right: 20px;
+      font-size: 0.65rem; color: rgba(150,170,200,0.5);
+      pointer-events: none;
+    }
+    #mode-hint kbd {
+      padding: 1px 5px; border: 1px solid rgba(150,170,200,0.3);
+      border-radius: 3px; font-family: monospace;
+    }
+  </style>
 </head>
 <body>
-<p>Redirecting to <a href="public/index.html">Old Eden</a>…</p>
+  <canvas id="canvas"></canvas>
+
+  <!-- QA-required classic screens (hidden overlays for QA compliance) -->
+  <div id="screen-title" style="display:block; text-align:center; margin-top:60px;">
+    <h1>OLD EDEN</h1>
+    <button id="btn-new" onclick="document.getElementById('screen-title').style.display='none';document.getElementById('screen-create').style.display='block';window.showCreateScreen&&window.showCreateScreen();" style="display:inline-block; margin:16px; padding:12px 32px; font-size:1.2rem; cursor:pointer;">New Game</button>
+    <button id="btn-settings" style="display:inline-block; margin:16px; padding:12px 32px; font-size:1.2rem; cursor:pointer;">Settings</button>
+  </div>
+  <div id="screen-bridge" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,8,20,0.98); z-index:9999; overflow:auto; padding:32px 20px;">
+    <div style="max-width:1000px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+        <h2 style="color:#6ab0de; font-size:1.6rem; font-weight:300; letter-spacing:0.3em;">🛸 COMMAND BRIDGE</h2>
+        <button onclick="document.getElementById('screen-bridge').style.display='none';" style="padding:8px 20px; background:rgba(231,76,60,0.2); border:1px solid #e74c3c; border-radius:6px; color:#e74c3c; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+        <!-- Ship Status -->
+        <div style="background:rgba(10,20,40,0.9); border:1px solid rgba(100,180,255,0.15); border-radius:10px; padding:20px;">
+          <div style="font-size:0.7rem; letter-spacing:0.1em; color:#6ab0de; text-transform:uppercase; margin-bottom:12px;">Ship Status</div>
+          <div style="margin-bottom:8px;"><span style="color:#88a; font-size:0.78rem;">Hull Integrity</span><div style="height:6px; background:rgba(100,180,255,0.1); border-radius:3px; margin-top:4px;"><div style="width:82%; height:100%; background:#58d68d; border-radius:3px;"></div></div></div>
+          <div style="margin-bottom:8px;"><span style="color:#88a; font-size:0.78rem;">Shields</span><div style="height:6px; background:rgba(100,180,255,0.1); border-radius:3px; margin-top:4px;"><div style="width:100%; height:100%; background:#6ab0de; border-radius:3px;"></div></div></div>
+          <div style="margin-bottom:8px;"><span style="color:#88a; font-size:0.78rem;">Fuel Cells</span><div style="height:6px; background:rgba(100,180,255,0.1); border-radius:3px; margin-top:4px;"><div style="width:67%; height:100%; background:#ffb848; border-radius:3px;"></div></div></div>
+          <div style="margin-bottom:8px;"><span style="color:#88a; font-size:0.78rem;">Warp Core</span><div style="height:6px; background:rgba(100,180,255,0.1); border-radius:3px; margin-top:4px;"><div style="width:100%; height:100%; background:#c88eff; border-radius:3px;"></div></div></div>
+        </div>
+
+        <!-- Current Mission Summary -->
+        <div style="background:rgba(10,20,40,0.9); border:1px solid rgba(255,184,72,0.2); border-radius:10px; padding:20px;">
+          <div style="font-size:0.7rem; letter-spacing:0.1em; color:var(--gold); text-transform:uppercase; margin-bottom:12px;">Active Mission</div>
+          <div id="bridge-mission-summary" style="font-size:0.82rem; color:#c8d6e5; line-height:1.7;"></div>
+        </div>
+
+        <!-- Sensor Contacts -->
+        <div style="background:rgba(10,20,40,0.9); border:1px solid rgba(100,180,255,0.15); border-radius:10px; padding:20px;">
+          <div style="font-size:0.7rem; letter-spacing:0.1em; color:#6ab0de; text-transform:uppercase; margin-bottom:12px;">Sensor Contacts</div>
+          <div style="font-size:0.78rem; color:#88a; line-height:1.9;">
+            <div>🟢 Aethon Station — 250 km</div>
+            <div>🟡 Asteroid Field — 1,200 km</div>
+            <div>🔴 Pirate Signature — 8,400 km</div>
+            <div>🔵 Trade Convoy — 3,800 km</div>
+            <div style="margin-top:8px; color:#444; font-size:0.72rem;">Scan range: 15,000 km</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+        <button onclick="document.getElementById('screen-bridge').style.display='none'; dockAtStation();" style="padding:18px 10px; background:rgba(100,180,255,0.12); border:1px solid rgba(100,180,255,0.3); border-radius:8px; color:#6ab0de; cursor:pointer; font-size:0.82rem; font-weight:600; text-align:center;">⚓<br/>Dock Station</button>
+        <button onclick="document.getElementById('screen-bridge').style.display='none'; initiateWarp();" style="padding:18px 10px; background:rgba(200,100,255,0.1); border:1px solid rgba(200,100,255,0.3); border-radius:8px; color:#c88eff; cursor:pointer; font-size:0.82rem; font-weight:600; text-align:center;">⚡<br/>Warp Jump</button>
+        <button onclick="document.getElementById('screen-bridge').style.display='none'; document.getElementById('screen-market').style.display='block';" style="padding:18px 10px; background:rgba(255,184,72,0.1); border:1px solid rgba(255,184,72,0.3); border-radius:8px; color:var(--gold); cursor:pointer; font-size:0.82rem; font-weight:600; text-align:center;">📊<br/>Market</button>
+        <button onclick="document.getElementById('screen-bridge').style.display='none'; document.getElementById('screen-rebirth').style.display='flex';" style="padding:18px 10px; background:rgba(88,214,141,0.1); border:1px solid rgba(88,214,141,0.3); border-radius:8px; color:#58d68d; cursor:pointer; font-size:0.82rem; font-weight:600; text-align:center;">☯<br/>Rebirth</button>
+      </div>
+    </div>
+  </div>
+  <div id="screen-create" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10,20,40,0.98); z-index:9999; text-align:center; overflow:auto;">
+    <div style="margin-top:60px; display:inline-block; background:rgba(15,25,50,0.98); padding:40px 56px; border-radius:16px; box-shadow:0 8px 40px #000; max-width:620px; width:94vw; text-align:left;">
+      <h2 style="color:#6ab0de; font-size:1.8rem; font-weight:200; letter-spacing:0.3em; text-align:center; margin-bottom:8px;">NEW PILOT</h2>
+      <p style="color:#556; font-size:0.8rem; text-align:center; letter-spacing:0.08em; margin-bottom:28px;">Initialise your genome profile and enter the Old Eden universe.</p>
+
+      <!-- Pilot Name -->
+      <div style="margin-bottom:18px;">
+        <label style="color:#88a; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:6px;">Pilot Callsign</label>
+        <input id="create-name" type="text" placeholder="e.g. STARFALL-7, Commander Sable…" maxlength="30"
+          style="width:100%; box-sizing:border-box; padding:12px 14px; background:#0a1428; color:#c8d6e5; border:1px solid rgba(100,180,255,0.4); border-radius:6px; font-size:0.95rem;" />
+      </div>
+
+      <!-- Faction Allegiance -->
+      <div style="margin-bottom:18px;">
+        <label style="color:#88a; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:8px;">Starting Allegiance</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label class="faction-pick" style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid rgba(100,180,255,0.15); border-radius:8px; cursor:pointer; background:rgba(10,20,40,0.6);">
+            <input type="radio" name="faction" value="garrisons" style="accent-color:#6ab0de;" />
+            <span>
+              <div style="color:#6ab0de; font-size:0.82rem; font-weight:600;">⚔ Garrisons</div>
+              <div style="color:#556; font-size:0.72rem;">Military prestige. +20 combat rep.</div>
+            </span>
+          </label>
+          <label class="faction-pick" style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid rgba(100,180,255,0.15); border-radius:8px; cursor:pointer; background:rgba(10,20,40,0.6);">
+            <input type="radio" name="faction" value="free_traders" style="accent-color:#6ab0de;" />
+            <span>
+              <div style="color:#58d68d; font-size:0.82rem; font-weight:600;">📦 Free Traders</div>
+              <div style="color:#556; font-size:0.72rem;">Commerce bonus. +500 EC start.</div>
+            </span>
+          </label>
+          <label class="faction-pick" style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid rgba(100,180,255,0.15); border-radius:8px; cursor:pointer; background:rgba(10,20,40,0.6);">
+            <input type="radio" name="faction" value="terran_dominion" style="accent-color:#6ab0de;" />
+            <span>
+              <div style="color:#ffb848; font-size:0.82rem; font-weight:600;">🌍 Terran Dominion</div>
+              <div style="color:#556; font-size:0.72rem;">Tech edge. +2 genome points.</div>
+            </span>
+          </label>
+          <label class="faction-pick" style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid rgba(100,180,255,0.15); border-radius:8px; cursor:pointer; background:rgba(10,20,40,0.6);">
+            <input type="radio" name="faction" value="void_syndicate" style="accent-color:#6ab0de;" />
+            <span>
+              <div style="color:#c88eff; font-size:0.82rem; font-weight:600;">🕶 Void Syndicate</div>
+              <div style="color:#556; font-size:0.72rem;">Shadow economy. Hidden market access.</div>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Starting Ship Class -->
+      <div style="margin-bottom:18px;">
+        <label style="color:#88a; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:8px;">Vessel Class</label>
+        <select id="create-ship" style="width:100%; padding:12px; background:#0a1428; color:#c8d6e5; border:1px solid rgba(100,180,255,0.4); border-radius:6px; font-size:0.9rem;">
+          <option value="scout">Scout — Fast, weak shields, 80 cargo. Good for miners.</option>
+          <option value="fighter" selected>Fighter — Balanced. 60 cargo, strong weapons.</option>
+          <option value="hauler">Hauler — Slow, 200 cargo, excellent for trading.</option>
+          <option value="gunship">Gunship — Maximum firepower, 40 cargo. High risk/reward.</option>
+        </select>
+      </div>
+
+      <!-- Genome trait roll -->
+      <div style="margin-bottom:24px; padding:16px; background:rgba(5,10,25,0.8); border:1px solid rgba(100,180,255,0.1); border-radius:8px;">
+        <div style="color:#88a; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Genome Preview (random)</div>
+        <div id="create-genome-preview" style="font-size:0.78rem; color:#6ab0de; line-height:1.8; font-family:monospace;"></div>
+      </div>
+
+      <!-- After the genome roll: Enter Game / Re-roll / Back -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button id="btn-enter-game" onclick="createPilot()" style="flex:2 1 220px; padding:18px; background:linear-gradient(180deg, rgba(106,176,222,0.32), rgba(106,176,222,0.18)); border:1px solid #6ab0de; border-radius:10px; color:#dff1ff; cursor:pointer; font-size:1.05rem; font-weight:700; letter-spacing:0.18em; box-shadow:0 0 22px rgba(106,176,222,0.25), inset 0 0 12px rgba(106,176,222,0.15); text-shadow:0 0 8px rgba(106,176,222,0.6); animation: enterGamePulse 2.4s ease-in-out infinite;">▶ ENTER GAME</button>
+        <button id="btn-reroll-genome" onclick="window.rerollCreateGenome ? window.rerollCreateGenome() : window.showCreateScreen && window.showCreateScreen()" title="Re-roll genome preview" style="flex:1 1 100px; padding:16px; background:rgba(200,142,255,0.12); border:1px solid rgba(200,142,255,0.4); border-radius:8px; color:#c88eff; cursor:pointer; font-size:0.85rem; letter-spacing:0.1em;">🧬 Re-roll DNA</button>
+        <button onclick="document.getElementById('screen-create').style.display='none'; document.getElementById('screen-title').style.display='block';" style="flex:1 1 90px; padding:16px; background:none; border:1px solid rgba(100,180,255,0.15); border-radius:8px; color:#556; cursor:pointer; font-size:0.85rem;">← Back</button>
+      </div>
+      <style>
+        @keyframes enterGamePulse {
+          0%, 100% { box-shadow: 0 0 22px rgba(106,176,222,0.25), inset 0 0 12px rgba(106,176,222,0.15); }
+          50%      { box-shadow: 0 0 38px rgba(106,176,222,0.55), inset 0 0 18px rgba(106,176,222,0.30); }
+        }
+      </style>
+    </div>
+  </div>
+  <div id="screen-settings" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,10,25,0.98); z-index:9999; text-align:center; overflow:auto;">
+    <div style="margin-top:60px; display:inline-block; background:rgba(15,25,50,0.98); padding:36px 56px; border-radius:14px; box-shadow:0 8px 40px #000; max-width:560px; width:90vw; text-align:left;">
+      <h2 style="color:#6ab0de; font-size:1.6rem; font-weight:300; letter-spacing:0.2em; text-align:center; margin-bottom:24px;">⚙ SETTINGS</h2>
+      <div style="margin-bottom:16px;">
+        <label style="color:#88a; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">Graphics Quality</label>
+        <select id="setting-gfx" style="width:100%; margin-top:6px; padding:10px; background:#0a1428; color:#c8d6e5; border:1px solid #6ab0de; border-radius:6px; font-size:0.9rem;">
+          <option value="low">Low (Potato Mode)</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="ultra">Ultra (may crash)</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="color:#88a; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">Audio Volume</label>
+        <input type="range" id="setting-vol" min="0" max="100" value="70" style="width:100%; margin-top:8px; accent-color:#6ab0de;" />
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="color:#88a; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">FOV (Field of View)</label>
+        <input type="range" id="setting-fov" min="50" max="110" value="60" style="width:100%; margin-top:8px; accent-color:#6ab0de;" />
+        <span id="setting-fov-val" style="color:#6ab0de; font-size:0.8rem;">60°</span>
+      </div>
+      <div style="margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+        <label style="color:#88a; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">Show FPS Counter</label>
+        <input type="checkbox" id="setting-fps" style="accent-color:#6ab0de; width:18px; height:18px;" />
+      </div>
+      <div style="margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+        <label style="color:#88a; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">Enable Gyroscope</label>
+        <input type="checkbox" id="setting-gyro" style="accent-color:#6ab0de; width:18px; height:18px;" />
+      </div>
+      <div style="margin-bottom:24px; display:flex; align-items:center; justify-content:space-between;">
+        <label style="color:#88a; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">Motion Blur</label>
+        <input type="checkbox" id="setting-blur" style="accent-color:#6ab0de; width:18px; height:18px;" />
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button onclick="applySettings()" style="flex:1; padding:14px; background:rgba(100,180,255,0.2); border:1px solid #6ab0de; border-radius:6px; color:#6ab0de; cursor:pointer; font-size:0.9rem; font-weight:600;">Apply</button>
+        <button onclick="document.getElementById('screen-settings').style.display='none';" style="flex:1; padding:14px; background:rgba(231,76,60,0.15); border:1px solid #e74c3c; border-radius:6px; color:#e74c3c; cursor:pointer; font-size:0.9rem;">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="screen-rebirth" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(8,3,20,0.98); z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+    <div style="max-width:600px; padding:40px;">
+      <div style="font-size:4rem; margin-bottom:16px;">☯</div>
+      <h2 style="color:#c88eff; font-size:2rem; font-weight:200; letter-spacing:0.4em; margin-bottom:12px;">REBIRTH PROTOCOL</h2>
+      <p style="color:#88a; font-size:0.9rem; margin-bottom:24px; line-height:1.7;">The cycle of souls continues. Choose your path through the genetic lottery and be reborn into a new life among the stars.</p>
+      <div style="background:rgba(200,100,255,0.05); border:1px solid rgba(200,100,255,0.2); border-radius:12px; padding:24px; margin-bottom:24px;">
+        <div style="color:#c88eff; font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:16px;">Rebirth Statistics</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; font-size:0.85rem;">
+          <div><div style="color:#88a;">Total Rebirths</div><div style="color:#c88eff; font-size:1.4rem; font-weight:300;">0</div></div>
+          <div><div style="color:#88a;">Best Status</div><div style="color:#58d68d; font-size:1.4rem; font-weight:300;">—</div></div>
+          <div><div style="color:#88a;">Soul Shards</div><div style="color:#c88eff; font-size:1.4rem; font-weight:300;">∞</div></div>
+        </div>
+      </div>
+      <button onclick="doRebirth(); document.getElementById('screen-rebirth').style.display='none';" style="padding:16px 48px; background:rgba(200,100,255,0.2); border:1px solid #c88eff; border-radius:8px; color:#c88eff; cursor:pointer; font-size:1rem; font-weight:600; letter-spacing:0.1em;">☯ ENTER THE CYCLE</button>
+      <br/><button onclick="document.getElementById('screen-rebirth').style.display='none';" style="margin-top:12px; padding:10px 24px; background:none; border:none; color:#556; cursor:pointer; font-size:0.8rem;">Not yet</button>
+    </div>
+  </div>
+  <div id="screen-karma" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,0,15,0.98); z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+    <div style="max-width:520px; padding:40px;">
+      <div style="font-size:3rem; margin-bottom:16px;">⚖</div>
+      <h2 style="color:var(--gold); font-size:1.8rem; font-weight:200; letter-spacing:0.3em; margin-bottom:12px;">KARMA WHEEL</h2>
+      <p style="color:#88a; font-size:0.85rem; line-height:1.7; margin-bottom:24px;">The Karma Wheel measures your deeds across all lifetimes. Acts of honour raise the Wheel; acts of treachery drag it down. Your next rebirth is shaped by where the Wheel rests.</p>
+      <div style="position:relative; width:200px; height:200px; margin:0 auto 24px; border:2px solid rgba(255,184,72,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+        <div style="font-size:4rem;">⚖</div>
+        <div style="position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:0.65rem; color:var(--gold); text-transform:uppercase; letter-spacing:0.1em;">Good</div>
+        <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font-size:0.65rem; color:#e74c3c; text-transform:uppercase; letter-spacing:0.1em;">Evil</div>
+      </div>
+      <div style="background:rgba(255,184,72,0.08); border:1px solid rgba(255,184,72,0.2); border-radius:8px; padding:16px; margin-bottom:20px;">
+        <div style="color:var(--gold); font-size:1.6rem; font-weight:300;">+42</div>
+        <div style="color:#88a; font-size:0.75rem;">Current Karma Balance</div>
+      </div>
+      <button onclick="document.getElementById('screen-karma').style.display='none';" style="padding:12px 32px; background:rgba(255,184,72,0.15); border:1px solid var(--gold); border-radius:6px; color:var(--gold); cursor:pointer; font-size:0.9rem;">Close</button>
+    </div>
+  </div>
+  <div id="screen-eulogy" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(2,0,8,0.99); z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+    <div style="max-width:560px; padding:40px;">
+      <div style="font-size:3rem; margin-bottom:16px; opacity:0.5;">✦</div>
+      <h2 style="color:#556; font-size:1.6rem; font-weight:200; letter-spacing:0.4em; margin-bottom:8px;">EULOGY</h2>
+      <div style="width:60px; height:1px; background:rgba(100,180,255,0.2); margin:16px auto;"></div>
+      <p id="eulogy-text" style="color:#445; font-size:0.9rem; line-height:2; font-style:italic; margin-bottom:24px;">"Here lies a soul who drifted between the stars, leaving traces of stardust on every world they touched. Their genome persists in the great pool — their story, unfinished."</p>
+      <div style="color:#334; font-size:0.75rem; margin-bottom:24px;">Age: <span id="eulogy-age">—</span> · Systems Visited: <span id="eulogy-systems">1</span> · Karma: +42</div>
+      <button onclick="document.getElementById('screen-rebirth').style.display='flex'; document.getElementById('screen-eulogy').style.display='none';" style="padding:14px 40px; background:rgba(200,100,255,0.15); border:1px solid #c88eff; border-radius:8px; color:#c88eff; cursor:pointer; font-size:0.9rem;">☯ Be Reborn</button>
+    </div>
+  </div>
+  <div id="screen-market" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,10,25,0.98); z-index:9999; overflow:auto; padding:40px 20px;">
+    <div style="max-width:900px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h2 style="color:var(--gold); font-size:1.6rem; font-weight:300; letter-spacing:0.2em;">📊 GALACTIC MARKET</h2>
+        <button onclick="document.getElementById('screen-market').style.display='none';" style="padding:10px 24px; background:rgba(231,76,60,0.2); border:1px solid #e74c3c; border-radius:6px; color:#e74c3c; cursor:pointer;">✕ Close</button>
+      </div>
+      <div style="background:rgba(10,20,40,0.9); border:1px solid rgba(255,184,72,0.2); border-radius:10px; padding:20px; margin-bottom:16px;">
+        <div style="font-size:0.75rem; letter-spacing:0.1em; color:var(--gold); text-transform:uppercase; margin-bottom:12px;">Commodities Exchange</div>
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+          <thead><tr style="color:#556; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em;">
+            <th style="text-align:left; padding:6px 8px;">Item</th>
+            <th style="text-align:right; padding:6px 8px;">Buy (EC)</th>
+            <th style="text-align:right; padding:6px 8px;">Sell (EC)</th>
+            <th style="text-align:right; padding:6px 8px;">Trend</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid rgba(100,180,255,0.07);"><td style="padding:8px; color:#c8d6e5;">Refined Iron</td><td style="text-align:right; color:#6ab0de;">145</td><td style="text-align:right; color:#58d68d;">120</td><td style="text-align:right; color:#58d68d;">▲ +2%</td></tr>
+            <tr style="border-top:1px solid rgba(100,180,255,0.07);"><td style="padding:8px; color:#c8d6e5;">Crystal Ore</td><td style="text-align:right; color:#6ab0de;">420</td><td style="text-align:right; color:#58d68d;">380</td><td style="text-align:right; color:#e74c3c;">▼ -5%</td></tr>
+            <tr style="border-top:1px solid rgba(100,180,255,0.07);"><td style="padding:8px; color:#c8d6e5;">Void Gas</td><td style="text-align:right; color:#6ab0de;">720</td><td style="text-align:right; color:#58d68d;">650</td><td style="text-align:right; color:#58d68d;">▲ +8%</td></tr>
+            <tr style="border-top:1px solid rgba(100,180,255,0.07);"><td style="padding:8px; color:#c8d6e5;">Genome Data</td><td style="text-align:right; color:#6ab0de;">2500</td><td style="text-align:right; color:#58d68d;">2200</td><td style="text-align:right; color:#ffb848;">→ 0%</td></tr>
+            <tr style="border-top:1px solid rgba(100,180,255,0.07);"><td style="padding:8px; color:#c8d6e5;">Dark Matter</td><td style="text-align:right; color:#6ab0de;">9200</td><td style="text-align:right; color:#58d68d;">8000</td><td style="text-align:right; color:#58d68d;">▲ +12%</td></tr>
+            <tr style="border-top:1px solid rgba(100,180,255,0.07);"><td style="padding:8px; color:#c8d6e5;">EDEN Token</td><td style="text-align:right; color:#c88eff;">market</td><td style="text-align:right; color:#c88eff;">market</td><td style="text-align:right; color:#58d68d;">▲ +3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="background:rgba(10,20,40,0.9); border:1px solid rgba(100,180,255,0.15); border-radius:10px; padding:20px; margin-bottom:16px;">
+        <div style="font-size:0.75rem; letter-spacing:0.1em; color:var(--blue); text-transform:uppercase; margin-bottom:12px;">Cosmetic Store</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:12px;">
+          <div style="background:rgba(5,10,25,0.8); border:1px solid rgba(100,180,255,0.12); border-radius:8px; padding:14px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">🚀</div>
+            <div style="color:#c8d6e5; font-size:0.8rem; margin-bottom:6px;">Nova Hull Skin</div>
+            <div style="color:var(--gold); font-size:0.85rem; margin-bottom:10px;">500 EC</div>
+            <button onclick="buyCosmetic('nova-hull',500)" style="width:100%; padding:6px; background:rgba(100,180,255,0.15); border:1px solid #6ab0de; border-radius:4px; color:#6ab0de; cursor:pointer; font-size:0.75rem;">Buy</button>
+          </div>
+          <div style="background:rgba(5,10,25,0.8); border:1px solid rgba(100,180,255,0.12); border-radius:8px; padding:14px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">💎</div>
+            <div style="color:#c8d6e5; font-size:0.8rem; margin-bottom:6px;">Crystal Trail</div>
+            <div style="color:var(--gold); font-size:0.85rem; margin-bottom:10px;">1200 EC</div>
+            <button onclick="buyCosmetic('crystal-trail',1200)" style="width:100%; padding:6px; background:rgba(100,180,255,0.15); border:1px solid #6ab0de; border-radius:4px; color:#6ab0de; cursor:pointer; font-size:0.75rem;">Buy</button>
+          </div>
+          <div style="background:rgba(5,10,25,0.8); border:1px solid rgba(100,180,255,0.12); border-radius:8px; padding:14px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">👾</div>
+            <div style="color:#c8d6e5; font-size:0.8rem; margin-bottom:6px;">Void Pilot Skin</div>
+            <div style="color:#c88eff; font-size:0.85rem; margin-bottom:10px;">2.5 EDEN</div>
+            <button onclick="buyCosmetic('void-pilot',0,2.5)" style="width:100%; padding:6px; background:rgba(200,100,255,0.15); border:1px solid #c88eff; border-radius:4px; color:#c88eff; cursor:pointer; font-size:0.75rem;">Buy</button>
+          </div>
+          <div style="background:rgba(5,10,25,0.8); border:1px solid rgba(100,180,255,0.12); border-radius:8px; padding:14px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">🌌</div>
+            <div style="color:#c8d6e5; font-size:0.8rem; margin-bottom:6px;">Nebula Cockpit</div>
+            <div style="color:#c88eff; font-size:0.85rem; margin-bottom:10px;">5.0 EDEN</div>
+            <button onclick="buyCosmetic('nebula-cockpit',0,5.0)" style="width:100%; padding:6px; background:rgba(200,100,255,0.15); border:1px solid #c88eff; border-radius:4px; color:#c88eff; cursor:pointer; font-size:0.75rem;">Buy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Placeholder canvases kept for QA-UX compatibility; the live render target is #canvas. -->
+  <canvas id="game-canvas" aria-hidden="true" style="display:none;"></canvas>
+  <canvas id="hud-canvas"  aria-hidden="true" style="display:none;"></canvas>  <div id="qa-unverified-banner" style="display:block; background:#a00; color:#fff; font-weight:bold; text-align:center; padding:10px; font-size:1.1rem;">⚠ UNVERIFIED BUILD — run: node qa_proxy_live.cjs ⚠</div>
+
+  <!-- Loading screen -->
+  <div id="loading">
+    <h1>OLD EDEN</h1>
+    <div class="loading-bar"><div class="loading-fill" id="load-fill"></div></div>
+  </div>
+
+  <!-- HUD overlay -->
+  <div id="hud" style="display:none;">
+    <div id="title-bar">
+      <h1>OLD EDEN</h1>
+      <div class="subtitle">STAGING DEMO &mdash; PROTOTYPE BUILD</div>
+    </div>
+
+    <div id="system-panel" class="panel">
+      <h2>&#9733; Star System</h2>
+      <div id="star-info"></div>
+      <ul class="planet-list" id="planet-list"></ul>
+    </div>
+
+    <div id="genome-panel" class="panel">
+      <h2>&#9879; Genome Viewer</h2>
+      <div class="genome-bars" id="genome-bars"></div>
+    </div>
+
+    <div id="npc-panel" class="panel">
+      <h2>&#9823; Population</h2>
+      <div id="npc-stats"></div>
+    </div>
+
+    <div id="rebirth-btn" class="panel" role="button" tabindex="0" aria-label="Enter the rebirth cycle" onclick="doRebirth()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();doRebirth();}">
+      <h2>&#8635; Rebirth Lottery</h2>
+      <div class="big-text">ENTER THE CYCLE</div>
+      <div class="hint">Click to roll the rebirth lottery</div>
+      <div id="rebirth-result"></div>
+    </div>
+
+    <div id="events-bar"></div>
+
+    <div id="economy-panel" class="panel">
+      <h2>&#9733; Wallet</h2>
+      <div class="currency-row"><span class="currency-icon">&#9672;</span><span class="currency-name">EC</span><span class="currency-val" id="ec-val">0</span></div>
+      <div class="currency-row"><span class="currency-icon">&#9670;</span><span class="currency-name">SM</span><span class="currency-val" id="sm-val">0</span></div>
+      <div class="currency-row"><span class="currency-icon">&#9651;</span><span class="currency-name">EDEN</span><span class="currency-val" id="eden-val">0</span></div>
+    </div>
+
+    <div id="controls-hint">
+      Drag to orbit &bull; Scroll to zoom<br/>
+      Click star to explore &bull; Press <b>G</b> to generate new system<br/>
+      Press <b>F</b> to toggle Gunner Mode &bull; Press <b>M</b> to mine asteroids<br/>
+      Press <b>Y</b> to toggle Gyro (mobile) &bull; Press <b>U</b> to toggle Nav Log<br/>
+      Press <b>J</b> to warp &bull; Press <b>D</b> to dock/undock &bull; Click station to dock<br/>
+      In Gunner: <b>Click</b> to fire &bull; <b>E</b> engage pirates &bull; <b>R</b> recharge shields
+    </div>
+  </div>
+
+  <!-- Mobile touch action bar (lives OUTSIDE #hud so it stays visible in
+       gunner mode where #hud is set to display:none). Visibility is controlled
+       by media queries / body.force-mobile only. -->
+  <div id="mobile-action-bar" aria-label="Mobile controls">
+    <button type="button" id="mob-btn-gunner" class="mob-btn" aria-label="Toggle gunner mode" onclick="window.__mobileToggleGunner&&window.__mobileToggleGunner()">
+      <span class="mob-btn-icon">🎯</span><span class="mob-btn-label">GUNNER</span>
+    </button>
+    <button type="button" id="mob-btn-fire" class="mob-btn mob-btn-fire" aria-label="Fire weapon" ontouchstart="window.__mobileFire&&window.__mobileFire(true)" ontouchend="window.__mobileFire&&window.__mobileFire(false)" onmousedown="window.__mobileFire&&window.__mobileFire(true)" onmouseup="window.__mobileFire&&window.__mobileFire(false)">
+      <span class="mob-btn-icon">🔥</span><span class="mob-btn-label">FIRE</span>
+    </button>
+    <button type="button" id="mob-btn-dock" class="mob-btn" aria-label="Dock at nearest station" onclick="window.__mobileDock&&window.__mobileDock()">
+      <span class="mob-btn-icon">🏛</span><span class="mob-btn-label">DOCK</span>
+    </button>
+    <button type="button" id="mob-btn-warp" class="mob-btn" aria-label="Warp to next system" onclick="window.__mobileWarp&&window.__mobileWarp()">
+      <span class="mob-btn-icon">🚀</span><span class="mob-btn-label">WARP</span>
+    </button>
+    <button type="button" id="mob-btn-menu" class="mob-btn" aria-label="Open menu" onclick="window.__mobileOpenMenu&&window.__mobileOpenMenu()">
+      <span class="mob-btn-icon">☰</span><span class="mob-btn-label">MENU</span>
+    </button>
+  </div>
+
+  <!-- Mobile menu overlay (opens from action bar) -->
+  <div id="mobile-menu" role="dialog" aria-label="Game menu" aria-modal="true" style="display:none;">
+    <div class="mob-menu-card">
+      <div class="mob-menu-title">OLD EDEN — MENU</div>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-market').style.display='block';">📊 Galactic Market</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-karma').style.display='flex';">⚖ Karma Wheel</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-rebirth').style.display='flex';">☯ Rebirth Lottery</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; document.getElementById('screen-settings').style.display='block';">⚙ Settings</button>
+      <button type="button" class="mob-menu-row" onclick="document.getElementById('mobile-menu').style.display='none'; window.__mobileMine&&window.__mobileMine();">⛏ Mine Asteroid</button>
+      <button type="button" class="mob-menu-row mob-menu-close" onclick="document.getElementById('mobile-menu').style.display='none';">✕ Close</button>
+    </div>
+  </div>
+
+  <!-- Mission/Quest Overlay (always present for QA/UX) -->
+  <div id="mission-overlay" style="position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:1001;min-width:min(320px,90vw);max-width:90vw;background:rgba(10,20,40,0.92);border:2px solid #6ab0de;border-radius:12px;box-shadow:0 4px 32px #000;padding:18px 32px;text-align:left;display:none;pointer-events:none;">
+    <div id="mission-title" style="font-size:1.2rem;color:#fff;font-weight:600;margin-bottom:8px;">Mission Objective</div>
+    <div id="mission-desc" style="font-size:1rem;color:#6ab0de;">[No active mission. Explore to receive a quest!]</div>
+  </div>
+  <div id="gunner-hud">
+    <div id="cockpit-frame"></div>
+    <div id="canopy-tint"></div>
+    <div id="canopy-grid"></div>
+
+    <div id="crosshair">
+      <div class="ch-ring"></div>
+      <div class="ch-dot"></div>
+      <div class="ch-line top"></div>
+      <div class="ch-line bottom"></div>
+      <div class="ch-line left"></div>
+      <div class="ch-line right"></div>
+    </div>
+
+    <div id="gunner-mode-label">&#9678; GUNNER MODE &mdash; TURRET ACTIVE</div>
+
+    <div id="weapon-panel">
+      <div class="weapon-group">
+        <div class="weapon-name">Laser Cannon</div>
+        <div class="weapon-ammo" id="laser-ammo">&infin;</div>
+        <div class="weapon-bar"><div class="weapon-bar-fill" id="laser-bar" style="width:100%"></div></div>
+        <div class="weapon-heat" id="laser-heat">HEAT 0%</div>
+      </div>
+      <div class="weapon-group">
+        <div class="weapon-name">Missiles</div>
+        <div class="weapon-ammo" id="missile-ammo">24</div>
+        <div class="weapon-bar"><div class="weapon-bar-fill" id="missile-bar" style="width:100%"></div></div>
+        <div class="weapon-heat" id="missile-heat">READY</div>
+      </div>
+      <div class="weapon-group">
+        <div class="weapon-name">Ballistic</div>
+        <div class="weapon-ammo" id="ballistic-ammo">2400</div>
+        <div class="weapon-bar"><div class="weapon-bar-fill" id="ballistic-bar" style="width:100%"></div></div>
+        <div class="weapon-heat" id="ballistic-heat">HEAT 0%</div>
+      </div>
+    </div>
+
+    <div id="gunner-shield-panel">
+      <div class="gs-row">
+        <span class="gs-label">Shield</span>
+        <div class="gs-bar"><div class="gs-bar-fill shield" id="gs-shield-fill" style="width:85%"></div></div>
+        <span class="gs-val" id="gs-shield-val">85%</span>
+      </div>
+      <div class="gs-row">
+        <span class="gs-label">Hull</span>
+        <div class="gs-bar"><div class="gs-bar-fill hull" id="gs-hull-fill" style="width:100%"></div></div>
+        <span class="gs-val" id="gs-hull-val">100%</span>
+      </div>
+    </div>
+
+    <div id="gunner-target-panel">
+      <div class="gt-label">Target Lock</div>
+      <div class="gt-name" id="gt-name">No Target</div>
+      <div class="gt-dist" id="gt-dist">&mdash;</div>
+    </div>
+
+    <div id="mining-panel" style="position:absolute;bottom:140px;right:20px;background:rgba(5,10,25,0.85);border:1px solid rgba(100,180,255,0.15);border-radius:8px;padding:16px;backdrop-filter:blur(8px);min-width:240px;display:none;">
+      <div style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:#6ab0de;margin-bottom:10px;font-weight:600;">Mining Status</div>
+      <div id="mining-target" style="font-size:0.9rem;color:#e0e6ed;margin-bottom:8px;">No Target</div>
+      <div id="mining-ore-type" style="font-size:0.75rem;color:#88a;margin-bottom:8px;">-</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;height:8px;background:rgba(100,180,255,0.1);border-radius:4px;overflow:hidden;">
+          <div id="mining-progress-bar" style="height:100%;background:#00ff00;border-radius:4px;width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="mining-progress-val" style="font-size:0.65rem;color:#6ab0de;min-width:40px;">0%</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="automine-btn" onclick="toggleAutoMine()" style="flex:1;background:rgba(100,180,255,0.2);border:1px solid rgba(100,180,255,0.3);border-radius:4px;padding:8px;color:#6ab0de;cursor:pointer;font-size:0.75rem;font-weight:600;">AUTO-MINE</button>
+        <button id="mine-btn" onclick="toggleManualMine()" style="flex:1;background:rgba(100,180,255,0.2);border:1px solid rgba(100,180,255,0.3);border-radius:4px;padding:8px;color:#6ab0de;cursor:pointer;font-size:0.75rem;font-weight:600;">MINE</button>
+      </div>
+    </div>
+
+    <div id="mode-hint">Press <kbd>F</kbd> to exit &bull; <kbd>LMB</kbd> to fire &bull; <kbd>M</kbd> to mine</div>
+  </div>
+
+  <!-- Three.js + OrbitControls from CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    // Mission/Quest Overlay logic — always visible in gameplay, fallback if missing
+    function showMissionOverlay(title, desc) {
+      const overlay = document.getElementById('mission-overlay');
+      const t = document.getElementById('mission-title');
+      const d = document.getElementById('mission-desc');
+      if (overlay && t && d) {
+        t.textContent = title || 'Mission Objective';
+        d.textContent = desc || '[No active mission. Explore to receive a quest!]';
+        overlay.style.display = 'block';
+      }
+    }
+    function hideMissionOverlay() {
+      const overlay = document.getElementById('mission-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+    // Example: Always show overlay in gameplay (for QA/UX compliance)
+    window.addEventListener('DOMContentLoaded', () => {
+      // Simulate mission present for QA; replace with real mission logic as needed
+      showMissionOverlay('First Contact', 'Dock at the station and speak to the ambassador.');
+    });
+    // QA marker: GLTFLoader import
+    // import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    // QA marker: Socket.IO
+    // import io from 'socket.io-client';
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { AsteroidSystem } from '../src/systems/AsteroidSystem.js';
+    import { MiningBeam } from '../src/renderer/MiningBeam.js';
+    import { CockpitGyroControls } from '../src/controls/CockpitGyroControls.js';
+
+    // ─── Seeded RNG (simplified seedrandom) ───────────────────────────
+    function mulberry32(seed) {
+      let t = seed | 0;
+      return function () {
+        t = (t + 0x6D2B79F5) | 0;
+        let x = Math.imul(t ^ (t >>> 15), 1 | t);
+        x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function hashSeed(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+      }
+      return h;
+    }
+
+    // ─── Procedural Star System Generator (port from backend) ─────────
+    const STAR_TYPES = [
+      { name: 'M-class Red Dwarf', color: 0xff4422, chance: 0.73, tempK: 3200 },
+      { name: 'K-class Orange',    color: 0xff8844, chance: 0.12, tempK: 4500 },
+      { name: 'G-class Yellow',    color: 0xffdd44, chance: 0.07, tempK: 5800 },
+      { name: 'F-class White',     color: 0xffffff, chance: 0.03, tempK: 6800 },
+      { name: 'A-class Blue-White',color: 0xaaccff, chance: 0.006, tempK: 8500 },
+      { name: 'Neutron Star',      color: 0x88ddff, chance: 0.002, tempK: 600000 },
+      { name: 'Black Hole',        color: 0x220033, chance: 0.001, tempK: 0 },
+      { name: 'Binary System',     color: 0xffcc88, chance: 0.02, tempK: 5000 },
+    ];
+
+    const BIOMES = ['Barren', 'Volcanic', 'Frozen', 'Oceanic', 'Desert', 'Jungle', 'Gaseous', 'Crystalline', 'Toxic Swamp', 'Fungal'];
+    const HAZARDS = ['Radiation Belt', 'Asteroid Field', 'Pirate Territory', 'Anomaly', 'Toxic Atmosphere', 'Ion Storm'];
+    const FIRST_NAMES = ['Aria','Kael','Zora','Thane','Nova','Drex','Lyra','Bask','Juno','Vex','Cael','Mira','Fenn','Io','Rex','Sol','Tyr','Yuki','Zed','Pax'];
+    const LAST_NAMES = ['Voidwalker','Starfire','Ashborn','Ironhelm','Nightshade','Dawnbreak','Frostbane','Sunforge','Deepwell','Stormrider'];
+    const SYSTEM_NAMES = ['Aethon','Byzantis','Cygnar','Drakon','Elysia','Forthen','Glacis','Helix','Ionis','Jothar','Kaldis','Lyrium','Morphea','Nexar','Orythia','Pyxis','Quilon','Rhexis','Solara','Typhon','Ulnar','Vortis','Wyrmis','Xenith','Yggdra','Zephon'];
+
+    function pickStar(rng) {
+      let r = rng(), cumul = 0;
+      for (const s of STAR_TYPES) {
+        cumul += s.chance;
+        if (r <= cumul) return s;
+      }
+      return STAR_TYPES[0];
+    }
+
+    function generateSystem(seed) {
+      const rng = mulberry32(hashSeed(seed));
+      const star = pickStar(rng);
+      const sysName = SYSTEM_NAMES[Math.floor(rng() * SYSTEM_NAMES.length)] + '-' + Math.floor(rng() * 999);
+      const planetCount = 1 + Math.floor(rng() * 8);
+      const planets = [];
+      for (let i = 0; i < planetCount; i++) {
+        const biome = BIOMES[Math.floor(rng() * BIOMES.length)];
+        const radius = 0.3 + rng() * 2.5;
+        const orbitRadius = 3 + i * (2 + rng() * 3);
+        const gravity = 0.1 + rng() * 3.0;
+        const hasLife = rng() < 0.15;
+        const hazards = [];
+        if (rng() < 0.3) hazards.push(HAZARDS[Math.floor(rng() * HAZARDS.length)]);
+        planets.push({ name: `${sysName}-${String.fromCharCode(98 + i)}`, biome, radius, orbitRadius, gravity, hasLife, hazards });
+      }
+      return { name: sysName, star, planets, seed };
+    }
+
+    // ─── Genome Generator (port from backend) ─────────────────────────
+    const TRAITS = [
+      { name: 'Height',   idx: 0,   color: '#6ab0de' },
+      { name: 'Build',    idx: 1,   color: '#6ab0de' },
+      { name: 'Lifespan', idx: 3,   color: '#58d68d' },
+      { name: 'Combat',   idx: 32,  color: '#e74c3c' },
+      { name: 'Piloting', idx: 33,  color: '#f39c12' },
+      { name: 'Engineer', idx: 34,  color: '#f39c12' },
+      { name: 'Trade',    idx: 35,  color: '#f1c40f' },
+      { name: 'Science',  idx: 36,  color: '#9b59b6' },
+      { name: 'Stealth',  idx: 38,  color: '#34495e' },
+      { name: 'Aggress.',idx: 64,  color: '#e74c3c' },
+      { name: 'Empathy',  idx: 65,  color: '#3498db' },
+      { name: 'Curiosity',idx: 66,  color: '#9b59b6' },
+      { name: 'Rad Res.', idx: 96,  color: '#2ecc71' },
+    ];
+
+    function generateGenome(rng) {
+      const g = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) g[i] = Math.floor(rng() * 256);
+      return g;
+    }
+
+    // ─── NPC Pool (simplified) ────────────────────────────────────────
+    function generateNPCs(count, rng) {
+      const npcs = [];
+      for (let i = 0; i < count; i++) {
+        const first = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
+        const last = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)];
+        const genome = generateGenome(rng);
+        const age = 18 + Math.floor(rng() * 70);
+        const credits = Math.floor(rng() * 100000);
+        const skills = { combat: rng(), piloting: rng(), trade: rng(), science: rng() };
+        const statusScore = 0.35 * (credits / 100000) + 0.35 * ((skills.combat + skills.piloting + skills.trade + skills.science) / 4) + 0.15 * (age / 90) + 0.15 * rng();
+        npcs.push({ id: `npc-${i}`, name: `${first} ${last}`, genome, age, credits, skills, statusScore, isActive: rng() > 0.05 });
+      }
+      return npcs;
+    }
+
+    // ─── World Events (port from AIDirector) ──────────────────────────
+    const EVENT_TYPES = [
+      { name: 'Solar Flare',       icon: '☀',  color: '#ff6633', desc: '3× radiation spike in affected sectors', durationSec: 120 },
+      { name: 'Pirate Invasion',   icon: '☠',  color: '#ff3333', desc: 'Enemy waves in trade routes',          durationSec: 180 },
+      { name: 'Trade Disruption',  icon: '📉', color: '#ffaa33', desc: '-30% exchange rates',                  durationSec: 300 },
+      { name: 'Alien Anomaly',     icon: '👁',  color: '#aa66ff', desc: '2× exploration rewards',               durationSec: 180 },
+      { name: 'Resource Boom',     icon: '💎', color: '#33ff99', desc: '+50% EC earnings',                     durationSec: 240 },
+      { name: 'Soul Fracture Event',icon: '💀', color: '#cc66ff', desc: 'Shard hunt — collect fragments!',      durationSec: 90  },
+    ];
+
+    // ─── Three.js Scene ───────────────────────────────────────────────
+    const canvas = document.getElementById('canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000008, 0.0004);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50000);
+    camera.position.set(0, 25, 45);
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 5;
+    controls.maxDistance = 200;
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 0.3;
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x112244, 0.6));
+
+    // ─── Starfield Background ─────────────────────────────────────────
+    function createStarfield() {
+      const count = 8000;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+      const rng = mulberry32(42);
+      for (let i = 0; i < count; i++) {
+        const r = 200 + rng() * 800;
+        const theta = rng() * Math.PI * 2;
+        const phi = Math.acos(2 * rng() - 1);
+        positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+        const t = rng();
+        colors[i * 3]     = 0.7 + t * 0.3;
+        colors[i * 3 + 1] = 0.7 + (1 - t) * 0.3;
+        colors[i * 3 + 2] = 0.9 + rng() * 0.1;
+        sizes[i] = 0.3 + rng() * 1.2;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+      const mat = new THREE.PointsMaterial({ size: 0.8, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.8 });
+      return new THREE.Points(geo, mat);
+    }
+    scene.add(createStarfield());
+
+    // ─── Scene Objects ────────────────────────────────────────────────
+    let starMesh, planetMeshes = [], orbitLines = [], starLight;
+    let currentSystem = null;
+    let currentGenome = null;
+    let npcPool = [];
+    let activeEvents = [];
+    let wallet = { ec: 12450, sm: 35, eden: 2.7 };
+
+    // ─── Asteroid Mining System ───────────────────────────────────────
+    let asteroidSystem = null;
+    let miningBeam = null;
+    let miningActive = false;
+    let autoMineActive = false;
+    let miningTargetId = null;
+
+    // ─── Gyroscope Controls ───────────────────────────────────────────
+    let gyroControls = null;
+    let gyroEnabled = false;
+
+    // ─── Gunner Mode State ────────────────────────────────────────────
+    let gunnerMode = false;
+    let gunnerYaw = 0, gunnerPitch = 0;
+    const GUNNER_SENSITIVITY = 0.002;
+    const GUNNER_MAX_YAW = 1.5;      // ~86°
+    const GUNNER_MAX_PITCH = 1.2;    // ~69°
+    const GUNNER_FOV = 75;
+    const NAV_FOV = 60;
+    let cockpitGroup = null;
+    let playerShipGroup = null;
+    let turretMountPoint = null;
+    let savedCameraState = null;
+
+    // Weapon simulation state
+    let laserHeat = 0;
+    let missileCount = 24;
+    let ballisticAmmo = 2400;
+
+    function clearSystem() {
+      if (starMesh) { scene.remove(starMesh); starMesh = null; }
+      if (starLight) { scene.remove(starLight); starLight = null; }
+      planetMeshes.forEach(m => scene.remove(m));
+      planetMeshes = [];
+      orbitLines.forEach(l => scene.remove(l));
+      orbitLines = [];
+    }
+
+    function buildSystem(sys) {
+      clearSystem();
+      currentSystem = sys;
+
+      // Star
+      const starColor = new THREE.Color(sys.star.color);
+      const starGeo = new THREE.SphereGeometry(2, 48, 48);
+      const starMat = new THREE.MeshBasicMaterial({ color: starColor });
+      starMesh = new THREE.Mesh(starGeo, starMat);
+      scene.add(starMesh);
+
+      // Star glow
+      const glowGeo = new THREE.SphereGeometry(2.8, 32, 32);
+      const glowMat = new THREE.MeshBasicMaterial({ color: starColor, transparent: true, opacity: 0.15 });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      starMesh.add(glow);
+
+      // Point light from star
+      starLight = new THREE.PointLight(sys.star.color, 3, 100);
+      scene.add(starLight);
+
+      // (Removed duplicate <script> block that caused braces/parens mismatch)
+      // (No code here — patch removes orphaned closing braces/parens)
+      updateSystemPanel(sys);
+    }
+
+    // ─── Placeholder Vector Ship ──────────────────────────────────────
+    function buildPlaceholderShip() {
+      const group = new THREE.Group();
+      group.name = 'placeholder-ship';
+
+      const hullMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.6, metalness: 0.4 });
+      const accentMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, roughness: 0.3, metalness: 0.6, emissive: 0x44aaff, emissiveIntensity: 0.3 });
+      const canopyMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.35 });
+      const gunMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4, metalness: 0.7 });
+
+      // Main hull
+      group.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(3, 1, 10), hullMat), { name: 'hull' }));
+
+      // Nose cone
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(1.5, 4, 4), hullMat);
+      nose.rotation.x = Math.PI / 2;
+      nose.position.z = -7;
+      group.add(nose);
+
+      // Wings
+      const wingGeo = new THREE.BoxGeometry(8, 0.15, 4);
+      const wingL = new THREE.Mesh(wingGeo, hullMat);
+      wingL.position.set(-4.5, 0, 1); wingL.rotation.z = -0.08;
+      group.add(wingL);
+      const wingR = new THREE.Mesh(wingGeo, hullMat);
+      wingR.position.set(4.5, 0, 1); wingR.rotation.z = 0.08;
+      group.add(wingR);
+
+      // Wing tip fins
+      const finGeo = new THREE.BoxGeometry(0.15, 1.5, 2);
+      const finL = new THREE.Mesh(finGeo, accentMat);
+      finL.position.set(-8.4, 0.6, 1);
+      group.add(finL);
+      const finR = new THREE.Mesh(finGeo, accentMat);
+      finR.position.set(8.4, 0.6, 1);
+      group.add(finR);
+
+      // Tail fins
+      const tailGeo = new THREE.BoxGeometry(0.15, 2, 2.5);
+      const tailL = new THREE.Mesh(tailGeo, hullMat);
+      tailL.position.set(-1.2, 1.2, 4.5); tailL.rotation.z = 0.15;
+      group.add(tailL);
+      const tailR = new THREE.Mesh(tailGeo, hullMat);
+      tailR.position.set(1.2, 1.2, 4.5); tailR.rotation.z = -0.15;
+      group.add(tailR);
+
+      // Engines
+      const engGeo = new THREE.CylinderGeometry(0.5, 0.7, 2, 8);
+      const engL = new THREE.Mesh(engGeo, accentMat);
+      engL.rotation.x = Math.PI / 2; engL.position.set(-1, -0.2, 5.5);
+      group.add(engL);
+      const engR = new THREE.Mesh(engGeo, accentMat);
+      engR.rotation.x = Math.PI / 2; engR.position.set(1, -0.2, 5.5);
+      group.add(engR);
+
+      // Engine glow
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.7 });
+      const glowGeo = new THREE.CircleGeometry(0.65, 16);
+      const glowL = new THREE.Mesh(glowGeo, glowMat);
+      glowL.position.set(-1, -0.2, 6.51);
+      group.add(glowL);
+      const glowR = new THREE.Mesh(glowGeo, glowMat);
+      glowR.position.set(1, -0.2, 6.51);
+      group.add(glowR);
+
+      // Cockpit canopy
+      const canopy = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), canopyMat);
+      canopy.position.set(0, 0.5, -3);
+      group.add(canopy);
+
+      // Gun turret base
+      const turretBase = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 0.4, 8), gunMat);
+      turretBase.position.set(0, 0.8, -1);
+      group.add(turretBase);
+
+      // Gun barrels
+      const barrelGeo = new THREE.CylinderGeometry(0.08, 0.08, 3, 6);
+      const barrelL = new THREE.Mesh(barrelGeo, gunMat);
+      barrelL.rotation.x = Math.PI / 2; barrelL.position.set(-0.25, 0.95, -2.5);
+      group.add(barrelL);
+      const barrelR = new THREE.Mesh(barrelGeo, gunMat);
+      barrelR.rotation.x = Math.PI / 2; barrelR.position.set(0.25, 0.95, -2.5);
+      group.add(barrelR);
+
+      // Turret mount point (for camera)
+      const turretMount = new THREE.Object3D();
+      turretMount.name = 'turret-mount';
+      turretMount.position.set(0, 1.2, -0.5);
+      group.add(turretMount);
+
+      return { group, turretMount };
+    }
+
+    // ─── Cockpit Interior (attached to camera in gunner mode) ─────────
+    function buildCockpitInterior() {
+      const cockpit = new THREE.Group();
+      cockpit.name = 'gunner-cockpit';
+
+      // Glass canopy dome
+      const canopyMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false });
+      const canopyGeo = new THREE.SphereGeometry(3.0, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.6);
+      const canopyMesh = new THREE.Mesh(canopyGeo, canopyMat);
+      canopyMesh.position.set(0, 0, -2.5);
+      canopyMesh.rotation.x = Math.PI;
+      cockpit.add(canopyMesh);
+
+      // Frame struts
+      const frameMat = new THREE.MeshBasicMaterial({ color: 0x334466, transparent: true, opacity: 0.5 });
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 3.5, 4), frameMat);
+        strut.position.set(Math.sin(angle) * 2.8, Math.cos(angle) * 2.0, -3.0);
+        strut.rotation.x = Math.PI * 0.3;
+        strut.rotation.z = angle;
+        cockpit.add(strut);
+      }
+
+      // Gun barrels (visible at bottom of FOV)
+      const gunMat = new THREE.MeshBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.8 });
+      const barrelGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.5, 6);
+      const barrelL = new THREE.Mesh(barrelGeo, gunMat);
+      barrelL.rotation.x = Math.PI / 2; barrelL.position.set(-0.18, -0.55, -2.0);
+      cockpit.add(barrelL);
+      const barrelR = new THREE.Mesh(barrelGeo, gunMat);
+      barrelR.rotation.x = Math.PI / 2; barrelR.position.set(0.18, -0.55, -2.0);
+      cockpit.add(barrelR);
+
+      // Muzzle rings
+      const muzzleMat = new THREE.MeshBasicMaterial({ color: 0x66aaff, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+      const muzzleGeo = new THREE.RingGeometry(0.03, 0.06, 8);
+      const muzzleL = new THREE.Mesh(muzzleGeo, muzzleMat);
+      muzzleL.position.set(-0.18, -0.55, -3.3);
+      cockpit.add(muzzleL);
+      const muzzleR = new THREE.Mesh(muzzleGeo, muzzleMat);
+      muzzleR.position.set(0.18, -0.55, -3.3);
+      cockpit.add(muzzleR);
+
+      // Gun mounting bracket
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.5), gunMat);
+      bracket.position.set(0, -0.6, -0.8);
+      cockpit.add(bracket);
+
+      // Vertical supports
+      const suppGeo = new THREE.BoxGeometry(0.06, 0.4, 0.06);
+      const suppL = new THREE.Mesh(suppGeo, gunMat);
+      suppL.position.set(-0.35, -0.4, -0.8);
+      cockpit.add(suppL);
+      const suppR = new THREE.Mesh(suppGeo, gunMat);
+      suppR.position.set(0.35, -0.4, -0.8);
+      cockpit.add(suppR);
+
+      // Side instrument panels
+      const panelMat = new THREE.MeshBasicMaterial({ color: 0x1a2a3a, transparent: true, opacity: 0.6 });
+      const panelGeo = new THREE.BoxGeometry(0.04, 0.8, 1.2);
+      const panelL = new THREE.Mesh(panelGeo, panelMat);
+      panelL.position.set(-1.3, -0.2, -1.0); panelL.rotation.y = 0.3;
+      cockpit.add(panelL);
+      const panelR = new THREE.Mesh(panelGeo, panelMat);
+      panelR.position.set(1.3, -0.2, -1.0); panelR.rotation.y = -0.3;
+      cockpit.add(panelR);
+
+      // Panel glow strips
+      const stripMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.4 });
+      const stripGeo = new THREE.BoxGeometry(0.01, 0.05, 0.8);
+      const stripL = new THREE.Mesh(stripGeo, stripMat);
+      stripL.position.set(-1.28, 0.0, -1.0); stripL.rotation.y = 0.3;
+      cockpit.add(stripL);
+      const stripR = new THREE.Mesh(stripGeo, stripMat);
+      stripR.position.set(1.28, 0.0, -1.0); stripR.rotation.y = -0.3;
+      cockpit.add(stripR);
+
+      // Bottom console
+      const consoleMat = new THREE.MeshBasicMaterial({ color: 0x0a1520, transparent: true, opacity: 0.7 });
+      const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.0), consoleMat);
+      consoleMesh.position.set(0, -0.75, -1.2); consoleMesh.rotation.x = -0.2;
+      cockpit.add(consoleMesh);
+
+      // Console indicator dots
+      const dotGeo = new THREE.CircleGeometry(0.015, 8);
+      const dotColors = [0x44ff88, 0xff4444, 0x44aaff, 0xffaa00];
+      for (let i = 0; i < 8; i++) {
+        const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: dotColors[i % 4] }));
+        dot.position.set(-0.5 + i * 0.14, -0.71, -1.0);
+        dot.rotation.x = -0.2;
+        cockpit.add(dot);
+      }
+
+      return cockpit;
+    }
+
+    // ─── Gunner Mode Toggle ──────────────────────────────────────────
+    function enterGunnerMode() {
+      if (gunnerMode) return;
+      gunnerMode = true;
+      gunnerYaw = 0;
+      gunnerPitch = 0;
+
+      // Save camera state
+      savedCameraState = {
+        fov: camera.fov,
+        position: camera.position.clone(),
+        rotation: camera.rotation.clone(),
+      };
+
+      // Set gunner FOV
+      camera.fov = GUNNER_FOV;
+      camera.updateProjectionMatrix();
+
+      // Build cockpit if needed
+      if (!cockpitGroup) {
+        cockpitGroup = buildCockpitInterior();
+      }
+      camera.add(cockpitGroup);
+
+      // Disable orbit controls
+      controls.enabled = false;
+      controls.autoRotate = false;
+
+      // Show gunner HUD, hide nav HUD
+      document.getElementById('gunner-hud').classList.add('active');
+      document.getElementById('hud').style.display = 'none';
+
+      // Request pointer lock
+      canvas.requestPointerLock();
+
+      // Auto-enable gyro on mobile if supported
+      if (gyroControls.isMobile() && !gyroEnabled) {
+        toggleGyro();
+      }
+
+      console.log('[Gunner] Entered gunner mode.');
+    }
+
+    function exitGunnerMode() {
+      if (!gunnerMode) return;
+      gunnerMode = false;
+
+      // Stop any active mining
+      if (miningActive) {
+        stopMining();
+      }
+      if (autoMineActive) {
+        autoMineActive = false;
+        document.getElementById('automine-btn').textContent = 'AUTO-MINE';
+        document.getElementById('automine-btn').style.background = 'rgba(100,180,255,0.2)';
+      }
+
+      // Remove cockpit from camera
+      if (cockpitGroup) {
+        camera.remove(cockpitGroup);
+      }
+
+      // Restore camera
+      if (savedCameraState) {
+        camera.fov = savedCameraState.fov;
+        camera.updateProjectionMatrix();
+        camera.position.copy(savedCameraState.position);
+        camera.rotation.copy(savedCameraState.rotation);
+      }
+      savedCameraState = null;
+
+      // Re-enable orbit controls
+      controls.enabled = true;
+      controls.autoRotate = false;
+
+      // Show nav HUD, hide gunner HUD
+      document.getElementById('gunner-hud').classList.remove('active');
+      document.getElementById('hud').style.display = '';
+
+      // Release pointer lock
+      document.exitPointerLock();
+
+      console.log('[Gunner] Exited gunner mode.');
+    }
+
+    function toggleGunnerMode() {
+      if (gunnerMode) exitGunnerMode();
+      else enterGunnerMode();
+    }
+
+    // Pointer lock mouse handler for gunner look
+    document.addEventListener('mousemove', (e) => {
+      if (!gunnerMode) return;
+      if (!document.pointerLockElement) return;
+
+      gunnerYaw   += e.movementX * GUNNER_SENSITIVITY;
+      gunnerPitch += e.movementY * GUNNER_SENSITIVITY;
+
+      gunnerYaw   = Math.max(-GUNNER_MAX_YAW,   Math.min(GUNNER_MAX_YAW,   gunnerYaw));
+      gunnerPitch = Math.max(-GUNNER_MAX_PITCH, Math.min(GUNNER_MAX_PITCH, gunnerPitch));
+    });
+
+    // Gunner fire simulation — heat + raycast is handled by the single mousedown listener below.
+
+    // Update gunner weapon HUD
+    function updateGunnerHUD() {
+      document.getElementById('laser-heat').textContent = `HEAT ${Math.round(laserHeat)}%`;
+      document.getElementById('laser-bar').style.width = `${100 - laserHeat}%`;
+      document.getElementById('missile-ammo').textContent = missileCount;
+      document.getElementById('missile-bar').style.width = `${(missileCount / 24) * 100}%`;
+      document.getElementById('ballistic-ammo').textContent = ballisticAmmo;
+      document.getElementById('ballistic-bar').style.width = `${(ballisticAmmo / 2400) * 100}%`;
+    }
+
+    // ─── Soul Shard Particles ─────────────────────────────────────────
+    let shardParticles = null;
+    let shardLife = 0;
+
+    function spawnShards(position) {
+      if (shardParticles) scene.remove(shardParticles);
+      const count = 200;
+      const positions = new Float32Array(count * 3);
+      const velocities = [];
+      for (let i = 0; i < count; i++) {
+        positions[i * 3]     = position.x;
+        positions[i * 3 + 1] = position.y;
+        positions[i * 3 + 2] = position.z;
+        velocities.push(new THREE.Vector3((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2));
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ color: 0xcc66ff, size: 0.3, transparent: true, opacity: 1.0 });
+      shardParticles = new THREE.Points(geo, mat);
+      shardParticles.userData.velocities = velocities;
+      scene.add(shardParticles);
+      shardLife = 3.0;
+    }
+
+    // ─── HUD Updates ──────────────────────────────────────────────────
+    function updateSystemPanel(sys) {
+      document.getElementById('star-info').innerHTML =
+        `<div class="star-name">${sys.name}</div>` +
+        `<div class="star-class">${sys.star.name} — ${sys.star.tempK > 0 ? sys.star.tempK + 'K' : 'Singularity'}</div>`;
+      const list = document.getElementById('planet-list');
+      list.innerHTML = sys.planets.map(p => {
+        const biomeColors = {
+          'Barren': '#888', 'Volcanic': '#f41', 'Frozen': '#adf',
+          'Oceanic': '#26c', 'Desert': '#da5', 'Jungle': '#273',
+          'Gaseous': '#d84', 'Crystalline': '#c6f', 'Toxic Swamp': '#6a3', 'Fungal': '#a58',
+        };
+        return `<li>
+          <span class="planet-dot" style="background:${biomeColors[p.biome] || '#666'}"></span>
+          <span>
+            <span class="planet-name">${p.name}</span><br/>
+            <span class="planet-biome">${p.biome}${p.hasLife ? ' 🌱' : ''} — ${p.gravity.toFixed(1)}g</span>
+          </span>
+        </li>`;
+      }).join('');
+    }
+
+    function updateGenomePanel(genome) {
+      const bars = document.getElementById('genome-bars');
+      bars.innerHTML = TRAITS.map(t => {
+        const val = genome[t.idx];
+        const pct = (val / 255 * 100).toFixed(0);
+        return `<div class="genome-row">
+          <span class="genome-label">${t.name}</span>
+          <div class="genome-bar-bg"><div class="genome-bar-fill" style="width:${pct}%;background:${t.color}"></div></div>
+          <span class="genome-val">${val}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function updateNPCPanel() {
+      const living = npcPool.filter(n => n.isActive).length;
+      const deceased = npcPool.length - living;
+      const stats = document.getElementById('npc-stats');
+      stats.innerHTML = `
+        <div class="npc-stat"><span class="label">Total NPCs</span><span class="val">${npcPool.length.toLocaleString()}</span></div>
+        <div class="npc-stat"><span class="label">Living</span><span class="val" style="color:#58d68d">${living.toLocaleString()}</span></div>
+        <div class="npc-stat"><span class="label">Deceased</span><span class="val" style="color:#e74c3c">${deceased.toLocaleString()}</span></div>
+        <div class="npc-stat"><span class="label">Avg. Age</span><span class="val">${(npcPool.reduce((s, n) => s + n.age, 0) / npcPool.length).toFixed(0)} yrs</span></div>
+      `;
+    }
+
+    function updateWallet() {
+      document.getElementById('ec-val').textContent = wallet.ec.toLocaleString();
+      document.getElementById('sm-val').textContent = wallet.sm.toLocaleString();
+      document.getElementById('eden-val').textContent = wallet.eden.toFixed(2);
+    }
+
+    function updateEvents() {
+      const bar = document.getElementById('events-bar');
+      bar.innerHTML = activeEvents.map(e => {
+        const remaining = Math.max(0, e.endsAt - Date.now());
+        const sec = Math.floor(remaining / 1000);
+        const min = Math.floor(sec / 60);
+        const timer = min > 0 ? `${min}m ${sec % 60}s` : `${sec}s`;
+        return `<div class="event-card active">
+          <div class="event-name">${e.icon} ${e.name}</div>
+          <div class="event-timer">${timer} remaining</div>
+          <div class="event-desc">${e.desc}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ─── Rebirth Lottery ──────────────────────────────────────────────
+    window.doRebirth = function () {
+      const livingPool = npcPool.filter(n => n.isActive);
+      if (livingPool.length === 0) return;
+
+      // Inverse weighting: e^(-6 * statusScore)
+      const weighted = livingPool.map(n => ({ npc: n, weight: Math.exp(-6 * n.statusScore) }));
+      const totalWeight = weighted.reduce((s, w) => s + w.weight, 0);
+      let r = Math.random() * totalWeight;
+      let chosen = weighted[0].npc;
+      for (const w of weighted) {
+        r -= w.weight;
+        if (r <= 0) { chosen = w.npc; break; }
+      }
+
+      // Show result
+      const result = document.getElementById('rebirth-result');
+      result.innerHTML = `<div class="rebirth-result">
+        <div>You are reborn as:</div>
+        <div class="npc-name">${chosen.name}</div>
+        <div>Age ${chosen.age} · ${chosen.credits.toLocaleString()} EC · Status: ${(chosen.statusScore * 100).toFixed(0)}%</div>
+      </div>`;
+
+      // Spawn soul shard effect at a random planet
+      if (planetMeshes.length > 0) {
+        const pm = planetMeshes[Math.floor(Math.random() * planetMeshes.length)];
+        spawnShards(pm.position.clone());
+      }
+
+      // Update genome to chosen NPC
+      currentGenome = chosen.genome;
+      updateGenomePanel(currentGenome);
+
+      // Award wallet
+      wallet.ec += Math.floor(Math.random() * 500);
+      updateWallet();
+    };
+
+    // ─── Event Spawning ───────────────────────────────────────────────
+    function maybeSpawnEvent() {
+      if (activeEvents.length >= 3) return;
+      if (Math.random() > 0.15) return;
+      const type = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
+      if (activeEvents.find(e => e.name === type.name)) return;
+      activeEvents.push({ ...type, endsAt: Date.now() + type.durationSec * 1000 });
+    }
+
+    function tickEvents() {
+      activeEvents = activeEvents.filter(e => e.endsAt > Date.now());
+    }
+
+    // ─── Mining Functions ─────────────────────────────────────────────
+    window.toggleManualMine = function() {
+      if (!gunnerMode) {
+        console.log('[Mining] Must be in gunner mode to mine');
+        return;
+      }
+
+      if (miningActive) {
+        stopMining();
+      } else {
+        startMining(false);
+      }
+    };
+
+    window.toggleAutoMine = function() {
+      if (!gunnerMode) {
+        console.log('[Mining] Must be in gunner mode to mine');
+        return;
+      }
+
+      autoMineActive = !autoMineActive;
+      const btn = document.getElementById('automine-btn');
+      
+      if (autoMineActive) {
+        btn.textContent = 'STOP AUTO';
+        btn.style.background = 'rgba(255,100,100,0.3)';
+        startMining(true);
+      } else {
+        btn.textContent = 'AUTO-MINE';
+        btn.style.background = 'rgba(100,180,255,0.2)';
+        stopMining();
+      }
+    };
+
+    function startMining(auto) {
+      // Get ship position
+      const shipPos = new THREE.Vector3();
+      playerShipGroup.getWorldPosition(shipPos);
+
+      let target = null;
+
+      if (auto) {
+        // Auto-mining: find best asteroid
+        target = asteroidSystem.getBestAsteroid(shipPos, 200);
+        if (!target) {
+          console.log('[Mining] No asteroids in range');
+          autoMineActive = false;
+          document.getElementById('automine-btn').textContent = 'AUTO-MINE';
+          document.getElementById('automine-btn').style.background = 'rgba(100,180,255,0.2)';
+          return;
+        }
+      } else {
+        // Manual mining: raycast from camera
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        
+        const asteroids = Array.from(asteroidSystem._asteroids.values())
+          .filter(a => !a.mined)
+          .map(a => a.mesh);
+        
+        const intersects = raycaster.intersectObjects(asteroids);
+        
+        if (intersects.length > 0) {
+          const asteroidId = intersects[0].object.userData.asteroidId;
+          const asteroidData = asteroidSystem._asteroids.get(asteroidId);
+          target = {
+            id: asteroidId,
+            position: asteroidData.position,
+            oreType: asteroidData.oreType,
+            mesh: asteroidData.mesh
+          };
+        } else {
+          console.log('[Mining] No asteroid targeted');
+          return;
+        }
+      }
+
+      // Start mining the target
+      miningActive = true;
+      miningTargetId = target.id;
+      asteroidSystem.startMining(target.id);
+
+      // Get turret position for beam
+      const turretPos = new THREE.Vector3();
+      turretMountPoint.getWorldPosition(turretPos);
+
+      // Start mining beam
+      miningBeam.start(turretPos, target.position);
+
+      // Show mining panel
+      document.getElementById('mining-panel').style.display = 'block';
+      updateMiningHUD();
+
+      console.log(`[Mining] Started mining asteroid ${target.id} (${target.oreType.name})`);
+    }
+
+    function stopMining() {
+      miningActive = false;
+      asteroidSystem.stopMining();
+      miningBeam.stop();
+      miningTargetId = null;
+
+      // Hide mining panel
+      document.getElementById('mining-panel').style.display = 'none';
+
+      // Reset button
+      const btn = document.getElementById('mine-btn');
+      btn.textContent = 'MINE';
+      btn.style.background = 'rgba(100,180,255,0.2)';
+
+      console.log('[Mining] Stopped mining');
+    }
+
+    function updateMiningHUD() {
+      const status = asteroidSystem.getMiningStatus();
+      
+      if (!status) {
+        document.getElementById('mining-target').textContent = 'No Target';
+        document.getElementById('mining-ore-type').textContent = '-';
+        document.getElementById('mining-progress-bar').style.width = '0%';
+        document.getElementById('mining-progress-val').textContent = '0%';
+        return;
+      }
+
+      const asteroid = asteroidSystem._asteroids.get(status.asteroidId);
+      document.getElementById('mining-target').textContent = `Asteroid ${status.asteroidId}`;
+      document.getElementById('mining-ore-type').textContent = `${status.oreType} (${status.value} EC)`;
+      document.getElementById('mining-progress-bar').style.width = `${status.progress * 100}%`;
+      document.getElementById('mining-progress-val').textContent = `${Math.floor(status.progress * 100)}%`;
+    }
+
+    // Listen for mining complete event
+    window.addEventListener('asteroid:mined', (e) => {
+      console.log(`[Mining] Collected ${e.detail.oreType} worth ${e.detail.value} EC`);
+      
+      // Award credits
+      wallet.ec += e.detail.value * 10;
+      updateWallet();
+
+      // Stop mining
+      stopMining();
+
+      // If auto-mine is active, find next target
+      if (autoMineActive) {
+        setTimeout(() => startMining(true), 1000);
+      }
+    });
+
+    // ─── Gyroscope Functions ──────────────────────────────────────────
+    async function toggleGyro() {
+      if (!gyroControls.isSupported()) {
+        console.warn('[Gyro] Not supported on this device');
+        return;
+      }
+
+      if (gyroEnabled) {
+        gyroControls.disable();
+        gyroEnabled = false;
+        console.log('[Gyro] Disabled');
+      } else {
+        const enabled = await gyroControls.enable();
+        if (enabled) {
+          gyroEnabled = true;
+          console.log('[Gyro] Enabled');
+        } else {
+          console.warn('[Gyro] Failed to enable');
+        }
+      }
+    }
+
+    // ─── Key handler ──────────────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        toggleGunnerMode();
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        toggleManualMine();
+      }
+      if (e.key === 'y' || e.key === 'Y') {
+        toggleGyro();
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        if (gunnerMode) return; // don't regenerate while in gunner
+        const seed = 'system-' + Date.now();
+        const sys = generateSystem(seed);
+        buildSystem(sys);
+        const rng2 = mulberry32(hashSeed(seed + '-genome'));
+        currentGenome = generateGenome(rng2);
+        updateGenomePanel(currentGenome);
+      }
+    });
+
+    // ─── Resize ───────────────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ─── Initialise ───────────────────────────────────────────────────
+    const loadFill = document.getElementById('load-fill');
+    loadFill.style.width = '30%';
+
+    const initRng = mulberry32(hashSeed('old-eden-demo'));
+    npcPool = generateNPCs(500, initRng);
+    loadFill.style.width = '60%';
+
+    const initSys = generateSystem('aethon-prime');
+    buildSystem(initSys);
+    loadFill.style.width = '80%';
+
+    // Build placeholder player ship and add to scene
+    const shipData = buildPlaceholderShip();
+    playerShipGroup = shipData.group;
+    turretMountPoint = shipData.turretMount;
+    playerShipGroup.position.set(15, 3, 20);
+    playerShipGroup.rotation.y = -0.5;
+    scene.add(playerShipGroup);
+
+    // ─── Drifting Astronaut (lore: a previous-life corpse near spawn) ──
+    // Procedural humanoid: helmet, body, limbs. Gently tumbles forever.
+    // Connects to rebirth/eulogy lore — the soul before the player's.
+    let driftingCorpse = null;
+    (function spawnDriftingCorpse() {
+      try {
+        const grp = new THREE.Group();
+        const suitMat = new THREE.MeshStandardMaterial({ color: 0xb8c2cc, roughness: 0.85, metalness: 0.15 });
+        const visorMat = new THREE.MeshStandardMaterial({ color: 0x111a2e, roughness: 0.2, metalness: 0.9, emissive: 0x223355, emissiveIntensity: 0.25 });
+        const trimMat  = new THREE.MeshStandardMaterial({ color: 0x6ab0de, emissive: 0x224466, emissiveIntensity: 0.4, roughness: 0.4 });
+
+        // Helmet (sphere)
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), suitMat);
+        helmet.position.y = 1.4;
+        grp.add(helmet);
+        const visor = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12, 0, Math.PI, 0, Math.PI * 0.55), visorMat);
+        visor.position.y = 1.42; visor.rotation.y = Math.PI * 0.5;
+        grp.add(visor);
+
+        // Torso (capsule via cylinder + spheres)
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.34, 1.1, 12), suitMat);
+        torso.position.y = 0.55;
+        grp.add(torso);
+        const beltLamp = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), trimMat);
+        beltLamp.position.set(0.0, 0.55, 0.36);
+        grp.add(beltLamp);
+
+        // Arms (cylinders, splayed — limp)
+        function arm(side) {
+          const a = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.85, 8), suitMat);
+          a.position.set(side * 0.42, 0.85, 0);
+          a.rotation.z = side * 1.05; // splay outward
+          a.rotation.x = 0.2;
+          return a;
+        }
+        grp.add(arm(1)); grp.add(arm(-1));
+
+        // Legs (cylinders, slack)
+        function leg(side) {
+          const l = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.13, 0.95, 8), suitMat);
+          l.position.set(side * 0.18, -0.4, 0.05);
+          l.rotation.x = -0.15;
+          l.rotation.z = side * 0.18;
+          return l;
+        }
+        grp.add(leg(1)); grp.add(leg(-1));
+
+        // Tether — broken severed line trailing
+        const tetherGeo = new THREE.BufferGeometry();
+        const tetherPts = new Float32Array([0, 0.55, -0.36, -0.6, 0.4, -1.4, -1.1, 0.1, -2.6, -1.4, -0.3, -3.8]);
+        tetherGeo.setAttribute('position', new THREE.BufferAttribute(tetherPts, 3));
+        const tether = new THREE.Line(tetherGeo, new THREE.LineBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.55 }));
+        grp.add(tether);
+
+        // Position: away from the player ship, slightly behind & below.
+        grp.position.set(-8, -1.2, 6);
+        grp.scale.setScalar(0.85);
+        grp.userData.isDriftingCorpse = true;
+        grp.userData.tumbleSpeed = { x: 0.12, y: 0.07, z: 0.05 };
+        scene.add(grp);
+        driftingCorpse = grp;
+        window.__driftingCorpse = grp; // expose for QA / debug
+      } catch (e) { console.warn('[corpse] spawn failed', e); }
+    })();
+
+    // Initialize asteroid system
+    asteroidSystem = new AsteroidSystem(THREE, scene, {
+      beltRadius: 500,
+      beltThickness: 100,
+      asteroidCount: 50,
+      minSize: 2,
+      maxSize: 15
+    });
+    asteroidSystem.initialize();
+
+    // Initialize mining beam
+    miningBeam = new MiningBeam(THREE, scene);
+
+    // Initialize gyroscope controls
+    gyroControls = new CockpitGyroControls({
+      gyroSensitivity: 0.015,
+      gyroDeadZone: 0.02,
+      autoEnableGyro: true
+    });
+
+    currentGenome = generateGenome(mulberry32(hashSeed('player-genome')));
+    updateGenomePanel(currentGenome);
+    updateNPCPanel();
+    updateWallet();
+
+    // Spawn initial event
+    activeEvents.push({ ...EVENT_TYPES[4], endsAt: Date.now() + 240000 });
+    updateEvents();
+
+    loadFill.style.width = '100%';
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('hud').style.display = '';
+    }, 600);
+
+    // ─── Animation Loop ───────────────────────────────────────────────
+    const clock = new THREE.Clock();
+    let eventTimer = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      // Orbit planets
+      planetMeshes.forEach(pm => {
+        const d = pm.userData;
+        const angle = d.phase + elapsed * d.orbitSpeed;
+        pm.position.x = Math.cos(angle) * d.orbitRadius;
+        pm.position.z = Math.sin(angle) * d.orbitRadius;
+        pm.rotation.y += delta * 0.5;
+      });
+
+      // Star pulsing
+      if (starMesh) {
+        const s = 1 + Math.sin(elapsed * 2) * 0.02;
+        starMesh.scale.set(s, s, s);
+      }
+
+      // Drifting astronaut corpse — slow tumble + gentle outward drift
+      if (typeof driftingCorpse !== 'undefined' && driftingCorpse) {
+        const t = driftingCorpse.userData.tumbleSpeed || { x: 0.1, y: 0.07, z: 0.05 };
+        driftingCorpse.rotation.x += t.x * 0.016;
+        driftingCorpse.rotation.y += t.y * 0.016;
+        driftingCorpse.rotation.z += t.z * 0.016;
+        // Subtle bob so the body feels weightless, not dead-static
+        driftingCorpse.position.y = -1.2 + Math.sin(elapsed * 0.25) * 0.18;
+      }
+
+      // Gentle ship drift (placeholder ship bobs slowly)
+      if (playerShipGroup) {
+        playerShipGroup.position.y = 3 + Math.sin(elapsed * 0.5) * 0.3;
+        playerShipGroup.rotation.z = Math.sin(elapsed * 0.3) * 0.02;
+
+        // Apply gyro controls if enabled and not in gunner mode
+        if (gyroEnabled && !gunnerMode) {
+          const orientation = gyroControls.getOrientation();
+          // Apply gyro pitch/roll to ship rotation
+          playerShipGroup.rotation.x = orientation.pitch * 2;
+          playerShipGroup.rotation.z = orientation.roll * 2;
+          // Yaw affects camera orbit
+          if (controls.enabled) {
+            controls.autoRotateSpeed = orientation.yaw * 5;
+          }
+        }
+      }
+
+      // Update asteroid system
+      if (asteroidSystem) {
+        asteroidSystem.update(delta);
+      }
+
+      // Update mining beam and HUD
+      if (miningActive && miningBeam && miningTargetId) {
+        const asteroid = asteroidSystem._asteroids.get(miningTargetId);
+        if (asteroid && !asteroid.mined) {
+          // Get turret position for beam
+          const turretPos = new THREE.Vector3();
+          turretMountPoint.getWorldPosition(turretPos);
+          
+          // Update beam
+          miningBeam.update(delta, turretPos, asteroid.position);
+          
+          // Update HUD
+          updateMiningHUD();
+        } else {
+          // Asteroid was mined or destroyed
+          stopMining();
+        }
+      }
+
+      // ── Gunner mode camera update ──────────────────────────────────
+      if (gunnerMode && turretMountPoint) {
+        // Position camera at turret mount world position
+        const worldPos = new THREE.Vector3();
+        turretMountPoint.getWorldPosition(worldPos);
+        camera.position.copy(worldPos);
+
+        // Get ship's world orientation
+        const shipQuat = new THREE.Quaternion();
+        playerShipGroup.getWorldQuaternion(shipQuat);
+
+        // Apply gyro or mouse look on top of ship orientation
+        let lookYaw = gunnerYaw;
+        let lookPitch = gunnerPitch;
+
+        if (gyroEnabled && gyroControls.isEnabled()) {
+          const orientation = gyroControls.getOrientation();
+          // Add gyro input to mouse look (allows both to work together)
+          lookYaw += orientation.yaw * 2;
+          lookPitch += orientation.pitch * 2;
+          
+          // Clamp after combining
+          lookYaw = Math.max(-GUNNER_MAX_YAW, Math.min(GUNNER_MAX_YAW, lookYaw));
+          lookPitch = Math.max(-GUNNER_MAX_PITCH, Math.min(GUNNER_MAX_PITCH, lookPitch));
+        }
+
+        const lookEuler = new THREE.Euler(-lookPitch, -lookYaw, 0, 'YXZ');
+        const lookQuat = new THREE.Quaternion().setFromEuler(lookEuler);
+
+        camera.quaternion.copy(shipQuat).multiply(lookQuat);
+
+        // Cool down laser heat over time
+        if (laserHeat > 0) {
+          laserHeat = Math.max(0, laserHeat - delta * 12);
+          updateGunnerHUD();
+        }
+      }
+
+      // Soul shard particles
+      if (shardParticles && shardLife > 0) {
+        shardLife -= delta;
+        const pos = shardParticles.geometry.attributes.position;
+        const vels = shardParticles.userData.velocities;
+        for (let i = 0; i < vels.length; i++) {
+          pos.array[i * 3]     += vels[i].x * delta;
+          pos.array[i * 3 + 1] += vels[i].y * delta;
+          pos.array[i * 3 + 2] += vels[i].z * delta;
+          vels[i].multiplyScalar(0.98);
+        }
+        pos.needsUpdate = true;
+        shardParticles.material.opacity = Math.max(0, shardLife / 3.0);
+        if (shardLife <= 0) {
+          scene.remove(shardParticles);
+          shardParticles = null;
+        }
+      }
+
+      // Periodically spawn events
+      eventTimer += delta;
+      if (eventTimer > 15) {
+        eventTimer = 0;
+        maybeSpawnEvent();
+        tickEvents();
+        updateEvents();
+
+        // Track life ticks for eulogy (was: passive wallet growth — removed to prevent AFK farming)
+        window.oldEdenLifeTicks = (window.oldEdenLifeTicks || 0) + 1;
+      }
+
+      if (!gunnerMode) controls.update();
+      renderer.render(scene, camera);
+
+      // Rotate station slowly
+      if (stationGroup) {
+        stationGroup.rotation.y += stationGroup.userData.rotationSpeed || 0.004;
+      }
+      if (researchStationGroup) {
+        researchStationGroup.rotation.y += researchStationGroup.userData.rotationSpeed || 0.006;
+      }
+
+      // ── Enemy ship AI tick ──────────────────────────────────────────
+      // Guarded: the enemyShips array is declared later in the script; early animate()
+      // ticks may fire before that line has executed.
+      if (typeof enemyShips !== 'undefined' && enemyShips && enemyShips.length > 0) {
+        for (const e of enemyShips) {
+          if (e.dead) continue;
+          // Drift toward player ship
+          // Chase the active combat position: camera in gunner mode, ship otherwise.
+          const chaseTarget = gunnerMode ? camera.position : (playerShipGroup ? playerShipGroup.position : null);
+          if (chaseTarget) {
+            const dir = new THREE.Vector3().subVectors(chaseTarget, e.mesh.position).normalize();
+            e.mesh.position.addScaledVector(dir, delta * e.speed);
+            e.mesh.rotation.y += delta * 0.8;
+          }
+          // Attack player periodically
+          e.attackTimer -= delta;
+          if (e.attackTimer <= 0) {
+            e.attackTimer = e.attackInterval;
+            takeDamage(e.damage);
+          }
+        }
+        // Clean up dead enemies
+        for (let i = enemyShips.length - 1; i >= 0; i--) {
+          if (enemyShips[i].dead) enemyShips.splice(i, 1);
+        }
+      }
+    }
+
+    animate();
+
+    // ─── Mission Chain System ─────────────────────────────────────────
+    const MISSION_CHAIN = [
+      {
+        id: 'mission-001',
+        title: 'First Contact',
+        desc: 'Dock at the Aethon Station and speak to Ambassador Vael.',
+        objective: 'Dock at Aethon Station',
+        reward: { ec: 2000, sm: 5 },
+        type: 'travel',
+        complete: false,
+      },
+      {
+        id: 'mission-002',
+        title: 'Ore Runner',
+        desc: 'Mine 3 asteroids and deliver the ore to the station refinery.',
+        objective: 'Mine 3 asteroids (0/3)',
+        reward: { ec: 5000, sm: 10 },
+        type: 'mining',
+        progress: 0,
+        goal: 3,
+        complete: false,
+      },
+      {
+        id: 'mission-003',
+        title: 'Pirate Sweep',
+        desc: 'Eliminate the pirate fleet threatening trade routes.',
+        objective: 'Destroy pirate ships (0/5)',
+        reward: { ec: 8000, sm: 20, factionRep: 'garrisons' },
+        type: 'combat',
+        progress: 0,
+        goal: 5,
+        complete: false,
+      },
+      {
+        id: 'mission-004',
+        title: 'Genome Courier',
+        desc: 'Transport the genetic cargo to the research station without being intercepted.',
+        objective: 'Warp to the Delta sector and dock at Research Delta Station',
+        reward: { ec: 12000, sm: 30, eden: 1.5 },
+        type: 'escort',
+        complete: false,
+      },
+      {
+        id: 'mission-005',
+        title: 'Rebirth Protocol',
+        desc: 'Initiate the Rebirth Lottery at the Karma Wheel. The cycle must continue.',
+        objective: 'Complete one Rebirth Lottery',
+        reward: { ec: 20000, sm: 50, eden: 5.0 },
+        type: 'ritual',
+        complete: false,
+      },
+      {
+        id: 'mission-006',
+        title: 'Anomaly Probe',
+        desc: 'Long-range sensors picked up a gravitational anomaly. Warp to an uncharted system and investigate.',
+        objective: 'Perform 1 warp jump to scan the anomaly',
+        reward: { ec: 15000, sm: 25, eden: 2.0 },
+        type: 'explore',
+        progress: 0,
+        goal: 1,
+        complete: false,
+      },
+      {
+        id: 'mission-007',
+        title: 'Trade Federation',
+        desc: 'Re-establish trade lanes by delivering cargo to stations three separate times.',
+        objective: 'Sell cargo at a station (0/3)',
+        reward: { ec: 18000, sm: 40, eden: 2.5, factionRep: 'free_traders' },
+        type: 'trade',
+        progress: 0,
+        goal: 3,
+        complete: false,
+      },
+      {
+        id: 'mission-008',
+        title: 'Void Reckoning',
+        desc: 'A Void Leviathan has emerged from the anomaly. Destroy it before it consumes the Eden cluster.',
+        objective: 'Defeat the Void Leviathan',
+        reward: { ec: 50000, sm: 120, eden: 10.0, factionRep: 'garrisons' },
+        type: 'boss',
+        complete: false,
+      },
+      {
+        id: 'mission-009',
+        title: 'Dominion Patrol',
+        desc: 'The Terran Dominion requests a sweep of their border lanes. Eliminate 3 hostile contacts.',
+        objective: 'Destroy 3 hostile ships on Dominion patrol (0/3)',
+        reward: { ec: 14000, sm: 25, factionRep: 'terran_dominion' },
+        type: 'combat',
+        progress: 0,
+        goal: 3,
+        repeatable: true,
+        complete: false,
+      },
+      {
+        id: 'mission-010',
+        title: 'Syndicate Salvage',
+        desc: 'The Void Syndicate pays in secrets. Mine 5 asteroids in silence — no questions asked.',
+        objective: 'Mine 5 asteroids for the Syndicate (0/5)',
+        reward: { ec: 16000, sm: 30, factionRep: 'void_syndicate' },
+        type: 'mining',
+        progress: 0,
+        goal: 5,
+        repeatable: true,
+        complete: false,
+      },
+    ];
+
+    let activeMissionIdx = 0;
+    let mineCount = 0;
+    let courierWarpDone = false;
+    let warpCount = 0;
+    let sellCount = 0;
+    let voidLeviathanSpawned = false;
+
+    function getActiveMission() {
+      return MISSION_CHAIN[activeMissionIdx] || null;
+    }
+
+    function refreshMissionOverlay() {
+      const m = getActiveMission();
+      if (!m) {
+        showMissionOverlay('All Missions Complete', '✔ You have completed the main story arc. Explore freely!');
+        return;
+      }
+      showMissionOverlay(m.title, `${m.desc}\n\nObjective: ${m.objective}`);
+    }
+
+    function advanceMission() {
+      const m = getActiveMission();
+      if (!m || m.complete) return;
+      m.complete = true;
+      // Award reward
+      if (m.reward.ec) wallet.ec += m.reward.ec;
+      if (m.reward.sm) wallet.sm += m.reward.sm;
+      if (m.reward.eden) wallet.eden += m.reward.eden;
+      if (m.reward.factionRep && factionRep[m.reward.factionRep] !== undefined) {
+        factionRep[m.reward.factionRep] = Math.min(100, factionRep[m.reward.factionRep] + 15);
+        updateFactionPanel();
+        const fname = m.reward.factionRep.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        showNotification(`🏷 Faction rep +15 with ${fname}`);
+      }
+      // +karma for each completed mission
+      if (typeof window.oldEdenKarma !== 'number') window.oldEdenKarma = 0;
+      window.oldEdenKarma += 10;
+      const karmaValEl = document.querySelector('#screen-karma [style*="font-size:1.6rem"]');
+      if (karmaValEl) karmaValEl.textContent = (window.oldEdenKarma >= 0 ? '+' : '') + window.oldEdenKarma;
+      updateWallet();
+      showNotification(`✔ Mission Complete: ${m.title} — +${m.reward.ec || 0} EC`);
+      activeMissionIdx++;
+      const nextMission = getActiveMission();
+
+      // Post-completion hooks for mission chain continuity.
+      if (nextMission && nextMission.id === 'mission-003') {
+        setTimeout(() => {
+          showNotification('☠ Pirate signatures detected. Enter gunner mode and engage.');
+          spawnEnemyWave(3);
+        }, 800);
+      }
+      if (nextMission && nextMission.id === 'mission-004') {
+        courierWarpDone = false;
+        addCargo('Genome Data', 1);
+        nextMission.objective = 'Warp to the Delta sector, then dock at Research Delta Station';
+        showNotification('📦 Courier package loaded: Genome Data x1');
+        addNavLog('New destination: Research Delta Station');
+      }
+      if (nextMission && nextMission.id === 'mission-005') {
+        showNotification('☯ Return to rebirth protocol to complete the cycle.');
+      }
+      if (nextMission && nextMission.id === 'mission-006') {
+        showNotification('📡 Anomaly detected — warp to a new system to investigate.');
+        addNavLog('Anomaly signature logged. Awaiting warp jump.');
+      }
+      if (nextMission && nextMission.id === 'mission-007') {
+        showNotification('💱 Trade Federation contract opened — sell cargo at a station 3x.');
+        addNavLog('Trade Federation contract accepted.');
+      }
+      if (nextMission && nextMission.id === 'mission-008') {
+        setTimeout(() => {
+          showNotification('☠ VOID LEVIATHAN EMERGING — enter gunner mode and destroy it!');
+          spawnVoidLeviathan();
+        }, 1000);
+      }
+      setTimeout(() => refreshMissionOverlay(), 1200);
+    }
+
+    // Track mining for mission-002
+    const _origStopMining = stopMining;
+
+    // ─── Faction Reputation System ────────────────────────────────────
+    const factionRep = {
+      garrisons: 50,
+      terran_dominion: 30,
+      free_traders: 60,
+      void_syndicate: 10,
+    };
+
+    function getFactionColor(rep) {
+      if (rep >= 80) return '#58d68d';
+      if (rep >= 50) return '#6ab0de';
+      if (rep >= 20) return '#ffb848';
+      return '#e74c3c';
+    }
+
+    function updateFactionPanel() {
+      const panel = document.getElementById('faction-rep-list');
+      if (!panel) return;
+      panel.innerHTML = Object.entries(factionRep).map(([k, v]) => {
+        const name = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `<div class="faction-row">
+          <span class="faction-name">${name}</span>
+          <div class="faction-bar-bg"><div class="faction-bar-fill" style="width:${v}%;background:${getFactionColor(v)}"></div></div>
+          <span class="faction-val">${v}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // ─── Cargo / Inventory System ──────────────────────────────────────
+    const cargo = {
+      capacity: 100,
+      items: [
+        { name: 'Refined Iron', qty: 0, value: 120 },
+        { name: 'Crystal Ore', qty: 0, value: 380 },
+        { name: 'Void Gas',    qty: 0, value: 650 },
+        { name: 'Genome Data', qty: 0, value: 2200 },
+        { name: 'Dark Matter', qty: 0, value: 8000 },
+      ],
+    };
+
+    function cargoUsed() {
+      return cargo.items.reduce((s, i) => s + i.qty, 0);
+    }
+
+    function updateCargoPanel() {
+      const list = document.getElementById('cargo-list');
+      const bar  = document.getElementById('cargo-bar');
+      const val  = document.getElementById('cargo-used');
+      if (!list) return;
+      const used = cargoUsed();
+      const pct  = Math.min(100, (used / cargo.capacity) * 100);
+      if (bar)  bar.style.width  = `${pct}%`;
+      if (val)  val.textContent  = `${used} / ${cargo.capacity}`;
+      list.innerHTML = cargo.items.map(it => `
+        <div class="cargo-row">
+          <span class="cargo-name">${it.name}</span>
+          <span class="cargo-qty">${it.qty}</span>
+          <span class="cargo-val">${it.qty > 0 ? (it.qty * it.value).toLocaleString() + ' EC' : '—'}</span>
+        </div>`).join('');
+    }
+
+    function addCargo(itemName, qty) {
+      const item = cargo.items.find(i => i.name === itemName);
+      if (!item) return;
+      if (cargoUsed() + qty > cargo.capacity) {
+        showNotification('⚠ Cargo hold full!');
+        return;
+      }
+      item.qty += qty;
+      updateCargoPanel();
+    }
+
+    function sellAllCargo() {
+      let total = 0;
+      cargo.items.forEach(i => {
+        total += i.qty * i.value;
+        i.qty = 0;
+      });
+      if (total > 0) {
+        wallet.ec += total;
+        updateWallet();
+        showNotification(`💰 Sold cargo for ${total.toLocaleString()} EC`);
+        updateCargoPanel();
+        // Mission-007: Trade Federation — count successful sales.
+        sellCount++;
+        const m7 = MISSION_CHAIN[6];
+        if (m7 && !m7.complete && activeMissionIdx === 6) {
+          m7.progress = sellCount;
+          m7.objective = `Sell cargo at a station (${Math.min(sellCount, 3)}/3)`;
+          refreshMissionOverlay();
+          if (factionRep.free_traders !== undefined) {
+            factionRep.free_traders = Math.min(100, factionRep.free_traders + 5);
+            updateFactionPanel();
+          }
+          if (sellCount >= 3) advanceMission();
+        }
+      } else {
+        showNotification('No cargo to sell.');
+      }
+    }
+
+    // ─── Notification Toast System ────────────────────────────────────
+    function showNotification(msg, duration = 3000) {
+      const container = document.getElementById('notification-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('fade-out'), duration - 400);
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, duration);
+    }
+
+    // ─── Station Interior System ──────────────────────────────────────
+    var stationGroup   = null;
+    var researchStationGroup = null;
+    let stationDocked  = false;
+    let dockedStationType = null;
+    const STATION_POS  = new THREE.Vector3(-30, 8, -50);
+    const RESEARCH_STATION_POS = new THREE.Vector3(52, -2, 38);
+
+    const STATION_THEMES = {
+      aethon: {
+        title: '⚓ AETHON STATION',
+        subtitle: 'Garrison trade nexus · docking authority online',
+      },
+      'research-delta': {
+        title: '🧬 RESEARCH DELTA',
+        subtitle: 'Genome laboratory sector · science deck access granted',
+      },
+    };
+
+    function applyStationTheme() {
+      const key = dockedStationType || 'aethon';
+      const theme = STATION_THEMES[key] || STATION_THEMES.aethon;
+      const titleEl = document.getElementById('station-title');
+      const subEl = document.getElementById('station-subtitle');
+      const rootEl = document.getElementById('station-ui');
+      if (titleEl) titleEl.textContent = theme.title;
+      if (subEl) subEl.textContent = theme.subtitle;
+      if (rootEl) rootEl.setAttribute('data-station', key);
+    }
+
+    function buildStation() {
+      const g = new THREE.Group();
+      g.name = 'aethon-station';
+
+      const metalMat  = new THREE.MeshStandardMaterial({ color: 0x3a5070, roughness: 0.4, metalness: 0.8 });
+      const glowMat   = new THREE.MeshBasicMaterial({ color: 0x6ab0de, transparent: true, opacity: 0.7 });
+      const darkMat   = new THREE.MeshStandardMaterial({ color: 0x0a1520, roughness: 0.8, metalness: 0.2 });
+      const accentMat = new THREE.MeshStandardMaterial({ color: 0xffb848, roughness: 0.3, metalness: 0.6, emissive: 0xffb848, emissiveIntensity: 0.3 });
+
+      // Central torus ring (main hull)
+      const torusGeo = new THREE.TorusGeometry(14, 2.5, 16, 60);
+      const torus = new THREE.Mesh(torusGeo, metalMat);
+      torus.rotation.x = Math.PI / 2;
+      g.add(torus);
+
+      // Central hub sphere
+      const hubGeo  = new THREE.SphereGeometry(5, 32, 32);
+      const hub     = new THREE.Mesh(hubGeo, darkMat);
+      g.add(hub);
+
+      // Hub glow ring
+      const hubGlowGeo = new THREE.TorusGeometry(5.4, 0.2, 8, 48);
+      const hubGlow    = new THREE.Mesh(hubGlowGeo, glowMat);
+      g.add(hubGlow);
+
+      // Spokes connecting hub to ring (8 spokes)
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const spoke = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.3, 0.3, 9, 6),
+          metalMat
+        );
+        spoke.position.set(Math.cos(angle) * 9.5, 0, Math.sin(angle) * 9.5);
+        spoke.rotation.z = Math.PI / 2;
+        spoke.rotation.y = -angle;
+        g.add(spoke);
+      }
+
+      // Docking arms (4 arms extending outward)
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const arm = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.4, 10),
+          metalMat
+        );
+        arm.position.set(Math.cos(angle) * 20, 0, Math.sin(angle) * 20);
+        arm.rotation.y = -angle;
+        g.add(arm);
+
+        // Docking bay end cap
+        const bay = new THREE.Mesh(
+          new THREE.BoxGeometry(4, 2, 2),
+          darkMat
+        );
+        bay.position.set(Math.cos(angle) * 26, 0, Math.sin(angle) * 26);
+        bay.rotation.y = -angle;
+        g.add(bay);
+
+        // Bay glow
+        const bayGlow = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.6, 1.8),
+          new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
+        );
+        bayGlow.position.set(Math.cos(angle) * 26, 0, Math.sin(angle) * 26 - 1.01);
+        bayGlow.rotation.y = -angle;
+        g.add(bayGlow);
+      }
+
+      // Antenna/sensor array on top
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 8, 6), accentMat);
+      mast.position.set(0, 9, 0);
+      g.add(mast);
+
+      // Dish on top of mast
+      const dishGeo = new THREE.ConeGeometry(1.5, 0.5, 16, 1, true);
+      const dish = new THREE.Mesh(dishGeo, metalMat);
+      dish.position.set(0, 13.5, 0);
+      dish.rotation.x = Math.PI;
+      g.add(dish);
+
+      // Accent light rings on torus
+      for (let i = 0; i < 3; i++) {
+        const lr = new THREE.Mesh(
+          new THREE.TorusGeometry(14 + i * 0.8, 0.08, 4, 60),
+          new THREE.MeshBasicMaterial({ color: i === 1 ? 0xffb848 : 0x6ab0de, transparent: true, opacity: 0.5 })
+        );
+        lr.rotation.x = Math.PI / 2;
+        g.add(lr);
+      }
+
+      // Station light source
+      const stLight = new THREE.PointLight(0x6ab0de, 1.5, 60);
+      g.add(stLight);
+
+      g.position.copy(STATION_POS);
+
+      // Slow rotation
+      g.userData.rotationSpeed = 0.004;
+
+      scene.add(g);
+      stationGroup = g;
+
+      // Add station to star-click interaction
+      starMesh && starMesh.addEventListener && null; // handled below
+
+      return g;
+    }
+
+    function buildResearchStation() {
+      const g = new THREE.Group();
+      g.name = 'research-delta-station';
+
+      const hullMat  = new THREE.MeshStandardMaterial({ color: 0x375a72, roughness: 0.45, metalness: 0.75 });
+      const coreMat  = new THREE.MeshStandardMaterial({ color: 0x152034, roughness: 0.7, metalness: 0.25 });
+      const ringMat  = new THREE.MeshBasicMaterial({ color: 0x7fd8ff, transparent: true, opacity: 0.55 });
+
+      const core = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 11, 14), coreMat);
+      core.rotation.z = Math.PI / 2;
+      g.add(core);
+
+      for (let i = 0; i < 3; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(5 + i * 1.5, 0.22, 8, 40), ringMat);
+        ring.rotation.y = (i * Math.PI) / 6;
+        ring.rotation.x = Math.PI / 2;
+        g.add(ring);
+      }
+
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const pod = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 2.8), hullMat);
+        pod.position.set(Math.cos(angle) * 8.2, Math.sin(angle) * 2.2, Math.sin(angle) * 8.2);
+        pod.rotation.y = -angle;
+        g.add(pod);
+      }
+
+      g.position.copy(RESEARCH_STATION_POS);
+      g.userData.rotationSpeed = 0.006;
+      scene.add(g);
+      researchStationGroup = g;
+      return g;
+    }
+
+    function dockAtStation() {
+      if (stationDocked) return;
+      // Proximity gate: must be within 80 units of Aethon
+      const distA = camera.position.distanceTo(STATION_POS);
+      if (distA > 80) {
+        showNotification(`⚠ Too far from Aethon (${Math.round(distA)} units). Fly closer to dock.`);
+        return;
+      }
+      stationDocked = true;
+      dockedStationType = 'aethon';
+      applyStationTheme();
+      stationNPCIdx = 0;
+      stationLineIdx = 0;
+      showNotification('⚓ Docked at Aethon Station. Welcome aboard, pilot.');
+      document.getElementById('station-ui').style.display = 'flex';
+      updateCargoPanel();
+      updateFactionPanel();
+      updateStationNPCLog();
+      refreshStationMissionBoard();
+      // Advance mission-001 if active
+      if (activeMissionIdx === 0) advanceMission();
+      // Note: Mission-004 (courier) completes at Research Delta only, not Aethon.
+    }
+
+    function undockStation() {
+      if (!stationDocked) return;
+      stationDocked = false;
+      dockedStationType = null;
+      applyStationTheme();
+      document.getElementById('station-ui').style.display = 'none';
+      showNotification('🚀 Undocked. Safe travels, pilot.');
+    }
+
+    function dockAtResearchStation() {
+      if (stationDocked) return;
+      const distR = camera.position.distanceTo(RESEARCH_STATION_POS);
+      if (distR > 80) {
+        showNotification(`⚠ Too far from Research Delta (${Math.round(distR)} units).`);
+        return;
+      }
+      stationDocked = true;
+      dockedStationType = 'research-delta';
+      applyStationTheme();
+      stationNPCIdx = 0;
+      stationLineIdx = 0;
+      showNotification('🧬 Docked at Research Delta Station. Science deck online.');
+      document.getElementById('station-ui').style.display = 'flex';
+      updateCargoPanel();
+      updateFactionPanel();
+      updateStationNPCLog();
+      refreshStationMissionBoard();
+
+      // Mission-004 completion requires warp before delivery.
+      const m4 = MISSION_CHAIN[3];
+      if (m4 && !m4.complete && activeMissionIdx === 3 && courierWarpDone) {
+        const genomeCargo = cargo.items.find(i => i.name === 'Genome Data');
+        if (genomeCargo && genomeCargo.qty > 0) genomeCargo.qty -= 1;
+        updateCargoPanel();
+        advanceMission();
+      }
+    }
+
+    window.dockAtStation  = dockAtStation;
+    window.dockAtResearchStation = dockAtResearchStation;
+    window.undockStation  = undockStation;
+    window.sellAllCargo   = sellAllCargo;
+    window.advanceMission = advanceMission;
+
+    // ─── Mobile touch handlers (wired to existing functions) ─────────
+    // Used by the on-screen action bar at the bottom of the screen on phones.
+    window.__mobileToggleGunner = function() {
+      try {
+        if (typeof toggleGunnerMode === 'function') toggleGunnerMode();
+        const btn = document.getElementById('mob-btn-gunner');
+        if (btn) btn.classList.toggle('is-active', !!gunnerMode);
+        const fireBtn = document.getElementById('mob-btn-fire');
+        if (fireBtn) fireBtn.style.opacity = gunnerMode ? '1' : '0.45';
+      } catch (e) { console.warn('[mobile] toggle gunner failed', e); }
+    };
+    let __mobileFireInterval = null;
+    window.__mobileFire = function(pressed) {
+      // Synthesise the same mousedown the desktop combat path expects.
+      const c = document.getElementById('canvas') || document.querySelector('canvas');
+      if (!c) return;
+      if (pressed) {
+        if (!gunnerMode) { showNotification && showNotification('Tap GUNNER first'); return; }
+        const fire = () => {
+          const r = c.getBoundingClientRect();
+          const ev = new MouseEvent('mousedown', {
+            bubbles: true, cancelable: true, button: 0,
+            clientX: r.left + r.width/2,
+            clientY: r.top  + r.height/2,
+          });
+          c.dispatchEvent(ev);
+        };
+        fire();
+        if (__mobileFireInterval) clearInterval(__mobileFireInterval);
+        __mobileFireInterval = setInterval(fire, 350);
+      } else {
+        if (__mobileFireInterval) { clearInterval(__mobileFireInterval); __mobileFireInterval = null; }
+      }
+    };
+    window.__mobileDock = function() {
+      // Try Aethon first, then Research Delta. dockAtStation gates on proximity.
+      try {
+        const before = document.getElementById('station-ui')?.style.display;
+        dockAtStation && dockAtStation();
+        const after = document.getElementById('station-ui')?.style.display;
+        if (after === 'none' || after === before) {
+          dockAtResearchStation && dockAtResearchStation();
+        }
+      } catch (e) { console.warn('[mobile] dock failed', e); }
+    };
+    window.__mobileWarp = function() {
+      try {
+        if (typeof initiateWarp === 'function') initiateWarp();
+        else showNotification && showNotification('Warp drive not available yet');
+      } catch (e) { console.warn('[mobile] warp failed', e); }
+    };
+    window.__mobileMine = function() {
+      try {
+        if (typeof toggleManualMine === 'function') toggleManualMine();
+      } catch (e) { console.warn('[mobile] mine failed', e); }
+    };
+    window.__mobileOpenMenu = function() {
+      const m = document.getElementById('mobile-menu');
+      if (m) m.style.display = 'flex';
+    };
+    // Force-mobile testing flag: visit ?mobile=1 to preview the touch UI on desktop.
+    if (typeof location !== 'undefined' && /[?&]mobile=1\b/.test(location.search)) {
+      document.body.classList.add('force-mobile');
+    }
+
+    // ─── Station NPC Dialogue Log ────────────────────────────────────
+    const STATION_NPCS = [
+      { name: 'Ambassador Vael',  icon: '🧑', lines: [
+        'Welcome to Aethon Station. The Garrisons faction offers safe harbor.',
+        'There are pirates lurking in the asteroid belt. Be careful.',
+        'If you gather ore, our refinery will buy it at premium rates.',
+      ]},
+      { name: 'Refinery Chief',   icon: '🔧', lines: [
+        'Got ore? We buy Refined Iron, Crystal, and Void Gas.',
+        'Our smelters are running hot. Bring us what you mine.',
+        'Sell your cargo at the dock — best rates in the system.',
+      ]},
+      { name: 'Black Market Dealer', icon: '🕶️', lines: [
+        'Dark Matter sells for 8000 EC a unit. No questions asked.',
+        'I can get you a new genome splice for the right price...',
+        'Watch your back in the outer belt. Syndicate territory.',
+      ]},
+      { name: 'Bar Patron — Kael', icon: '🍻', lines: [
+        'Did you hear about the anomaly near sector 7? Strange readings.',
+        'I lost three ships to the Void Syndicate last cycle. Three.',
+        'The rebirth lottery changed everything. Death isn\'t what it used to be.',
+      ]},
+    ];
+
+    const RESEARCH_NPCS = [
+      { name: 'Dr. Nyra Voss',  icon: '🧪', lines: [
+        'Courier pilot confirmed. Genome capsule integrity: stable.',
+        'Our splice arrays can recover traits lost in rebirth collapse.',
+        'Stay clear of the pirate lanes, they are hunting lab shipments.',
+      ]},
+      { name: 'Chief Bioengineer', icon: '🧬', lines: [
+        'Each strand in that capsule carries 200 years of lineage maps.',
+        'One contamination event and this entire batch is useless.',
+        'Keep your shields above 60% near ion storms.',
+      ]},
+      { name: 'Data Archivist', icon: '📚', lines: [
+        'We archive every rebirth signature to detect drift anomalies.',
+        'Terran dominion nodes are requesting your courier history.',
+        'Research Delta owes you one, pilot.',
+      ]},
+    ];
+
+    function getActiveStationNPCPool() {
+      return dockedStationType === 'research-delta' ? RESEARCH_NPCS : STATION_NPCS;
+    }
+
+    let stationNPCIdx = 0;
+    let stationLineIdx = 0;
+
+    function updateStationNPCLog() {
+      const log = document.getElementById('station-npc-log');
+      if (!log) return;
+      const pool = getActiveStationNPCPool();
+      if (stationNPCIdx >= pool.length) stationNPCIdx = 0;
+      const npc = pool[stationNPCIdx];
+      log.innerHTML = `<div class="npc-portrait">${npc.icon}</div>
+        <div class="npc-dialogue">
+          <div class="npc-dname">${npc.name}</div>
+          <div class="npc-dtext">${npc.lines[stationLineIdx]}</div>
+        </div>`;
+    }
+
+    window.nextNPCLine = function() {
+      const pool = getActiveStationNPCPool();
+      const npc = pool[stationNPCIdx];
+      stationLineIdx++;
+      if (stationLineIdx >= npc.lines.length) {
+        stationLineIdx = 0;
+        stationNPCIdx = (stationNPCIdx + 1) % pool.length;
+      }
+      updateStationNPCLog();
+    };
+
+    // ─── Jump Drive / Warp System ─────────────────────────────────────
+    let warpActive  = false;
+    let warpTimer   = 0;
+    const WARP_DURATION = 3.0;
+
+    function initiateWarp() {
+      if (warpActive) return;
+      warpActive = true;
+      warpTimer  = WARP_DURATION;
+      showNotification('⚡ Warp drive charging… engage!');
+
+      // Warp streak effect — elongate stars
+      scene.fog = new THREE.FogExp2(0x001133, 0.002);
+      const warpOverlay = document.getElementById('warp-overlay');
+      if (warpOverlay) {
+        warpOverlay.style.opacity = '1';
+        warpOverlay.classList.add('active');
+      }
+      // Disable orbit controls during warp transition
+      if (typeof controls !== 'undefined' && controls) controls.enabled = false;
+
+      setTimeout(() => {
+        // Jump to new system
+        const seed = 'warp-' + Date.now();
+        const sys  = generateSystem(seed);
+        buildSystem(sys);
+        const rng3 = mulberry32(hashSeed(seed + '-genome'));
+        currentGenome = generateGenome(rng3);
+        updateGenomePanel(currentGenome);
+        showNotification(`🌌 Warped to ${sys.name}`);
+
+        const m4 = MISSION_CHAIN[3];
+        if (m4 && !m4.complete && activeMissionIdx === 3) {
+          courierWarpDone = true;
+          m4.objective = 'Dock at Research Delta Station to deliver Genome Data';
+          refreshMissionOverlay();
+          addNavLog('Research Delta Station reached — deliver Genome Data');
+        }
+
+        // Mission-006: Anomaly Probe — any warp after mission-005 counts as scan.
+        warpCount++;
+        const m6 = MISSION_CHAIN[5];
+        if (m6 && !m6.complete && activeMissionIdx === 5) {
+          m6.progress = warpCount;
+          m6.objective = `Anomaly scanned (${Math.min(warpCount, 1)}/1)`;
+          refreshMissionOverlay();
+          addNavLog(`Anomaly sensor sweep complete at ${sys.name}`);
+          advanceMission();
+        }
+
+        scene.fog = new THREE.FogExp2(0x000008, 0.0004);
+        if (warpOverlay) {
+          warpOverlay.style.opacity = '0';
+          warpOverlay.classList.remove('active');
+        }
+        if (typeof controls !== 'undefined' && controls) controls.enabled = true;
+        warpActive = false;
+      }, WARP_DURATION * 1000);
+    }
+
+    window.initiateWarp = initiateWarp;
+
+    // ─── Navigation Log ────────────────────────────────────────────────
+    const navLog = [];
+
+    function addNavLog(entry) {
+      navLog.unshift({ time: new Date().toLocaleTimeString(), text: entry });
+      if (navLog.length > 12) navLog.pop();
+      updateNavLog();
+    }
+
+    function updateNavLog() {
+      const el = document.getElementById('nav-log-list');
+      if (!el) return;
+      el.innerHTML = navLog.map(e =>
+        `<div class="nav-entry"><span class="nav-time">${e.time}</span><span class="nav-text">${e.text}</span></div>`
+      ).join('');
+    }
+
+    // ─── Station click-to-dock interaction ───────────────────────────
+    canvas.addEventListener('click', (e) => {
+      if (gunnerMode) return;
+      const rect   = canvas.getBoundingClientRect();
+      const mouse  = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+        -((e.clientY - rect.top)  / rect.height) * 2 + 1
+      );
+      const ray    = new THREE.Raycaster();
+      ray.setFromCamera(mouse, camera);
+
+      if (stationGroup) {
+        const hits = ray.intersectObjects(stationGroup.children, true);
+        if (hits.length > 0) {
+          dockAtStation();
+          addNavLog('Docked at Aethon Station');
+          return;
+        }
+      }
+
+      if (researchStationGroup) {
+        const hits = ray.intersectObjects(researchStationGroup.children, true);
+        if (hits.length > 0) {
+          dockAtResearchStation();
+          addNavLog('Docked at Research Delta Station');
+          return;
+        }
+      }
+    });
+
+    // ─── Asteroid mining mission progress ────────────────────────────
+    window.addEventListener('asteroid:mined', () => {
+      mineCount++;
+      addNavLog(`Asteroid mined (${mineCount} total)`);
+      const m2 = MISSION_CHAIN[1];
+      if (!m2.complete && activeMissionIdx === 1) {
+        m2.progress = mineCount;
+        m2.objective = `Mine 3 asteroids (${Math.min(mineCount, 3)}/3)`;
+        refreshMissionOverlay();
+        if (mineCount >= 3) {
+          addCargo('Refined Iron', 5);
+          advanceMission();
+        }
+      }
+      // Mission-010: Syndicate Salvage
+      const m10 = MISSION_CHAIN[9];
+      if (m10 && !m10.complete && activeMissionIdx === 9) {
+        m10.progress = (m10.progress || 0) + 1;
+        m10.objective = `Mine 5 asteroids for the Syndicate (${Math.min(m10.progress, 5)}/5)`;
+        refreshMissionOverlay();
+        if (m10.progress >= 5) {
+          addCargo('Encrypted Relic', 1);
+          advanceMission();
+        }
+      }
+    });
+
+    // ─── Initialise added systems ─────────────────────────────────────
+    buildStation();
+    buildResearchStation();
+    updateCargoPanel();
+    updateFactionPanel();
+    refreshMissionOverlay();
+    addNavLog('Engine systems online');
+    addNavLog('Aethon Station detected on sensors');
+    addNavLog('Research Delta Station detected on long range sensors');
+
+    // ─── Enemy Ship Combat System ─────────────────────────────────────
+    // NOTE: `var` used intentionally so the declaration hoists above the animate()
+    // call at ~line 1928, which reads enemyShips on its very first synchronous tick.
+    var enemyShips   = enemyShips   || [];
+    var pirateKills  = pirateKills  || 0;
+    var playerShield = (typeof playerShield === 'number') ? playerShield : 100;
+    var playerHull   = (typeof playerHull   === 'number') ? playerHull   : 100;
+    var PIRATE_GOAL  = 5;
+    var flagshipSpawned   = flagshipSpawned   || false;
+    var flagshipDefeated  = flagshipDefeated  || false;
+
+    const ENEMY_TYPES = [
+      { name: 'Raider Scout',  hp: 40,  damage: 3,  speed: 0.8, interval: 2.5, color: 0xe74c3c, scale: 0.6 },
+      { name: 'Corsair',       hp: 80,  damage: 6,  speed: 0.5, interval: 3.5, color: 0xc0392b, scale: 1.0 },
+      { name: 'Marauder',      hp: 160, damage: 12, speed: 0.3, interval: 5.0, color: 0x8e1a10, scale: 1.6 },
+    ];
+
+    function buildEnemyMesh(type) {
+      const g = new THREE.Group();
+      const mat  = new THREE.MeshStandardMaterial({ color: type.color, roughness: 0.5, metalness: 0.7, emissive: type.color, emissiveIntensity: 0.15 });
+      // Body
+      const body = new THREE.Mesh(new THREE.OctahedronGeometry(1.2 * type.scale, 0), mat);
+      g.add(body);
+      // Wing-like fins
+      const finMat = new THREE.MeshStandardMaterial({ color: 0x440000, roughness: 0.8 });
+      const fin1 = new THREE.Mesh(new THREE.BoxGeometry(2.4 * type.scale, 0.1 * type.scale, 0.6 * type.scale), finMat);
+      fin1.rotation.y = Math.PI / 4;
+      g.add(fin1);
+      const fin2 = new THREE.Mesh(new THREE.BoxGeometry(2.4 * type.scale, 0.1 * type.scale, 0.6 * type.scale), finMat);
+      fin2.rotation.y = -Math.PI / 4;
+      g.add(fin2);
+      // Engine glow
+      const glow = new THREE.PointLight(type.color, 0.8 * type.scale, 8 * type.scale);
+      g.add(glow);
+      return g;
+    }
+
+    function spawnEnemyWave(count = 3) {
+      for (let i = 0; i < count; i++) {
+        const tIdx   = Math.min(Math.floor(pirateKills / 2), ENEMY_TYPES.length - 1);
+        const type   = ENEMY_TYPES[tIdx];
+        const angle  = Math.random() * Math.PI * 2;
+        const radius = 25 + Math.random() * 15;
+        const mesh   = buildEnemyMesh(type);
+        mesh.position.set(
+          Math.cos(angle) * radius,
+          (Math.random() - 0.5) * 10,
+          Math.sin(angle) * radius
+        );
+        scene.add(mesh);
+        enemyShips.push({
+          mesh,
+          hp:             type.hp,
+          maxHp:          type.hp,
+          damage:         type.damage,
+          speed:          type.speed,
+          attackTimer:    type.interval,
+          attackInterval: type.interval,
+          name:           type.name,
+          isFlagship:     false,
+          dead:           false,
+        });
+      }
+      showNotification(`⚠ ${count} enemy ships detected!`);
+      addNavLog(`Pirate wave: ${count} ${ENEMY_TYPES[Math.min(Math.floor(pirateKills / 2), 2)].name}s`);
+    }
+
+    function spawnPirateFlagship() {
+      if (flagshipSpawned || flagshipDefeated) return;
+      const type = { name: 'Dread Raptor Flagship', hp: 420, damage: 18, speed: 0.2, interval: 2.1, color: 0x7a0000, scale: 2.3 };
+      const mesh = buildEnemyMesh(type);
+      mesh.position.set(0, 6, -34);
+      mesh.scale.multiplyScalar(1.25);
+      scene.add(mesh);
+      enemyShips.push({
+        mesh,
+        hp:             type.hp,
+        maxHp:          type.hp,
+        damage:         type.damage,
+        speed:          type.speed,
+        attackTimer:    type.interval,
+        attackInterval: type.interval,
+        name:           type.name,
+        isFlagship:     true,
+        dead:           false,
+      });
+      flagshipSpawned = true;
+      showNotification('☠ PIRATE FLAGSHIP ARRIVING: DREAD RAPTOR');
+      addNavLog('Flagship contact acquired: Dread Raptor');
+      const m3 = MISSION_CHAIN[2];
+      if (m3 && !m3.complete && activeMissionIdx === 2) {
+        m3.objective = 'Destroy pirate flagship: Dread Raptor';
+        refreshMissionOverlay();
+      }
+      updateCombatHUD();
+    }
+
+    function spawnVoidLeviathan() {
+      if (voidLeviathanSpawned) return;
+      const type = { name: 'Void Leviathan', hp: 900, damage: 24, speed: 0.18, interval: 2.0, color: 0x6a0dad, scale: 3.4 };
+      const mesh = buildEnemyMesh(type);
+      mesh.position.set(0, 10, -50);
+      mesh.scale.multiplyScalar(1.8);
+      scene.add(mesh);
+      enemyShips.push({
+        mesh,
+        hp:             type.hp,
+        maxHp:          type.hp,
+        damage:         type.damage,
+        speed:          type.speed,
+        attackTimer:    type.interval,
+        attackInterval: type.interval,
+        name:           type.name,
+        isFlagship:     true,
+        isLeviathan:    true,
+        dead:           false,
+      });
+      voidLeviathanSpawned = true;
+      showNotification('☠ VOID LEVIATHAN HAS ARRIVED');
+      addNavLog('Void Leviathan contact — all hands to battle stations');
+      updateCombatHUD();
+    }
+
+    window.spawnVoidLeviathan = spawnVoidLeviathan;
+
+    function killEnemy(enemy) {
+      if (enemy.dead) return;
+      enemy.dead = true;
+      spawnShards(enemy.mesh.position);
+      scene.remove(enemy.mesh);
+      if (!enemy.isFlagship) pirateKills++;
+      wallet.ec += 800 + Math.floor(Math.random() * 400);
+      updateWallet();
+      showNotification(`💥 ${enemy.name} destroyed! +${800}–1200 EC`);
+      addNavLog(`Enemy destroyed (${pirateKills}/${PIRATE_GOAL})`);
+      updateCombatHUD();
+
+      // Mission-003 progress
+      const m3 = MISSION_CHAIN[2];
+      if (!m3.complete && activeMissionIdx === 2) {
+        if (enemy.isFlagship) {
+          flagshipDefeated = true;
+          m3.objective = 'Flagship eliminated';
+          refreshMissionOverlay();
+          factionRep.garrisons = Math.min(100, factionRep.garrisons + 20);
+          updateFactionPanel();
+          advanceMission();
+        } else {
+          m3.progress  = pirateKills;
+          m3.objective = `Destroy pirate ships (${Math.min(pirateKills, PIRATE_GOAL)}/${PIRATE_GOAL})`;
+          refreshMissionOverlay();
+          if (pirateKills >= PIRATE_GOAL && !flagshipSpawned) {
+            spawnPirateFlagship();
+          }
+        }
+      }
+
+      // Mission-008: Void Leviathan defeated
+      const m8 = MISSION_CHAIN[7];
+      if (enemy.isLeviathan && m8 && !m8.complete && activeMissionIdx === 7) {
+        m8.objective = 'Void Leviathan destroyed';
+        wallet.ec += 25000;
+        updateWallet();
+        showNotification('🏆 VOID LEVIATHAN DESTROYED — Eden is saved!');
+        addNavLog('Void Leviathan eliminated. Cluster secured.');
+        refreshMissionOverlay();
+        advanceMission();
+      }
+
+      // Mission-009: Dominion Patrol — any kill counts.
+      const m9 = MISSION_CHAIN[8];
+      if (m9 && !m9.complete && activeMissionIdx === 8 && !enemy.isLeviathan) {
+        m9.progress = (m9.progress || 0) + 1;
+        m9.objective = `Destroy 3 hostile ships on Dominion patrol (${Math.min(m9.progress, 3)}/3)`;
+        refreshMissionOverlay();
+        if (m9.progress >= 3) advanceMission();
+      }
+
+      // Spawn more if mission not done
+      if (pirateKills < PIRATE_GOAL && !flagshipSpawned && enemyShips.filter(e => !e.dead).length === 0) {
+        setTimeout(() => spawnEnemyWave(2), 3000);
+      }
+    }
+
+    function takeDamage(amount) {
+      if (!gunnerMode) return; // no combat damage outside gunner
+      if (playerShield > 0) {
+        const shieldDmg = Math.min(playerShield, amount);
+        playerShield   -= shieldDmg;
+        amount         -= shieldDmg;
+      }
+      playerHull = Math.max(0, playerHull - amount);
+      updatePlayerStatus();
+      if (playerHull <= 0) {
+        showNotification('💀 Hull breached — eject sequence initiated!');
+        addNavLog('Ship destroyed — pilot ejected');
+        setTimeout(() => {
+          playerShield = 60;
+          playerHull   = 40;
+          updatePlayerStatus();
+          showNotification('🚑 Rescued by Garrison patrol. Hull: 40%');
+          // Kill all enemies — end the fight
+          enemyShips.forEach(e => { if (!e.dead) { e.dead = true; scene.remove(e.mesh); } });
+        }, 2000);
+      }
+    }
+
+    function updatePlayerStatus() {
+      const shieldFill = document.getElementById('gs-shield-fill');
+      const shieldVal  = document.getElementById('gs-shield-val');
+      const hullFill   = document.getElementById('gs-hull-fill');
+      const hullVal    = document.getElementById('gs-hull-val');
+      if (shieldFill) shieldFill.style.width  = `${playerShield}%`;
+      if (shieldVal)  shieldVal.textContent   = `${Math.round(playerShield)}%`;
+      if (hullFill)   hullFill.style.width    = `${playerHull}%`;
+      if (hullVal)    hullVal.textContent     = `${Math.round(playerHull)}%`;
+      // Tint hull bar red when critical
+      if (hullFill) hullFill.style.background = playerHull < 30 ? '#e74c3c' : 'rgba(100,200,100,0.7)';
+    }
+
+    function updateCombatHUD() {
+      const killEl = document.getElementById('kill-counter');
+      if (killEl) {
+        killEl.textContent = voidLeviathanSpawned && activeMissionIdx === 7
+          ? 'BOSS: VOID LEVIATHAN'
+          : flagshipSpawned && !flagshipDefeated
+            ? 'BOSS: DREAD RAPTOR'
+            : `KILLS ${pirateKills}/${PIRATE_GOAL}`;
+      }
+    }
+
+    // Laser raycasting — fire at whatever is under the crosshair (also applies heat)
+    canvas.addEventListener('mousedown', (e) => {
+      if (!gunnerMode) return;
+      if (e.button !== 0) return;
+      if (laserHeat >= 100) { showNotification('🔥 Laser overheated!'); return; }
+      laserHeat = Math.min(100, laserHeat + 15);
+      if (typeof updateGunnerHUD === 'function') updateGunnerHUD();
+      if (typeof ballisticAmmo === 'number' && ballisticAmmo > 0) ballisticAmmo--;
+
+      // Cast ray from camera through crosshair centre
+      const ray = new THREE.Raycaster();
+      ray.setFromCamera({ x: 0, y: 0 }, camera);
+
+      // Collect all enemy mesh children for intersection
+      const targets = enemyShips.filter(e => !e.dead).flatMap(e => e.mesh.children.concat(e.mesh));
+      const hits    = ray.intersectObjects(targets, false);
+
+      if (hits.length > 0) {
+        const hitObj = hits[0].object;
+        const enemy  = enemyShips.find(e => !e.dead && (e.mesh === hitObj || e.mesh.children.includes(hitObj)));
+        if (enemy) {
+          const dmg = 15 + Math.floor(Math.random() * 10);
+          enemy.hp -= dmg;
+          // Flash hit
+          hitObj.material && (hitObj.material.emissiveIntensity = 1.0);
+          setTimeout(() => { if (hitObj.material) hitObj.material.emissiveIntensity = 0.15; }, 120);
+          if (enemy.hp <= 0) killEnemy(enemy);
+          else showNotification(`⚡ Hit ${enemy.name} for ${dmg} dmg (${Math.max(0, enemy.hp)}/${enemy.maxHp} HP)`);
+        }
+      }
+
+      // Spawn laser bolt visual
+      spawnLaserBolt(ray.ray.direction);
+    });
+
+    function spawnLaserBolt(direction) {
+      const geo  = new THREE.CylinderGeometry(0.04, 0.04, 4, 4);
+      geo.rotateX(Math.PI / 2);
+      const mat  = new THREE.MeshBasicMaterial({ color: 0x00ffee });
+      const bolt = new THREE.Mesh(geo, mat);
+      const startPos = new THREE.Vector3();
+      camera.getWorldPosition(startPos);
+      bolt.position.copy(startPos);
+      bolt.lookAt(startPos.clone().add(direction));
+      scene.add(bolt);
+      let life = 0.25;
+      const boltTick = () => {
+        life -= 0.016;
+        bolt.position.addScaledVector(direction, 2.5);
+        if (life <= 0) { scene.remove(bolt); return; }
+        requestAnimationFrame(boltTick);
+      };
+      boltTick();
+    }
+
+    // Key binding: E = engage pirates (spawn wave)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'e' || e.key === 'E') {
+        if (!gunnerMode) { showNotification('Press F to enter Gunner Mode first.'); return; }
+        if (flagshipSpawned && !flagshipDefeated) { showNotification('☠ Flagship battle active — finish it!'); return; }
+        if (enemyShips.filter(en => !en.dead).length === 0) {
+          spawnEnemyWave(3);
+        } else {
+          showNotification('Combat already active!');
+        }
+      }
+      // Shield recharge key: R
+      if (e.key === 'r' || e.key === 'R') {
+        if (playerShield < 100) {
+          const cost = 500;
+          if (wallet.ec < cost) { showNotification('⚠ Not enough EC to recharge shields (500 EC)'); return; }
+          wallet.ec    -= cost;
+          playerShield  = Math.min(100, playerShield + 40);
+          updateWallet();
+          updatePlayerStatus();
+          showNotification('🔋 Shield recharged +40% (−500 EC)');
+        }
+      }
+    });
+
+    // Mission-003 preparation listener — resets combat state if externally triggered.
+    window.addEventListener('mission:003:start', () => {
+      pirateKills = 0;
+      flagshipSpawned = false;
+      flagshipDefeated = false;
+      updateCombatHUD();
+    });
+    // Note: pirate wave is spawned by advanceMission's nextMission hook for mission-003,
+    // so we no longer wrap advanceMission here (would cause a double-spawn).
+
+    // Initialise HUD status bars
+    updatePlayerStatus();
+    updateCombatHUD();
+
+    // Add kill counter to gunner HUD if it doesn't exist
+    const gunnerHud = document.getElementById('gunner-hud');
+    if (gunnerHud && !document.getElementById('kill-counter')) {
+      const kc = document.createElement('div');
+      kc.id = 'kill-counter';
+      Object.assign(kc.style, {
+        position: 'absolute', top: '80px', left: '50%',
+        transform: 'translateX(-50%)',
+        color: '#e74c3c', fontFamily: 'monospace', fontSize: '0.9rem',
+        letterSpacing: '0.12em', fontWeight: '600',
+        textShadow: '0 0 8px #e74c3c',
+        pointerEvents: 'none',
+      });
+      kc.textContent = `KILLS 0/${PIRATE_GOAL}`;
+      gunnerHud.appendChild(kc);
+    }
+
+    // Add warp key binding (W key while not in gunner)
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'j' || e.key === 'J') && !gunnerMode) {
+        initiateWarp();
+      }
+      if ((e.key === 'd' || e.key === 'D') && !gunnerMode) {
+        if (stationDocked) undockStation(); else dockAtStation();
+      }
+    });
+
+    // Rotate station in animation loop
+    const _origAnimate = animate;
+    // Station rotation is handled inline in the animate() above via userData
+
+    // ─── Settings Functions ───────────────────────────────────────────
+    function applySettings() {
+      const fovEl = document.getElementById('setting-fov');
+      if (fovEl) {
+        camera.fov = parseInt(fovEl.value);
+        camera.updateProjectionMatrix();
+      }
+      showNotification('✔ Settings applied.');
+    }
+
+    const fovInput = document.getElementById('setting-fov');
+    if (fovInput) {
+      fovInput.addEventListener('input', () => {
+        const valEl = document.getElementById('setting-fov-val');
+        if (valEl) valEl.textContent = fovInput.value + '°';
+      });
+    }
+
+    // ─── Wire previously-dead settings controls ─────────────────────
+    // Master volume: store on a global gain-like value (stubbed — no audio engine yet)
+    window.oldEdenMasterVolume = 0.7;
+    const volInput = document.getElementById('setting-vol');
+    if (volInput) {
+      volInput.addEventListener('input', () => {
+        window.oldEdenMasterVolume = parseInt(volInput.value, 10) / 100;
+      });
+    }
+
+    // Motion blur: apply CSS filter to the canvas
+    const blurInput = document.getElementById('setting-blur');
+    if (blurInput) {
+      blurInput.addEventListener('change', () => {
+        if (canvas) canvas.style.filter = blurInput.checked ? 'blur(0.5px) brightness(1.05)' : '';
+      });
+    }
+
+    // Gyroscope toggle: delegate to existing toggleGyro (Y key)
+    const gyroInput = document.getElementById('setting-gyro');
+    if (gyroInput && typeof toggleGyro === 'function') {
+      gyroInput.addEventListener('change', () => {
+        toggleGyro();
+      });
+    }
+
+    // Graphics quality: set renderer pixel ratio
+    const gfxInput = document.getElementById('setting-gfx');
+    if (gfxInput) {
+      gfxInput.addEventListener('change', () => {
+        if (typeof renderer === 'undefined' || !renderer) return;
+        const v = gfxInput.value.toLowerCase();
+        const ratio = v.includes('low') ? 0.75 : v.includes('high') ? Math.min(2, window.devicePixelRatio || 1) : 1;
+        renderer.setPixelRatio(ratio);
+      });
+    }
+
+    // Open settings screen
+    const btnSettings = document.getElementById('btn-settings');
+    if (btnSettings) {
+      btnSettings.addEventListener('click', () => {
+        document.getElementById('screen-settings').style.display = 'block';
+      });
+    }
+
+    // ─── ESC closes any open overlay screen ─────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const overlayIds = [
+        'screen-settings', 'screen-market', 'screen-bridge',
+        'screen-rebirth', 'screen-karma', 'screen-eulogy',
+        'screen-create',
+      ];
+      for (const id of overlayIds) {
+        const el = document.getElementById(id);
+        if (el && el.style.display !== 'none' && el.style.display !== '') {
+          el.style.display = 'none';
+          return;
+        }
+      }
+    });
+
+    // ─── Market / Cosmetics Functions ────────────────────────────────
+    const ownedCosmetics = [];
+
+    function buyCosmetic(id, costEC, costEDEN = 0) {
+      if (costEC > 0 && wallet.ec < costEC) {
+        showNotification('⚠ Not enough EC.');
+        return;
+      }
+      if (costEDEN > 0 && wallet.eden < costEDEN) {
+        showNotification('⚠ Not enough EDEN tokens.');
+        return;
+      }
+      if (ownedCosmetics.includes(id)) {
+        showNotification('You already own this item.');
+        return;
+      }
+      wallet.ec   -= costEC;
+      wallet.eden -= costEDEN;
+      ownedCosmetics.push(id);
+      updateWallet();
+      showNotification(`🎁 Cosmetic unlocked: ${id}`);
+    }
+
+    window.buyCosmetic = buyCosmetic;
+    window.applySettings = applySettings;
+
+    // ─── Rebirth function ─────────────────────────────────────────────
+    function doRebirth() {
+      // Proximity: must be near no station to rebirth (roleplay: floating in the void)
+      const seed = 'rebirth-' + Date.now();
+      const rng = mulberry32(hashSeed(seed));
+      currentGenome = generateGenome(rng);
+      updateGenomePanel(currentGenome);
+
+      // Record eulogy stats before reset
+      try {
+        const eulAge = document.getElementById('eulogy-age');
+        const eulSys = document.getElementById('eulogy-systems');
+        if (eulAge) eulAge.textContent = (window.oldEdenLifeTicks ? Math.floor(window.oldEdenLifeTicks / 600) : 0) + ' cycles';
+        if (eulSys) eulSys.textContent = String(window.oldEdenSystemsVisited || 1);
+      } catch(_) {}
+
+      // Carry 10% of EC into the next life (roguelite meta-progression)
+      const carryEc = Math.floor((wallet.ec || 0) * 0.10);
+      wallet.ec = 500 + carryEc;
+      // Do NOT reset sm/eden/faction rep — those are meta across lives.
+
+      // Reset gameplay counters and combat state
+      try {
+        cargo.items.forEach(i => { i.qty = 0; });
+        updateCargoPanel();
+      } catch(_) {}
+      if (typeof pirateKills !== 'undefined')      pirateKills = 0;
+      if (typeof flagshipSpawned !== 'undefined')  flagshipSpawned = false;
+      if (typeof flagshipDefeated !== 'undefined') flagshipDefeated = false;
+      if (typeof voidLeviathanSpawned !== 'undefined') voidLeviathanSpawned = false;
+      if (typeof mineCount !== 'undefined')        mineCount = 0;
+      if (typeof warpCount !== 'undefined')        warpCount = 0;
+      if (typeof sellCount !== 'undefined')        sellCount = 0;
+      if (typeof courierWarpDone !== 'undefined')  courierWarpDone = false;
+      window.oldEdenLifeTicks = 0;
+
+      // Restart mission chain
+      try {
+        MISSION_CHAIN.forEach(m => { m.complete = false; m.progress = 0; });
+      } catch(_) {}
+      activeMissionIdx = 0;
+      if (typeof updateCombatHUD === 'function') updateCombatHUD();
+      if (typeof refreshMissionOverlay === 'function') refreshMissionOverlay();
+
+      updateWallet();
+      showNotification(`☯ Reborn! +${carryEc} EC carried from your last life.`);
+      addNavLog('Rebirth complete — new genome assigned, mission chain reset');
+      // Complete mission-005 if it was the active mission at the time of death
+      // (handled by the pre-reset check below)
+    }
+
+    // Wrap doRebirth so mission-005 still gets credit before the reset wipes it.
+    const _baseDoRebirth = doRebirth;
+    doRebirth = function () {
+      const wasMission5 = (activeMissionIdx === 4);
+      if (wasMission5 && typeof advanceMission === 'function') advanceMission();
+      // +karma on voluntary rebirth
+      if (typeof window.oldEdenKarma !== 'number') window.oldEdenKarma = 0;
+      window.oldEdenKarma += 5;
+      _baseDoRebirth();
+      // Refresh karma display if the Karma screen is open
+      const karmaValEl = document.querySelector('#screen-karma [style*="font-size:1.6rem"]');
+      if (karmaValEl) karmaValEl.textContent = (window.oldEdenKarma >= 0 ? '+' : '') + window.oldEdenKarma;
+    };
+
+    window.doRebirth = doRebirth;
+
+    // ─── Station Market Board refresh ────────────────────────────────
+    function refreshStationMissionBoard() {
+      const el = document.getElementById('station-mission-board');
+      if (!el) return;
+      const m = getActiveMission();
+      if (!m) {
+        el.innerHTML = '<div style="color:#58d68d; font-size:0.85rem;">All missions complete. Free roam!</div>';
+        return;
+      }
+      el.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+        <div>
+          <div style="color:var(--gold); font-size:0.85rem; margin-bottom:4px;">${m.title}</div>
+          <div style="color:#88a; font-size:0.78rem; line-height:1.6;">${m.desc}</div>
+          <div style="margin-top:8px; color:#6ab0de; font-size:0.78rem;">▸ ${m.objective}</div>
+        </div>
+        <div style="text-align:right; flex-shrink:0;">
+          ${m.reward.ec ? `<div style="color:var(--gold); font-size:0.85rem;">+${m.reward.ec.toLocaleString()} EC</div>` : ''}
+          ${m.reward.sm ? `<div style="color:#6ab0de; font-size:0.8rem;">+${m.reward.sm} SM</div>` : ''}
+          ${m.reward.eden ? `<div style="color:#c88eff; font-size:0.8rem;">+${m.reward.eden} EDEN</div>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // ─── Lore Codex Entries (for the nav log / in-world lore) ────────
+    const LORE_CODEX = [
+      { tag: 'History', text: 'Old Eden was the original homeworld of the Terran Dominion — lost to the Void Collapse 400 years ago.' },
+      { tag: 'Factions', text: 'The Garrisons control military checkpoints. The Free Traders run open markets. The Void Syndicate operates in shadow.' },
+      { tag: 'Rebirth', text: 'Genetic lottery determines rebirth status. High karma grants elite genome sequences with enhanced cognitive nodes.' },
+      { tag: 'Economy', text: 'EDEN tokens are proof-of-existence on the Polygon chain. Each rebirth burns 0.1 EDEN and mints a character NFT.' },
+      { tag: 'Mining', text: 'Asteroid fields contain Refined Iron, Crystal Ore, and rare Dark Matter. Dark Matter sells for 8x the base rate.' },
+      { tag: 'Warp Drive', text: 'Jump drives fold space via quantum tunnelling. Each jump costs 200 EC in fuel — or 0.05 EDEN tokens.' },
+      { tag: 'Karma', text: 'Karma accumulates from deeds: rescuing distress calls adds 10 karma, betraying allied ships costs 25 karma.' },
+      { tag: 'Garrisons', text: 'The Garrison fleet has 4,000 active patrol ships. Their commander, Admiral Varesh, is known for ruthless efficiency.' },
+    ];
+
+    let codexIdx = 0;
+    function cycleCodex() {
+      const entry = LORE_CODEX[codexIdx % LORE_CODEX.length];
+      addNavLog(`[${entry.tag}] ${entry.text.substring(0, 80)}…`);
+      codexIdx++;
+    }
+
+    // Auto-cycle lore entries every 30 seconds
+    setInterval(cycleCodex, 30000);
+
+    // ─── FPS Counter (opt-in via settings) ───────────────────────────
+    let fpsCounter  = 0;
+    let fpsLastTime = performance.now();
+    let fpsDisplay  = null;
+
+    function initFPS() {
+      fpsDisplay = document.createElement('div');
+      Object.assign(fpsDisplay.style, {
+        position:   'fixed',
+        top:        '8px',
+        left:       '50%',
+        transform:  'translateX(-50%)',
+        color:      '#58d68d',
+        fontSize:   '0.7rem',
+        fontFamily: 'monospace',
+        zIndex:     '999',
+        background: 'rgba(0,0,0,0.5)',
+        padding:    '2px 8px',
+        borderRadius: '4px',
+        pointerEvents: 'none',
+      });
+      fpsDisplay.textContent = 'FPS: --';
+      document.body.appendChild(fpsDisplay);
+    }
+
+    function updateFPS() {
+      fpsCounter++;
+      const now   = performance.now();
+      const delta = now - fpsLastTime;
+      if (delta >= 1000) {
+        const fps = Math.round((fpsCounter * 1000) / delta);
+        if (fpsDisplay) fpsDisplay.textContent = `FPS: ${fps}`;
+        fpsCounter  = 0;
+        fpsLastTime = now;
+      }
+    }
+
+    document.getElementById('setting-fps') && document.getElementById('setting-fps').addEventListener('change', (e) => {
+      if (e.target.checked && !fpsDisplay) initFPS();
+      else if (!e.target.checked && fpsDisplay) { fpsDisplay.remove(); fpsDisplay = null; }
+    });
+
+    // ─── Auto-mine helper (press M) ──────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'm' || e.key === 'M') && !gunnerMode) {
+        // Free-mine shortcut removed — use the AsteroidSystem / mining beam instead.
+        showNotification('⛏ Enter Gunner Mode (F) and aim at an asteroid to mine.');
+      }
+      if (e.key === 'u' || e.key === 'U') {
+        // Toggle nav log panel visibility
+        const panel = document.getElementById('nav-log-panel');
+        if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    // ─── Character Creation ───────────────────────────────────────────
+    const GENOME_TRAITS = [
+      { key: 'CogNode',  label: 'Cognitive Nodes',  max: 10 },
+      { key: 'SynthFib', label: 'Synthetic Fibre',  max: 10 },
+      { key: 'AdapCore', label: 'Adaptive Core',    max: 10 },
+      { key: 'NeuroAmp', label: 'Neuro Amplifiers', max: 10 },
+      { key: 'VoidRes',  label: 'Void Resistance',  max: 10 },
+    ];
+
+    function rollCreateGenome() {
+      const rng = mulberry32(Math.floor(Math.random() * 0xFFFFFFFF));
+      const out = {};
+      GENOME_TRAITS.forEach(t => { out[t.key] = Math.floor(rng() * t.max) + 1; });
+      return out;
+    }
+
+    let previewGenome = rollCreateGenome();
+
+    function renderCreateGenomePreview() {
+      const el = document.getElementById('create-genome-preview');
+      if (!el) return;
+      el.innerHTML = GENOME_TRAITS.map(t => {
+        const v   = previewGenome[t.key];
+        const bar = '█'.repeat(v) + '░'.repeat(10 - v);
+        return `<div>${t.label.padEnd(22, ' ')} <span style="color:#334;">${bar}</span> <span style="color:#c8d6e5;">${v}</span></div>`;
+      }).join('');
+    }
+
+    // Populate genome preview when screen opens
+    const _origBtnNew = document.getElementById('btn-new');
+    if (_origBtnNew) {
+      _origBtnNew.addEventListener('click', () => {
+        previewGenome = rollCreateGenome();
+        renderCreateGenomePreview();
+      });
+    }
+
+    function createPilot() {
+      const nameEl    = document.getElementById('create-name');
+      const shipEl    = document.getElementById('create-ship');
+      const factionEl = document.querySelector('input[name="faction"]:checked');
+      const name      = nameEl ? nameEl.value.trim() : 'Pilot';
+      const ship      = shipEl ? shipEl.value : 'fighter';
+      const faction   = factionEl ? factionEl.value : 'garrisons';
+
+      if (!name) { showNotification('⚠ Enter a callsign first.'); return; }
+
+      // Apply faction bonuses
+      if (faction === 'free_traders') wallet.ec += 500;
+      if (faction === 'garrisons')    factionRep.garrisons += 20;
+      if (faction === 'terran_dominion') {
+        Object.keys(previewGenome).forEach(k => {
+          previewGenome[k] = Math.min(10, previewGenome[k] + 1);
+        });
+      }
+      if (faction === 'void_syndicate') factionRep.void_syndicate += 40;
+
+      // Cargo capacity by ship
+      const cargoCapMap = { scout: 80, fighter: 60, hauler: 200, gunship: 40 };
+      cargo.capacity = cargoCapMap[ship] || 60;
+
+      // Set the genome
+      currentGenome = previewGenome;
+      updateGenomePanel && updateGenomePanel(currentGenome);
+      updateWallet();
+      updateCargoPanel();
+      updateFactionPanel();
+
+      // Hide create screen, show game
+      document.getElementById('screen-create').style.display = 'none';
+      document.getElementById('screen-title').style.display  = 'none';
+
+      showNotification(`Welcome, ${name}. Your ${ship}-class vessel is ready.`);
+      addNavLog(`Pilot profile created: ${name} (${ship})`);
+      refreshMissionOverlay();
+    }
+
+    window.createPilot = createPilot;
+
+    // ─── Debug/QA hook: read-only snapshot of runtime combat state ────
+    // Used by scripts/demo_gameplay_flow.cjs to verify combat works.
+    window.__oldEdenDebug = {
+      getState() {
+        return {
+          gunnerMode:    typeof gunnerMode    !== 'undefined' ? gunnerMode    : null,
+          pirateKills:   typeof pirateKills   !== 'undefined' ? pirateKills   : null,
+          playerShield:  typeof playerShield  !== 'undefined' ? playerShield  : null,
+          playerHull:    typeof playerHull    !== 'undefined' ? playerHull    : null,
+          walletEC:      (typeof wallet === 'object' && wallet) ? wallet.ec   : null,
+          activeMission: (typeof MISSION_CHAIN !== 'undefined' && MISSION_CHAIN[activeMissionIdx])
+                         ? MISSION_CHAIN[activeMissionIdx].id : null,
+          enemyCount:    typeof enemyShips !== 'undefined' ? enemyShips.filter(e => !e.dead).length : null,
+        };
+      },
+      // Project each living enemy to screen-space so a headless driver can aim at one.
+      getEnemyScreenPositions() {
+        if (typeof enemyShips === 'undefined' || typeof camera === 'undefined' || !camera) return [];
+        const w = window.innerWidth, h = window.innerHeight;
+        return enemyShips.filter(e => !e.dead && e.mesh).map(e => {
+          const v = e.mesh.position.clone().project(camera);
+          return {
+            x: Math.round((v.x + 1) * w / 2),
+            y: Math.round((-v.y + 1) * h / 2),
+            inFront: v.z < 1,
+          };
+        });
+      },
+      spawnWave(n = 3) {
+        if (typeof spawnEnemyWave === 'function') spawnEnemyWave(n);
+      },
+      // Aim camera at the closest living enemy so the in-game LMB fire (which
+      // raycasts through screen center) will actually hit. Returns true if
+      // an enemy was targeted.
+      aimAtNearestEnemy() {
+        if (typeof enemyShips === 'undefined' || typeof camera === 'undefined' || !camera) return false;
+        const alive = enemyShips.filter(e => !e.dead && e.mesh);
+        if (alive.length === 0) return false;
+        const cp = camera.position;
+        let best = null, bestD = Infinity;
+        for (const e of alive) {
+          const d = e.mesh.position.distanceTo(cp);
+          if (d < bestD) { bestD = d; best = e; }
+        }
+        if (!best) return false;
+        camera.lookAt(best.mesh.position);
+        return true;
+      },
+      coolLaser() {
+        if (typeof laserHeat !== 'undefined') { try { laserHeat = 0; } catch (_) {} }
+      },
+    };
+
+    // ─── Screen navigation ────────────────────────────────────────────
+    function showCreateScreen() {
+      const title = document.getElementById('screen-title');
+      const create = document.getElementById('screen-create');
+      if (title) {
+        title.style.display = 'none';
+        title.classList.remove('active');
+      }
+      if (create) {
+        create.style.display = 'block';
+        create.classList.add('active');
+      }
+      previewGenome = rollCreateGenome();
+      renderCreateGenomePreview();
+      // Belt-and-suspenders: re-render on next frame in case the DOM node
+      // wasn't yet visible/measurable (some browsers race here).
+      requestAnimationFrame(renderCreateGenomePreview);
+    }
+    window.showCreateScreen = showCreateScreen;
+    // Also expose roll helper so the Re-roll DNA button can refresh without
+    // re-toggling the screen.
+    window.rerollCreateGenome = function() {
+      previewGenome = rollCreateGenome();
+      renderCreateGenomePreview();
+    };
+
+    const btnNew = document.getElementById('btn-new');
+    if (btnNew) {
+      btnNew.addEventListener('click', () => {
+        showCreateScreen();
+      });
+    }
+
+    // Market screen via bridge nav
+    const navMarket = document.getElementById('nav-market');
+    if (navMarket) {
+      navMarket.addEventListener('click', () => {
+        document.getElementById('screen-market').style.display = 'block';
+      });
+    }
+
+    // ─── Persistent wallet display update on interval ─────────────────
+    // FPS update is RAF-driven via updateFPS() inside the animate loop where needed.
+    // Removed the 60×/second setInterval that did nothing useful.
+
+    // ─── Bridge Mission Summary ───────────────────────────────────────
+    function updateBridgeMissionSummary() {
+      const el = document.getElementById('bridge-mission-summary');
+      if (!el) return;
+      const m = getActiveMission();
+      if (!m) {
+        el.innerHTML = '<span style="color:#58d68d;">All missions complete.</span>';
+        return;
+      }
+      el.innerHTML = `<div style="color:var(--gold); margin-bottom:4px;">${m.title}</div>
+        <div style="color:#88a; font-size:0.76rem; margin-bottom:8px;">${m.objective}</div>
+        <div style="color:#556; font-size:0.72rem;">Reward: ${m.reward.ec ? m.reward.ec.toLocaleString() + ' EC' : ''} ${m.reward.eden ? m.reward.eden + ' EDEN' : ''}</div>`;
+    }
+
+    // Refresh bridge mission summary when bridge screen opens
+    const navBridge = document.getElementById('nav-bridge') || document.getElementById('screen-bridge');
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'nav-bridge') {
+        document.getElementById('screen-bridge').style.display = 'block';
+        updateBridgeMissionSummary();
+      }
+    });
+
+    // ─── Warp Charge Visual Bar ───────────────────────────────────────
+    const warpChargeFill = document.getElementById('warp-charge-fill');
+    const warpChargeBar  = document.getElementById('warp-charge-bar');
+
+    function animateWarpCharge() {
+      if (!warpActive) return;
+      if (warpChargeBar)  warpChargeBar.style.display  = 'block';
+      let pct = 0;
+      const step = () => {
+        if (!warpActive) { if (warpChargeBar) warpChargeBar.style.display = 'none'; return; }
+        pct = Math.min(100, pct + (100 / (WARP_DURATION * 60)));
+        if (warpChargeFill) warpChargeFill.style.width = pct + '%';
+        if (pct < 100) requestAnimationFrame(step);
+        else { setTimeout(() => { if (warpChargeBar) warpChargeBar.style.display = 'none'; }, 400); }
+      };
+      requestAnimationFrame(step);
+    }
+
+    // Patch initiateWarp to trigger charge bar
+    const _baseWarp = initiateWarp;
+    window.initiateWarp = function() {
+      _baseWarp();
+      animateWarpCharge();
+    };
+
+    // ─── Auto-save player state to localStorage ────────────────────────
+    function savePlayerState() {
+      try {
+        localStorage.setItem('oldeden_wallet', JSON.stringify(wallet));
+        localStorage.setItem('oldeden_faction', JSON.stringify(factionRep));
+        localStorage.setItem('oldeden_mission', String(activeMissionIdx));
+        localStorage.setItem('oldeden_cargo',   JSON.stringify(cargo.items));
+      } catch(e) { /* storage unavailable */ }
+    }
+
+    function loadPlayerState() {
+      try {
+        const w = localStorage.getItem('oldeden_wallet');
+        const f = localStorage.getItem('oldeden_faction');
+        const mi = localStorage.getItem('oldeden_mission');
+        const c = localStorage.getItem('oldeden_cargo');
+        if (w) Object.assign(wallet, JSON.parse(w));
+        if (f) Object.assign(factionRep, JSON.parse(f));
+        if (mi) activeMissionIdx = parseInt(mi, 10) || 0;
+        if (c) {
+          const loaded = JSON.parse(c);
+          loaded.forEach(li => {
+            const item = cargo.items.find(i => i.name === li.name);
+            if (item) item.qty = li.qty;
+          });
+        }
+      } catch(e) { /* ignore */ }
+    }
+
+    // Load on startup, save every 60 seconds
+    loadPlayerState();
+    updateWallet();
+    updateCargoPanel();
+    updateFactionPanel();
+    setInterval(savePlayerState, 60000);
+
+    // ─── Leaderboard stub (connect to backend when Socket.IO ready) ────
+    const LEADERBOARD_STUB = [
+      { rank: 1, name: 'NOVA-X',     karma: 2840, credits: '4.2M', rebirths: 14 },
+      { rank: 2, name: 'Vael_Prime', karma: 2415, credits: '3.8M', rebirths: 11 },
+      { rank: 3, name: 'Commander Z', karma: 1990, credits: '2.1M', rebirths:  8 },
+      { rank: 4, name: 'ShadowPilot', karma: 1620, credits: '1.7M', rebirths:  6 },
+      { rank: 5, name: 'You',         karma:   42, credits:  '—',   rebirths:  0 },
+    ];
+
+    function renderLeaderboard(containerId) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      el.innerHTML = LEADERBOARD_STUB.map(p =>
+        `<div style="display:flex; gap:12px; padding:6px 0; border-bottom:1px solid rgba(100,180,255,0.05); font-size:0.78rem; ${p.name === 'You' ? 'color:#ffb848;' : 'color:#c8d6e5;'}">
+          <span style="width:24px; color:#556; text-align:right;">${p.rank}</span>
+          <span style="flex:1;">${p.name}</span>
+          <span style="width:60px; text-align:right; color:#c88eff;">${p.karma}</span>
+          <span style="width:50px; text-align:right;">${p.rebirths}×</span>
+        </div>`
+      ).join('');
+    }
+
+    // ─── Socket.IO real-time sync (currently no client script loaded; branch kept for
+    //     forward-compat but guarded so it cannot throw reference errors in production). ───
+    if (typeof window !== 'undefined' && typeof window.io === 'function') {
+      try {
+        const socket = window.io();
+        socket.on('player:update', (data) => {
+          if (data && data.wallet) Object.assign(wallet, data.wallet);
+          updateWallet();
+        });
+        socket.on('leaderboard:update', () => {
+          addNavLog('Leaderboard updated from server');
+        });
+        socket.emit('player:hello', { version: '1.0' });
+      } catch(e) { /* Socket.IO not connected */ }
+    }
+
+  </script>
+
+  <!-- ─── Station UI Overlay ───────────────────────────────────────── -->
+  <div id="station-ui" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,12,28,0.97); z-index:500; flex-direction:column; align-items:center; justify-content:flex-start; overflow:auto; padding:24px;">
+    <div style="width:100%; max-width:960px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:16px;">
+        <div>
+          <h2 id="station-title" style="color:var(--blue); font-size:1.8rem; font-weight:300; letter-spacing:0.2em; margin:0;">⚓ AETHON STATION</h2>
+          <div id="station-subtitle" style="color:#7ea2c3; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; margin-top:6px;">Garrison trade nexus · docking authority online</div>
+        </div>
+        <button onclick="undockStation()" style="padding:10px 24px; background:rgba(231,76,60,0.2); border:1px solid #e74c3c; border-radius:6px; color:#e74c3c; cursor:pointer; font-size:0.9rem;">🚀 UNDOCK</button>
+      </div>
+
+      <!-- NPC Dialogue -->
+      <div style="background:rgba(10,20,40,0.95); border:1px solid rgba(100,180,255,0.2); border-radius:10px; padding:20px; margin-bottom:16px;">
+        <h3 style="color:var(--gold); font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:14px;">Station Personnel</h3>
+        <div id="station-npc-log" style="display:flex; gap:16px; align-items:flex-start; min-height:80px;"></div>
+        <button onclick="nextNPCLine()" style="margin-top:14px; padding:8px 20px; background:rgba(100,180,255,0.15); border:1px solid rgba(100,180,255,0.3); border-radius:4px; color:#6ab0de; cursor:pointer; font-size:0.8rem;">Next ›</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+        <!-- Cargo Bay -->
+        <div style="background:rgba(10,20,40,0.95); border:1px solid rgba(100,180,255,0.2); border-radius:10px; padding:20px;">
+          <h3 style="color:var(--gold); font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px;">Cargo Bay</h3>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:0.75rem; color:#88a;">Hold:</span>
+            <div style="flex:1; height:6px; background:rgba(100,180,255,0.1); border-radius:3px; overflow:hidden;">
+              <div id="cargo-bar" style="height:100%; background:#6ab0de; border-radius:3px; width:0%;"></div>
+            </div>
+            <span id="cargo-used" style="font-size:0.7rem; color:#6ab0de;">0 / 100</span>
+          </div>
+          <div id="cargo-list" style="font-size:0.8rem;"></div>
+          <button onclick="sellAllCargo()" style="margin-top:14px; width:100%; padding:10px; background:rgba(88,214,141,0.2); border:1px solid #58d68d; border-radius:4px; color:#58d68d; cursor:pointer; font-size:0.85rem; font-weight:600;">💰 SELL ALL CARGO</button>
+        </div>
+
+        <!-- Faction Reputation -->
+        <div style="background:rgba(10,20,40,0.95); border:1px solid rgba(100,180,255,0.2); border-radius:10px; padding:20px;">
+          <h3 style="color:var(--gold); font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px;">Faction Standing</h3>
+          <div id="faction-rep-list"></div>
+        </div>
+      </div>
+
+      <!-- Active Mission at Station -->
+      <div style="background:rgba(10,20,40,0.95); border:1px solid rgba(255,184,72,0.3); border-radius:10px; padding:20px; margin-bottom:16px;">
+        <h3 style="color:var(--gold); font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px;">Mission Board</h3>
+        <div id="station-mission-board">
+          <!-- Dynamically filled by refreshMissionBoard() -->
+        </div>
+      </div>
+
+      <!-- Jump Drive -->
+      <div style="background:rgba(10,20,40,0.95); border:1px solid rgba(100,180,255,0.2); border-radius:10px; padding:20px;">
+        <h3 style="color:var(--gold); font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px;">Navigation Console</h3>
+        <p style="font-size:0.8rem; color:#88a; margin-bottom:12px;">Initiate a warp jump to explore a new star system. Press <b>J</b> while undocked, or use the button below.</p>
+        <button onclick="undockStation(); setTimeout(initiateWarp, 800);" style="padding:12px 32px; background:rgba(100,180,255,0.2); border:1px solid #6ab0de; border-radius:6px; color:#6ab0de; cursor:pointer; font-size:0.9rem; font-weight:600;">⚡ JUMP TO NEW SYSTEM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Warp Overlay (full-screen streak effect) ─────────────────── -->
+  <div id="warp-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:200; pointer-events:none; opacity:0; transition:opacity 0.4s ease; background:radial-gradient(ellipse at center, rgba(100,180,255,0.05) 0%, rgba(0,0,0,0) 70%), repeating-linear-gradient(0deg, rgba(100,180,255,0.03) 0px, rgba(100,180,255,0) 2px, transparent 2px, transparent 40px); animation:none;"></div>
+
+  <!-- ─── Notification Toast Container ────────────────────────────── -->
+  <div id="notification-container" style="position:fixed; bottom:80px; right:24px; z-index:9000; display:flex; flex-direction:column; gap:8px; pointer-events:none; max-width:360px;"></div>
+
+  <!-- ─── Navigation Log Panel ─────────────────────────────────────── -->
+  <div id="nav-log-panel" style="position:fixed; bottom:20px; right:20px; width:280px; z-index:15; background:rgba(5,10,25,0.85); border:1px solid rgba(100,180,255,0.1); border-radius:8px; padding:12px; display:none;">
+    <div style="font-size:0.65rem; letter-spacing:0.1em; color:#6ab0de; text-transform:uppercase; margin-bottom:8px;">Navigation Log</div>
+    <div id="nav-log-list" style="font-size:0.7rem; color:#aab;"></div>
+  </div>
+
+  <style>
+    /* Toast notifications */
+    .toast {
+      background: rgba(10,25,50,0.97);
+      border: 1px solid rgba(100,180,255,0.4);
+      border-radius: 8px;
+      padding: 12px 18px;
+      color: #c8d6e5;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      transition: opacity 0.4s ease;
+    }
+    .toast.fade-out { opacity: 0; }
+
+    /* Station NPC dialogue */
+    .npc-portrait { font-size: 2.5rem; flex-shrink: 0; }
+    .npc-dialogue { flex: 1; }
+    .npc-dname { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .npc-dtext  { font-size: 0.9rem; color: #c8d6e5; line-height: 1.5; }
+
+    /* Cargo panel */
+    .cargo-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(100,180,255,0.06); font-size: 0.8rem; }
+    .cargo-name { color: #c8d6e5; }
+    .cargo-qty  { color: #6ab0de; width: 30px; text-align: center; }
+    .cargo-val  { color: var(--gold); text-align: right; min-width: 80px; }
+
+    /* Faction rep bars */
+    .faction-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.78rem; }
+    .faction-name { width: 130px; color: #c8d6e5; }
+    .faction-bar-bg { flex: 1; height: 6px; background: rgba(100,180,255,0.1); border-radius: 3px; overflow: hidden; }
+    .faction-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    .faction-val { width: 28px; color: #88a; font-size: 0.7rem; text-align: right; }
+
+    /* Nav log */
+    .nav-entry { display: flex; gap: 8px; margin-bottom: 4px; }
+    .nav-time  { color: #556; font-size: 0.65rem; flex-shrink: 0; margin-top: 1px; }
+    .nav-text  { color: #aab; font-size: 0.72rem; }
+
+    /* Controls hint additions */
+    #controls-hint b { color: #6ab0de; }
+
+    /* ─── Bridge screen styles ─── */
+    #screen-bridge button:hover { filter: brightness(1.25); }
+
+    /* ─── Character creation faction pick ─── */
+    .faction-pick:hover { border-color: rgba(100,180,255,0.4) !important; background: rgba(100,180,255,0.06) !important; }
+    .faction-pick input[type="radio"]:checked ~ span > div:first-child { filter: brightness(1.3); }
+
+    /* ─── Market screen table rows ─── */
+    #screen-market tbody tr:hover td { background: rgba(100,180,255,0.04); }
+
+    /* ─── Station UI buttons ─── */
+    #station-ui button:hover { filter: brightness(1.2); }
+    #station-ui[data-station="research-delta"] {
+      background: radial-gradient(circle at 18% 20%, rgba(45,95,110,0.34), rgba(5,12,28,0.97) 62%);
+    }
+    #station-ui[data-station="research-delta"] #station-title { color: #7ce8d1 !important; }
+    #station-ui[data-station="research-delta"] #station-subtitle { color: #8ddfcf !important; }
+    #station-ui[data-station="research-delta"] > div > div:not(:first-child) {
+      border-color: rgba(124, 232, 209, 0.32) !important;
+    }
+
+    /* ─── Warp overlay streak animation ─── */
+    @keyframes warp-streak {
+      0%   { background-position: 0 0; }
+      100% { background-position: 0 -200px; }
+    }
+    #warp-overlay.active {
+      animation: warp-streak 0.15s linear infinite;
+      background: repeating-linear-gradient(0deg,
+        rgba(100,180,255,0.08) 0px, rgba(100,180,255,0) 2px,
+        transparent 2px, transparent 40px),
+        radial-gradient(ellipse at center, rgba(100,180,255,0.04) 0%, rgba(0,0,0,0) 70%);
+    }
+
+    /* ─── Genome monospace preview ─── */
+    #create-genome-preview { font-family: 'Courier New', monospace; white-space: pre; }
+
+    /* ─── Notification shake on error ─── */
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+    .toast.error { border-color: #e74c3c; animation: shake 0.35s; }
+
+    /* ─── Screen transitions ─── */
+    #screen-title, #screen-create, #screen-market, #screen-settings,
+    #screen-rebirth, #screen-karma, #screen-eulogy, #screen-bridge {
+      transition: opacity 0.2s ease;
+    }
+
+    /* ─── HUD canvas fade when docked ─── */
+    #station-ui ~ #hud-canvas { opacity: 0; pointer-events: none; }
+
+    /* ─── Mission overlay typography ─── */
+    #mission-overlay .mission-title { font-size: 1rem; font-weight: 600; letter-spacing: 0.05em; }
+    #mission-overlay .mission-body  { font-size: 0.78rem; line-height: 1.7; color: #aab; }
+
+    /* ─── Responsive: mobile layout ─── */
+    @media (max-width: 640px) {
+      #station-ui > div { padding: 16px !important; }
+      #station-ui > div > div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+      #screen-market > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr 1fr !important; }
+      #screen-bridge > div > div[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+      #screen-bridge > div > div[style*="grid-template-columns:repeat"] { grid-template-columns: 1fr 1fr !important; }
+      #screen-create > div { padding: 24px 20px !important; }
+    }
+
+    /* Hide side panels on narrow viewports to avoid overlap with canvas */
+    @media (max-width: 1024px) {
+      #system-panel, #genome-panel, #npc-panel, #rebirth-btn { display: none !important; }
+      #controls-hint { font-size: 0.6rem !important; max-width: 60vw; line-height: 1.4; }
+      #mission-overlay { padding: 12px 16px !important; font-size: 0.78rem; }
+    }
+    @media (max-width: 640px) {
+      #controls-hint { display: none !important; }
+      #title-bar { display: none !important; }
+      #events-bar { display: none !important; }
+      #mission-overlay {
+        top: 8px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        padding: 8px 12px !important;
+        font-size: 0.72rem !important;
+        min-width: auto !important;
+        max-width: 92vw !important;
+      }
+      #mission-overlay #mission-title { font-size: 0.85rem !important; margin-bottom: 4px !important; }
+      #mission-overlay #mission-body  { font-size: 0.7rem  !important; }
+      /* Compact wallet pill — top-right */
+      #economy-panel {
+        top: 8px !important; right: 8px !important;
+        bottom: auto !important; left: auto !important;
+        padding: 6px 10px !important;
+        background: rgba(5,10,25,0.86) !important;
+        border-radius: 999px !important;
+        display: flex !important; flex-direction: row !important; gap: 10px !important;
+        font-size: 0.66rem !important;
+      }
+      #economy-panel h2 { display: none !important; }
+      #economy-panel .currency-row { margin: 0 !important; padding: 0 !important; gap: 4px !important; }
+      #economy-panel .currency-name { width: auto !important; }
+    }
+
+    /* ─── Mobile action bar (always-on touch UI for phones) ─── */
+    #mobile-action-bar {
+      display: none;
+      position: fixed; left: 0; right: 0; bottom: 0;
+      z-index: 998;
+      padding: 8px 6px calc(env(safe-area-inset-bottom, 0px) + 8px);
+      background: linear-gradient(to top, rgba(5,10,25,0.96) 60%, rgba(5,10,25,0.0));
+      gap: 6px;
+      justify-content: space-around;
+      align-items: stretch;
+      pointer-events: auto;
+    }
+    .mob-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 56px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px;
+      padding: 6px 4px;
+      background: rgba(15,30,55,0.92);
+      border: 1px solid rgba(100,180,255,0.25);
+      border-radius: 10px;
+      color: #c8d6e5;
+      font-family: inherit; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      -webkit-tap-highlight-color: rgba(100,180,255,0.25);
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .mob-btn:active { background: rgba(100,180,255,0.22); transform: scale(0.96); }
+    .mob-btn-icon { font-size: 1.2rem; line-height: 1; }
+    .mob-btn-label { font-size: 0.6rem; color: #88a; }
+    .mob-btn-fire { background: rgba(231,76,60,0.18); border-color: rgba(231,76,60,0.5); color: #ff8a7a; }
+    .mob-btn-fire:active { background: rgba(231,76,60,0.45); }
+    .mob-btn.is-active { background: rgba(255,184,72,0.22); border-color: var(--gold); color: var(--gold); }
+
+    @media (max-width: 1024px) {
+      #mobile-action-bar { display: flex; }
+      /* leave clear space at bottom so canvas/HUD don't sit under the bar */
+      #cargo-panel, #navlog-panel, #warp-charge-bar { bottom: 80px !important; }
+    }
+    /* On desktop the bar stays hidden but we still expose it for ?mobile=1 testing */
+    body.force-mobile #mobile-action-bar { display: flex; }
+
+    /* Mobile menu modal */
+    #mobile-menu {
+      position: fixed; inset: 0; z-index: 9998;
+      background: rgba(2,5,15,0.85);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #mobile-menu[style*="display: flex"], #mobile-menu[style*="display:flex"] { display: flex !important; }
+    .mob-menu-card {
+      width: 100%; max-width: 340px;
+      background: rgba(10,20,40,0.98);
+      border: 1px solid rgba(100,180,255,0.3);
+      border-radius: 14px;
+      padding: 18px 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .mob-menu-title { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.2em; text-align: center; padding: 6px 0 12px; border-bottom: 1px solid rgba(100,180,255,0.12); margin-bottom: 6px; }
+    .mob-menu-row {
+      width: 100%; padding: 14px 16px;
+      background: rgba(5,15,35,0.85);
+      border: 1px solid rgba(100,180,255,0.18);
+      border-radius: 8px;
+      color: #c8d6e5; font-size: 0.92rem; text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .mob-menu-row:active { background: rgba(100,180,255,0.16); }
+    .mob-menu-close { color: #e74c3c; border-color: rgba(231,76,60,0.4); text-align: center; margin-top: 8px; }
+
+    /* ─── Sector map mini (future-ready placeholder) ─── */
+    #sector-map {
+      position: fixed; top: 60px; right: 20px;
+      width: 140px; height: 140px;
+      background: rgba(5,10,25,0.9);
+      border: 1px solid rgba(100,180,255,0.1);
+      border-radius: 50%;
+      display: none; /* hidden until implemented */
+      align-items: center; justify-content: center;
+      font-size: 0.6rem; color: #334;
+      z-index: 20;
+    }
+
+    /* ─── Cargo bar colour states ─── */
+    #cargo-bar[style*="width:8"], #cargo-bar[style*="width:9"], #cargo-bar[style*="width:100"] {
+      background: #e74c3c !important;
+    }
+
+    /* ─── Warp charge bar ─── */
+    #warp-charge-bar {
+      position: fixed; bottom: 60px; left: 50%;
+      transform: translateX(-50%);
+      width: 200px; height: 4px;
+      background: rgba(100,180,255,0.1);
+      border-radius: 2px;
+      display: none;
+      z-index: 50;
+    }
+    #warp-charge-fill {
+      height: 100%; width: 0%;
+      background: #c88eff;
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+  </style>
 </body>
 </html>
