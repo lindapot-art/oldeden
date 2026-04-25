@@ -1314,8 +1314,24 @@
       document.getElementById('gunner-hud').classList.add('active');
       document.getElementById('hud').style.display = 'none';
 
-      // Request pointer lock
-      canvas.requestPointerLock();
+      // Request pointer lock — gracefully fall back to drag-to-aim if the
+      // browser denies the request (mobile, iframes, sandboxed contexts, or
+      // a transient user-activation gap). Without this fallback the gunner
+      // becomes unaimable and the game looks frozen.
+      gunnerPointerLocked = false;
+      try {
+        const p = canvas.requestPointerLock();
+        if (p && typeof p.then === 'function') {
+          p.then(() => { gunnerPointerLocked = true; })
+           .catch(() => {
+             gunnerPointerLocked = false;
+             showNotification && showNotification('Pointer lock unavailable — drag to aim');
+           });
+        }
+      } catch (e) {
+        gunnerPointerLocked = false;
+        console.warn('[Gunner] pointer-lock unavailable, using drag fallback', e);
+      }
 
       // Auto-enable gyro on mobile if supported
       if (gyroControls.isMobile() && !gyroEnabled) {
@@ -1372,9 +1388,64 @@
       else enterGunnerMode();
     }
 
-    // Pointer lock mouse handler for gunner look
+    // Drag-to-aim fallback state (used when pointer-lock is unavailable).
+    var gunnerPointerLocked = false;
+    var gunnerDragging      = false;
+    var gunnerLastX         = 0;
+    var gunnerLastY         = 0;
+
+    // Track real lock state via the official event so we don't get out of sync.
+    document.addEventListener('pointerlockchange', () => {
+      gunnerPointerLocked = (document.pointerLockElement === canvas);
+    });
+    document.addEventListener('pointerlockerror', () => {
+      gunnerPointerLocked = false;
+      showNotification && showNotification('Pointer lock blocked — drag to aim');
+    });
+
+    // Mouse-drag fallback when pointer-lock isn't active.
+    canvas.addEventListener('mousedown', (e) => {
+      if (!gunnerMode || gunnerPointerLocked) return;
+      if (e.button !== 2) return; // right-button drag = aim, left = fire
+      gunnerDragging = true;
+      gunnerLastX = e.clientX;
+      gunnerLastY = e.clientY;
+    });
+    document.addEventListener('mouseup', () => { gunnerDragging = false; });
+    canvas.addEventListener('contextmenu', (e) => { if (gunnerMode) e.preventDefault(); });
+
+    // Touch-drag fallback for mobile gunner aiming (one finger = aim).
+    canvas.addEventListener('touchstart', (e) => {
+      if (!gunnerMode) return;
+      const t = e.touches[0]; if (!t) return;
+      gunnerDragging = true; gunnerLastX = t.clientX; gunnerLastY = t.clientY;
+    }, { passive: true });
+    canvas.addEventListener('touchmove', (e) => {
+      if (!gunnerMode || !gunnerDragging) return;
+      const t = e.touches[0]; if (!t) return;
+      const dx = t.clientX - gunnerLastX;
+      const dy = t.clientY - gunnerLastY;
+      gunnerLastX = t.clientX; gunnerLastY = t.clientY;
+      gunnerYaw   += dx * GUNNER_SENSITIVITY * 1.5;
+      gunnerPitch += dy * GUNNER_SENSITIVITY * 1.5;
+      gunnerPitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, gunnerPitch));
+    }, { passive: true });
+    canvas.addEventListener('touchend', () => { gunnerDragging = false; }, { passive: true });
+
+    // Pointer lock mouse handler for gunner look (with drag-to-aim fallback).
     document.addEventListener('mousemove', (e) => {
       if (!gunnerMode) return;
+      // Drag fallback path when pointer-lock isn't active.
+      if (!gunnerPointerLocked) {
+        if (!gunnerDragging) return;
+        const dx = e.clientX - gunnerLastX;
+        const dy = e.clientY - gunnerLastY;
+        gunnerLastX = e.clientX; gunnerLastY = e.clientY;
+        gunnerYaw   += dx * GUNNER_SENSITIVITY * 1.5;
+        gunnerPitch += dy * GUNNER_SENSITIVITY * 1.5;
+        gunnerPitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, gunnerPitch));
+        return;
+      }
       if (!document.pointerLockElement) return;
 
       gunnerYaw   += e.movementX * GUNNER_SENSITIVITY;
@@ -2353,8 +2424,14 @@
     var researchStationGroup = null;
     let stationDocked  = false;
     let dockedStationType = null;
-    const STATION_POS  = new THREE.Vector3(-30, 8, -50);
-    const RESEARCH_STATION_POS = new THREE.Vector3(52, -2, 38);
+    // Aethon is the FIRST mission target. Keep it at moderate distance so the
+    // player must actually fly to it (no auto-dock from spawn). Spawn is at
+    // (0,25,45); ~101 units exceeds the 80-unit dock gate, forcing intentional
+    // approach. Research Delta is the SECOND mission target reached after
+    // warping, so place it well beyond the dock gate to stop the mobile dock
+    // helper from blindly falling through to the wrong station during M1.
+    const STATION_POS          = new THREE.Vector3(-30, 8, -50);    // ~101u from spawn
+    const RESEARCH_STATION_POS = new THREE.Vector3(180, -20, -150); // ~245u (warp-only)
 
     const STATION_THEMES = {
       aethon: {
@@ -2623,13 +2700,23 @@
       }
     };
     window.__mobileDock = function() {
-      // Try Aethon first, then Research Delta. dockAtStation gates on proximity.
+      // Dock at whichever station is closest AND within range. This avoids the
+      // bug where we'd blindly fall through to Research Delta during the
+      // opening mission (which requires Aethon).
       try {
-        const before = document.getElementById('station-ui')?.style.display;
-        dockAtStation && dockAtStation();
-        const after = document.getElementById('station-ui')?.style.display;
-        if (after === 'none' || after === before) {
+        const distA = camera.position.distanceTo(STATION_POS);
+        const distR = camera.position.distanceTo(RESEARCH_STATION_POS);
+        // Prefer Aethon when both are in range or when it's closer.
+        if (distA <= 80 && (distA <= distR || distR > 80)) {
+          dockAtStation && dockAtStation();
+        } else if (distR <= 80) {
           dockAtResearchStation && dockAtResearchStation();
+        } else {
+          // Neither in range — surface the closest one's distance so the
+          // player knows which way to fly.
+          const which = distA < distR ? 'Aethon' : 'Research Delta';
+          const dist  = Math.round(Math.min(distA, distR));
+          showNotification && showNotification(`⚠ Too far to dock — closest: ${which} (${dist} units)`);
         }
       } catch (e) { console.warn('[mobile] dock failed', e); }
     };
@@ -3611,9 +3698,12 @@
       spawnWave(n = 3) {
         if (typeof spawnEnemyWave === 'function') spawnEnemyWave(n);
       },
-      // Aim camera at the closest living enemy so the in-game LMB fire (which
-      // raycasts through screen center) will actually hit. Returns true if
-      // an enemy was targeted.
+      // Aim at the closest living enemy. In gunner mode the animate loop
+      // overrides camera.quaternion every frame from gunnerYaw/gunnerPitch
+      // (multiplied by ship orientation), so a plain camera.lookAt() is wiped
+      // out. We instead compute the local-space yaw/pitch toward the target
+      // and write it into the gunner state so the override produces the
+      // right rotation. Fallback to camera.lookAt() outside gunner mode.
       aimAtNearestEnemy() {
         if (typeof enemyShips === 'undefined' || typeof camera === 'undefined' || !camera) return false;
         const alive = enemyShips.filter(e => !e.dead && e.mesh);
@@ -3625,6 +3715,23 @@
           if (d < bestD) { bestD = d; best = e; }
         }
         if (!best) return false;
+        try {
+          if (typeof gunnerMode !== 'undefined' && gunnerMode &&
+              typeof playerShipGroup !== 'undefined' && playerShipGroup) {
+            // Convert world-space target direction into ship-local space.
+            const shipQuat = new THREE.Quaternion();
+            playerShipGroup.getWorldQuaternion(shipQuat);
+            const inv = shipQuat.clone().invert();
+            const dir = best.mesh.position.clone().sub(cp).normalize().applyQuaternion(inv);
+            // Override applies Euler(-pitch, -yaw, 0, 'YXZ') so forward is -Z.
+            // Solve for yaw/pitch that produce dir = (sin(yaw)cos(pitch), -sin(pitch), -cos(yaw)cos(pitch)).
+            const yaw   = Math.atan2(dir.x, -dir.z);
+            const pitch = Math.asin(Math.max(-1, Math.min(1, -dir.y)));
+            gunnerYaw   = Math.max(-GUNNER_MAX_YAW,   Math.min(GUNNER_MAX_YAW,   yaw));
+            gunnerPitch = Math.max(-GUNNER_MAX_PITCH, Math.min(GUNNER_MAX_PITCH, pitch));
+            return true;
+          }
+        } catch (_) { /* fall through to lookAt */ }
         camera.lookAt(best.mesh.position);
         return true;
       },

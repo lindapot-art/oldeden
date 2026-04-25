@@ -2,12 +2,12 @@
   "stats": {
     "gunnerMode": true,
     "pirateKills": 1,
-    "playerShield": 22,
+    "playerShield": 31,
     "playerHull": 100,
-    "walletEC": 20465,
+    "walletEC": 20336,
     "activeMission": "mission-003",
     "enemyCount": 2
   },
   "pageErrors": [],
-  "ts": "2026-04-24T23:27:51.149Z"
+  "ts": "2026-04-25T02:37:17.128Z"
 }
