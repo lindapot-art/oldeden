@@ -2136,6 +2136,11 @@
         researchStationGroup.rotation.y += researchStationGroup.userData.rotationSpeed || 0.006;
       }
 
+      // ── Civilian NPC ship traffic ──────────────────────────────────
+      if (typeof civilianNPCs !== 'undefined' && civilianNPCs.length > 0) {
+        updateCivilianNPCs(elapsed, delta);
+      }
+
       // ── Enemy ship AI tick ──────────────────────────────────────────
       // Guarded: the enemyShips array is declared later in the script; early animate()
       // ticks may fire before that line has executed.
@@ -3003,6 +3008,7 @@
     // ─── Initialise added systems ─────────────────────────────────────
     buildStation();
     buildResearchStation();
+    spawnCivilianNPCs(4);
     updateCargoPanel();
     updateFactionPanel();
     refreshMissionOverlay();
@@ -3026,6 +3032,70 @@
       { name: 'Corsair',       hp: 80,  damage: 6,  speed: 0.5, interval: 3.5, color: 0xc0392b, scale: 1.0 },
       { name: 'Marauder',      hp: 160, damage: 12, speed: 0.3, interval: 5.0, color: 0x8e1a10, scale: 1.6 },
     ];
+
+    // ─── Civilian NPC ships (non-combat ambient traffic) ─────────────
+    const NPC_SHIP_TYPES = [
+      { name: 'Cargo Hauler',   file: 'cargo_shuttle.glb',     scale: 1.4, color: 0x6a7a8c },
+      { name: 'Container Ship', file: 'container_shuttle.glb', scale: 1.6, color: 0x8a9aa8 },
+      { name: 'Patrol Cutter',  file: 'patrol_alpha.glb',      scale: 1.0, color: 0x4a90c2 },
+      { name: 'Salvager',       file: 'cyborg_ship.glb',       scale: 1.1, color: 0xb08a4a },
+      { name: 'Civil Transport',file: 'shuttle.glb',           scale: 1.0, color: 0xa0a0b0 },
+    ];
+    const civilianNPCs = [];
+
+    function buildCivilianNPCMesh(type) {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: type.color, roughness: 0.6, metalness: 0.5, emissive: type.color, emissiveIntensity: 0.05 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.4 * type.scale, 1 * type.scale, 4 * type.scale), mat);
+      body.userData.__fallback = true;
+      g.add(body);
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(3.6 * type.scale, 0.15 * type.scale, 0.8 * type.scale), mat);
+      fin.position.y = 0.6 * type.scale;
+      fin.userData.__fallback = true;
+      g.add(fin);
+      const glow = new THREE.PointLight(0xffe7a8, 0.4 * type.scale, 6);
+      glow.position.z = -2 * type.scale;
+      g.add(glow);
+      attachGLB(g, type.file, { scale: type.scale });
+      return g;
+    }
+
+    function spawnCivilianNPCs(count = 3) {
+      for (let i = 0; i < count; i++) {
+        const type = NPC_SHIP_TYPES[Math.floor(Math.random() * NPC_SHIP_TYPES.length)];
+        const mesh = buildCivilianNPCMesh(type);
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 60 + Math.random() * 80;
+        mesh.position.set(
+          Math.cos(angle) * radius,
+          (Math.random() - 0.5) * 30,
+          Math.sin(angle) * radius
+        );
+        scene.add(mesh);
+        civilianNPCs.push({
+          mesh,
+          name: type.name,
+          // Simple drifting orbit around origin
+          orbitRadius: radius,
+          orbitAngle: angle,
+          orbitSpeed: 0.02 + Math.random() * 0.04,
+          bobPhase: Math.random() * Math.PI * 2,
+          y: mesh.position.y,
+        });
+      }
+    }
+
+    function updateCivilianNPCs(elapsed, delta) {
+      for (const n of civilianNPCs) {
+        n.orbitAngle += n.orbitSpeed * delta;
+        const x = Math.cos(n.orbitAngle) * n.orbitRadius;
+        const z = Math.sin(n.orbitAngle) * n.orbitRadius;
+        const y = n.y + Math.sin(elapsed * 0.3 + n.bobPhase) * 0.6;
+        // Face direction of travel (tangent to orbit)
+        n.mesh.position.set(x, y, z);
+        n.mesh.rotation.y = -n.orbitAngle + Math.PI / 2;
+      }
+    }
 
     function buildEnemyMesh(type) {
       const g = new THREE.Group();
@@ -3738,6 +3808,7 @@
           activeMission: (typeof MISSION_CHAIN !== 'undefined' && MISSION_CHAIN[activeMissionIdx])
                          ? MISSION_CHAIN[activeMissionIdx].id : null,
           enemyCount:    typeof enemyShips !== 'undefined' ? enemyShips.filter(e => !e.dead).length : null,
+          npcShipsCount: typeof civilianNPCs !== 'undefined' ? civilianNPCs.length : 0,
         };
       },
       // Project each living enemy to screen-space so a headless driver can aim at one.
