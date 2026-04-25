@@ -1,0 +1,86 @@
+QA BOARD REPORT
+Timestamp: 2026-04-25T00:16:25.011Z
+URL: http://localhost:3000
+Source: D:\antiruscist\oldeden\public\index.html
+
+──────────────────────────────────────────────────
+  QA-Code (Source Integrity)
+──────────────────────────────────────────────────
+[QA-Code] ✔ PASS: public/index.html exists
+[QA-Code] ✔ PASS: Braces balanced: 807/807
+[QA-Code] ✔ PASS: Parens balanced: 2061/2061
+[QA-Code] ✔ PASS: Brackets balanced: 142/142
+[QA-Code] ✔ PASS: Marker found: DOCTYPE
+[QA-Code] ✔ PASS: Marker found: Three.js import
+[QA-Code] ✔ PASS: Marker found: GLTFLoader import
+[QA-Code] ✔ PASS: Marker found: Socket.IO
+[QA-Code] ✔ PASS: Marker found: Karma Wheel
+[QA-Code] ✔ PASS: Marker found: Rebirth system
+[QA-Code] ✔ PASS: Marker found: Game canvas
+[QA-Code] ✔ PASS: Marker found: HUD canvas
+[QA-Code] ✔ PASS: Line count: 4119 (healthy)
+[QA-Code] ✔ PASS: SHA-256 hash: 0bcfbabf550e3ca3
+
+──────────────────────────────────────────────────
+  QA-API (Server Health & Endpoints)
+──────────────────────────────────────────────────
+[QA-API] ✔ PASS: GET / — HTTP 200
+[QA-API] ✔ PASS: Content-Type: text/html
+[QA-API] ✘ FAIL: Response body missing expected HTML structure
+[QA-API] ⚠ WARN: Socket.IO polling — HTTP 404 (may need session)
+[QA-API] ✔ PASS: Static /3d/glb/ responds — HTTP 404
+
+──────────────────────────────────────────────────
+  QA-Visual (Screenshots & Visual Structure)
+──────────────────────────────────────────────────
+[QA-Visual] ✔ PASS: Title screen screenshot: title_2026-04-25T00-16-25-008Z.png
+[QA-Visual] ✔ PASS: Viewport OK: 1280x900
+[QA-Visual] ✘ FAIL: CSS variables missing
+[QA-Visual] ⚠ WARN: QA banner not found — may have been removed
+[QA-Visual] ✘ FAIL: Title heading not visible or missing
+
+──────────────────────────────────────────────────
+  QA-Runtime (WebGL & JS Errors)
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: WebGL context healthy
+[QA-Runtime] ✔ PASS: No 3D engine error banner in DOM
+[QA-Runtime] ✔ PASS: Runtime screenshot: runtime_2026-04-25T00-16-25-008Z.png
+
+──────────────────────────────────────────────────
+  QA-UX (DOM & Interactivity)
+──────────────────────────────────────────────────
+[QA-UX] ✘ FAIL: Title Screen (#screen-title) — MISSING
+[QA-UX] ✘ FAIL: Bridge Screen (#screen-bridge) — MISSING
+[QA-UX] ✘ FAIL: Character Creation (#screen-create) — MISSING
+[QA-UX] ✘ FAIL: Settings Screen (#screen-settings) — MISSING
+[QA-UX] ✘ FAIL: Rebirth Screen (#screen-rebirth) — MISSING
+[QA-UX] ✘ FAIL: Karma Wheel (#screen-karma) — MISSING
+[QA-UX] ✘ FAIL: Eulogy Screen (#screen-eulogy) — MISSING
+[QA-UX] ✘ FAIL: Market Screen (#screen-market) — MISSING
+[QA-UX] ✘ FAIL: New Game Button (#btn-new) — MISSING
+[QA-UX] ✘ FAIL: Settings Button (#btn-settings) — MISSING
+[QA-UX] ✘ FAIL: Game Canvas (#game-canvas) — MISSING
+[QA-UX] ✘ FAIL: HUD Canvas (#hud-canvas) — MISSING
+[QA-UX] ✘ FAIL: QA Banner (#qa-unverified-banner) — MISSING
+[QA-UX] ✘ FAIL: New Game button not clickable or missing
+[QA-UX] ⚠ WARN: Click test failed: No element found for selector: #btn-new
+
+──────────────────────────────────────────────────
+  JS Errors Summary
+──────────────────────────────────────────────────
+[QA-Runtime] ✔ PASS: Zero JS errors
+
+──────────────────────────────────────────────────
+  FINAL VERDICTS
+──────────────────────────────────────────────────
+✔ APPROVED  QA-Code
+✘ REJECTED  QA-API
+✘ REJECTED  QA-Visual
+✔ APPROVED  QA-Runtime
+✘ REJECTED  QA-UX
+
+══════════════════════════════════════════════════
+OVERALL: REJECTED — FIX AND RE-RUN
+Hash: 0bcfbabf550e3ca3
+Screenshots: D:\antiruscist\oldeden\qa_reports\screenshots
+Timestamp: 2026-04-25T00:16:37.490Z

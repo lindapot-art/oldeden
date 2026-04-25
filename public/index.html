@@ -486,10 +486,18 @@
         <div id="create-genome-preview" style="font-size:0.78rem; color:#6ab0de; line-height:1.8; font-family:monospace;"></div>
       </div>
 
-      <div style="display:flex; gap:12px;">
-        <button onclick="createPilot()" style="flex:2; padding:16px; background:rgba(100,180,255,0.2); border:1px solid #6ab0de; border-radius:8px; color:#6ab0de; cursor:pointer; font-size:1rem; font-weight:600; letter-spacing:0.1em;">🚀 LAUNCH</button>
-        <button onclick="document.getElementById('screen-create').style.display='none'; document.getElementById('screen-title').style.display='block';" style="flex:1; padding:16px; background:none; border:1px solid rgba(100,180,255,0.15); border-radius:8px; color:#556; cursor:pointer; font-size:0.9rem;">← Back</button>
+      <!-- After the genome roll: Enter Game / Re-roll / Back -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button id="btn-enter-game" onclick="createPilot()" style="flex:2 1 220px; padding:18px; background:linear-gradient(180deg, rgba(106,176,222,0.32), rgba(106,176,222,0.18)); border:1px solid #6ab0de; border-radius:10px; color:#dff1ff; cursor:pointer; font-size:1.05rem; font-weight:700; letter-spacing:0.18em; box-shadow:0 0 22px rgba(106,176,222,0.25), inset 0 0 12px rgba(106,176,222,0.15); text-shadow:0 0 8px rgba(106,176,222,0.6); animation: enterGamePulse 2.4s ease-in-out infinite;">▶ ENTER GAME</button>
+        <button id="btn-reroll-genome" onclick="window.rerollCreateGenome ? window.rerollCreateGenome() : window.showCreateScreen && window.showCreateScreen()" title="Re-roll genome preview" style="flex:1 1 100px; padding:16px; background:rgba(200,142,255,0.12); border:1px solid rgba(200,142,255,0.4); border-radius:8px; color:#c88eff; cursor:pointer; font-size:0.85rem; letter-spacing:0.1em;">🧬 Re-roll DNA</button>
+        <button onclick="document.getElementById('screen-create').style.display='none'; document.getElementById('screen-title').style.display='block';" style="flex:1 1 90px; padding:16px; background:none; border:1px solid rgba(100,180,255,0.15); border-radius:8px; color:#556; cursor:pointer; font-size:0.85rem;">← Back</button>
       </div>
+      <style>
+        @keyframes enterGamePulse {
+          0%, 100% { box-shadow: 0 0 22px rgba(106,176,222,0.25), inset 0 0 12px rgba(106,176,222,0.15); }
+          50%      { box-shadow: 0 0 38px rgba(106,176,222,0.55), inset 0 0 18px rgba(106,176,222,0.30); }
+        }
+      </style>
     </div>
   </div>
   <div id="screen-settings" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(5,10,25,0.98); z-index:9999; text-align:center; overflow:auto;">
@@ -1750,6 +1758,71 @@
     playerShipGroup.rotation.y = -0.5;
     scene.add(playerShipGroup);
 
+    // ─── Drifting Astronaut (lore: a previous-life corpse near spawn) ──
+    // Procedural humanoid: helmet, body, limbs. Gently tumbles forever.
+    // Connects to rebirth/eulogy lore — the soul before the player's.
+    let driftingCorpse = null;
+    (function spawnDriftingCorpse() {
+      try {
+        const grp = new THREE.Group();
+        const suitMat = new THREE.MeshStandardMaterial({ color: 0xb8c2cc, roughness: 0.85, metalness: 0.15 });
+        const visorMat = new THREE.MeshStandardMaterial({ color: 0x111a2e, roughness: 0.2, metalness: 0.9, emissive: 0x223355, emissiveIntensity: 0.25 });
+        const trimMat  = new THREE.MeshStandardMaterial({ color: 0x6ab0de, emissive: 0x224466, emissiveIntensity: 0.4, roughness: 0.4 });
+
+        // Helmet (sphere)
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), suitMat);
+        helmet.position.y = 1.4;
+        grp.add(helmet);
+        const visor = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12, 0, Math.PI, 0, Math.PI * 0.55), visorMat);
+        visor.position.y = 1.42; visor.rotation.y = Math.PI * 0.5;
+        grp.add(visor);
+
+        // Torso (capsule via cylinder + spheres)
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.34, 1.1, 12), suitMat);
+        torso.position.y = 0.55;
+        grp.add(torso);
+        const beltLamp = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), trimMat);
+        beltLamp.position.set(0.0, 0.55, 0.36);
+        grp.add(beltLamp);
+
+        // Arms (cylinders, splayed — limp)
+        function arm(side) {
+          const a = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.85, 8), suitMat);
+          a.position.set(side * 0.42, 0.85, 0);
+          a.rotation.z = side * 1.05; // splay outward
+          a.rotation.x = 0.2;
+          return a;
+        }
+        grp.add(arm(1)); grp.add(arm(-1));
+
+        // Legs (cylinders, slack)
+        function leg(side) {
+          const l = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.13, 0.95, 8), suitMat);
+          l.position.set(side * 0.18, -0.4, 0.05);
+          l.rotation.x = -0.15;
+          l.rotation.z = side * 0.18;
+          return l;
+        }
+        grp.add(leg(1)); grp.add(leg(-1));
+
+        // Tether — broken severed line trailing
+        const tetherGeo = new THREE.BufferGeometry();
+        const tetherPts = new Float32Array([0, 0.55, -0.36, -0.6, 0.4, -1.4, -1.1, 0.1, -2.6, -1.4, -0.3, -3.8]);
+        tetherGeo.setAttribute('position', new THREE.BufferAttribute(tetherPts, 3));
+        const tether = new THREE.Line(tetherGeo, new THREE.LineBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.55 }));
+        grp.add(tether);
+
+        // Position: away from the player ship, slightly behind & below.
+        grp.position.set(-8, -1.2, 6);
+        grp.scale.setScalar(0.85);
+        grp.userData.isDriftingCorpse = true;
+        grp.userData.tumbleSpeed = { x: 0.12, y: 0.07, z: 0.05 };
+        scene.add(grp);
+        driftingCorpse = grp;
+        window.__driftingCorpse = grp; // expose for QA / debug
+      } catch (e) { console.warn('[corpse] spawn failed', e); }
+    })();
+
     // Initialize asteroid system
     asteroidSystem = new AsteroidSystem(THREE, scene, {
       beltRadius: 500,
@@ -1807,6 +1880,16 @@
       if (starMesh) {
         const s = 1 + Math.sin(elapsed * 2) * 0.02;
         starMesh.scale.set(s, s, s);
+      }
+
+      // Drifting astronaut corpse — slow tumble + gentle outward drift
+      if (typeof driftingCorpse !== 'undefined' && driftingCorpse) {
+        const t = driftingCorpse.userData.tumbleSpeed || { x: 0.1, y: 0.07, z: 0.05 };
+        driftingCorpse.rotation.x += t.x * 0.016;
+        driftingCorpse.rotation.y += t.y * 0.016;
+        driftingCorpse.rotation.z += t.z * 0.016;
+        // Subtle bob so the body feels weightless, not dead-static
+        driftingCorpse.position.y = -1.2 + Math.sin(elapsed * 0.25) * 0.18;
       }
 
       // Gentle ship drift (placeholder ship bobs slowly)
@@ -3564,8 +3647,17 @@
       }
       previewGenome = rollCreateGenome();
       renderCreateGenomePreview();
+      // Belt-and-suspenders: re-render on next frame in case the DOM node
+      // wasn't yet visible/measurable (some browsers race here).
+      requestAnimationFrame(renderCreateGenomePreview);
     }
     window.showCreateScreen = showCreateScreen;
+    // Also expose roll helper so the Re-roll DNA button can refresh without
+    // re-toggling the screen.
+    window.rerollCreateGenome = function() {
+      previewGenome = rollCreateGenome();
+      renderCreateGenomePreview();
+    };
 
     const btnNew = document.getElementById('btn-new');
     if (btnNew) {
