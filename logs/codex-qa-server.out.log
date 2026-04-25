@@ -1,0 +1,32 @@
+
+> old-eden@0.1.0 start
+> node src/core/index.js
+
+[GameEngine] Starting Old Eden engine…
+[GameEngine]   Initialising system: genetics
+[GeneticSystem] Initialised.
+[GameEngine]   Initialising system: mutation
+[MutationSystem] Initialised.
+[GameEngine]   Initialising system: npc
+[NPCSystem] Initialised.
+[GameEngine]   Initialising system: economy
+[EconomySystem] Initialised.
+[GameEngine]   Initialising system: rebirth
+[RebirthSystem] Initialised.
+[GameEngine]   Initialising system: procedural
+[ProceduralGenerator] Initialised.
+[GameEngine]   Initialising system: fracture
+[SoulFractureSystem] Initialised.
+[GameEngine]   Initialising system: ascension
+[AscensionSystem] Initialised.
+[GameEngine]   Initialising system: cyclepass
+[CyclePass] Initialised.
+[GameEngine]   Initialising system: cosmetics
+[CosmeticsStore] Initialised.
+[GameEngine]   Initialising system: director
+[AIDirector] Initialised.
+[GameEngine] Engine running at 10 TPS.
+[HttpServer] Listening on port 3000
+[AIDirector] World event started: soul_fracture_event (sectors: Gamma-Deep)
+[AIDirector] World event started: resource_boom (sectors: Alpha-Prime, Beta-Secundus, Zeta-Expanse)
+[AIDirector] World event started: soul_fracture_event (sectors: Alpha-Prime, Delta-Reach, Zeta-Expanse)

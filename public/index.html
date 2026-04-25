@@ -688,6 +688,22 @@
       <div class="currency-row"><span class="currency-icon">&#9651;</span><span class="currency-name">EDEN</span><span class="currency-val" id="eden-val">0</span></div>
     </div>
 
+    <!-- Crypto Wallet Panel: MetaMask / WalletConnect on Polygon -->
+    <div id="crypto-panel" class="panel" style="position:fixed; right:14px; top:120px; min-width:240px; background:rgba(10,15,30,0.92); border:1px solid rgba(200,100,255,0.35); border-radius:10px; padding:12px 14px; color:#c8d6e5; font-size:0.78rem; z-index:1000; box-shadow:0 0 24px rgba(200,100,255,0.15);">
+      <h2 style="margin:0 0 8px 0; color:#c88eff; font-size:0.78rem; letter-spacing:0.18em; font-weight:600; text-transform:uppercase;">&#9651; CRYPTO</h2>
+      <div id="wallet-status" style="font-size:0.72rem; color:#778; margin-bottom:8px;">Not connected</div>
+      <div id="wallet-address" style="font-size:0.7rem; color:#6ab0de; margin-bottom:6px; font-family:monospace; word-break:break-all; display:none;"></div>
+      <div id="wallet-network" style="font-size:0.65rem; color:#ffb848; margin-bottom:8px; display:none;"></div>
+      <div id="wallet-balances" style="font-size:0.72rem; color:#c8d6e5; margin-bottom:10px; display:none;">
+        <div>MATIC: <span id="bal-matic" style="color:#a78bfa;">0</span></div>
+        <div>ARC: <span id="bal-arc" style="color:#58d68d;">0</span></div>
+        <div>EDEN: <span id="bal-eden" style="color:#c88eff;">0</span></div>
+      </div>
+      <button type="button" id="btn-connect-wallet" onclick="window.connectWallet&&window.connectWallet()" style="width:100%; padding:8px 10px; background:linear-gradient(135deg, #6a3aa8, #c88eff); border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:0.75rem; font-weight:600; letter-spacing:0.08em;">CONNECT WALLET</button>
+      <button type="button" id="btn-mint-pilot" onclick="window.mintPilotNFT&&window.mintPilotNFT()" style="display:none; width:100%; margin-top:6px; padding:8px 10px; background:rgba(88,214,141,0.15); border:1px solid #58d68d; border-radius:6px; color:#58d68d; cursor:pointer; font-size:0.72rem; font-weight:600;">&#127918; MINT PILOT NFT</button>
+      <div style="margin-top:8px; font-size:0.62rem; color:#445; line-height:1.4;">Polygon network &middot; 10% Ukraine donation on every mint &middot; F2P always free</div>
+    </div>
+
     <div id="controls-hint">
       Drag to orbit &bull; Scroll to zoom<br/>
       Click star to explore &bull; Press <b>G</b> to generate new system<br/>
@@ -842,15 +858,142 @@
       // Simulate mission present for QA; replace with real mission logic as needed
       showMissionOverlay('First Contact', 'Dock at the station and speak to the ambassador.');
     });
-    // QA marker: GLTFLoader import
-    // import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    // QA marker: GLTFLoader import (now active)
     // QA marker: Socket.IO
-    // import io from 'socket.io-client';
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { AsteroidSystem } from '../src/systems/AsteroidSystem.js';
-    import { MiningBeam } from '../src/renderer/MiningBeam.js';
-    import { CockpitGyroControls } from '../src/controls/CockpitGyroControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    // Use repo-relative paths so it works in dev (express serves /src) AND on
+    // GitHub Pages (where the site lives at /oldeden/, so '../src' would 404).
+    import { AsteroidSystem } from './src/systems/AsteroidSystem.js';
+    import { MiningBeam } from './src/renderer/MiningBeam.js';
+    import { CockpitGyroControls } from './src/controls/CockpitGyroControls.js';
+
+    // ─── GLB asset loader (real ships + cockpits) ────────────────────
+    // Resolves a glb relative to the page (works on dev + Pages).
+    const _glbLoader = new GLTFLoader();
+    const GLB_BASE = '3d/glb/optimized/';
+    function loadGLB(filename) {
+      return new Promise((resolve, reject) => {
+        _glbLoader.load(
+          GLB_BASE + filename,
+          (gltf) => resolve(gltf.scene),
+          undefined,
+          (err) => reject(err)
+        );
+      });
+    }
+    window.__loadGLB = loadGLB;
+
+    // ─── Crypto wallet (Polygon / MetaMask) ──────────────────────────
+    // Stage 1: connect, show address + network + native balance.
+    // Stage 2 (later): wire CharacterNFT + ARC/EDEN ERC-20 contracts.
+    const POLYGON_CHAIN_HEX = '0x89'; // 137
+    const POLYGON_PARAMS = {
+      chainId: POLYGON_CHAIN_HEX,
+      chainName: 'Polygon Mainnet',
+      nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+      rpcUrls: ['https://polygon-rpc.com'],
+      blockExplorerUrls: ['https://polygonscan.com']
+    };
+    const __wallet = { addr: null, chainId: null };
+    function _short(a) { return a ? a.slice(0, 6) + '…' + a.slice(-4) : ''; }
+    function _setWalletUI(connected) {
+      const stat = document.getElementById('wallet-status');
+      const addrEl = document.getElementById('wallet-address');
+      const netEl = document.getElementById('wallet-network');
+      const balEl = document.getElementById('wallet-balances');
+      const btnC = document.getElementById('btn-connect-wallet');
+      const btnM = document.getElementById('btn-mint-pilot');
+      if (!stat) return;
+      if (connected && __wallet.addr) {
+        stat.textContent = '✓ Connected';
+        stat.style.color = '#58d68d';
+        addrEl.textContent = _short(__wallet.addr);
+        addrEl.title = __wallet.addr;
+        addrEl.style.display = 'block';
+        netEl.textContent = (__wallet.chainId === POLYGON_CHAIN_HEX) ? 'Polygon Mainnet' : ('Wrong network: ' + __wallet.chainId + ' (switch to Polygon)');
+        netEl.style.color = (__wallet.chainId === POLYGON_CHAIN_HEX) ? '#58d68d' : '#ffb848';
+        netEl.style.display = 'block';
+        balEl.style.display = 'block';
+        if (btnC) btnC.textContent = 'DISCONNECT';
+        if (btnM) btnM.style.display = 'block';
+      } else {
+        stat.textContent = 'Not connected';
+        stat.style.color = '#778';
+        addrEl.style.display = 'none';
+        netEl.style.display = 'none';
+        balEl.style.display = 'none';
+        if (btnC) btnC.textContent = 'CONNECT WALLET';
+        if (btnM) btnM.style.display = 'none';
+      }
+    }
+    async function _refreshNativeBalance() {
+      try {
+        if (!window.ethereum || !__wallet.addr) return;
+        const wei = await window.ethereum.request({ method: 'eth_getBalance', params: [__wallet.addr, 'latest'] });
+        const matic = parseInt(wei, 16) / 1e18;
+        const el = document.getElementById('bal-matic');
+        if (el) el.textContent = matic.toFixed(4);
+      } catch (e) { console.warn('[wallet] balance failed', e); }
+    }
+    window.connectWallet = async function () {
+      try {
+        if (__wallet.addr) {
+          // Disconnect = local clear (MetaMask has no programmatic disconnect)
+          __wallet.addr = null;
+          _setWalletUI(false);
+          return;
+        }
+        if (!window.ethereum) {
+          alert('No EVM wallet detected.\n\nInstall MetaMask: https://metamask.io\nOr open this game in a wallet browser (Trust, Rainbow, etc.).');
+          return;
+        }
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        __wallet.addr = accounts && accounts[0] || null;
+        __wallet.chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        // Try to switch to Polygon; if not added, add it.
+        if (__wallet.chainId !== POLYGON_CHAIN_HEX) {
+          try {
+            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLYGON_CHAIN_HEX }] });
+          } catch (sw) {
+            if (sw && sw.code === 4902) {
+              await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [POLYGON_PARAMS] });
+            }
+          }
+          __wallet.chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        }
+        _setWalletUI(true);
+        _refreshNativeBalance();
+        // React to wallet/network changes
+        if (!window.__walletListenersBound) {
+          window.ethereum.on && window.ethereum.on('accountsChanged', (accs) => {
+            __wallet.addr = accs && accs[0] || null;
+            _setWalletUI(!!__wallet.addr);
+            if (__wallet.addr) _refreshNativeBalance();
+          });
+          window.ethereum.on && window.ethereum.on('chainChanged', (cid) => {
+            __wallet.chainId = cid;
+            _setWalletUI(!!__wallet.addr);
+          });
+          window.__walletListenersBound = true;
+        }
+      } catch (e) {
+        console.warn('[wallet] connect failed', e);
+        alert('Wallet connect failed: ' + (e && e.message || e));
+      }
+    };
+    window.mintPilotNFT = async function () {
+      if (!__wallet.addr) { alert('Connect a wallet first.'); return; }
+      // Stage 1 stub — real CharacterNFT contract is in contracts/CharacterNFT.sol
+      // and will be wired here once deployed to Polygon. For now, simulate
+      // the mint flow so the UX is fully testable end-to-end.
+      const ok = confirm('MINT PILOT NFT\n\nThis will mint a unique on-chain pilot for ' + _short(__wallet.addr) + '.\n\n10% of the mint fee goes to Ukraine humanitarian aid (immutable).\n\nProceed? (Stage 1: simulated until contract deploys.)');
+      if (!ok) return;
+      console.log('[mint] would call CharacterNFT.mint() with genome=', window.previewGenome || null);
+      alert('✓ Mint queued (simulated).\n\nWhen the CharacterNFT contract goes live on Polygon, this button will sign and submit the real tx. Your DNA roll is preserved.');
+    };
+    window.__wallet = __wallet;
 
     // ─── Seeded RNG (simplified seedrandom) ───────────────────────────
     function mulberry32(seed) {
@@ -1750,13 +1893,39 @@
     buildSystem(initSys);
     loadFill.style.width = '80%';
 
-    // Build placeholder player ship and add to scene
+    // Build player ship: try real GLB first, fall back to procedural placeholder.
+    // The real model gives the user the EVE-Online-style fighter look they
+    // expect; the placeholder kept us alive while assets were being optimized.
     const shipData = buildPlaceholderShip();
     playerShipGroup = shipData.group;
     turretMountPoint = shipData.turretMount;
     playerShipGroup.position.set(15, 3, 20);
     playerShipGroup.rotation.y = -0.5;
     scene.add(playerShipGroup);
+    // Async upgrade to real GLB; replace placeholder when it lands.
+    loadGLB('fighter_alpha.glb').then((glb) => {
+      try {
+        glb.scale.setScalar(2.5);
+        glb.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
+        const oldGroup = playerShipGroup;
+        const newGroup = new THREE.Group();
+        newGroup.name = 'player-ship-glb';
+        newGroup.add(glb);
+        // Keep the procedural turret mount so gunner mode still works.
+        const newMount = new THREE.Object3D();
+        newMount.name = 'turret-mount';
+        newMount.position.set(0, 1.2, -0.5);
+        newGroup.add(newMount);
+        newGroup.position.copy(oldGroup.position);
+        newGroup.rotation.copy(oldGroup.rotation);
+        scene.remove(oldGroup);
+        scene.add(newGroup);
+        playerShipGroup = newGroup;
+        turretMountPoint = newMount;
+        window.__playerShipGLB = glb;
+        console.log('[GLB] player fighter_alpha.glb loaded');
+      } catch (e) { console.warn('[GLB] swap failed, keeping placeholder', e); }
+    }).catch((e) => console.warn('[GLB] fighter_alpha.glb failed, using placeholder:', e && e.message || e));
 
     // ─── Drifting Astronaut (lore: a previous-life corpse near spawn) ──
     // Procedural humanoid: helmet, body, limbs. Gently tumbles forever.

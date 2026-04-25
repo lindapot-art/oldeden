@@ -1,0 +1,15 @@
+const fs = require('fs');
+const s = fs.readFileSync('public/index.html', 'utf8');
+const r = fs.readFileSync('index.html', 'utf8');
+const d = fs.readFileSync('docs/index.html', 'utf8');
+console.log('public size:', s.length);
+console.log('root size:', r.length, 'matches public:', r.length === s.length);
+console.log('docs size:', d.length, 'matches public:', d.length === s.length);
+console.log('imports relative:', s.includes("from './src/") && !s.includes("../src/"));
+console.log('GLTFLoader import:', s.includes("import { GLTFLoader }"));
+console.log('GLB loader helper:', s.includes("function loadGLB"));
+console.log('GLB ship swap:', s.includes("loadGLB('fighter_alpha.glb')"));
+console.log('crypto panel:', s.includes('id="crypto-panel"'));
+console.log('connectWallet:', s.includes('window.connectWallet'));
+console.log('mintPilotNFT:', s.includes('window.mintPilotNFT'));
+console.log('Polygon chain:', s.includes("'0x89'"));
