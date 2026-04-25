@@ -848,9 +848,60 @@
     // import io from 'socket.io-client';
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     import { AsteroidSystem } from '../src/systems/AsteroidSystem.js';
     import { MiningBeam } from '../src/renderer/MiningBeam.js';
     import { CockpitGyroControls } from '../src/controls/CockpitGyroControls.js';
+
+    // ─── GLB model loader + registry ──────────────────────────────────
+    // Loads optimized GLBs from /3d/glb/optimized/. Falls back to procedural
+    // primitives if a GLB is missing/broken so the game never goes blank.
+    const GLB_BASE = '3d/glb/optimized/';
+    const __glbCache = new Map();      // path -> Promise<THREE.Group>
+    const __dracoLoader = new DRACOLoader();
+    __dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+    const __gltfLoader = new GLTFLoader().setDRACOLoader(__dracoLoader);
+
+    function loadGLB(path) {
+      if (__glbCache.has(path)) return __glbCache.get(path);
+      const p = new Promise((resolve) => {
+        __gltfLoader.load(
+          GLB_BASE + path,
+          (gltf) => resolve(gltf.scene || gltf.scenes[0]),
+          undefined,
+          (err) => { console.warn('[GLB] failed', path, err && err.message); resolve(null); }
+        );
+      });
+      __glbCache.set(path, p);
+      return p;
+    }
+
+    // Attach a GLB to a host group as soon as it's loaded. The host gets the
+    // procedural fallback immediately; the GLB replaces it once decoded.
+    // scale and rotation are applied to the GLB only.
+    function attachGLB(host, path, opts = {}) {
+      const { scale = 1, rotY = 0, replaceFallback = true } = opts;
+      loadGLB(path).then((scene) => {
+        if (!scene) return;                         // fallback stays
+        const clone = scene.clone(true);
+        clone.scale.setScalar(scale);
+        clone.rotation.y = rotY;
+        if (replaceFallback) {
+          // Mark and remove children that were procedural fallbacks.
+          const toRemove = host.children.filter((c) => c.userData && c.userData.__fallback);
+          toRemove.forEach((c) => host.remove(c));
+        }
+        host.add(clone);
+      }).catch(() => { /* keep fallback */ });
+    }
+
+    // Map ship types → GLB files. Falls back to procedural if file missing.
+    const ENEMY_GLB = {
+      'Raider Scout': { file: 'red_fighter.glb',     scale: 1.4 },
+      'Corsair':      { file: 'corvette_alpha.glb',  scale: 1.0 },
+      'Marauder':     { file: 'demon_battleship.glb', scale: 0.9 },
+    };
 
     // ─── Seeded RNG (simplified seedrandom) ───────────────────────────
     function mulberry32(seed) {
@@ -2979,20 +3030,27 @@
     function buildEnemyMesh(type) {
       const g = new THREE.Group();
       const mat  = new THREE.MeshStandardMaterial({ color: type.color, roughness: 0.5, metalness: 0.7, emissive: type.color, emissiveIntensity: 0.15 });
-      // Body
+      // Body (procedural fallback — replaced by GLB if available)
       const body = new THREE.Mesh(new THREE.OctahedronGeometry(1.2 * type.scale, 0), mat);
+      body.userData.__fallback = true;
       g.add(body);
       // Wing-like fins
       const finMat = new THREE.MeshStandardMaterial({ color: 0x440000, roughness: 0.8 });
       const fin1 = new THREE.Mesh(new THREE.BoxGeometry(2.4 * type.scale, 0.1 * type.scale, 0.6 * type.scale), finMat);
       fin1.rotation.y = Math.PI / 4;
+      fin1.userData.__fallback = true;
       g.add(fin1);
       const fin2 = new THREE.Mesh(new THREE.BoxGeometry(2.4 * type.scale, 0.1 * type.scale, 0.6 * type.scale), finMat);
       fin2.rotation.y = -Math.PI / 4;
+      fin2.userData.__fallback = true;
       g.add(fin2);
-      // Engine glow
+      // Engine glow (kept regardless of GLB swap so we still see the thrust)
       const glow = new THREE.PointLight(type.color, 0.8 * type.scale, 8 * type.scale);
       g.add(glow);
+
+      // Try to upgrade to a GLB silhouette.
+      const glb = ENEMY_GLB[type.name];
+      if (glb) attachGLB(g, glb.file, { scale: (glb.scale || 1) * type.scale });
       return g;
     }
 
